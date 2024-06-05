@@ -7,6 +7,8 @@ import lombok.Setter;
 @Setter
 public class Message {
 	private String code;
+	
 	private String Description;
+	
 	private MessageSeverityEnum severity;
 }
