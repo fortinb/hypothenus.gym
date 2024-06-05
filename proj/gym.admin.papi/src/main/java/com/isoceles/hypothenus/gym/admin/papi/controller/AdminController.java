@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.isoceles.hypothenus.gym.admin.papi.dto.GymDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.patch.PatchGymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostGymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutGymDto;
 
@@ -47,7 +48,7 @@ public class AdminController {
 	@ResponseStatus(value = HttpStatus.OK)
 	@Operation(summary = "Retrieve a list of gym")
 	public ResponseEntity<List<GymDto>> listGym (@Parameter(description = "page number") @RequestParam (name="page", required = true) int page,
-														@Parameter(description = "page size") @RequestParam (name="pageSize", required = true) int pageSize) {
+												 @Parameter(description = "page size") @RequestParam (name="pageSize", required = true) int pageSize) {
 		return null;
 		
 	} 
@@ -55,7 +56,7 @@ public class AdminController {
 	@GetMapping("/gyms/{gymId}")
 	@ResponseStatus(value = HttpStatus.OK)
 	@Operation(summary = "Retrieve a specific gym")
-	public ResponseEntity<GymDto> getGym (@PathVariable("gymId") String gymId, @RequestBody PutGymDto request) {
+	public ResponseEntity<GymDto> getGym (@PathVariable("gymId") String gymId) {
 		return null;
 		
 	}
@@ -70,22 +71,22 @@ public class AdminController {
 	
 	@PutMapping("/gyms/{gymId}")
 	@ResponseStatus(value = HttpStatus.OK)
-	//@Operation(summary = "Create a new gym")
+	@Operation(summary = "Update a gym")
 	public ResponseEntity<GymDto> updateGym (@PathVariable("gymId") String gymId, @RequestBody PutGymDto request) {
 		return null;
 		
 	}
 	
 	@PatchMapping("/gyms/{gymId}")
-	//@Operation(summary = "Create a new gym")
+	@Operation(summary = "Patch a gym")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<GymDto> patchGym (@PathVariable("gymId") String gymId, @RequestBody PutGymDto request) {
+	public ResponseEntity<GymDto> patchGym (@PathVariable("gymId") String gymId, @RequestBody PatchGymDto request) {
 		return null;
 		
 	}
 	
 	@DeleteMapping("/gyms/{gymId}")
-	//@Operation(summary = "Create a new gym")
+	@Operation(summary = "Delete a gym")
 	@ResponseStatus(value = HttpStatus.ACCEPTED)
 	public void deleteGym (@PathVariable("gymId") String gymId) {
 		
