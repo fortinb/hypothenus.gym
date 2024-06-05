@@ -2,9 +2,9 @@ package com.isoceles.hypothenus.gym.admin.papi.dto.put;
 
 import java.util.List;
 
-import com.isoceles.hypothenus.gym.admin.papi.dto.Address;
-import com.isoceles.hypothenus.gym.admin.papi.dto.PhoneNumber;
-import com.isoceles.hypothenus.gym.admin.papi.dto.SocialMediaAccount;
+import com.isoceles.hypothenus.gym.admin.papi.dto.AddressDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.PhoneNumberDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.SocialMediaAccountDto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -13,21 +13,21 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class PutGym {
+public class PutGymDto {
 	@NotNull
 	private String id;
 	
 	@NotBlank
 	private String name;
 	
-	private Address address;
+	private AddressDto address;
 	
 	@NotBlank
 	private String email;
 	
 	private String language;
 	
-	private List<PhoneNumber> phoneNumbers;
+	private List<PhoneNumberDto> phoneNumbers;
 	
-	private List<SocialMediaAccount> socialMediaAccount;
+	private List<SocialMediaAccountDto> socialMediaAccount;
 }

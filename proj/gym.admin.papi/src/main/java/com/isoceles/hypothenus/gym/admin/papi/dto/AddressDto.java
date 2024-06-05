@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class Address {
+public class AddressDto {
 
 	@NotBlank
 	private String civicNumber;

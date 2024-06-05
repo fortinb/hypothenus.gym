@@ -7,18 +7,18 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class Gym {
+public class GymDto {
 	private String id;
 	
 	private String name;
 	
-	private Address address;
+	private AddressDto address;
 	
 	private String email;
 	
 	private String language;
 	
-	private List<PhoneNumber> phoneNumbers;
+	private List<PhoneNumberDto> phoneNumbers;
 	
-	private List<SocialMediaAccount> socialMediaAccount;
+	private List<SocialMediaAccountDto> socialMediaAccount;
 }

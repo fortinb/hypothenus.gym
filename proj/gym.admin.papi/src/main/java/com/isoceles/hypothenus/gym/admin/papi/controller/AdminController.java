@@ -17,16 +17,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.isoceles.hypothenus.gym.admin.papi.dto.Gym;
-import com.isoceles.hypothenus.gym.admin.papi.dto.Response;
-import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostGym;
-import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutGym;
+import com.isoceles.hypothenus.gym.admin.papi.dto.GymDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostGymDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutGymDto;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/v1/admin")
 @Validated
 public class AdminController {
 
@@ -37,9 +36,9 @@ public class AdminController {
 	@GetMapping("/gyms/search")
 	@ResponseStatus(value = HttpStatus.OK)
 	@Operation(summary = "Search for gym")
-	public ResponseEntity<Response<List<Gym>>> searchGym (@Parameter(description = "page number") @RequestParam (name="page", required = true) int page,
-														  @Parameter(description = "page size") @RequestParam (name="pageSize", required = true) int pageSize,
-														  @Parameter(description = "search criteria") @RequestParam (name="criteria", required = true) String criteria) {
+	public ResponseEntity<List<GymDto>> searchGym (@Parameter(description = "page number") @RequestParam (name="page", required = true) int page,
+												   @Parameter(description = "page size") @RequestParam (name="pageSize", required = true) int pageSize,
+												   @Parameter(description = "search criteria") @RequestParam (name="criteria", required = true) String criteria) {
 		return null;
 		
 	} 
@@ -47,7 +46,7 @@ public class AdminController {
 	@GetMapping("/gyms/list")
 	@ResponseStatus(value = HttpStatus.OK)
 	@Operation(summary = "Retrieve a list of gym")
-	public ResponseEntity<Response<List<Gym>>> listGym (@Parameter(description = "page number") @RequestParam (name="page", required = true) int page,
+	public ResponseEntity<List<GymDto>> listGym (@Parameter(description = "page number") @RequestParam (name="page", required = true) int page,
 														@Parameter(description = "page size") @RequestParam (name="pageSize", required = true) int pageSize) {
 		return null;
 		
@@ -56,7 +55,7 @@ public class AdminController {
 	@GetMapping("/gyms/{gymId}")
 	@ResponseStatus(value = HttpStatus.OK)
 	@Operation(summary = "Retrieve a specific gym")
-	public ResponseEntity<Response<Gym>> getGym (@PathVariable("gymId") String gymId, @RequestBody PutGym request) {
+	public ResponseEntity<GymDto> getGym (@PathVariable("gymId") String gymId, @RequestBody PutGymDto request) {
 		return null;
 		
 	}
@@ -64,7 +63,7 @@ public class AdminController {
 	@PostMapping("/gyms")
 	@ResponseStatus(value = HttpStatus.CREATED)
 	@Operation(summary = "Create a new gym")
-	public ResponseEntity<Response<Gym>> createGym (@RequestBody PostGym request) {
+	public ResponseEntity<GymDto> createGym (@RequestBody PostGymDto request) {
 		return null;
 		
 	}
@@ -72,7 +71,7 @@ public class AdminController {
 	@PutMapping("/gyms/{gymId}")
 	@ResponseStatus(value = HttpStatus.OK)
 	//@Operation(summary = "Create a new gym")
-	public ResponseEntity<Response<Gym>> updateGym (@PathVariable("gymId") String gymId, @RequestBody PutGym request) {
+	public ResponseEntity<GymDto> updateGym (@PathVariable("gymId") String gymId, @RequestBody PutGymDto request) {
 		return null;
 		
 	}
@@ -80,7 +79,7 @@ public class AdminController {
 	@PatchMapping("/gyms/{gymId}")
 	//@Operation(summary = "Create a new gym")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Response<Gym>> patchGym (@PathVariable("gymId") String gymId, @RequestBody PutGym request) {
+	public ResponseEntity<GymDto> patchGym (@PathVariable("gymId") String gymId, @RequestBody PutGymDto request) {
 		return null;
 		
 	}
