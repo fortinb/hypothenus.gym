@@ -28,5 +28,15 @@
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-21/"/>
 	<classpathentry kind="con" path="org.eclipse.buildship.core.gradleclasspathcontainer"/>
+	<classpathentry kind="lib" path="C:/Users/forti/.gradle/caches/modules-2/files-2.1/org.springframework/spring-context/6.1.8/21219a0df58e5b96ef489a172b449232573352e8/spring-context-6.1.8.jar" sourcepath="C:/Users/forti/.gradle/caches/modules-2/files-2.1/org.springframework/spring-context/6.1.8/2d292802cb994f0c4a0b5b2b23f6b6baafafd53d/spring-context-6.1.8-sources.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="C:/Users/forti/.gradle/caches/modules-2/files-2.1/org.springframework/spring-beans/6.1.8/79a5e45383542ff514b5328fe277410cf4054f3b/spring-beans-6.1.8.jar" sourcepath="C:/Users/forti/.gradle/caches/modules-2/files-2.1/org.springframework/spring-beans/6.1.8/6b0c65bb443e810e49dff5d473f73f513b96c519/spring-beans-6.1.8-sources.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin/default"/>
 </classpath>
