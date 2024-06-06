@@ -2,8 +2,10 @@ package com.isoceles.hypothenus.gym.admin.papi.controller;
 
 import java.util.List;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,11 +18,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.isoceles.hypothenus.gym.admin.papi.dto.GymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.patch.PatchGymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostGymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutGymDto;
+import com.isoceles.hypothenus.gym.domain.model.Gym;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -64,9 +68,13 @@ public class AdminController {
 	@PostMapping("/gyms")
 	@ResponseStatus(value = HttpStatus.CREATED)
 	@Operation(summary = "Create a new gym")
+	@PreAuthorize("hasRole('Admin')")
 	public ResponseEntity<GymDto> createGym (@RequestBody PostGymDto request) {
-		return null;
-		
+		ModelMapper modelMapper = new ModelMapper();
+		Gym gym = modelMapper.map(request, Gym.class);
+
+		GymDto gymDto = modelMapper.map(gym, GymDto.class);
+		return ResponseEntity.created(ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(gym.getId()).toUri()).body(gymDto);
 	}
 	
 	@PutMapping("/gyms/{gymId}")
