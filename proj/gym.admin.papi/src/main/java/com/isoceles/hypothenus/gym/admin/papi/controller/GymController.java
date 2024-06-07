@@ -5,7 +5,6 @@ import java.util.List;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -43,11 +42,10 @@ public class GymController {
 	@Autowired
 	private Logger logger;
 	
-	@Autowired
 	private GymService gymService;
 	
-	public GymController() {
-
+	public GymController(GymService gymService) {
+		this.gymService = gymService;
 	}
 
 	@GetMapping("/gyms/search")
