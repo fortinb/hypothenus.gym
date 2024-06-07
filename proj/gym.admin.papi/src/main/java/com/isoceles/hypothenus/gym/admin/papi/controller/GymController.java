@@ -1,10 +1,12 @@
 package com.isoceles.hypothenus.gym.admin.papi.controller;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -42,6 +44,9 @@ public class GymController {
 	@Autowired
 	private Logger logger;
 	
+	@Autowired
+	private ModelMapper modelMapper;
+	
 	private GymService gymService;
 	
 	public GymController(GymService gymService) {
@@ -49,8 +54,9 @@ public class GymController {
 	}
 
 	@GetMapping("/gyms/search")
-	@ResponseStatus(value = HttpStatus.OK)
+	@PreAuthorize("hasRole('" + Roles.Admin + "')")
 	@Operation(summary = "Search for gym")
+	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<List<GymDto>> searchGym(
 			@Parameter(description = "page number") @RequestParam(name = "page", required = true) int page,
 			@Parameter(description = "page size") @RequestParam(name = "pageSize", required = true) int pageSize,
@@ -60,22 +66,44 @@ public class GymController {
 	}
 
 	@GetMapping("/gyms/list")
-	@ResponseStatus(value = HttpStatus.OK)
+	@PreAuthorize("hasRole('" + Roles.Admin + "')")
 	@Operation(summary = "Retrieve a list of gym")
-	public ResponseEntity<List<GymDto>> listGym(
+	@ResponseStatus(value = HttpStatus.OK)
+	public ResponseEntity<Object> listGym(
 			@Parameter(description = "page number") @RequestParam(name = "page", required = true) int page,
 			@Parameter(description = "page size") @RequestParam(name = "pageSize", required = true) int pageSize) {
-		return null;
-
+		
+		Page<Gym> entities = null;
+		try {
+			entities = gymService.list(page, pageSize);
+		} catch (DomainException e) {
+			logger.error(e.getMessage(), e);
+			
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+		}
+	
+		return ResponseEntity.ok(entities.map(item -> modelMapper.map(item, GymDto.class)));
+				
 	}
 
 	@GetMapping("/gyms/{gymId}")
 	@Operation(summary = "Retrieve a specific gym")
-	@PreAuthorize("hasAnyRole('" + Roles.Admin + "'," + Roles.Manager + "')")
+	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "','" + Roles.Member + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<GymDto> getGym(@PathVariable("gymId") String gymId) {
-		return null;
+	public ResponseEntity<Object> getGym(@PathVariable("gymId") String gymId) {
+		Gym entity = null;
+		try {
+			entity = gymService.findById(gymId);
+		} catch (DomainException e) {
+			logger.error(e.getMessage(), e);
+			if (e.getCode() == DomainException.GYM_NOT_FOUND) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+			}
+				
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+		}
 
+		return ResponseEntity.ok(modelMapper.map(entity, GymDto.class));
 	}
 
 	@PostMapping("/gyms")
@@ -83,7 +111,6 @@ public class GymController {
 	@PreAuthorize("hasRole('" + Roles.Admin + "')")
 	@ResponseStatus(value = HttpStatus.CREATED)
 	public ResponseEntity<Object> createGym(@RequestBody PostGymDto request) {
-		ModelMapper modelMapper = new ModelMapper();
 		Gym gym = modelMapper.map(request, Gym.class);
 
 		try {
@@ -94,15 +121,14 @@ public class GymController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
 		}
 		
-		GymDto gymDto = modelMapper.map(gym, GymDto.class);
 		return ResponseEntity.created(
 				ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(gym.getId()).toUri())
-				.body(gymDto);
+				.body(modelMapper.map(gym, GymDto.class));
 	}
 
 	@PutMapping("/gyms/{gymId}")
 	@Operation(summary = "Update a gym")
-	@PreAuthorize("hasRole('" + Roles.Admin + "')")
+	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<GymDto> updateGym(@PathVariable("gymId") String gymId, @RequestBody PutGymDto request) {
 		return null;
@@ -111,7 +137,7 @@ public class GymController {
 
 	@PatchMapping("/gyms/{gymId}")
 	@Operation(summary = "Patch a gym")
-	@PreAuthorize("hasRole('" + Roles.Admin + "')")
+	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<GymDto> patchGym(@PathVariable("gymId") String gymId, @RequestBody PatchGymDto request) {
 		return null;
