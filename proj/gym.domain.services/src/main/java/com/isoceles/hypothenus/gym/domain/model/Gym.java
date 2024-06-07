@@ -3,6 +3,7 @@ package com.isoceles.hypothenus.gym.domain.model;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.TextIndexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.Getter;
@@ -15,13 +16,15 @@ public class Gym {
 	@Id
 	private String id;
 	
+	@TextIndexed
 	private String name;
 	
 	private Address address;
 	
+	@TextIndexed
 	private String email;
 	
-	private String language;
+	private String locale;
 	
 	private List<PhoneNumber> phoneNumbers;
 	

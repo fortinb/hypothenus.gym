@@ -1,7 +1,6 @@
 package com.isoceles.hypothenus.gym.admin.papi.controller;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
@@ -25,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.isoceles.hypothenus.gym.admin.papi.config.security.Roles;
+import com.isoceles.hypothenus.gym.admin.papi.dto.ErrorDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.GymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.patch.PatchGymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostGymDto;
@@ -43,12 +43,12 @@ public class GymController {
 
 	@Autowired
 	private Logger logger;
-	
+
 	@Autowired
 	private ModelMapper modelMapper;
-	
+
 	private GymService gymService;
-	
+
 	public GymController(GymService gymService) {
 		this.gymService = gymService;
 	}
@@ -57,11 +57,21 @@ public class GymController {
 	@PreAuthorize("hasRole('" + Roles.Admin + "')")
 	@Operation(summary = "Search for gym")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<List<GymDto>> searchGym(
+	public ResponseEntity<Object> searchGym(
 			@Parameter(description = "page number") @RequestParam(name = "page", required = true) int page,
 			@Parameter(description = "page size") @RequestParam(name = "pageSize", required = true) int pageSize,
 			@Parameter(description = "search criteria") @RequestParam(name = "criteria", required = true) String criteria) {
-		return null;
+		
+		Page<Gym> entities = null;
+		try {
+			entities = gymService.search(criteria, page, pageSize);
+		} catch (DomainException e) {
+			logger.error(e.getMessage(), e);
+			
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+		}
+	
+		return ResponseEntity.ok(entities.map(item -> modelMapper.map(item, GymDto.class)));
 
 	}
 
@@ -72,18 +82,17 @@ public class GymController {
 	public ResponseEntity<Object> listGym(
 			@Parameter(description = "page number") @RequestParam(name = "page", required = true) int page,
 			@Parameter(description = "page size") @RequestParam(name = "pageSize", required = true) int pageSize) {
-		
+
 		Page<Gym> entities = null;
 		try {
 			entities = gymService.list(page, pageSize);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
-			
+
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
 		}
-	
+
 		return ResponseEntity.ok(entities.map(item -> modelMapper.map(item, GymDto.class)));
-				
 	}
 
 	@GetMapping("/gyms/{gymId}")
@@ -97,9 +106,10 @@ public class GymController {
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 			if (e.getCode() == DomainException.GYM_NOT_FOUND) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+				return ResponseEntity.status(HttpStatus.NOT_FOUND)
+						.body(new ErrorDto(e.getCode(), e.getMessage(), gymId));
 			}
-				
+
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
 		}
 
@@ -117,10 +127,10 @@ public class GymController {
 			gymService.create(gym);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
-			
+
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
 		}
-		
+
 		return ResponseEntity.created(
 				ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(gym.getId()).toUri())
 				.body(modelMapper.map(gym, GymDto.class));

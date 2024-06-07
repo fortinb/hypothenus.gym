@@ -16,7 +16,7 @@ public class GymDto {
 	
 	private String email;
 	
-	private String language;
+	private String locale;
 	
 	private List<PhoneNumberDto> phoneNumbers;
 	

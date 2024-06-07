@@ -10,4 +10,12 @@ public class ErrorDto {
 	private String code;
 
 	private String Description;
+	
+	private String data;
+	
+	public ErrorDto(String code, String description, String data) {
+		this.code = code;
+		this.Description = description;
+		this.data = data;
+	}
 }

@@ -1,0 +1,3 @@
+    
+db.createUser({"user": "admin", "pwd":"test.1", "roles": ["dbAdmin"]})
+db.gym.createIndex({ "name": "text", "address.streetName": "text", "address.city": "text", "email": "text" }, { "name": "Gym_TextIndex", "v": 2, "collation": { locale: "simple", caseLevel: false, caseFirst: "off", strength: 3, numericOrdering: false, alternate: "non-ignorable", maxVariable: "punct", normalization: false, backwards: true, version: "57.1" }}) 
