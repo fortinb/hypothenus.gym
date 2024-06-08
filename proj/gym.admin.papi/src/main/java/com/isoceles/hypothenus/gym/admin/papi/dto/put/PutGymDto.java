@@ -14,8 +14,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class PutGymDto {
-	@NotNull
-	private String id;
+	
+	@NotBlank
+	private String gymId;
 	
 	@NotBlank
 	private String name;

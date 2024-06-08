@@ -6,6 +6,7 @@ import com.isoceles.hypothenus.gym.admin.papi.dto.AddressDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.PhoneNumberDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.SocialMediaAccountDto;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,8 +15,8 @@ import lombok.Setter;
 @Setter
 public class PatchGymDto {
 	
-	@NotNull
-	private String id;
+	@NotBlank
+	private String gymId;
 	
 	private String name;
 	

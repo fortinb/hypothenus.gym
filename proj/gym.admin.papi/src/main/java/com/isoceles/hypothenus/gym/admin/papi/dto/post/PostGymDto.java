@@ -15,6 +15,9 @@ import lombok.Setter;
 public class PostGymDto {
 	
 	@NotBlank
+	private String gymId;
+	
+	@NotBlank
 	private String name;
 	
 	private AddressDto address;

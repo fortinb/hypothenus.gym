@@ -3,6 +3,7 @@ package com.isoceles.hypothenus.gym.domain.model;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.index.TextIndexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -12,9 +13,13 @@ import lombok.Setter;
 @Getter
 @Setter
 @Document ("gym")
-public class Gym {
+public class Gym extends BaseEntity {
+	
 	@Id
 	private String id;
+	
+	@Indexed (unique = true)
+	private String gymId;
 	
 	@TextIndexed
 	private String name;
@@ -28,5 +33,5 @@ public class Gym {
 	
 	private List<PhoneNumber> phoneNumbers;
 	
-	private List<SocialMediaAccount> socialMediaAccount;
+	private List<SocialMediaAccount> socialMediaAccounts;
 }

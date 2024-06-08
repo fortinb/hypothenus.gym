@@ -1,3 +1,29 @@
-    
-db.createUser({"user": "admin", "pwd":"test.1", "roles": ["dbAdmin"]})
-db.gym.createIndex({ "name": "text", "address.streetName": "text", "address.city": "text", "email": "text" }, { "name": "Gym_TextIndex", "v": 2, "collation": { locale: "simple", caseLevel: false, caseFirst: "off", strength: 3, numericOrdering: false, alternate: "non-ignorable", maxVariable: "punct", normalization: false, backwards: true, version: "57.1" }}) 
+-- { "roles" : ["Admin"] }   
+{
+  "gymId": "16034",
+  "name": "Meck",
+  "address": {
+    "civicNumber": "500",
+    "streetName": "François-V.-Malhiot",
+    "appartment": "35",
+    "city": "Boucherville",
+    "state": "QC",
+    "zipCode": "J4B 0H1"
+  },
+  "email": "fortinb@videotron.ca",
+  "language": "fr",
+  "phoneNumbers": [
+    {
+      "regionalCode": "514",
+      "number": "996-6933",
+      "type": "Mobile"
+    }
+  ]
+  
+}
+
+
+use hypothenus-gym-dev
+db.createUser({"user": "admin", "pwd":"test.1", "roles": ["dbOwner"]})
+db.createUser({"user": "hypothenus", "pwd":"test.1", "roles": ["readWrite"]})
+db.gym.createIndex({ "name": "text", "address.streetName": "text", "address.city": "text", "address.zipcode" : "text", "email": "text" }, { "name": "Gym_TextIndex", "v": 2, "collation": { locale: "simple", caseLevel: false, caseFirst: "off", strength: 3, numericOrdering: false, alternate: "non-ignorable", maxVariable: "punct", normalization: false, backwards: true, version: "57.1" }}) 

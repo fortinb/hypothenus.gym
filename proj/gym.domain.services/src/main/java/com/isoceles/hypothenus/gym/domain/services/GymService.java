@@ -25,21 +25,53 @@ public class GymService {
 		return gymRepository.save(gym);
 	}
 
-	public Gym findById(String id) throws DomainException {
-		Optional<Gym> entity = gymRepository.findById(id);
+	public Gym update(Gym gym) throws DomainException {
+		Gym oldGym = this.findByGymId(gym.getGymId());
+		
+		oldGym.setEmail(gym.getEmail());
+		oldGym.setLocale(gym.getLocale());
+		oldGym.setName(gym.getName());
+		oldGym.setAddress(gym.getAddress());
+		oldGym.setPhoneNumbers(gym.getPhoneNumbers());
+		oldGym.setSocialMediaAccounts(gym.getSocialMediaAccounts());
+		
+		return gymRepository.save(oldGym);
+	}
+	
+	public Gym patch(Gym gym) throws DomainException {
+		Gym oldGym = this.findByGymId(gym.getGymId());
+		
+		if (gym.getEmail() != null) oldGym.setEmail(gym.getEmail());
+		if (gym.getLocale() != null) oldGym.setLocale(gym.getLocale());
+		if (gym.getName() != null) oldGym.setName(gym.getName());
+		if (gym.getAddress() != null) oldGym.setAddress(gym.getAddress());
+		if (gym.getPhoneNumbers() != null) oldGym.setPhoneNumbers(gym.getPhoneNumbers());
+		if (gym.getSocialMediaAccounts() != null) oldGym.setSocialMediaAccounts(gym.getSocialMediaAccounts());
+		
+		return gymRepository.save(oldGym);
+	}
+	
+	public void delete(String gymId) throws DomainException {
+		Gym oldGym = this.findByGymId(gymId);
+		oldGym.setDeleted(true);
+		
+		gymRepository.save(oldGym);
+	}
+	
+	public Gym findByGymId(String id) throws DomainException {
+		Optional<Gym> entity = gymRepository.findByGymIdAndIsDeleted(id, false);
 		if (entity.isEmpty()) {
 			throw new DomainException(DomainException.GYM_NOT_FOUND, "Gym not found");
 		}
 		
 		return entity.get();
-			
 	}
 	
 	public Page<Gym> search(String criteria, int page, int pageSize) throws DomainException {
-		return gymRepository.findAllBy(TextCriteria.forDefaultLanguage().matching(criteria), PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"));
+		return gymRepository.findAllByAndIsDeleted(TextCriteria.forDefaultLanguage().matching(criteria).caseSensitive(false), PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"), false);
 	}
 	
 	public Page<Gym> list(int page, int pageSize) throws DomainException {
-		return gymRepository.findAll(PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"));
+		return gymRepository.findAllByIsDeleted(PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"), false);
 	}
 }

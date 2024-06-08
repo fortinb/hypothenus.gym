@@ -11,8 +11,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import com.isoceles.hypothenus.gym.domain.model.Gym;
 
 public interface IGymRepository extends PagingAndSortingRepository<Gym, String>, CrudRepository<Gym, String>{
-
-	Optional<Gym> findById(String id);
-	
-	Page<Gym> findAllBy(TextCriteria criteria, Pageable pageable);
+	Optional<Gym> findByGymIdAndIsDeleted(String gymId, boolean isDeleted);
+	Page<Gym> findAllByAndIsDeleted(TextCriteria criteria, Pageable pageable, boolean isDeleted);
+	Page<Gym> findAllByIsDeleted(Pageable pageable, boolean isDeleted);
 }

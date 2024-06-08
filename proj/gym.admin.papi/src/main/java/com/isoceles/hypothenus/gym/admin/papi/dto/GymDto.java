@@ -7,8 +7,9 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class GymDto {
-	private String id;
+public class GymDto extends BaseDto {
+	
+	private String gymId;
 	
 	private String name;
 	
