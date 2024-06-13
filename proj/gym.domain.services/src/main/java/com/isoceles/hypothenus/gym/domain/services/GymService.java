@@ -1,15 +1,16 @@
 package com.isoceles.hypothenus.gym.domain.services;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.stereotype.Service;
 
 import com.isoceles.hypothenus.gym.domain.exception.DomainException;
-import com.isoceles.hypothenus.gym.domain.model.Gym;
+import com.isoceles.hypothenus.gym.domain.model.GymSearchResult;
+import com.isoceles.hypothenus.gym.domain.model.aggregate.Gym;
 import com.isoceles.hypothenus.gym.domain.repository.IGymRepository;
 
 @Service
@@ -59,7 +60,7 @@ public class GymService {
 	}
 	
 	public Gym findByGymId(String id) throws DomainException {
-		Optional<Gym> entity = gymRepository.findByGymIdAndIsDeleted(id, false);
+		Optional<Gym> entity = gymRepository.findByGymIdAndIsDeletedIsFalse(id);
 		if (entity.isEmpty()) {
 			throw new DomainException(DomainException.GYM_NOT_FOUND, "Gym not found");
 		}
@@ -67,11 +68,11 @@ public class GymService {
 		return entity.get();
 	}
 	
-	public Page<Gym> search(String criteria, int page, int pageSize) throws DomainException {
-		return gymRepository.findAllByAndIsDeleted(TextCriteria.forDefaultLanguage().matching(criteria).caseSensitive(false), PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"), false);
+	public List<GymSearchResult> search(String criteria) throws DomainException {
+		return gymRepository.searchAutocomplete(criteria);
 	}
 	
 	public Page<Gym> list(int page, int pageSize) throws DomainException {
-		return gymRepository.findAllByIsDeleted(PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"), false);
+		return gymRepository.findAllByIsDeletedIsFalse(PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"));
 	}
 }

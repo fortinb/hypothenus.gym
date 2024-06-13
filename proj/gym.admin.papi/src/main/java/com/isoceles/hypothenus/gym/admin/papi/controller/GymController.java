@@ -1,6 +1,8 @@
 package com.isoceles.hypothenus.gym.admin.papi.controller;
 
 import java.lang.reflect.Type;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
@@ -26,11 +28,13 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import com.isoceles.hypothenus.gym.admin.papi.config.security.Roles;
 import com.isoceles.hypothenus.gym.admin.papi.dto.ErrorDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.GymDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.GymSearchDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.patch.PatchGymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostGymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutGymDto;
 import com.isoceles.hypothenus.gym.domain.exception.DomainException;
-import com.isoceles.hypothenus.gym.domain.model.Gym;
+import com.isoceles.hypothenus.gym.domain.model.GymSearchResult;
+import com.isoceles.hypothenus.gym.domain.model.aggregate.Gym;
 import com.isoceles.hypothenus.gym.domain.services.GymService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -66,21 +70,20 @@ public class GymController {
 	  })
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> searchGym(
-			@Parameter(description = "page number") @RequestParam(name = "page", required = true) int page,
-			@Parameter(description = "page size") @RequestParam(name = "pageSize", required = true) int pageSize,
 			@Parameter(description = "search criteria") @RequestParam(name = "criteria", required = true) String criteria) {
 		
-		Page<Gym> entities = null;
+		List<GymSearchResult> entities = null;
 		try {
-			entities = gymService.search(criteria, page, pageSize);
+			entities = gymService.search(criteria);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 			
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body(new ErrorDto(e.getCode(), e.getMessage(), criteria));
 		}
+		List<GymSearchDto> response = entities.stream().map(item -> modelMapper.map(item, GymSearchDto.class)).collect(Collectors.toList());
 	
-		return ResponseEntity.ok(entities.map(item -> modelMapper.map(item, GymDto.class)));
+		return ResponseEntity.ok(response);
 
 	}
 

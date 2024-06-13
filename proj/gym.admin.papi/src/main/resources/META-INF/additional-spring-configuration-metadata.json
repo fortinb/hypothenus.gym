@@ -1,5 +1,17 @@
-{"properties": [{
-  "name": "hypothenus.gym.database.name",
-  "type": "java.lang.String",
-  "description": "A description for 'hypothenus.gym.database.name'"
-}]}
+{"properties": [
+  {
+    "name": "hypothenus.gym.database.name",
+    "type": "java.lang.String",
+    "description": "A description for 'hypothenus.gym.database.name'"
+  },
+  {
+    "name": "spring.data.mongodb.search.index.limit",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.data.mongodb.search.index.limit'"
+  },
+  {
+    "name": "spring.data.mongodb.search.index.name",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.data.mongodb.search.index.name'"
+  }
+]}

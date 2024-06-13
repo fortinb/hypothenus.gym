@@ -1,7 +1,9 @@
-package com.isoceles.hypothenus.gym.domain.model;
+package com.isoceles.hypothenus.gym.domain.model.aggregate;
 
 import java.util.List;
 import org.springframework.data.annotation.Transient;
+
+import com.isoceles.hypothenus.gym.domain.model.Message;
 
 import lombok.Getter;
 import lombok.Setter;
