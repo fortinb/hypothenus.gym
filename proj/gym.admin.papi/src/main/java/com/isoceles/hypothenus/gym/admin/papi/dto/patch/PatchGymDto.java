@@ -7,7 +7,6 @@ import com.isoceles.hypothenus.gym.admin.papi.dto.PhoneNumberDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.SocialMediaAccountDto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
