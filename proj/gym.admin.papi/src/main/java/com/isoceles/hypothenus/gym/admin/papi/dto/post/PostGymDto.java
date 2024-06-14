@@ -25,9 +25,9 @@ public class PostGymDto {
 	@NotBlank
 	private String email;
 	
-	private String language;
+	private String locale;
 	
 	private List<PhoneNumberDto> phoneNumbers;
 	
-	private List<SocialMediaAccountDto> socialMediaAccount;
+	private List<SocialMediaAccountDto> socialMediaAccounts;
 }

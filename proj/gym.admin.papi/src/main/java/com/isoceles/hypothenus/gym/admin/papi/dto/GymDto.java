@@ -21,5 +21,5 @@ public class GymDto extends BaseDto {
 	
 	private List<PhoneNumberDto> phoneNumbers;
 	
-	private List<SocialMediaAccountDto> socialMediaAccount;
+	private List<SocialMediaAccountDto> socialMediaAccounts;
 }
