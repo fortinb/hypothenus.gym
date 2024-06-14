@@ -11,14 +11,14 @@ import org.springframework.stereotype.Service;
 import com.isoceles.hypothenus.gym.domain.exception.DomainException;
 import com.isoceles.hypothenus.gym.domain.model.GymSearchResult;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Gym;
-import com.isoceles.hypothenus.gym.domain.repository.IGymRepository;
+import com.isoceles.hypothenus.gym.domain.repository.GymRepository;
 
 @Service
 public class GymService {
 
-	private IGymRepository gymRepository;
+	private GymRepository gymRepository;
 	
-	public GymService(IGymRepository gymRepository) {
+	public GymService(GymRepository gymRepository) {
 		this.gymRepository = gymRepository;
 	}
 

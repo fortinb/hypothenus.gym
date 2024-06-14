@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.AuthenticationUserDetailsService;
 import org.springframework.security.core.userdetails.User;
@@ -17,15 +18,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class AuthorizationUserDetailsService
 		implements AuthenticationUserDetailsService<PreAuthenticatedAuthenticationToken> {
+	
+	@Autowired
+	ObjectMapper objectMapper;
 
 	@Override
 	public UserDetails loadUserDetails(PreAuthenticatedAuthenticationToken token) {
 		final String principal = (String) token.getPrincipal();
 		final String credentials = (String) token.getCredentials();
 
-		ObjectMapper mapper = new ObjectMapper();
+		
 		try {
-			AuthorizationDto authorizationDto = mapper.readValue(principal, new TypeReference<AuthorizationDto>(){});
+			AuthorizationDto authorizationDto = objectMapper.readValue(principal, new TypeReference<AuthorizationDto>(){});
 			final Collection<SimpleGrantedAuthority> authorities = authorizationDto.getRoles().stream()
 					.map(i -> new SimpleGrantedAuthority("ROLE_".concat(i))).collect(Collectors.toList());
 			return new User(credentials, "", authorities);

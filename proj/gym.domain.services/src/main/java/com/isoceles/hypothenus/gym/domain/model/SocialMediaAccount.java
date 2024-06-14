@@ -1,6 +1,6 @@
 package com.isoceles.hypothenus.gym.domain.model;
 
-import java.net.URL;
+import java.net.URI;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -13,5 +13,15 @@ public class SocialMediaAccount {
 	
 	private String accountName;
 	
-	private URL url;
+	private URI url;
+
+	public SocialMediaAccount() {
+	}
+	
+	public SocialMediaAccount(SocialMediaTypeEnum socialMedia, String accountName, URI url) {
+		super();
+		this.socialMedia = socialMedia;
+		this.accountName = accountName;
+		this.url = url;
+	}
 }

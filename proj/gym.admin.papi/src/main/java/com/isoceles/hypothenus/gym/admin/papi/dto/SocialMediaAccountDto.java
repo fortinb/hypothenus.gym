@@ -1,6 +1,6 @@
 package com.isoceles.hypothenus.gym.admin.papi.dto;
 
-import java.net.URL;
+import java.net.URI;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -18,5 +18,5 @@ public class SocialMediaAccountDto {
 	private String accountName;
 	
 	@NotBlank
-	private URL url;
+	private URI url;
 }
