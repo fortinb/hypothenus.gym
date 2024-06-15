@@ -29,5 +29,5 @@ public class PutGymDto {
 	
 	private List<PhoneNumberDto> phoneNumbers;
 	
-	private List<SocialMediaAccountDto> socialMediaAccount;
+	private List<SocialMediaAccountDto> socialMediaAccounts;
 }

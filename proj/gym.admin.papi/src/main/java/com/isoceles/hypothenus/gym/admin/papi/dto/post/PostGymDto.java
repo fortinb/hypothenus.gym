@@ -25,7 +25,7 @@ public class PostGymDto {
 	@NotBlank
 	private String email;
 	
-	private String locale;
+	private String language;
 	
 	private List<PhoneNumberDto> phoneNumbers;
 	
