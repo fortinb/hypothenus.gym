@@ -5,6 +5,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -77,6 +78,7 @@ class GymControllerTests {
 	private TestRestTemplate restTemplate = new TestRestTemplate();
 
 	private Gym gym;
+	private Gym gymIsDeleted;
 	private List<Gym> gyms = new ArrayList<Gym>();
 
 	@BeforeAll
@@ -87,12 +89,21 @@ class GymControllerTests {
 
 		gym = GymBuilder.build();
 		gymRepository.save(gym);
+		
+		gymIsDeleted = GymBuilder.build();
+		gymIsDeleted.setDeleted(true);
+		gymIsDeleted = gymRepository.save(gymIsDeleted);
 
 		for (int i = 0; i < 10; i++) {
 			Gym item = GymBuilder.build();
 
 			gymRepository.save(item);
 			gyms.add(item);
+		}
+		try {
+			TimeUnit.SECONDS.sleep(7);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -102,6 +113,28 @@ class GymControllerTests {
 		gymRepository.deleteAll();
 	}
 
+	@Test
+	void createData() {
+		restTemplate.getRestTemplate().setRequestFactory(new HttpComponentsClientHttpRequestFactory());
+		
+		for (int i = 0; i < 10; i++) {
+			Gym item = GymBuilder.build();
+
+			gymRepository.save(item);
+			gyms.add(item);
+		}
+	}
+
+	@Test
+	void testSearchAutocompleteIsDeletedSuccess() throws MalformedURLException, JsonProcessingException, Exception {
+		// Act
+		String criteria = StringUtils.extractRandomWordPartial(gymIsDeleted.getName(), 10);
+		ResponseEntity<List<GymSearchDto>> response = search(criteria);
+
+		Assertions.assertTrue(response.getBody().size() == 0,
+				String.format("Gym search by name return results for isDeleted [%s]", criteria));
+	}
+	
 	@Test
 	void testSearchAutocompleteCitySuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Act
