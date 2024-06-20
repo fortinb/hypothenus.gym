@@ -1,5 +1,6 @@
 package com.isoceles.hypothenus.gym.domain.model.aggregate;
 
+import java.time.Instant;
 import java.util.List;
 import org.springframework.data.annotation.Transient;
 
@@ -16,4 +17,13 @@ public abstract class BaseEntity {
 	protected List<Message> messages;
 	
 	protected boolean isDeleted = false;
+	
+	private String createdBy;
+	private Instant createdOn;
+	
+	private String deletedBy;
+	private Instant deletedOn;
+	
+	private String modifiedBy;
+	private Instant modifiedOn;
 }

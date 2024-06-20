@@ -1,15 +1,18 @@
 package com.isoceles.hypothenus.gym.domain.services;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import com.isoceles.hypothenus.gym.domain.context.RequestContext;
 import com.isoceles.hypothenus.gym.domain.exception.DomainException;
 import com.isoceles.hypothenus.gym.domain.model.GymSearchResult;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Gym;
@@ -20,11 +23,17 @@ public class GymService {
 
 	private GymRepository gymRepository;
 
+	@Autowired
+	private RequestContext requestContext;
+	
 	public GymService(GymRepository gymRepository) {
 		this.gymRepository = gymRepository;
 	}
 
 	public Gym create(Gym gym) throws DomainException {
+		gym.setCreatedOn(Instant.now());
+		gym.setCreatedBy(requestContext.getUsername());
+		
 		return gymRepository.save(gym);
 	}
 
@@ -42,10 +51,12 @@ public class GymService {
 	        }
 	    };
 	    
-		//mapper.addMappings(new GymPropertyMap());
 		mapper.addMappings(gymPropertyMap);
 		mapper.map(gym, oldGym);
 
+		oldGym.setModifiedOn(Instant.now());
+		oldGym.setModifiedBy(requestContext.getUsername());
+		
 		return gymRepository.save(oldGym);
 	}
 
@@ -62,10 +73,13 @@ public class GymService {
 	            skip().setId(null);
 	        }
 	    };
+	    
 		mapper.addMappings(gymPropertyMap);
-
 		mapper.map(gym, oldGym);
-
+		
+		oldGym.setModifiedOn(Instant.now());
+		oldGym.setModifiedBy(requestContext.getUsername());
+		
 		return gymRepository.save(oldGym);
 	}
 
@@ -73,6 +87,9 @@ public class GymService {
 		Gym oldGym = this.findByGymId(gymId);
 		oldGym.setDeleted(true);
 
+		oldGym.setDeletedOn(Instant.now());
+		oldGym.setDeletedBy(requestContext.getUsername());
+		
 		gymRepository.save(oldGym);
 	}
 

@@ -25,6 +25,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+//	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 	implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.0.3'
 	implementation 'org.modelmapper:modelmapper:3.2.0'
 	implementation 'org.apache.httpcomponents.client5:httpclient5'

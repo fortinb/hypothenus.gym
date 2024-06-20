@@ -10,4 +10,6 @@ public class GymSearchDto {
 	private String gymId;
 	
 	private String name;
+	
+	private AddressDto address;
 }

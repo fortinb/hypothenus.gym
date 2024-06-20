@@ -5,7 +5,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -54,7 +53,7 @@ import com.isoceles.hypothenus.tests.utils.StringUtils;
 class GymControllerTests {
 
 	public static final String searchURI = "/v1/admin/gyms/search";
-	public static final String listURI = "/v1/admin/gyms/list";
+	public static final String listURI = "/v1/admin/gyms";
 	public static final String postURI = "/v1/admin/gyms";
 	public static final String getURI = "/v1/admin/gyms/%s";
 	public static final String putURI = "/v1/admin/gyms/%s";
@@ -100,29 +99,12 @@ class GymControllerTests {
 			gymRepository.save(item);
 			gyms.add(item);
 		}
-		try {
-			TimeUnit.SECONDS.sleep(7);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
 	}
 
 	@AfterAll
 	void cleanup() {
 		// Cleanup
 		gymRepository.deleteAll();
-	}
-
-	@Test
-	void createData() {
-		restTemplate.getRestTemplate().setRequestFactory(new HttpComponentsClientHttpRequestFactory());
-		
-		for (int i = 0; i < 10; i++) {
-			Gym item = GymBuilder.build();
-
-			gymRepository.save(item);
-			gyms.add(item);
-		}
 	}
 
 	@Test

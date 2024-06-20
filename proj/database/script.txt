@@ -26,4 +26,66 @@
 use hypothenus-gym-dev
 db.createUser({"user": "admin", "pwd":"test.1", "roles": ["dbOwner"]})
 db.createUser({"user": "hypothenus", "pwd":"test.1", "roles": ["readWrite"]})
-db.gym.createIndex({ "name": "text", "address.streetName": "text", "address.city": "text", "address.zipcode" : "text", "email": "text" }, { "name": "Gym_TextIndex", "v": 2, "collation": { locale: "simple", caseLevel: false, caseFirst: "off", strength: 3, numericOrdering: false, alternate: "non-ignorable", maxVariable: "punct", normalization: false, backwards: true, version: "57.1" }}) 
+db.gym.createIndex({ "name": "text", "address.streetName": "text", "address.city": "text", "address.zipcode" : "text", "email": "text" }, { "name": "Gym_TextIndex", "v": 2, "collation": { locale: "simple", caseLevel: false, caseFirst: "off", strength: 3, numericOrdering: false, alternate: "non-ignorable", maxVariable: "punct", normalization: false, backwards: true, version: "57.1" }})
+
+
+[
+  {
+    $search: {
+      index: "Gym_SearchIndex",
+      compound: {
+        filter: [
+          {
+            equals: {
+              value: false,
+              path: "isDeleted",
+            },
+          },
+        ],
+        must: {
+          compound: {
+            should: [
+              {
+                autocomplete: {
+                  query: "Kerluke-Ke",
+                  path: "name",
+                },
+              },
+              {
+                autocomplete: {
+                  query: "Kerluke-Ke",
+                  path: "email",
+                },
+              },
+              {
+                autocomplete: {
+                  query: "Kerluke-Ke",
+                  path: "address.streetName",
+                },
+              },
+              {
+                autocomplete: {
+                  query: "Kerluke-Ke",
+                  path: "address.city",
+                },
+              },
+              {
+                autocomplete: {
+                  query: "Kerluke-Ke",
+                  path: "address.state",
+                },
+              },
+              {
+                autocomplete: {
+                  query: "Kerluke-Ke",
+                  path: "address.zipCode",
+                },
+              },
+            ],
+          },
+        },
+      },
+      returnStoredSource: true,
+    },
+  },
+] 

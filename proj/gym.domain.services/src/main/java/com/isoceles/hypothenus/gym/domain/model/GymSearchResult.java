@@ -10,4 +10,6 @@ public class GymSearchResult {
 	private String gymId;
 	
 	private String name;
+	
+	private Address address;
 }
