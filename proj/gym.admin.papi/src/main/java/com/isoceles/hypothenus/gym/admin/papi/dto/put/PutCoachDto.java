@@ -1,6 +1,5 @@
 package com.isoceles.hypothenus.gym.admin.papi.dto.put;
 
-import java.time.Instant;
 import java.util.List;
 
 import com.isoceles.hypothenus.gym.admin.papi.dto.PhoneNumberDto;
@@ -30,11 +29,5 @@ public class PutCoachDto {
 	
 	private String language;
 	
-	private boolean isActive;
-	
 	private List<PhoneNumberDto> phoneNumbers;
-	
-	private Instant startedOn;
-	
-	private Instant endedOn;
 }

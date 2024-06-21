@@ -26,7 +26,7 @@ public class CoachDto extends BaseDto {
 	
 	private List<PhoneNumberDto> phoneNumbers;
 	
-	private Instant startedOn;
+	private Instant activatedOn;
 	
-	private Instant endedOn;
+	private Instant deactivatedOn;
 }

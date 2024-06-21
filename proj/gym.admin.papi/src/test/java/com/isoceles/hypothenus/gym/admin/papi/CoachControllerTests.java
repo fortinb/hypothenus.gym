@@ -120,7 +120,7 @@ class CoachControllerTests {
 	@AfterAll
 	void cleanup() {
 		// Cleanup
-		coachRepository.deleteAll();
+	//	coachRepository.deleteAll();
 	}
 
 	@ParameterizedTest
@@ -270,11 +270,23 @@ class CoachControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testPutSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
+		Coach coachToUpdate = CoachBuilder.build();
+		coachToUpdate.setGymId(gymId_16034);
+		coachToUpdate.setActive(false);
+		coachToUpdate.setActivatedOn(null);
+		coachToUpdate.setDeactivatedOn(null);
+		coachToUpdate = coachRepository.save(coachToUpdate);
+		
 		Coach updatedCoach = CoachBuilder.build();
-
+		updatedCoach.setGymId(coachToUpdate.getGymId());
+		updatedCoach.setId(coachToUpdate.getId());
+		updatedCoach.setActive(false);
+		updatedCoach.setActivatedOn(null);
+		updatedCoach.setDeactivatedOn(null);
+		
 		PutCoachDto putCoach = modelMapper.map(updatedCoach, PutCoachDto.class);
 		putCoach.setGymId(gymId_16034);
-		putCoach.setId(coach.getId());
+		putCoach.setId(coachToUpdate.getId());
 
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, putCoach);
@@ -285,27 +297,30 @@ class CoachControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Put error: %s", response.getStatusCode()));
 
-		assertCoach(modelMapper.map(putCoach, CoachDto.class), response.getBody());
+		assertCoach(modelMapper.map(updatedCoach, CoachDto.class), response.getBody());
 	}
 	
 	@ParameterizedTest
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testPutNullSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
+		Coach coachToUpdate = CoachBuilder.build();
+		coachToUpdate.setGymId(gymId_16034);
+		coachToUpdate.setActive(false);
+		coachToUpdate.setActivatedOn(null);
+		coachToUpdate.setDeactivatedOn(null);
+		coachToUpdate = coachRepository.save(coachToUpdate);
+		
 		Coach updatedCoach = CoachBuilder.build();
 
 		PutCoachDto putCoach = modelMapper.map(updatedCoach, PutCoachDto.class);
 		putCoach.setGymId(gymId_16034);
-		putCoach.setId(coach.getId());
-		
+		putCoach.setId(coachToUpdate.getId());
 		putCoach.setEmail(null);
 		putCoach.setLanguage(null);
 		putCoach.setFirstname(null);
 		putCoach.setLastname(null);
 		putCoach.setPhoneNumbers(null);
-		putCoach.setActive(false);
-		putCoach.setStartedOn(null);
-		putCoach.setEndedOn(null);
 		
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, putCoach);
@@ -315,8 +330,14 @@ class CoachControllerTests {
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Put null error: %s", response.getStatusCode()));
-
- 		assertCoach(modelMapper.map(putCoach, CoachDto.class), response.getBody());
+		
+		coachToUpdate.setEmail(null);
+		coachToUpdate.setLanguage(null);
+		coachToUpdate.setFirstname(null);
+		coachToUpdate.setLastname(null);
+		coachToUpdate.setPhoneNumbers(null);
+		
+ 		assertCoach(modelMapper.map(coachToUpdate, CoachDto.class), response.getBody());
 	}
 	
 	@ParameterizedTest
@@ -327,13 +348,13 @@ class CoachControllerTests {
 		
 		coachToActivate.setGymId(gymId_16034);
 		coachToActivate.setActive(false);
-		coachToActivate.setStartedOn(null);
-		coachToActivate.setEndedOn(null);
-		coachToActivate = coachRepository.save(coachIsDeleted);
+		coachToActivate.setActivatedOn(null);
+		coachToActivate.setDeactivatedOn(null);
+		coachToActivate = coachRepository.save(coachToActivate);
 		
 		coachToActivate.setActive(true);
-		coachToActivate.setStartedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
-		coachToActivate.setEndedOn(null);
+		coachToActivate.setActivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
+		coachToActivate.setDeactivatedOn(null);
 		
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
@@ -370,11 +391,11 @@ class CoachControllerTests {
 		
 		coachToDeactivate.setGymId(gymId_16034);
 		coachToDeactivate.setActive(true);
-		coachToDeactivate.setStartedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
-		coachToDeactivate = coachRepository.save(coachIsDeleted);
+		coachToDeactivate.setActivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
+		coachToDeactivate = coachRepository.save(coachToDeactivate);
 		
 		coachToDeactivate.setActive(false);
-		coachToDeactivate.setEndedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
+		coachToDeactivate.setDeactivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
 		
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
@@ -407,14 +428,18 @@ class CoachControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testPatchSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Coach updatedCoach = CoachBuilder.build();
+		Coach coachToPatch = CoachBuilder.build();
+		coachToPatch.setGymId(gymId_16034);
+		coachToPatch = coachRepository.save(coachToPatch);
 
-		PatchCoachDto patchCoach = modelMapper.map(updatedCoach, PatchCoachDto.class);
+		PatchCoachDto patchCoach = modelMapper.map(coachToPatch, PatchCoachDto.class);
 		patchCoach.setGymId(gymId_16034);
-		patchCoach.setId(coach.getId());
+		patchCoach.setId(coachToPatch.getId());
 		patchCoach.setEmail(null);
 		patchCoach.setLanguage(null);
 		patchCoach.setFirstname(null);
+		patchCoach.setLastname(faker.name().lastName());
+		patchCoach.setLanguage("en-US");
 		
 		// Act
 		HttpEntity<PatchCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchCoach);
@@ -425,13 +450,10 @@ class CoachControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
 
-		patchCoach.setEmail(coach.getEmail());
-		patchCoach.setLanguage(coach.getLanguage());
-		patchCoach.setFirstname(coach.getFirstname());
-		patchCoach.setStartedOn(coach.getStartedOn());
-		patchCoach.setEndedOn(coach.getEndedOn());
+		coachToPatch.setLastname(patchCoach.getLastname());
+		coachToPatch.setLanguage(patchCoach.getLanguage());
 		
- 		assertCoach(modelMapper.map(patchCoach, CoachDto.class), response.getBody());
+ 		assertCoach(modelMapper.map(coachToPatch, CoachDto.class), response.getBody());
 	}
 
 	public static final void assertCoach(CoachDto expected, CoachDto result) {
@@ -442,20 +464,20 @@ class CoachControllerTests {
 		Assertions.assertEquals(expected.getLanguage(), result.getLanguage());
 		Assertions.assertEquals(expected.isActive(), result.isActive());
 		
-		if (expected.getStartedOn() != null) {
-			Assertions.assertNotNull(result.getStartedOn());
-			Assertions.assertTrue(expected.getStartedOn().truncatedTo(ChronoUnit.DAYS).equals(result.getStartedOn().truncatedTo(ChronoUnit.DAYS)));
+		if (expected.getActivatedOn() != null) {
+			Assertions.assertNotNull(result.getActivatedOn());
+			Assertions.assertTrue(expected.getActivatedOn().truncatedTo(ChronoUnit.DAYS).equals(result.getActivatedOn().truncatedTo(ChronoUnit.DAYS)));
 		}
-		if (expected.getStartedOn() == null) {
-			Assertions.assertNull(result.getStartedOn());
+		if (expected.getActivatedOn() == null) {
+			Assertions.assertNull(result.getActivatedOn());
 		}
 		
-		if (expected.getEndedOn() != null) {
-			Assertions.assertNotNull(result.getEndedOn());
-			Assertions.assertTrue(expected.getEndedOn().truncatedTo(ChronoUnit.DAYS).equals(result.getEndedOn().truncatedTo(ChronoUnit.DAYS)));
+		if (expected.getDeactivatedOn() != null) {
+			Assertions.assertNotNull(result.getDeactivatedOn());
+			Assertions.assertTrue(expected.getDeactivatedOn().truncatedTo(ChronoUnit.DAYS).equals(result.getDeactivatedOn().truncatedTo(ChronoUnit.DAYS)));
 		}
-		if (expected.getEndedOn() == null) {
-			Assertions.assertNull(result.getEndedOn());
+		if (expected.getDeactivatedOn() == null) {
+			Assertions.assertNull(result.getDeactivatedOn());
 		}
 		
 		if (expected.getPhoneNumbers() != null) {

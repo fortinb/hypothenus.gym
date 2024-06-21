@@ -30,8 +30,8 @@ public class CoachRepositoryCustomImpl implements CoachRepositoryCustom {
 		
 		Update update = new Update()
 					.set("isActive", true)
-					.set("startedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
-					.set("endedOn", null);
+					.set("activatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
+					.set("deactivatedOn", null);
 
 		Coach coach = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Coach.class);
 		return coach == null ? Optional.empty() : Optional.of(coach);
@@ -45,7 +45,7 @@ public class CoachRepositoryCustomImpl implements CoachRepositoryCustom {
 		
 		Update update = new Update()
 					.set("isActive", false)
-					.set("endedOn", Instant.now().truncatedTo(ChronoUnit.DAYS));
+					.set("deactivatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS));
 
 		Coach coach = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Coach.class);
 		return coach == null ? Optional.empty() : Optional.of(coach);

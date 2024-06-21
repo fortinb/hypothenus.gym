@@ -1,6 +1,5 @@
 package com.isoceles.hypothenus.gym.admin.papi.dto.post;
 
-import java.time.Instant;
 import java.util.List;
 
 import com.isoceles.hypothenus.gym.admin.papi.dto.PhoneNumberDto;
@@ -27,11 +26,5 @@ public class PostCoachDto {
 	
 	private String language;
 	
-	private boolean isActive;
-	
 	private List<PhoneNumberDto> phoneNumbers;
-	
-	private Instant startedOn;
-	
-	private Instant endedOn;
 }

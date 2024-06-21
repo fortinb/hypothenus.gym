@@ -36,15 +36,15 @@ public class Coach extends BaseEntity {
 	
 	private List<PhoneNumber> phoneNumbers;
 	
-	private Instant startedOn;
+	private Instant activatedOn;
 	
-	private Instant endedOn;
+	private Instant deactivatedOn;
 	
 	public Coach() {
 	}
 	
 	public Coach(String gymId, String firstname, String lastname, String email, String language,
-			List<PhoneNumber> phoneNumbers, boolean isActive, Instant startedOn, Instant endedOn) {
+			List<PhoneNumber> phoneNumbers, boolean isActive, Instant activatedOn, Instant deactivatedOn) {
 		super();
 		this.gymId = gymId;
 		this.firstname = firstname;
@@ -53,7 +53,7 @@ public class Coach extends BaseEntity {
 		this.language = language;
 		this.phoneNumbers = phoneNumbers;
 		this.isActive = isActive;
-		this.startedOn = startedOn;
-		this.endedOn = endedOn;
+		this.activatedOn = activatedOn;
+		this.deactivatedOn = deactivatedOn;
 	}
 }

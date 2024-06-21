@@ -54,6 +54,9 @@ public class CoachService {
 	        protected void configure()
 	        {
 	            skip().setId(null);
+	            skip().setActive(false);
+	            skip().setActivatedOn(null);
+	            skip().setDeactivatedOn(null);
 	        }
 	    };
 	    
@@ -81,8 +84,9 @@ public class CoachService {
 	        protected void configure()
 	        {
 	            skip().setId(null);
-	            skip().setStartedOn(null);
-	            skip().setEndedOn(null);
+	            skip().setActive(false);
+	            skip().setActivatedOn(null);
+	            skip().setDeactivatedOn(null);
 	        }
 	    };
 	    
