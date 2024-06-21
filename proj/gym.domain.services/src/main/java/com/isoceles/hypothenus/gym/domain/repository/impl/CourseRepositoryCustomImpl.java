@@ -10,19 +10,19 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-import com.isoceles.hypothenus.gym.domain.model.aggregate.Coach;
-import com.isoceles.hypothenus.gym.domain.repository.CoachRepositoryCustom;
+import com.isoceles.hypothenus.gym.domain.model.aggregate.Course;
+import com.isoceles.hypothenus.gym.domain.repository.CourseRepositoryCustom;
 
-public class CoachRepositoryCustomImpl implements CoachRepositoryCustom {
+public class CourseRepositoryCustomImpl implements CourseRepositoryCustom {
 	private final MongoTemplate mongoTemplate;
 
-	public CoachRepositoryCustomImpl(MongoTemplate mongoTemplate) {
+	public CourseRepositoryCustomImpl(MongoTemplate mongoTemplate) {
 		this.mongoTemplate = mongoTemplate;
 	}
 
 	@Override
-	public Optional<Coach> activate(String gymId, String id) {
-		
+	public Optional<Course> activate(String gymId, String id) {
+
 		Query query = new Query(
 	            Criteria.where("gymId").is(gymId)
 	            		  .and("_id").is(id));
@@ -32,12 +32,12 @@ public class CoachRepositoryCustomImpl implements CoachRepositoryCustom {
 					.set("activatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
 					.set("deactivatedOn", null);
 
-		Coach coach = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Coach.class);
-		return coach == null ? Optional.empty() : Optional.of(coach);
+		Course course = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Course.class);
+		return course == null ? Optional.empty() : Optional.of(course);
 	}
 
 	@Override
-	public Optional<Coach> deactivate(String gymId, String id) {
+	public Optional<Course> deactivate(String gymId, String id) {
 		Query query = new Query(
 	            Criteria.where("gymId").is(gymId)
 	            		  .and("_id").is(id));
@@ -46,7 +46,7 @@ public class CoachRepositoryCustomImpl implements CoachRepositoryCustom {
 					.set("isActive", false)
 					.set("deactivatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS));
 
-		Coach coach = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Coach.class);
-		return coach == null ? Optional.empty() : Optional.of(coach);
+		Course course = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Course.class);
+		return course == null ? Optional.empty() : Optional.of(course);
 	}
 }

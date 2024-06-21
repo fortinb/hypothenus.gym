@@ -1,6 +1,5 @@
 package com.isoceles.hypothenus.gym.admin.papi.controller;
 
-import java.lang.reflect.Type;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -55,8 +54,6 @@ public class GymController {
 	private ModelMapper modelMapper;
 
 	private GymService gymService;
-
-	Type pageType;
 
 	public GymController(GymService gymService) {
 		this.gymService = gymService;

@@ -12,8 +12,8 @@ import com.isoceles.hypothenus.gym.domain.model.aggregate.Coach;
 public class CoachBuilder {
 	private static Faker faker = new Faker();
 	
-	public static Coach build() {
-		Coach entity = new Coach(faker.code().isbn10(), faker.name().firstName(), faker.name().lastName(),
+	public static Coach build(String gymId) {
+		Coach entity = new Coach(gymId, faker.name().firstName(), faker.name().lastName(),
 				faker.internet().emailAddress(), "fr-CA", buildPhoneNumbers(), true, Instant.now(), null);
 		return entity;
 	}

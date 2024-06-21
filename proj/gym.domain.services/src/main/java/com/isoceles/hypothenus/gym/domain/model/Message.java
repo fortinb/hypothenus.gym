@@ -11,4 +11,7 @@ public class Message {
 	private String Description;
 	
 	private MessageSeverityEnum severity;
+	
+	public Message() {
+	}
 }

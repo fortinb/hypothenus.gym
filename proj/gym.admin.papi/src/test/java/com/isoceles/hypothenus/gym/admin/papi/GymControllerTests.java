@@ -32,7 +32,7 @@ import org.springframework.util.MultiValueMap;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
+import com.github.javafaker.Faker;
 import com.isoceles.hypothenus.gym.admin.papi.dto.GymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.GymSearchDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.PhoneNumberDto;
@@ -74,6 +74,8 @@ class GymControllerTests {
 	@Autowired
 	ModelMapper modelMapper;
 
+	private Faker faker = new Faker();
+	
 	private TestRestTemplate restTemplate = new TestRestTemplate();
 
 	private Gym gym;
@@ -86,15 +88,15 @@ class GymControllerTests {
 		
 		gymRepository.deleteAll();
 
-		gym = GymBuilder.build();
+		gym = GymBuilder.build(faker.code().isbn10());
 		gymRepository.save(gym);
 		
-		gymIsDeleted = GymBuilder.build();
+		gymIsDeleted = GymBuilder.build(faker.code().isbn10());
 		gymIsDeleted.setDeleted(true);
 		gymIsDeleted = gymRepository.save(gymIsDeleted);
 
 		for (int i = 0; i < 10; i++) {
-			Gym item = GymBuilder.build();
+			Gym item = GymBuilder.build(faker.code().isbn10());
 
 			gymRepository.save(item);
 			gyms.add(item);
@@ -241,7 +243,7 @@ class GymControllerTests {
 	@Test
 	void testPostSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostGymDto postGym = modelMapper.map(GymBuilder.build(), PostGymDto.class);
+		PostGymDto postGym = modelMapper.map(GymBuilder.build(faker.code().isbn10()), PostGymDto.class);
 		HttpEntity<PostGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postGym);
 
 		// Act
@@ -258,7 +260,7 @@ class GymControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis", "Member, Guillaume Fortin", })
 	void testGetSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostGymDto postGym = modelMapper.map(GymBuilder.build(), PostGymDto.class);
+		PostGymDto postGym = modelMapper.map(GymBuilder.build(faker.code().isbn10()), PostGymDto.class);
 		HttpEntity<PostGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postGym);
 
 		ResponseEntity<GymDto> responsePost = restTemplate.exchange(
@@ -282,7 +284,7 @@ class GymControllerTests {
 	@Test
 	void testPutSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Gym updatedGym = GymBuilder.build();
+		Gym updatedGym = GymBuilder.build(faker.code().isbn10());
 
 		PutGymDto putGym = modelMapper.map(updatedGym, PutGymDto.class);
 		putGym.setGymId(gym.getGymId());
@@ -302,7 +304,7 @@ class GymControllerTests {
 	@Test
 	void testPutNullSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Gym updatedGym = GymBuilder.build();
+		Gym updatedGym = GymBuilder.build(faker.code().isbn10());
 
 		PutGymDto putGym = modelMapper.map(updatedGym, PutGymDto.class);
 		putGym.setGymId(gym.getGymId());
@@ -329,7 +331,7 @@ class GymControllerTests {
 	@Test
 	void testPatchSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Gym updatedGym = GymBuilder.build();
+		Gym updatedGym = GymBuilder.build(faker.code().isbn10());
 
 		PatchGymDto patchGym = modelMapper.map(updatedGym, PatchGymDto.class);
 		patchGym.setGymId(gym.getGymId());
@@ -397,7 +399,7 @@ class GymControllerTests {
 			Assertions.assertEquals(expected.getPhoneNumbers().size(), result.getPhoneNumbers().size());
 			expected.getPhoneNumbers().forEach(phone -> {
 				Optional<PhoneNumberDto> previous = result.getPhoneNumbers().stream()
-						.filter(item -> item.getType() == phone.getType()).findFirst();
+						.filter(item -> item.getType().equals(phone.getType())).findFirst();
 				Assertions.assertTrue(previous.isPresent());
 				Assertions.assertEquals(previous.get().getRegionalCode(), phone.getRegionalCode());
 				Assertions.assertEquals(previous.get().getNumber(), phone.getNumber());
@@ -414,7 +416,7 @@ class GymControllerTests {
 			Assertions.assertEquals(expected.getSocialMediaAccounts().size(), result.getSocialMediaAccounts().size());
 			expected.getSocialMediaAccounts().forEach(account -> {
 				Optional<SocialMediaAccountDto> previous = result.getSocialMediaAccounts().stream()
-						.filter(item -> item.getSocialMedia() == account.getSocialMedia()).findFirst();
+						.filter(item -> item.getSocialMedia().equals(account.getSocialMedia())).findFirst();
 				Assertions.assertTrue(previous.isPresent());
 				Assertions.assertEquals(previous.get().getAccountName(), account.getAccountName());
 				Assertions.assertEquals(previous.get().getUrl(), account.getUrl());

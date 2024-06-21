@@ -15,8 +15,8 @@ import com.isoceles.hypothenus.gym.domain.model.aggregate.Gym;
 public class GymBuilder {
 	private static Faker faker = new Faker();
 	
-	public static Gym build() {
-		Gym entity = new Gym(faker.code().isbn10(), faker.company().name(), buildAddress(),
+	public static Gym build(String gymId) {
+		Gym entity = new Gym(gymId, faker.company().name(), buildAddress(),
 				faker.internet().emailAddress(), "fr-CA", buildPhoneNumbers(), buildSocialMediaAccounts());
 		return entity;
 

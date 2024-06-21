@@ -32,22 +32,22 @@ public class Course extends BaseEntity {
 
 	private boolean isActive;
 
-	private Instant startedOn;
+	private Instant activatedOn;
 
-	private Instant endedOn;
+	private Instant deactivatedOn;
 
 	public Course() {
 	}
 
-	public Course(String gymId, String code, List<LocalizedString> name, List<LocalizedString> description, boolean isActive, Instant startedOn,
-			Instant endedOn) {
+	public Course(String gymId, String code, List<LocalizedString> name, List<LocalizedString> description,
+			boolean isActive, Instant startedOn, Instant endedOn) {
 		super();
 		this.gymId = gymId;
 		this.code = code;
 		this.name = name;
 		this.description = description;
 		this.isActive = isActive;
-		this.startedOn = startedOn;
-		this.endedOn = endedOn;
+		this.activatedOn = startedOn;
+		this.deactivatedOn = endedOn;
 	}
 }

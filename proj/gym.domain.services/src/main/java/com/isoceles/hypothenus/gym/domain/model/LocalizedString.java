@@ -6,6 +6,17 @@ import lombok.Setter;
 @Getter
 @Setter
 public class LocalizedString {
-	private String value;
+
+	private String text;
+	
 	private String language;
+	
+	public LocalizedString() {
+	}
+	
+	public LocalizedString(String text, String language) {
+		super();
+		this.text = text;
+		this.language = language;
+	}
 }
