@@ -1,8 +1,11 @@
 package com.isoceles.hypothenus.gym.domain.model.aggregate;
 
 import java.time.Instant;
+
 import java.util.List;
 import org.springframework.data.annotation.Transient;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.LastModifiedBy;
 
 import com.isoceles.hypothenus.gym.domain.model.Message;
 
@@ -18,12 +21,14 @@ public abstract class BaseEntity {
 	
 	protected boolean isDeleted = false;
 	
+	@CreatedBy
 	private String createdBy;
 	private Instant createdOn;
 	
 	private String deletedBy;
 	private Instant deletedOn;
 	
+	@LastModifiedBy
 	private String modifiedBy;
 	private Instant modifiedOn;
 }

@@ -104,7 +104,7 @@ class GymControllerTests {
 	@AfterAll
 	void cleanup() {
 		// Cleanup
-		gymRepository.deleteAll();
+	//	gymRepository.deleteAll();
 	}
 
 	@Test
@@ -294,7 +294,7 @@ class GymControllerTests {
 				HttpMethod.PUT, httpEntity, GymDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Get error: %s", response.getStatusCode()));
+				String.format("Put error: %s", response.getStatusCode()));
 
 		assertGym(modelMapper.map(putGym, GymDto.class), response.getBody());
 	}
@@ -321,7 +321,7 @@ class GymControllerTests {
 				HttpMethod.PUT, httpEntity, GymDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Get error: %s", response.getStatusCode()));
+				String.format("Put null error: %s", response.getStatusCode()));
 
  		assertGym(modelMapper.map(putGym, GymDto.class), response.getBody());
 	}

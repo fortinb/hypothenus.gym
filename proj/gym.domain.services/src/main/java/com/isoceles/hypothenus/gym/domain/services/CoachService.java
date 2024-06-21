@@ -81,6 +81,8 @@ public class CoachService {
 	        protected void configure()
 	        {
 	            skip().setId(null);
+	            skip().setStartedOn(null);
+	            skip().setEndedOn(null);
 	        }
 	    };
 	    
@@ -118,5 +120,25 @@ public class CoachService {
 	
 	public Page<Coach> listActive(String gymId, int page, int pageSize) throws DomainException {
 		return coachRepository.findAllByGymIdAndIsDeletedIsFalseAndIsActiveIsTrue(gymId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
+	}
+	
+	public Coach activate(String gymId, String id) throws DomainException {
+		
+		Optional<Coach> oldCoach = coachRepository.activate(gymId, id);
+		if (oldCoach.isEmpty()) {
+			throw new DomainException(DomainException.COACH_NOT_FOUND, "Coach not found");
+		}
+		
+		return oldCoach.get();
+	}
+	
+	public Coach deactivate(String gymId, String id) throws DomainException {
+		
+		Optional<Coach> oldCoach = coachRepository.deactivate(gymId, id);
+		if (oldCoach.isEmpty()) {
+			throw new DomainException(DomainException.COACH_NOT_FOUND, "Coach not found");
+		}
+		
+		return oldCoach.get();
 	}
 }

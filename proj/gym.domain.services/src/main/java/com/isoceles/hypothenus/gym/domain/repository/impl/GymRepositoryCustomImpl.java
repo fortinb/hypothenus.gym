@@ -22,11 +22,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import com.isoceles.hypothenus.gym.domain.model.GymSearchResult;
-import com.isoceles.hypothenus.gym.domain.repository.GymQueries;
+import com.isoceles.hypothenus.gym.domain.repository.GymRepositoryCustom;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.MongoCollection;
 
-public class GymQueriesImpl implements GymQueries {
+public class GymRepositoryCustomImpl implements GymRepositoryCustom {
 	private final MongoTemplate mongoTemplate;
 
 	@Value("${spring.data.mongodb.search.index.limit}")
@@ -35,7 +35,7 @@ public class GymQueriesImpl implements GymQueries {
 	@Value("${spring.data.mongodb.search.index.name}")
 	private String indexName;
 
-	public GymQueriesImpl(MongoTemplate mongoTemplate) {
+	public GymRepositoryCustomImpl(MongoTemplate mongoTemplate) {
 		this.mongoTemplate = mongoTemplate;
 	}
 

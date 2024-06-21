@@ -11,7 +11,6 @@ import com.isoceles.hypothenus.gym.domain.model.Address;
 import com.isoceles.hypothenus.gym.domain.model.PhoneNumber;
 import com.isoceles.hypothenus.gym.domain.model.SocialMediaAccount;
 
-
 import lombok.Getter;
 import lombok.Setter;
 

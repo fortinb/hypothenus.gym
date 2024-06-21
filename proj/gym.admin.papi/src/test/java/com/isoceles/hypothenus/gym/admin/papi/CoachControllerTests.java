@@ -2,6 +2,7 @@ package com.isoceles.hypothenus.gym.admin.papi;
 
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +33,7 @@ import org.springframework.util.MultiValueMap;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
+import com.github.javafaker.Faker;
 import com.isoceles.hypothenus.gym.admin.papi.dto.CoachDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.PhoneNumberDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.patch.PatchCoachDto;
@@ -51,9 +52,12 @@ class CoachControllerTests {
 	public static final String postURI = "/v1/admin/gyms/%s/coachs";
 	public static final String getURI = "/v1/admin/gyms/%s/coachs/%s";
 	public static final String putURI = "/v1/admin/gyms/%s/coachs/%s";
+	public static final String postActivateURI = "/v1/admin/gyms/%s/coachs/%s/activate";
+	public static final String postDeactivateURI = "/v1/admin/gyms/%s/coachs/%s/deactivate";
 	public static final String patchURI = "/v1/admin/gyms/%s/coachs/%s";
 	public static final String pageNumber = "page";
 	public static final String pageSize = "pageSize";
+	public static final String isActive = "isActive";
 	
 	public static final String gymId_16034 = "16034";
 	public static final String gymId_16035 = "16035";
@@ -69,6 +73,8 @@ class CoachControllerTests {
 
 	@Autowired
 	ModelMapper modelMapper;
+	
+	private Faker faker = new Faker();
 
 	private TestRestTemplate restTemplate = new TestRestTemplate();
 
@@ -98,12 +104,17 @@ class CoachControllerTests {
 			coachs.add(item);
 		}
 		
-		for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < 4; i++) {
 			Coach item = CoachBuilder.build();
 			item.setGymId(gymId_16035);
 			coachRepository.save(item);
 			coachs.add(item);
 		}
+		
+		Coach item = CoachBuilder.build();
+		item.setGymId(gymId_16035);
+		item.setActive(false);
+		coachRepository.save(item);
 	}
 
 	@AfterAll
@@ -114,6 +125,41 @@ class CoachControllerTests {
 
 	@ParameterizedTest
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	void testListActiveSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		HttpEntity<String> httpEntity = HttpUtils.createHttpEntity(role, user, null);
+
+		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
+		params.add(pageNumber, "0");
+		params.add(pageSize, "5");
+		params.add(isActive, "true");
+
+		// Act
+		ResponseEntity<String> response = restTemplate.exchange(HttpUtils.createURL(URI.create(String.format(listURI, gymId_16035)), port, params),
+				HttpMethod.GET, httpEntity, new ParameterizedTypeReference<String>() {
+				});
+
+		// Assert
+		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
+				String.format("List error: %s", response.getStatusCode()));
+
+		Page<CoachDto> page = objectMapper.readValue(response.getBody(), new TypeReference<Page<CoachDto>>() {
+		});
+
+		// Assert
+		Assertions.assertEquals(0, page.getPageable().getPageNumber(),
+				String.format("Coach list first page number invalid: %d", page.getPageable().getPageNumber()));
+		Assertions.assertEquals(4, page.getNumberOfElements(),
+				String.format("Coach list first page number of elements invalid: %d", page.getNumberOfElements()));
+		Assertions.assertEquals(4, page.getTotalElements(),
+				String.format("Coach total number of elements invalid: %d", page.getTotalElements()));
+		
+		page.get().forEach(coach ->Assertions.assertTrue(coach.isActive()));
+		page.get().forEach(coach ->Assertions.assertTrue(coach.isDeleted() == false));
+	}
+	
+	@ParameterizedTest
+	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testListFirstPageSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		HttpEntity<String> httpEntity = HttpUtils.createHttpEntity(role, user, null);
@@ -121,7 +167,8 @@ class CoachControllerTests {
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
 		params.add(pageNumber, "0");
 		params.add(pageSize, "5");
-
+		params.add(isActive, "false");
+		
 		// Act
 		ResponseEntity<String> response = restTemplate.exchange(HttpUtils.createURL(URI.create(String.format(listURI, gymId_16035)), port, params),
 				HttpMethod.GET, httpEntity, new ParameterizedTypeReference<String>() {
@@ -141,6 +188,8 @@ class CoachControllerTests {
 				String.format("Coach list first page number of elements invalid: %d", page.getNumberOfElements()));
 		Assertions.assertEquals(5, page.getTotalElements(),
 				String.format("Coach total number of elements invalid: %d", page.getTotalElements()));
+		
+		page.get().forEach(coach ->Assertions.assertTrue(coach.isDeleted() == false));
 	}
 
 	@ParameterizedTest
@@ -169,6 +218,7 @@ class CoachControllerTests {
 				String.format("Coach list second page number invalid: %d", page.getPageable().getPageNumber()));
 		Assertions.assertEquals(2, page.getNumberOfElements(),
 				String.format("Coach list second page number of elements invalid: %d", page.getNumberOfElements()));
+		page.get().forEach(coach ->Assertions.assertTrue(coach.isDeleted() == false));
 	}
 
 	@ParameterizedTest
@@ -233,7 +283,7 @@ class CoachControllerTests {
 				HttpMethod.PUT, httpEntity, CoachDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Get error: %s", response.getStatusCode()));
+				String.format("Put error: %s", response.getStatusCode()));
 
 		assertCoach(modelMapper.map(putCoach, CoachDto.class), response.getBody());
 	}
@@ -264,9 +314,93 @@ class CoachControllerTests {
 				HttpMethod.PUT, httpEntity, CoachDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Get error: %s", response.getStatusCode()));
+				String.format("Put null error: %s", response.getStatusCode()));
 
  		assertCoach(modelMapper.map(putCoach, CoachDto.class), response.getBody());
+	}
+	
+	@ParameterizedTest
+	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	void testActivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
+		// Arrange
+		Coach coachToActivate = CoachBuilder.build();
+		
+		coachToActivate.setGymId(gymId_16034);
+		coachToActivate.setActive(false);
+		coachToActivate.setStartedOn(null);
+		coachToActivate.setEndedOn(null);
+		coachToActivate = coachRepository.save(coachIsDeleted);
+		
+		coachToActivate.setActive(true);
+		coachToActivate.setStartedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
+		coachToActivate.setEndedOn(null);
+		
+		// Act
+		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
+		ResponseEntity<CoachDto> response = restTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(postActivateURI, gymId_16034, coachToActivate.getId())), port, null),
+				HttpMethod.POST, httpEntity, CoachDto.class);
+
+		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
+				String.format("Coach activation error: %s", response.getStatusCode()));
+
+ 		assertCoach(modelMapper.map(coachToActivate, CoachDto.class), response.getBody());
+	}
+	
+	@ParameterizedTest
+	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	void testActivateFailure(String role, String user) throws JsonProcessingException, MalformedURLException {
+		// Arrange
+		
+		// Act
+		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
+		ResponseEntity<CoachDto> response = restTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(postActivateURI, gymId_16034, faker.code().ean13())), port, null),
+				HttpMethod.POST, httpEntity, CoachDto.class);
+
+		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
+				String.format("Coach activation error: %s", response.getStatusCode()));
+	}
+	
+	@ParameterizedTest
+	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	void testDeactivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
+		// Arrange
+		Coach coachToDeactivate = CoachBuilder.build();
+		
+		coachToDeactivate.setGymId(gymId_16034);
+		coachToDeactivate.setActive(true);
+		coachToDeactivate.setStartedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
+		coachToDeactivate = coachRepository.save(coachIsDeleted);
+		
+		coachToDeactivate.setActive(false);
+		coachToDeactivate.setEndedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
+		
+		// Act
+		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
+		ResponseEntity<CoachDto> response = restTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(postDeactivateURI, gymId_16034, coachToDeactivate.getId())), port, null),
+				HttpMethod.POST, httpEntity, CoachDto.class);
+
+		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
+				String.format("Coach deactivation error: %s", response.getStatusCode()));
+
+ 		assertCoach(modelMapper.map(coachToDeactivate, CoachDto.class), response.getBody());
+	}
+	
+	@ParameterizedTest
+	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	void testDeactivateFailure(String role, String user) throws JsonProcessingException, MalformedURLException {
+		// Arrange
+		
+		// Act
+		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
+		ResponseEntity<CoachDto> response = restTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(postDeactivateURI, gymId_16034, faker.code().ean13())), port, null),
+				HttpMethod.POST, httpEntity, CoachDto.class);
+
+		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
+				String.format("Coach activation error: %s", response.getStatusCode()));
 	}
 
 	@ParameterizedTest
@@ -294,6 +428,8 @@ class CoachControllerTests {
 		patchCoach.setEmail(coach.getEmail());
 		patchCoach.setLanguage(coach.getLanguage());
 		patchCoach.setFirstname(coach.getFirstname());
+		patchCoach.setStartedOn(coach.getStartedOn());
+		patchCoach.setEndedOn(coach.getEndedOn());
 		
  		assertCoach(modelMapper.map(patchCoach, CoachDto.class), response.getBody());
 	}
@@ -308,7 +444,7 @@ class CoachControllerTests {
 		
 		if (expected.getStartedOn() != null) {
 			Assertions.assertNotNull(result.getStartedOn());
-			Assertions.assertTrue(expected.getStartedOn().truncatedTo(ChronoUnit.SECONDS).equals(result.getStartedOn().truncatedTo(ChronoUnit.SECONDS)));
+			Assertions.assertTrue(expected.getStartedOn().truncatedTo(ChronoUnit.DAYS).equals(result.getStartedOn().truncatedTo(ChronoUnit.DAYS)));
 		}
 		if (expected.getStartedOn() == null) {
 			Assertions.assertNull(result.getStartedOn());
@@ -316,7 +452,7 @@ class CoachControllerTests {
 		
 		if (expected.getEndedOn() != null) {
 			Assertions.assertNotNull(result.getEndedOn());
-			Assertions.assertTrue(expected.getEndedOn().truncatedTo(ChronoUnit.SECONDS).equals(result.getEndedOn().truncatedTo(ChronoUnit.SECONDS)));
+			Assertions.assertTrue(expected.getEndedOn().truncatedTo(ChronoUnit.DAYS).equals(result.getEndedOn().truncatedTo(ChronoUnit.DAYS)));
 		}
 		if (expected.getEndedOn() == null) {
 			Assertions.assertNull(result.getEndedOn());

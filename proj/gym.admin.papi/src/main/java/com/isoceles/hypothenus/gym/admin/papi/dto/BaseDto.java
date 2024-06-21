@@ -12,6 +12,8 @@ public abstract class BaseDto {
 
 	protected List<MessageDto> messages;
 	
+	protected boolean isDeleted;
+	
 	private String createdBy;
 	private Instant createdOn;
 	

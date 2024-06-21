@@ -9,7 +9,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Gym;
 
-public interface GymRepository extends PagingAndSortingRepository<Gym, String>, CrudRepository<Gym, String>, GymQueries {
+public interface GymRepository extends PagingAndSortingRepository<Gym, String>, CrudRepository<Gym, String>, GymRepositoryCustom {
 	
 	Optional<Gym> findByGymIdAndIsDeletedIsFalse(String gymId);
 	

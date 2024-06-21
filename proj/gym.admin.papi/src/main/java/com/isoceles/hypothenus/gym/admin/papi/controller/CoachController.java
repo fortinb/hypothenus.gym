@@ -69,12 +69,18 @@ public class CoachController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> listCoach(
 			@PathVariable("gymId") String gymId,
+			@Parameter(description = "only active") @RequestParam(name = "isActive", required = false, defaultValue = "true") boolean isActive,
 			@Parameter(description = "page number") @RequestParam(name = "page", required = true) int page,
 			@Parameter(description = "page size") @RequestParam(name = "pageSize", required = true) int pageSize) {
 
 		Page<Coach> entities = null;
 		try {
-			entities = coachService.list(gymId, page, pageSize);
+			if (isActive)
+				entities = coachService.listActive(gymId, page, pageSize);
+			else {
+				entities = coachService.list(gymId, page, pageSize);
+			}
+			
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
@@ -106,7 +112,7 @@ public class CoachController {
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.GYM_NOT_FOUND) {
+			if (e.getCode() == DomainException.COACH_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), coachId));
 			}
@@ -158,16 +164,17 @@ public class CoachController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> updateCoach(
 			@PathVariable("gymId") String gymId,
-			@PathVariable("coachId") String coachId, 
+			@PathVariable("coachId") String coachId,
+			@Parameter(description = "activate or deactivate coach") @RequestParam(name = "isActive", required = false, defaultValue = "true") boolean isActive,
 			@RequestBody PutCoachDto request) {
 		Coach entity = modelMapper.map(request, Coach.class);
-		;
+		
 		try {
 			entity = coachService.update(gymId, entity);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.GYM_NOT_FOUND) {
+			if (e.getCode() == DomainException.COACH_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), coachId));
 			}
@@ -179,6 +186,72 @@ public class CoachController {
 		return ResponseEntity.ok(modelMapper.map(entity, CoachDto.class));
 	}
 
+	@PostMapping("/gyms/{gymId}/coachs/{coachId}/activate")
+	@Operation(summary = "Activate a coach")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", content = {
+					@Content(schema = @Schema(implementation = CoachDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "404", description = "Not found.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
+	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
+	@ResponseStatus(value = HttpStatus.OK)
+	public ResponseEntity<Object> activateCoach(
+			@PathVariable("gymId") String gymId,
+			@PathVariable("coachId") String coachId) {
+		Coach entity;
+		
+		try {
+			entity = coachService.activate(gymId, coachId);
+		} catch (DomainException e) {
+			logger.error(e.getMessage(), e);
+
+			if (e.getCode() == DomainException.COACH_NOT_FOUND) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND)
+						.body(new ErrorDto(e.getCode(), e.getMessage(), coachId));
+			}
+
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(new ErrorDto(e.getCode(), e.getMessage(), coachId));
+		}
+
+		return ResponseEntity.ok(modelMapper.map(entity, CoachDto.class));
+	}
+	
+	@PostMapping("/gyms/{gymId}/coachs/{coachId}/deactivate")
+	@Operation(summary = "Deactivate a coach")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", content = {
+					@Content(schema = @Schema(implementation = CoachDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "404", description = "Not found.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
+	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
+	@ResponseStatus(value = HttpStatus.OK)
+	public ResponseEntity<Object> deactivateCoach(
+			@PathVariable("gymId") String gymId,
+			@PathVariable("coachId") String coachId) {
+		Coach entity;
+		
+		try {
+			entity = coachService.deactivate(gymId, coachId);
+		} catch (DomainException e) {
+			logger.error(e.getMessage(), e);
+
+			if (e.getCode() == DomainException.COACH_NOT_FOUND) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND)
+						.body(new ErrorDto(e.getCode(), e.getMessage(), coachId));
+			}
+
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(new ErrorDto(e.getCode(), e.getMessage(), coachId));
+		}
+
+		return ResponseEntity.ok(modelMapper.map(entity, CoachDto.class));
+	}
+	
 	@PatchMapping("/gyms/{gymId}/coachs/{coachId}")
 	@Operation(summary = "Patch a coach")
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
@@ -192,7 +265,8 @@ public class CoachController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> patchCoach(
 			@PathVariable("gymId") String gymId,
-			@PathVariable("coachId") String coachId, @RequestBody PatchCoachDto request) {
+			@PathVariable("coachId") String coachId,
+			@RequestBody PatchCoachDto request) {
 		Coach entity = modelMapper.map(request, Coach.class);
 		
 		try {
@@ -200,7 +274,7 @@ public class CoachController {
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.GYM_NOT_FOUND) {
+			if (e.getCode() == DomainException.COACH_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), coachId));
 			}
@@ -229,7 +303,7 @@ public class CoachController {
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.GYM_NOT_FOUND) {
+			if (e.getCode() == DomainException.COACH_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), coachId));
 			}
