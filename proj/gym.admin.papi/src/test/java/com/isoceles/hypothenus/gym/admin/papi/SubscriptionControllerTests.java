@@ -35,27 +35,27 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
 
-import com.isoceles.hypothenus.gym.admin.papi.dto.CourseDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.SubscriptionDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.LocalizedStringDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.patch.PatchCourseDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostCourseDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutCourseDto;
-import com.isoceles.hypothenus.gym.domain.model.aggregate.Course;
-import com.isoceles.hypothenus.gym.domain.repository.CourseRepository;
+import com.isoceles.hypothenus.gym.admin.papi.dto.patch.PatchSubscriptionDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostSubscriptionDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutSubscriptionDto;
+import com.isoceles.hypothenus.gym.domain.model.aggregate.Subscription;
+import com.isoceles.hypothenus.gym.domain.repository.SubscriptionRepository;
 import com.isoceles.hypothenus.tests.http.HttpUtils;
-import com.isoceles.hypothenus.tests.model.CourseBuilder;
+import com.isoceles.hypothenus.tests.model.SubscriptionBuilder;
 
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(Lifecycle.PER_CLASS)
-class CourseControllerTests {
+class SubscriptionControllerTests {
 
-	public static final String listURI = "/v1/admin/gyms/%s/courses";
-	public static final String postURI = "/v1/admin/gyms/%s/courses";
-	public static final String getURI = "/v1/admin/gyms/%s/courses/%s";
-	public static final String putURI = "/v1/admin/gyms/%s/courses/%s";
-	public static final String postActivateURI = "/v1/admin/gyms/%s/courses/%s/activate";
-	public static final String postDeactivateURI = "/v1/admin/gyms/%s/courses/%s/deactivate";
-	public static final String patchURI = "/v1/admin/gyms/%s/courses/%s";
+	public static final String listURI = "/v1/admin/gyms/%s/subscriptions";
+	public static final String postURI = "/v1/admin/gyms/%s/subscriptions";
+	public static final String getURI = "/v1/admin/gyms/%s/subscriptions/%s";
+	public static final String putURI = "/v1/admin/gyms/%s/subscriptions/%s";
+	public static final String postActivateURI = "/v1/admin/gyms/%s/subscriptions/%s/activate";
+	public static final String postDeactivateURI = "/v1/admin/gyms/%s/subscriptions/%s/deactivate";
+	public static final String patchURI = "/v1/admin/gyms/%s/subscriptions/%s";
 	public static final String pageNumber = "page";
 	public static final String pageSize = "pageSize";
 	public static final String isActive = "isActive";
@@ -67,7 +67,7 @@ class CourseControllerTests {
 	private int port;
 
 	@Autowired
-	CourseRepository courseRepository;
+	SubscriptionRepository subscriptionRepository;
 
 	@Autowired
 	ObjectMapper objectMapper;
@@ -79,44 +79,44 @@ class CourseControllerTests {
 
 	private TestRestTemplate restTemplate = new TestRestTemplate();
 
-	private Course course;
-	private Course courseIsDeleted;
-	private List<Course> courses = new ArrayList<Course>();
+	private Subscription subscription;
+	private Subscription subscriptionIsDeleted;
+	private List<Subscription> subscriptions = new ArrayList<Subscription>();
 
 	@BeforeAll
 	void arrange() {
 		restTemplate.getRestTemplate().setRequestFactory(new HttpComponentsClientHttpRequestFactory());
 
-		courseRepository.deleteAll();
+		subscriptionRepository.deleteAll();
 
-		course = CourseBuilder.build(gymId_16034);
-		courseRepository.save(course);
+		subscription = SubscriptionBuilder.build(gymId_16034);
+		subscriptionRepository.save(subscription);
 
-		courseIsDeleted = CourseBuilder.build(gymId_16034);
-		courseIsDeleted.setDeleted(true);
-		courseIsDeleted = courseRepository.save(courseIsDeleted);
+		subscriptionIsDeleted = SubscriptionBuilder.build(gymId_16034);
+		subscriptionIsDeleted.setDeleted(true);
+		subscriptionIsDeleted = subscriptionRepository.save(subscriptionIsDeleted);
 
 		for (int i = 0; i < 10; i++) {
-			Course item = CourseBuilder.build(gymId_16034);
-			courseRepository.save(item);
-			courses.add(item);
+			Subscription item = SubscriptionBuilder.build(gymId_16034);
+			subscriptionRepository.save(item);
+			subscriptions.add(item);
 		}
 
 		for (int i = 0; i < 4; i++) {
-			Course item = CourseBuilder.build(gymId_16035);
-			courseRepository.save(item);
-			courses.add(item);
+			Subscription item = SubscriptionBuilder.build(gymId_16035);
+			subscriptionRepository.save(item);
+			subscriptions.add(item);
 		}
 
-		Course item = CourseBuilder.build(gymId_16035);
+		Subscription item = SubscriptionBuilder.build(gymId_16035);
 		item.setActive(false);
-		courseRepository.save(item);
+		subscriptionRepository.save(item);
 	}
 
 	@AfterAll
 	void cleanup() {
 		// Cleanup
-		// courseRepository.deleteAll();
+		// subscriptionRepository.deleteAll();
 	}
 
 	@ParameterizedTest
@@ -141,19 +141,19 @@ class CourseControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 
-		Page<CourseDto> page = objectMapper.readValue(response.getBody(), new TypeReference<Page<CourseDto>>() {
+		Page<SubscriptionDto> page = objectMapper.readValue(response.getBody(), new TypeReference<Page<SubscriptionDto>>() {
 		});
 
 		// Assert
 		Assertions.assertEquals(0, page.getPageable().getPageNumber(),
-				String.format("Course list first page number invalid: %d", page.getPageable().getPageNumber()));
+				String.format("Subscription list first page number invalid: %d", page.getPageable().getPageNumber()));
 		Assertions.assertEquals(4, page.getNumberOfElements(),
-				String.format("Course list first page number of elements invalid: %d", page.getNumberOfElements()));
+				String.format("Subscription list first page number of elements invalid: %d", page.getNumberOfElements()));
 		Assertions.assertEquals(4, page.getTotalElements(),
-				String.format("Course total number of elements invalid: %d", page.getTotalElements()));
+				String.format("Subscription total number of elements invalid: %d", page.getTotalElements()));
 
-		page.get().forEach(course -> Assertions.assertTrue(course.isActive()));
-		page.get().forEach(course -> Assertions.assertTrue(course.isDeleted() == false));
+		page.get().forEach(subscription -> Assertions.assertTrue(subscription.isActive()));
+		page.get().forEach(subscription -> Assertions.assertTrue(subscription.isDeleted() == false));
 	}
 
 	@ParameterizedTest
@@ -178,18 +178,18 @@ class CourseControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 
-		Page<CourseDto> page = objectMapper.readValue(response.getBody(), new TypeReference<Page<CourseDto>>() {
+		Page<SubscriptionDto> page = objectMapper.readValue(response.getBody(), new TypeReference<Page<SubscriptionDto>>() {
 		});
 
 		// Assert
 		Assertions.assertEquals(0, page.getPageable().getPageNumber(),
-				String.format("Course list first page number invalid: %d", page.getPageable().getPageNumber()));
+				String.format("Subscription list first page number invalid: %d", page.getPageable().getPageNumber()));
 		Assertions.assertEquals(5, page.getNumberOfElements(),
-				String.format("Course list first page number of elements invalid: %d", page.getNumberOfElements()));
+				String.format("Subscription list first page number of elements invalid: %d", page.getNumberOfElements()));
 		Assertions.assertEquals(5, page.getTotalElements(),
-				String.format("Course total number of elements invalid: %d", page.getTotalElements()));
+				String.format("Subscription total number of elements invalid: %d", page.getTotalElements()));
 
-		page.get().forEach(course -> Assertions.assertTrue(course.isDeleted() == false));
+		page.get().forEach(subscription -> Assertions.assertTrue(subscription.isDeleted() == false));
 	}
 
 	@ParameterizedTest
@@ -212,153 +212,157 @@ class CourseControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 
-		Page<CourseDto> page = objectMapper.readValue(response.getBody(), new TypeReference<Page<CourseDto>>() {
+		Page<SubscriptionDto> page = objectMapper.readValue(response.getBody(), new TypeReference<Page<SubscriptionDto>>() {
 		});
 
 		// Assert
 		Assertions.assertEquals(1, page.getPageable().getPageNumber(),
-				String.format("Course list second page number invalid: %d", page.getPageable().getPageNumber()));
+				String.format("Subscription list second page number invalid: %d", page.getPageable().getPageNumber()));
 		Assertions.assertEquals(2, page.getNumberOfElements(),
-				String.format("Course list second page number of elements invalid: %d", page.getNumberOfElements()));
-		page.get().forEach(course -> Assertions.assertTrue(course.isDeleted() == false));
+				String.format("Subscription list second page number of elements invalid: %d", page.getNumberOfElements()));
+		page.get().forEach(subscription -> Assertions.assertTrue(subscription.isDeleted() == false));
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testPostSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostCourseDto postCourse = modelMapper.map(CourseBuilder.build(gymId_16034), PostCourseDto.class);
+		PostSubscriptionDto postSubscription = modelMapper.map(SubscriptionBuilder.build(gymId_16034), PostSubscriptionDto.class);
 
-		HttpEntity<PostCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, postCourse);
+		HttpEntity<PostSubscriptionDto> httpEntity = HttpUtils.createHttpEntity(role, user, postSubscription);
 
 		// Act
-		ResponseEntity<CourseDto> response = restTemplate.exchange(
+		ResponseEntity<SubscriptionDto> response = restTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(postURI, gymId_16034)), port, null), HttpMethod.POST,
-				httpEntity, CourseDto.class);
+				httpEntity, SubscriptionDto.class);
 
 		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
 				String.format("Post error: %s", response.getStatusCode()));
 
-		assertCourse(modelMapper.map(postCourse, CourseDto.class), response.getBody());
+		assertSubscription(modelMapper.map(postSubscription, SubscriptionDto.class), response.getBody());
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testGetSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostCourseDto postCourse = modelMapper.map(CourseBuilder.build(gymId_16034), PostCourseDto.class);
+		PostSubscriptionDto postSubscription = modelMapper.map(SubscriptionBuilder.build(gymId_16034), PostSubscriptionDto.class);
 
-		HttpEntity<PostCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, postCourse);
+		HttpEntity<PostSubscriptionDto> httpEntity = HttpUtils.createHttpEntity(role, user, postSubscription);
 
-		ResponseEntity<CourseDto> responsePost = restTemplate.exchange(
+		ResponseEntity<SubscriptionDto> responsePost = restTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(postURI, gymId_16034)), port, null), HttpMethod.POST,
-				httpEntity, CourseDto.class);
+				httpEntity, SubscriptionDto.class);
 
 		Assertions.assertEquals(HttpStatus.CREATED, responsePost.getStatusCode(),
 				String.format("Post error: %s", responsePost.getStatusCode()));
 
 		// Act
 		httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<CourseDto> response = restTemplate.exchange(HttpUtils
+		ResponseEntity<SubscriptionDto> response = restTemplate.exchange(HttpUtils
 				.createURL(URI.create(String.format(getURI, gymId_16034, responsePost.getBody().getId())), port, null),
-				HttpMethod.GET, httpEntity, CourseDto.class);
+				HttpMethod.GET, httpEntity, SubscriptionDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
 
-		assertCourse(modelMapper.map(postCourse, CourseDto.class), response.getBody());
+		assertSubscription(modelMapper.map(postSubscription, SubscriptionDto.class), response.getBody());
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testPutSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Course courseToUpdate = CourseBuilder.build(gymId_16034);
-		courseToUpdate.setActive(false);
-		courseToUpdate.setActivatedOn(null);
-		courseToUpdate.setDeactivatedOn(null);
-		courseToUpdate = courseRepository.save(courseToUpdate);
+		Subscription subscriptionToUpdate = SubscriptionBuilder.build(gymId_16034);
+		subscriptionToUpdate.setActive(false);
+		subscriptionToUpdate.setActivatedOn(null);
+		subscriptionToUpdate.setDeactivatedOn(null);
+		subscriptionToUpdate = subscriptionRepository.save(subscriptionToUpdate);
 
-		Course updatedCourse = CourseBuilder.build(gymId_16034);
-		updatedCourse.setId(courseToUpdate.getId());
-		updatedCourse.setActive(false);
-		updatedCourse.setActivatedOn(null);
-		updatedCourse.setDeactivatedOn(null);
+		Subscription updatedSubscription = SubscriptionBuilder.build(gymId_16034);
+		updatedSubscription.setId(subscriptionToUpdate.getId());
+		updatedSubscription.setActive(false);
+		updatedSubscription.setActivatedOn(null);
+		updatedSubscription.setDeactivatedOn(null);
 
-		PutCourseDto putCourse = modelMapper.map(updatedCourse, PutCourseDto.class);
-		putCourse.setId(courseToUpdate.getId());
+		PutSubscriptionDto putSubscription = modelMapper.map(updatedSubscription, PutSubscriptionDto.class);
+		putSubscription.setId(subscriptionToUpdate.getId());
 
 		// Act
-		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, putCourse);
-		ResponseEntity<CourseDto> response = restTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, gymId_16034, putCourse.getId())), port, null),
-				HttpMethod.PUT, httpEntity, CourseDto.class);
+		HttpEntity<PutSubscriptionDto> httpEntity = HttpUtils.createHttpEntity(role, user, putSubscription);
+		ResponseEntity<SubscriptionDto> response = restTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(putURI, gymId_16034, putSubscription.getId())), port, null),
+				HttpMethod.PUT, httpEntity, SubscriptionDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Put error: %s", response.getStatusCode()));
 
-		assertCourse(modelMapper.map(updatedCourse, CourseDto.class), response.getBody());
+		assertSubscription(modelMapper.map(updatedSubscription, SubscriptionDto.class), response.getBody());
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testPutNullSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Course courseToUpdate = CourseBuilder.build(gymId_16034);
-		courseToUpdate.setActive(false);
-		courseToUpdate.setActivatedOn(null);
-		courseToUpdate.setDeactivatedOn(null);
-		courseToUpdate = courseRepository.save(courseToUpdate);
+		Subscription subscriptionToUpdate = SubscriptionBuilder.build(gymId_16034);
+		subscriptionToUpdate.setActive(false);
+		subscriptionToUpdate.setActivatedOn(null);
+		subscriptionToUpdate.setDeactivatedOn(null);
+		subscriptionToUpdate = subscriptionRepository.save(subscriptionToUpdate);
 
-		Course updatedCourse = CourseBuilder.build(gymId_16034);
-
-		PutCourseDto putCourse = modelMapper.map(updatedCourse, PutCourseDto.class);
-		putCourse.setId(courseToUpdate.getId());
-		putCourse.setCode(null);
-		putCourse.setDescription(null);
-		putCourse.setName(null);
+		Subscription updatedSubscription = SubscriptionBuilder.build(gymId_16034);
+		updatedSubscription.setId(subscriptionToUpdate.getId());
+		updatedSubscription.setActive(false);
+		updatedSubscription.setActivatedOn(null);
+		updatedSubscription.setDeactivatedOn(null);
+		
+		PutSubscriptionDto putSubscription = modelMapper.map(updatedSubscription, PutSubscriptionDto.class);
+		putSubscription.setId(subscriptionToUpdate.getId());
+		putSubscription.setCode(null);
+		putSubscription.setDescription(null);
+		putSubscription.setName(null);
 
 		// Act
-		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, putCourse);
-		ResponseEntity<CourseDto> response = restTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, gymId_16034, putCourse.getId())), port, null),
-				HttpMethod.PUT, httpEntity, CourseDto.class);
+		HttpEntity<PutSubscriptionDto> httpEntity = HttpUtils.createHttpEntity(role, user, putSubscription);
+		ResponseEntity<SubscriptionDto> response = restTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(putURI, gymId_16034, putSubscription.getId())), port, null),
+				HttpMethod.PUT, httpEntity, SubscriptionDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Put null error: %s", response.getStatusCode()));
 
-		courseToUpdate.setCode(null);
-		courseToUpdate.setDescription(null);
-		courseToUpdate.setName(null);
+		updatedSubscription.setCode(null);
+		updatedSubscription.setDescription(null);
+		updatedSubscription.setName(null);
 
-		assertCourse(modelMapper.map(courseToUpdate, CourseDto.class), response.getBody());
+		assertSubscription(modelMapper.map(updatedSubscription, SubscriptionDto.class), response.getBody());
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testActivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Course courseToActivate = CourseBuilder.build(gymId_16034);
-		courseToActivate.setActive(false);
-		courseToActivate.setActivatedOn(null);
-		courseToActivate.setDeactivatedOn(null);
-		courseToActivate = courseRepository.save(courseToActivate);
+		Subscription subscriptionToActivate = SubscriptionBuilder.build(gymId_16034);
+		subscriptionToActivate.setActive(false);
+		subscriptionToActivate.setActivatedOn(null);
+		subscriptionToActivate.setDeactivatedOn(null);
+		subscriptionToActivate = subscriptionRepository.save(subscriptionToActivate);
 
-		courseToActivate.setActive(true);
-		courseToActivate.setActivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
-		courseToActivate.setDeactivatedOn(null);
+		subscriptionToActivate.setActive(true);
+		subscriptionToActivate.setActivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
+		subscriptionToActivate.setDeactivatedOn(null);
 
 		// Act
-		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<CourseDto> response = restTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postActivateURI, gymId_16034, courseToActivate.getId())),
+		HttpEntity<PutSubscriptionDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
+		ResponseEntity<SubscriptionDto> response = restTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(postActivateURI, gymId_16034, subscriptionToActivate.getId())),
 						port, null),
-				HttpMethod.POST, httpEntity, CourseDto.class);
+				HttpMethod.POST, httpEntity, SubscriptionDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Course activation error: %s", response.getStatusCode()));
+				String.format("Subscription activation error: %s", response.getStatusCode()));
 
-		assertCourse(modelMapper.map(courseToActivate, CourseDto.class), response.getBody());
+		assertSubscription(modelMapper.map(subscriptionToActivate, SubscriptionDto.class), response.getBody());
 	}
 
 	@ParameterizedTest
@@ -367,37 +371,37 @@ class CourseControllerTests {
 		// Arrange
 
 		// Act
-		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
+		HttpEntity<PutSubscriptionDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		ResponseEntity<Object> response = restTemplate.exchange(HttpUtils
 				.createURL(URI.create(String.format(postActivateURI, gymId_16034, faker.code().isbn10())), port, null),
 				HttpMethod.POST, httpEntity, Object.class);
 																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																											
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
-				String.format("Course activation error: %s", response.getStatusCode()));
+				String.format("Subscription activation error: %s", response.getStatusCode()));
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testDeactivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Course courseToDeactivate = CourseBuilder.build(gymId_16034);
-		courseToDeactivate.setActive(true);
-		courseToDeactivate.setActivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
-		courseToDeactivate = courseRepository.save(courseToDeactivate);
+		Subscription subscriptionToDeactivate = SubscriptionBuilder.build(gymId_16034);
+		subscriptionToDeactivate.setActive(true);
+		subscriptionToDeactivate.setActivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
+		subscriptionToDeactivate = subscriptionRepository.save(subscriptionToDeactivate);
 
-		courseToDeactivate.setActive(false);
-		courseToDeactivate.setDeactivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
+		subscriptionToDeactivate.setActive(false);
+		subscriptionToDeactivate.setDeactivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
 
 		// Act
-		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<CourseDto> response = restTemplate.exchange(HttpUtils.createURL(
-				URI.create(String.format(postDeactivateURI, gymId_16034, courseToDeactivate.getId())), port, null),
-				HttpMethod.POST, httpEntity, CourseDto.class);
+		HttpEntity<PutSubscriptionDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
+		ResponseEntity<SubscriptionDto> response = restTemplate.exchange(HttpUtils.createURL(
+				URI.create(String.format(postDeactivateURI, gymId_16034, subscriptionToDeactivate.getId())), port, null),
+				HttpMethod.POST, httpEntity, SubscriptionDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Course deactivation error: %s", response.getStatusCode()));
+				String.format("Subscription deactivation error: %s", response.getStatusCode()));
 
-		assertCourse(modelMapper.map(courseToDeactivate, CourseDto.class), response.getBody());
+		assertSubscription(modelMapper.map(subscriptionToDeactivate, SubscriptionDto.class), response.getBody());
 	}
 
 	@ParameterizedTest
@@ -406,44 +410,50 @@ class CourseControllerTests {
 		// Arrange
 
 		// Act
-		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
+		HttpEntity<PutSubscriptionDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		ResponseEntity<Object> response = restTemplate.exchange(HttpUtils
 				.createURL(URI.create(String.format(postDeactivateURI, gymId_16034, faker.code().ean13())), port, null),
 				HttpMethod.POST, httpEntity, Object.class);
 
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
-				String.format("Course activation error: %s", response.getStatusCode()));
+				String.format("Subscription activation error: %s", response.getStatusCode()));
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testPatchSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Course courseToPatch = CourseBuilder.build(gymId_16034);
-		courseToPatch = courseRepository.save(courseToPatch);
+		Subscription subscriptionToPatch = SubscriptionBuilder.build(gymId_16034);
+		subscriptionToPatch = subscriptionRepository.save(subscriptionToPatch);
 
-		PatchCourseDto patchCourse = modelMapper.map(courseToPatch, PatchCourseDto.class);
-		patchCourse.setId(courseToPatch.getId());
-		patchCourse.setDescription(null);
-		patchCourse.setName(null);
+		PatchSubscriptionDto patchSubscription = modelMapper.map(subscriptionToPatch, PatchSubscriptionDto.class);
+		patchSubscription.setId(subscriptionToPatch.getId());
+		patchSubscription.setDescription(null);
+		patchSubscription.setName(null);
 
 		// Act
-		HttpEntity<PatchCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchCourse);
-		ResponseEntity<CourseDto> response = restTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(patchURI, gymId_16034, patchCourse.getId())), port, null),
-				HttpMethod.PATCH, httpEntity, CourseDto.class);
+		HttpEntity<PatchSubscriptionDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchSubscription);
+		ResponseEntity<SubscriptionDto> response = restTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(patchURI, gymId_16034, patchSubscription.getId())), port, null),
+				HttpMethod.PATCH, httpEntity, SubscriptionDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
 
-		courseToPatch.setCode(patchCourse.getCode());
+		subscriptionToPatch.setCode(patchSubscription.getCode());
 
-		assertCourse(modelMapper.map(courseToPatch, CourseDto.class), response.getBody());
+		assertSubscription(modelMapper.map(subscriptionToPatch, SubscriptionDto.class), response.getBody());
 	}
 
-	public static final void assertCourse(CourseDto expected, CourseDto result) {
+	public static final void assertSubscription(SubscriptionDto expected, SubscriptionDto result) {
 		Assertions.assertEquals(expected.getId(), result.getId());
 		Assertions.assertEquals(expected.getCode(), result.getCode());
+		Assertions.assertEquals(expected.getDurationInMonths(), result.getDurationInMonths());
+		Assertions.assertEquals(expected.getMaxNumberOfClassesPerPeriod(), result.getMaxNumberOfClassesPerPeriod());
+		Assertions.assertEquals(expected.getPrice(), result.getPrice());
+		Assertions.assertEquals(expected.getPeriod(), result.getPeriod());
+		Assertions.assertEquals(expected.getPaymentOption(), result.getPaymentOption());
+
 		Assertions.assertEquals(expected.isActive(), result.isActive());
 
 		if (expected.getActivatedOn() != null) {
