@@ -43,8 +43,6 @@ public class Subscription extends BaseEntity {
 	
 	private Integer durationInMonths;
 	
-	private boolean isActive;
-
 	private Instant activatedOn;
 
 	private Instant deactivatedOn;
@@ -58,7 +56,7 @@ public class Subscription extends BaseEntity {
 	public Subscription(String gymId, String code, List<LocalizedString> name, List<LocalizedString> description,
 			Integer maxNumberOfClassesPerPeriod, SubscriptionPeriodEnum period, SubscriptionPaymentOptionEnum paymentOption, Integer price,
 			Integer durationInMonths, List<Course> courses, boolean isActive, Instant startedOn, Instant endedOn) {
-		super();
+		super(isActive);
 		this.gymId = gymId;
 		this.code = code;
 		this.name = name;
@@ -69,7 +67,6 @@ public class Subscription extends BaseEntity {
 		this.price = price;
 		this.durationInMonths = durationInMonths;
 		this.courses = courses;
-		this.isActive = isActive;
 		this.activatedOn = startedOn;
 		this.deactivatedOn = endedOn;
 	}

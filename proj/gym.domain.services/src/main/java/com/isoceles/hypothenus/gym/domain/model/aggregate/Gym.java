@@ -1,5 +1,6 @@
 package com.isoceles.hypothenus.gym.domain.model.aggregate;
 
+import java.time.Instant;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
@@ -33,16 +34,22 @@ public class Gym extends BaseEntity {
 	
 	private String language;
 	
+	private String note;
+	
 	private List<PhoneNumber> phoneNumbers;
 	
 	private List<SocialMediaAccount> socialMediaAccounts;
+	
+	private Instant activatedOn;
+
+	private Instant deactivatedOn;
 
 	public Gym() {
 	}
 	
-	public Gym(String gymId, String name, Address address, String email, String language,
-			List<PhoneNumber> phoneNumbers, List<SocialMediaAccount> socialMediaAccounts) {
-		super();
+	public Gym(String gymId, String name, Address address, String email, String language, boolean isActive,
+			List<PhoneNumber> phoneNumbers, List<SocialMediaAccount> socialMediaAccounts, Instant activatedOn, Instant deactivatedOn) {
+		super(isActive);
 		this.gymId = gymId;
 		this.name = name;
 		this.address = address;
@@ -50,7 +57,7 @@ public class Gym extends BaseEntity {
 		this.language = language;
 		this.phoneNumbers = phoneNumbers;
 		this.socialMediaAccounts = socialMediaAccounts;
+		this.activatedOn = activatedOn;
+		this.deactivatedOn = deactivatedOn;
 	}
-
-
 }

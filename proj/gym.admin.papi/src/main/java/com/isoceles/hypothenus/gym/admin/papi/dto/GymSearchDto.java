@@ -11,5 +11,7 @@ public class GymSearchDto {
 	
 	private String name;
 	
+	private String email;
+	
 	private AddressDto address;
 }

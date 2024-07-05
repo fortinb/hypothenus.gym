@@ -16,6 +16,8 @@ public class PutCourseDto {
 	private String gymId;
 
 	private String code;
+	
+	private boolean isActive;
 
 	private List<LocalizedStringDto> name;
 

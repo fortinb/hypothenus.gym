@@ -34,5 +34,7 @@ public class PutSubscriptionDto {
 	
 	private Integer durationInMonths;
 	
+	private boolean isActive;
+	
 	private List<CourseDto> courses;
 }

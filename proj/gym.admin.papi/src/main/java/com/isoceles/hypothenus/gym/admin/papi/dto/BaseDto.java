@@ -14,6 +14,8 @@ public abstract class BaseDto {
 	
 	protected boolean isDeleted;
 	
+	protected boolean isActive;
+	
 	private String createdBy;
 	private Instant createdOn;
 	

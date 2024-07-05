@@ -14,6 +14,8 @@ public class PostCourseDto {
 	private String gymId;
 
 	private String code;
+	
+	private boolean isActive;
 
 	private List<LocalizedStringDto> name;
 

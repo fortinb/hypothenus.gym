@@ -20,8 +20,6 @@ public class CourseDto extends BaseDto {
 
 	private List<LocalizedStringDto> description;
 
-	private boolean isActive;
-
 	private Instant activatedOn;
 
 	private Instant deactivatedOn;

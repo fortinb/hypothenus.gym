@@ -21,6 +21,8 @@ public abstract class BaseEntity {
 	
 	protected boolean isDeleted = false;
 	
+	protected boolean isActive = true;
+	
 	@CreatedBy
 	private String createdBy;
 	private Instant createdOn;
@@ -31,4 +33,11 @@ public abstract class BaseEntity {
 	@LastModifiedBy
 	private String modifiedBy;
 	private Instant modifiedOn;
+	
+	public BaseEntity() {
+	}
+	
+	public BaseEntity(boolean isActive) {
+		this.isActive = isActive;
+	}
 }

@@ -1,6 +1,7 @@
 package com.isoceles.hypothenus.tests.model;
 
 import java.net.URI;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,7 +18,8 @@ public class GymBuilder {
 	
 	public static Gym build(String gymId) {
 		Gym entity = new Gym(gymId, faker.company().name(), buildAddress(),
-				faker.internet().emailAddress(), "fr-CA", buildPhoneNumbers(), buildSocialMediaAccounts());
+				faker.internet().emailAddress(), "fr-CA", true, buildPhoneNumbers(), buildSocialMediaAccounts(),
+				Instant.now(), null);
 		return entity;
 
 	}

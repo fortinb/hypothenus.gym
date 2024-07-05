@@ -27,6 +27,10 @@ public class PostGymDto {
 	
 	private String language;
 	
+	private boolean isActive;
+	
+	private String note;
+	
 	private List<PhoneNumberDto> phoneNumbers;
 	
 	private List<SocialMediaAccountDto> socialMediaAccounts;

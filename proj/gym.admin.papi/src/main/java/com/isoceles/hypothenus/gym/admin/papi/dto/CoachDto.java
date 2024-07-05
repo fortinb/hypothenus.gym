@@ -22,8 +22,6 @@ public class CoachDto extends BaseDto {
 	
 	private String language;
 	
-	private boolean isActive;
-	
 	private List<PhoneNumberDto> phoneNumbers;
 	
 	private Instant activatedOn;

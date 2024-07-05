@@ -25,6 +25,8 @@ public class PatchGymDto {
 	
 	private String language;
 	
+	private String note;
+	
 	private List<PhoneNumberDto> phoneNumbers;
 	
 	private List<SocialMediaAccountDto> socialMediaAccounts;

@@ -1,6 +1,8 @@
 package com.isoceles.hypothenus.gym.domain.repository.impl;
 
 import static com.mongodb.client.model.Aggregates.limit;
+import static com.mongodb.client.model.Aggregates.sort;
+import static com.mongodb.client.model.Aggregates.skip;
 import static com.mongodb.client.model.Aggregates.project;
 import static com.mongodb.client.model.Projections.excludeId;
 import static com.mongodb.client.model.Projections.fields;
@@ -12,19 +14,32 @@ import static com.mongodb.client.model.Projections.metaSearchScore;
 //import static com.mongodb.client.model.search.SearchOptions.searchOptions;
 //import static com.mongodb.client.model.search.SearchPath.fieldPath;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 import com.isoceles.hypothenus.gym.domain.model.GymSearchResult;
+import com.isoceles.hypothenus.gym.domain.model.aggregate.Gym;
 import com.isoceles.hypothenus.gym.domain.repository.GymRepositoryCustom;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Sorts;
 
 public class GymRepositoryCustomImpl implements GymRepositoryCustom {
 	private final MongoTemplate mongoTemplate;
@@ -40,7 +55,7 @@ public class GymRepositoryCustomImpl implements GymRepositoryCustom {
 	}
 
 	@Override
-	public List<GymSearchResult> searchAutocomplete(String criteria) {
+	public Page<GymSearchResult> searchAutocomplete(String criteria, Pageable pageable, boolean includeInactive) {
 
 		MongoCollection<Document> collection = mongoTemplate.getCollection("gym");
 
@@ -57,16 +72,27 @@ public class GymRepositoryCustomImpl implements GymRepositoryCustom {
 //										autocomplete(fieldPath("name"), criteria))))),
 //				searchOptions().index(indexName).returnStoredSource(true)
 //		);
-	
+		ArrayList<Boolean> isActiveValues = new ArrayList<Boolean>();
+		isActiveValues.add(true);
+		if (includeInactive) {
+			isActiveValues.add(false);
+		}
+		
 		Document searchStage = new Document().append("$search", new Document()
 				.append("index", indexName)
 				.append("compound", new Document()
 						.append("filter",
 								Arrays.asList(new Document()
-										.append("equals",
-												new Document()
-													.append("value", false)
-													.append("path", "isDeleted"))))
+													.append("equals",
+															new Document()
+																.append("value", false)
+																.append("path", "isDeleted")),
+											  new Document()
+													.append("in",
+															new Document()
+																.append("value", isActiveValues)
+																.append("path", "isActive")
+																)))
 						.append("must",
 								new Document().append("compound", new Document()
 										.append("should",
@@ -102,11 +128,45 @@ public class GymRepositoryCustomImpl implements GymRepositoryCustom {
 		// Create a pipeline that searches, projects, and limits the number of results returned.
 		AggregateIterable<GymSearchResult> aggregationResults = collection.aggregate(
 				Arrays.asList(searchStage,
-						project(fields(excludeId(), include("gymId", "name", "address"), metaSearchScore("score"),
+						project(fields(excludeId(), include("gymId", "name", "address", "email"), metaSearchScore("score"),
 								meta("scoreDetails", "searchScoreDetails"))),
+						sort(Sorts.ascending("name")),
+						skip(pageable.getPageNumber() * pageable.getPageSize()),
 						limit(searchLimit)),
 				GymSearchResult.class);
-
-		return StreamSupport.stream(aggregationResults.spliterator(), false).collect(Collectors.toList());
+		
+		//return mongoTemplate.count(searchStage, GymSearchResult.class);
+		List<GymSearchResult> searchResults = StreamSupport.stream(aggregationResults.spliterator(), false).collect(Collectors.toList());
+		return new PageImpl<GymSearchResult>(searchResults, pageable, searchResults.size());
 	}
+	
+	@Override
+	public Optional<Gym> activate(String gymId) {
+
+		Query query = new Query(
+	            Criteria.where("gymId").is(gymId));
+		
+		Update update = new Update()
+					.set("isActive", true)
+					.set("activatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
+					.set("deactivatedOn", null);
+
+		Gym gym = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Gym.class);
+		return gym == null ? Optional.empty() : Optional.of(gym);
+	}
+
+	@Override
+	public Optional<Gym> deactivate(String gymId) {
+		Query query = new Query(
+	            Criteria.where("gymId").is(gymId));
+		
+		Update update = new Update()
+					.set("isActive", false)
+					.set("deactivatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS));
+
+		Gym gym = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Gym.class);
+		return gym == null ? Optional.empty() : Optional.of(gym);
+	}
+	
+
 }

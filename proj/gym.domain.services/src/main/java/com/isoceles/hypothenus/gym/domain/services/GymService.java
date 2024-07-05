@@ -1,7 +1,6 @@
 package com.isoceles.hypothenus.gym.domain.services;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 
 import org.modelmapper.ModelMapper;
@@ -102,11 +101,35 @@ public class GymService {
 		return entity.get();
 	}
 
-	public List<GymSearchResult> search(String criteria) throws DomainException {
-		return gymRepository.searchAutocomplete(criteria);
+	public Page<GymSearchResult> search(int page, int pageSize, String criteria, boolean includeInactive) throws DomainException {
+		return gymRepository.searchAutocomplete(criteria, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"),includeInactive);
 	}
 
-	public Page<Gym> list(int page, int pageSize) throws DomainException {
-		return gymRepository.findAllByIsDeletedIsFalse(PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"));
+	public Page<Gym> list(int page, int pageSize, boolean includeInactive) throws DomainException {
+		if (includeInactive) {
+			return gymRepository.findAllByIsDeletedIsFalse(PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"));
+		}
+		
+		return gymRepository.findAllByIsDeletedIsFalseAndIsActiveIsTrue(PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"));
+	}
+	
+	public Gym activate(String gymId) throws DomainException {
+		
+		Optional<Gym> oldGym = gymRepository.activate(gymId);
+		if (oldGym.isEmpty()) {
+			throw new DomainException(DomainException.GYM_NOT_FOUND, "Gym not found");
+		}
+		
+		return oldGym.get();
+	}
+	
+	public Gym deactivate(String gymId) throws DomainException {
+		
+		Optional<Gym> oldGym = gymRepository.deactivate(gymId);
+		if (oldGym.isEmpty()) {
+			throw new DomainException(DomainException.GYM_NOT_FOUND, "Gym not found");
+		}
+		
+		return oldGym.get();
 	}
 }

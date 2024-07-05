@@ -1,8 +1,5 @@
 package com.isoceles.hypothenus.gym.admin.papi.controller;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,9 +35,10 @@ import com.isoceles.hypothenus.gym.domain.services.GymService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.media.*;
 
 @RestController
 @RequestMapping("/v1/admin")
@@ -69,22 +67,22 @@ public class GymController {
 	@PreAuthorize("hasRole('" + Roles.Admin + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> searchGym(
-			@Parameter(description = "search criteria") @RequestParam(name = "criteria", required = true) String criteria) {
+			@Parameter(description = "search criteria") @RequestParam(name = "criteria", required = true) String criteria,
+			@Parameter(description = "page number") @RequestParam(name = "page", required = true) int page,
+			@Parameter(description = "page size") @RequestParam(name = "pageSize", required = true) int pageSize,
+			@Parameter(description = "includeInactive") @RequestParam(name = "includeInactive", required = false, defaultValue="false") boolean includeInactive) {
 
-		List<GymSearchResult> entities = null;
+		Page<GymSearchResult> entities = null;
 		try {
-			entities = gymService.search(criteria);
+			entities = gymService.search(page, pageSize, criteria, includeInactive);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body(new ErrorDto(e.getCode(), e.getMessage(), criteria));
 		}
-		List<GymSearchDto> response = entities.stream().map(item -> modelMapper.map(item, GymSearchDto.class))
-				.collect(Collectors.toList());
-
-		return ResponseEntity.ok(response);
-
+		
+		return ResponseEntity.ok(entities.map(item -> modelMapper.map(item, GymSearchDto.class)));
 	}
 
 	@GetMapping("/gyms")
@@ -98,11 +96,12 @@ public class GymController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> listGym(
 			@Parameter(description = "page number") @RequestParam(name = "page", required = true) int page,
-			@Parameter(description = "page size") @RequestParam(name = "pageSize", required = true) int pageSize) {
+			@Parameter(description = "page size") @RequestParam(name = "pageSize", required = true) int pageSize,
+			@Parameter(description = "includeInactive") @RequestParam(name = "includeInactive", required = false, defaultValue="false") boolean includeInactive) {
 
 		Page<Gym> entities = null;
 		try {
-			entities = gymService.list(page, pageSize);
+			entities = gymService.list(page, pageSize, includeInactive);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
@@ -231,6 +230,71 @@ public class GymController {
 		return ResponseEntity.ok(modelMapper.map(entity, GymDto.class));
 	}
 
+	
+	@PostMapping("/gyms/{gymId}/activate")
+	@Operation(summary = "Activate a gym")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", content = {
+					@Content(schema = @Schema(implementation = GymDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "404", description = "Not found.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
+	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
+	@ResponseStatus(value = HttpStatus.OK)
+	public ResponseEntity<Object> activateGym(
+			@PathVariable("gymId") String gymId) {
+		Gym entity;
+		
+		try {
+			entity = gymService.activate(gymId);
+		} catch (DomainException e) {
+			logger.error(e.getMessage(), e);
+
+			if (e.getCode() == DomainException.GYM_NOT_FOUND) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND)
+						.body(new ErrorDto(e.getCode(), e.getMessage(), gymId));
+			}
+
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(new ErrorDto(e.getCode(), e.getMessage(), gymId));
+		}
+
+		return ResponseEntity.ok(modelMapper.map(entity, GymDto.class));
+	}
+	
+	@PostMapping("/gyms/{gymId}/deactivate")
+	@Operation(summary = "Deactivate a gym")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", content = {
+					@Content(schema = @Schema(implementation = GymDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "404", description = "Not found.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
+	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
+	@ResponseStatus(value = HttpStatus.OK)
+	public ResponseEntity<Object> deactivateGym(
+			@PathVariable("gymId") String gymId) {
+		Gym entity;
+		
+		try {
+			entity = gymService.deactivate(gymId);
+		} catch (DomainException e) {
+			logger.error(e.getMessage(), e);
+
+			if (e.getCode() == DomainException.GYM_NOT_FOUND) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND)
+						.body(new ErrorDto(e.getCode(), e.getMessage(), gymId));
+			}
+
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(new ErrorDto(e.getCode(), e.getMessage(), gymId));
+		}
+
+		return ResponseEntity.ok(modelMapper.map(entity, GymDto.class));
+	}
+	
 	@DeleteMapping("/gyms/{gymId}")
 	@Operation(summary = "Delete a gym")
 	@ApiResponses({ @ApiResponse(responseCode = "202"),

@@ -26,5 +26,7 @@ public class PostCoachDto {
 	
 	private String language;
 	
+	private boolean isActive;
+	
 	private List<PhoneNumberDto> phoneNumbers;
 }

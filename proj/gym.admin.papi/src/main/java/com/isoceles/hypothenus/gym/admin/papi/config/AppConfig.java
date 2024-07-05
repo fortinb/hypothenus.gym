@@ -5,6 +5,7 @@ import org.springframework.cloud.openfeign.support.PageJacksonModule;
 import org.springframework.cloud.openfeign.support.SortJacksonModule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
@@ -26,6 +27,7 @@ public class AppConfig {
     }
 	
 	@Bean
+	@Primary
     ObjectMapper instanciateObjectMapper() {
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.registerModule(new PageJacksonModule());
