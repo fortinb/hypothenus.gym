@@ -6,7 +6,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class PhoneNumber {
-	private String regionalCode;
 	
 	private String number;
 	
@@ -15,9 +14,8 @@ public class PhoneNumber {
 	public PhoneNumber() {
 	}
 	
-	public PhoneNumber(String regionalCode, String number, PhoneNumberTypeEnum type) {
+	public PhoneNumber(String number, PhoneNumberTypeEnum type) {
 		super();
-		this.regionalCode = regionalCode;
 		this.number = number;
 		this.type = type;
 	}

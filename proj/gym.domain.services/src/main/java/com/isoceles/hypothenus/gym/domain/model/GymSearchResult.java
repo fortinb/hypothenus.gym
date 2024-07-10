@@ -14,4 +14,6 @@ public class GymSearchResult {
 	private String email;
 	
 	private Address address;
+	
+	private boolean isActive;
 }

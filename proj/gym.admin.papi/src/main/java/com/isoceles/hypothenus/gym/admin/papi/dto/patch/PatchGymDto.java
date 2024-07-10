@@ -3,6 +3,7 @@ package com.isoceles.hypothenus.gym.admin.papi.dto.patch;
 import java.util.List;
 
 import com.isoceles.hypothenus.gym.admin.papi.dto.AddressDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.ContactDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.PhoneNumberDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.SocialMediaAccountDto;
 
@@ -15,6 +16,9 @@ import lombok.Setter;
 public class PatchGymDto {
 	
 	@NotBlank
+	private String id;
+	
+	@NotBlank
 	private String gymId;
 	
 	private String name;
@@ -23,11 +27,11 @@ public class PatchGymDto {
 	
 	private String email;
 	
-	private String language;
-	
 	private String note;
 	
 	private List<PhoneNumberDto> phoneNumbers;
 	
 	private List<SocialMediaAccountDto> socialMediaAccounts;
+	
+	private List<ContactDto> contacts;
 }

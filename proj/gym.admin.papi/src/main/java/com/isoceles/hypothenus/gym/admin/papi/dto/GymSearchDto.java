@@ -14,4 +14,6 @@ public class GymSearchDto {
 	private String email;
 	
 	private AddressDto address;
+	
+	private boolean isActive;
 }

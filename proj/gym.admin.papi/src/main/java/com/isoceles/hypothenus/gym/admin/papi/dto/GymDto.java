@@ -10,6 +10,8 @@ import lombok.Setter;
 @Setter
 public class GymDto extends BaseDto {
 	
+	private String id;
+	
 	private String gymId;
 	
 	private String name;
@@ -17,8 +19,6 @@ public class GymDto extends BaseDto {
 	private AddressDto address;
 	
 	private String email;
-	
-	private String language;
 	
 	private String note;
 	
@@ -29,4 +29,6 @@ public class GymDto extends BaseDto {
 	private List<PhoneNumberDto> phoneNumbers;
 	
 	private List<SocialMediaAccountDto> socialMediaAccounts;
+	
+	private List<ContactDto> contacts;
 }

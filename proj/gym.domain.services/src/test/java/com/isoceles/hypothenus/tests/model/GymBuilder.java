@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.github.javafaker.Faker;
 import com.isoceles.hypothenus.gym.domain.model.Address;
+import com.isoceles.hypothenus.gym.domain.model.Contact;
 import com.isoceles.hypothenus.gym.domain.model.PhoneNumber;
 import com.isoceles.hypothenus.gym.domain.model.PhoneNumberTypeEnum;
 import com.isoceles.hypothenus.gym.domain.model.SocialMediaAccount;
@@ -18,10 +19,9 @@ public class GymBuilder {
 	
 	public static Gym build(String gymId) {
 		Gym entity = new Gym(gymId, faker.company().name(), buildAddress(),
-				faker.internet().emailAddress(), "fr-CA", true, buildPhoneNumbers(), buildSocialMediaAccounts(),
-				Instant.now(), null);
+				faker.internet().emailAddress(), true, buildPhoneNumbers(), buildSocialMediaAccounts(),
+				buildContacts(), Instant.now(), null);
 		return entity;
-
 	}
 
 	public static Address buildAddress() {
@@ -31,19 +31,31 @@ public class GymBuilder {
 
 	public static List<PhoneNumber> buildPhoneNumbers() {
 		ArrayList<PhoneNumber> phoneNumbers = new ArrayList<PhoneNumber>();
-		phoneNumbers.add(new PhoneNumber("514", faker.phoneNumber().cellPhone(), PhoneNumberTypeEnum.Mobile));
-		phoneNumbers.add(new PhoneNumber("514", faker.phoneNumber().phoneNumber(), PhoneNumberTypeEnum.Home));
+		phoneNumbers.add(new PhoneNumber(faker.phoneNumber().cellPhone(), PhoneNumberTypeEnum.Mobile));
+		phoneNumbers.add(new PhoneNumber(faker.phoneNumber().phoneNumber(), PhoneNumberTypeEnum.Home));
 
 		return phoneNumbers;
 	}
 	
 	public static List<SocialMediaAccount> buildSocialMediaAccounts() {
-		ArrayList<SocialMediaAccount> socialMediaAccount = new ArrayList<SocialMediaAccount>();
-		socialMediaAccount.add(new SocialMediaAccount(SocialMediaTypeEnum.Facebook, faker.company().name(),
+		ArrayList<SocialMediaAccount> socialMediaAccounts = new ArrayList<SocialMediaAccount>();
+		socialMediaAccounts.add(new SocialMediaAccount(SocialMediaTypeEnum.Facebook, faker.company().name(),
 				URI.create(faker.company().url())));
-		socialMediaAccount.add(new SocialMediaAccount(SocialMediaTypeEnum.Instagram, faker.company().name(),
+		socialMediaAccounts.add(new SocialMediaAccount(SocialMediaTypeEnum.Instagram, faker.company().name(),
 				URI.create(faker.company().url())));
 
-		return socialMediaAccount;
+		return socialMediaAccounts;
+	}
+	
+	public static List<Contact> buildContacts() {
+		ArrayList<Contact> contacts = new ArrayList<Contact>();
+		contacts.add(new Contact(faker.name().firstName(), faker.name().lastName(),faker.gameOfThrones().dragon(),
+				faker.internet().emailAddress(), buildPhoneNumbers()));
+		contacts.add(new Contact(faker.name().firstName(), faker.name().lastName(),faker.gameOfThrones().dragon(),
+				faker.internet().emailAddress(), buildPhoneNumbers()));
+		contacts.add(new Contact(faker.name().firstName(), faker.name().lastName(),faker.gameOfThrones().dragon(),
+				faker.internet().emailAddress(), buildPhoneNumbers()));
+
+		return contacts;
 	}
 }

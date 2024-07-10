@@ -30,6 +30,11 @@ public class GymService {
 	}
 
 	public Gym create(Gym gym) throws DomainException {
+		Optional<Gym> existingGym = gymRepository.findByGymId(gym.getGymId());
+		if (existingGym.isPresent()) {
+			throw new DomainException(DomainException.GYM_CODE_ALREADY_EXIST, "Duplicate gym code");
+		}
+		
 		gym.setCreatedOn(Instant.now());
 		gym.setCreatedBy(requestContext.getUsername());
 		

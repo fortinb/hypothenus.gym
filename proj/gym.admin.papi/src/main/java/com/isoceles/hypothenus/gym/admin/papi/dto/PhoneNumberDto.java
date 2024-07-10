@@ -8,8 +8,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class PhoneNumberDto {
-	@NotBlank
-	private String regionalCode;
 	
 	@NotBlank
 	private String number;

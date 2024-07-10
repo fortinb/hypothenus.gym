@@ -36,12 +36,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
 import com.isoceles.hypothenus.gym.admin.papi.dto.GymDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.ContactDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.GymSearchDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.PhoneNumberDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.SocialMediaAccountDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.patch.PatchGymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostGymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutGymDto;
+import com.isoceles.hypothenus.gym.domain.exception.DomainException;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Gym;
 import com.isoceles.hypothenus.gym.domain.repository.GymRepository;
 import com.isoceles.hypothenus.tests.http.HttpUtils;
@@ -269,6 +271,32 @@ class GymControllerTests {
 
 		assertGym(modelMapper.map(postGym, GymDto.class), response.getBody());
 	}
+	
+	@Test
+	void testPostDuplicateFailure() throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		PostGymDto postGym = modelMapper.map(GymBuilder.build(faker.code().isbn10()), PostGymDto.class);
+		HttpEntity<PostGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postGym);
+
+		ResponseEntity<GymDto> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postURI), port, null),
+				HttpMethod.POST, httpEntity, GymDto.class);
+
+		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
+				String.format("Post error: %s", response.getStatusCode()));
+
+		// Act
+		response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postURI), port, null),
+				HttpMethod.POST, httpEntity, GymDto.class);
+		
+		Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(),
+				String.format("Post error: %s", response.getStatusCode()));
+		
+		Assertions.assertEquals(1, response.getBody().getMessages().size(),
+				String.format("Duplicate error ,missing message: %s", response.getBody().getMessages().size()));
+		
+		Assertions.assertEquals(DomainException.GYM_CODE_ALREADY_EXIST, response.getBody().getMessages().getFirst().getCode(),
+				String.format("Duplicate error, missing message: %s", response.getBody().getMessages().getFirst().getCode()));
+	}
 
 	@ParameterizedTest
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis", "Member, Guillaume Fortin", })
@@ -325,10 +353,10 @@ class GymControllerTests {
 		
 		putGym.setEmail(null);
 		putGym.setAddress(null);
-		putGym.setLanguage(null);
 		putGym.setName(null);
 		putGym.setPhoneNumbers(null);
 		putGym.setSocialMediaAccounts(null);
+		putGym.setContacts(null);
 		
 		// Act
 		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putGym);
@@ -350,7 +378,6 @@ class GymControllerTests {
 		PatchGymDto patchGym = modelMapper.map(updatedGym, PatchGymDto.class);
 		patchGym.setGymId(gym.getGymId());
 		patchGym.setEmail(null);
-		patchGym.setLanguage(null);
 		patchGym.setName(null);
 		
 		// Act
@@ -363,7 +390,6 @@ class GymControllerTests {
 				String.format("Get error: %s", response.getStatusCode()));
 
 		patchGym.setEmail(gym.getEmail());
-		patchGym.setLanguage(gym.getLanguage());
 		patchGym.setName(gym.getName());
 		
  		assertGym(modelMapper.map(patchGym, GymDto.class), response.getBody());
@@ -475,7 +501,6 @@ class GymControllerTests {
 		Assertions.assertEquals(expected.getGymId(), result.getGymId());
 		Assertions.assertEquals(expected.getName(), result.getName());
 		Assertions.assertEquals(expected.getEmail(), result.getEmail());
-		Assertions.assertEquals(expected.getLanguage(), result.getLanguage());
 		
 		if (expected.getAddress() != null) {
 			Assertions.assertEquals(expected.getAddress().getCivicNumber(), result.getAddress().getCivicNumber());
@@ -498,7 +523,6 @@ class GymControllerTests {
 				Optional<PhoneNumberDto> previous = result.getPhoneNumbers().stream()
 						.filter(item -> item.getType().equals(phone.getType())).findFirst();
 				Assertions.assertTrue(previous.isPresent());
-				Assertions.assertEquals(previous.get().getRegionalCode(), phone.getRegionalCode());
 				Assertions.assertEquals(previous.get().getNumber(), phone.getNumber());
 			});
 		}
@@ -522,6 +546,41 @@ class GymControllerTests {
 
 		if (expected.getSocialMediaAccounts() == null) {
 			Assertions.assertNull(result.getSocialMediaAccounts());
+		}
+		
+		if (expected.getContacts() != null) {
+			Assertions.assertNotNull(result.getContacts());
+
+			Assertions.assertEquals(expected.getContacts().size(), result.getContacts().size());
+			expected.getContacts().forEach(contact -> {
+				Optional<ContactDto> previous = result.getContacts().stream()
+						.filter(item -> item.getFirstname().equals(contact.getFirstname())).findFirst();
+				Assertions.assertTrue(previous.isPresent());
+				Assertions.assertEquals(previous.get().getLastname(), contact.getLastname());
+				Assertions.assertEquals(previous.get().getDescription(), contact.getDescription());
+				Assertions.assertEquals(previous.get().getEmail(), contact.getEmail());
+				
+				if (previous.get().getPhoneNumbers() != null) {
+					Assertions.assertNotNull(contact.getPhoneNumbers());
+					
+					Assertions.assertEquals(contact.getPhoneNumbers().size(), contact.getPhoneNumbers().size());
+					
+					contact.getPhoneNumbers().forEach(phone -> {
+						Optional<PhoneNumberDto> previousPhone = contact.getPhoneNumbers().stream()
+								.filter(item -> item.getType().equals(phone.getType())).findFirst();
+						Assertions.assertTrue(previousPhone.isPresent());
+						Assertions.assertEquals(previousPhone.get().getNumber(), phone.getNumber());
+					});
+				}
+				
+				if (previous.get().getPhoneNumbers() == null) {
+					Assertions.assertNull(result.getPhoneNumbers());
+				}
+			});
+		}
+
+		if (expected.getPhoneNumbers() == null) {
+			Assertions.assertNull(result.getPhoneNumbers());
 		}
 	}
 }

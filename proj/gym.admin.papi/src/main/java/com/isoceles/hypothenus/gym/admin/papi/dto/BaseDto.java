@@ -16,12 +16,12 @@ public abstract class BaseDto {
 	
 	protected boolean isActive;
 	
-	private String createdBy;
-	private Instant createdOn;
+	protected String createdBy;
+	protected Instant createdOn;
 	
-	private String deletedBy;
-	private Instant deletedOn;
+	protected String deletedBy;
+	protected Instant deletedOn;
 	
-	private String modifiedBy;
-	private Instant modifiedOn;
+	protected String modifiedBy;
+	protected Instant modifiedOn;
 }

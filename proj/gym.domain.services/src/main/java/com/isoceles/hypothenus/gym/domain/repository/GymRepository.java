@@ -13,6 +13,8 @@ public interface GymRepository extends PagingAndSortingRepository<Gym, String>, 
 	
 	Optional<Gym> findByGymIdAndIsDeletedIsFalse(String gymId);
 	
+	Optional<Gym> findByGymId(String gymId);
+	
 	Page<Gym> findAllByIsDeletedIsFalse(Pageable pageable);
 	
 	Page<Gym> findAllByIsDeletedIsFalseAndIsActiveIsTrue(Pageable pageable);

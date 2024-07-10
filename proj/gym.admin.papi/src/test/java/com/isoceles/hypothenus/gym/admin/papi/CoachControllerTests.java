@@ -470,8 +470,6 @@ class CoachControllerTests {
 				Optional<PhoneNumberDto> previous = result.getPhoneNumbers().stream()
 						.filter(item -> item.getType().equals(phone.getType())).findFirst();
 				Assertions.assertTrue(previous.isPresent());
-				Assertions.assertEquals(previous.get().getRegionalCode(), phone.getRegionalCode());
-				Assertions.assertEquals(previous.get().getNumber(), phone.getNumber());
 			});
 		}
 

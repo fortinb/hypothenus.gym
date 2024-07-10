@@ -1,5 +1,8 @@
 package com.isoceles.hypothenus.gym.admin.papi.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +28,8 @@ import com.isoceles.hypothenus.gym.admin.papi.config.security.Roles;
 import com.isoceles.hypothenus.gym.admin.papi.dto.ErrorDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.GymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.GymSearchDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.MessageDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.MessageSeverityEnum;
 import com.isoceles.hypothenus.gym.admin.papi.dto.patch.PatchGymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostGymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutGymDto;
@@ -159,6 +164,20 @@ public class GymController {
 			gymService.create(entity);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
+			
+			if (e.getCode() == DomainException.GYM_CODE_ALREADY_EXIST) {
+				GymDto errorResponse = modelMapper.map(request, GymDto.class);
+				List<MessageDto> messages = new ArrayList<MessageDto>();
+				
+				MessageDto message = new MessageDto();
+				message.setCode(e.getCode());
+				message.setDescription(e.getMessage());
+				message.setSeverity(MessageSeverityEnum.Warning);
+				messages.add(message);
+				
+				errorResponse.setMessages(messages);
+				return ResponseEntity.status(HttpStatus.OK).body(errorResponse);
+			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
 		}
@@ -276,6 +295,7 @@ public class GymController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> deactivateGym(
 			@PathVariable("gymId") String gymId) {
+		
 		Gym entity;
 		
 		try {
