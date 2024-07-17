@@ -24,7 +24,7 @@ public class GymService {
 
 	@Autowired
 	private RequestContext requestContext;
-	
+
 	public GymService(GymRepository gymRepository) {
 		this.gymRepository = gymRepository;
 	}
@@ -34,10 +34,10 @@ public class GymService {
 		if (existingGym.isPresent()) {
 			throw new DomainException(DomainException.GYM_CODE_ALREADY_EXIST, "Duplicate gym code");
 		}
-		
+
 		gym.setCreatedOn(Instant.now());
 		gym.setCreatedBy(requestContext.getUsername());
-		
+
 		return gymRepository.save(gym);
 	}
 
@@ -45,22 +45,22 @@ public class GymService {
 		Gym oldGym = this.findByGymId(gym.getGymId());
 
 		ModelMapper mapper = new ModelMapper();
-		mapper.getConfiguration().setSkipNullEnabled(false);
-		
-		PropertyMap<Gym, Gym> gymPropertyMap = new PropertyMap<Gym, Gym>()
-	    {
-	        protected void configure()
-	        {
-	            skip().setId(null);
-	        }
-	    };
-	    
+		mapper.getConfiguration()
+			.setSkipNullEnabled(false)
+			.setCollectionsMergeEnabled(false);
+
+		PropertyMap<Gym, Gym> gymPropertyMap = new PropertyMap<Gym, Gym>() {
+			protected void configure() {
+				skip().setId(null);
+			}
+		};
+
 		mapper.addMappings(gymPropertyMap);
 		mapper.map(gym, oldGym);
 
 		oldGym.setModifiedOn(Instant.now());
 		oldGym.setModifiedBy(requestContext.getUsername());
-		
+
 		return gymRepository.save(oldGym);
 	}
 
@@ -69,21 +69,22 @@ public class GymService {
 
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(true);
-		
-		PropertyMap<Gym, Gym> gymPropertyMap = new PropertyMap<Gym, Gym>()
-	    {
-	        protected void configure()
-	        {
-	            skip().setId(null);
-	        }
-	    };
-	    
+
+		PropertyMap<Gym, Gym> gymPropertyMap = new PropertyMap<Gym, Gym>() {
+			protected void configure() {
+				skip().setId(null);
+				skip().setContacts(null);
+				skip().setPhoneNumbers(null);
+				skip().setSocialMediaAccounts(null);
+			}
+		};
+
 		mapper.addMappings(gymPropertyMap);
 		mapper.map(gym, oldGym);
-		
+
 		oldGym.setModifiedOn(Instant.now());
 		oldGym.setModifiedBy(requestContext.getUsername());
-		
+
 		return gymRepository.save(oldGym);
 	}
 
@@ -93,7 +94,7 @@ public class GymService {
 
 		oldGym.setDeletedOn(Instant.now());
 		oldGym.setDeletedBy(requestContext.getUsername());
-		
+
 		gymRepository.save(oldGym);
 	}
 
@@ -106,35 +107,38 @@ public class GymService {
 		return entity.get();
 	}
 
-	public Page<GymSearchResult> search(int page, int pageSize, String criteria, boolean includeInactive) throws DomainException {
-		return gymRepository.searchAutocomplete(criteria, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"),includeInactive);
+	public Page<GymSearchResult> search(int page, int pageSize, String criteria, boolean includeInactive)
+			throws DomainException {
+		return gymRepository.searchAutocomplete(criteria, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"),
+				includeInactive);
 	}
 
 	public Page<Gym> list(int page, int pageSize, boolean includeInactive) throws DomainException {
 		if (includeInactive) {
 			return gymRepository.findAllByIsDeletedIsFalse(PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"));
 		}
-		
-		return gymRepository.findAllByIsDeletedIsFalseAndIsActiveIsTrue(PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"));
+
+		return gymRepository
+				.findAllByIsDeletedIsFalseAndIsActiveIsTrue(PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"));
 	}
-	
+
 	public Gym activate(String gymId) throws DomainException {
-		
+
 		Optional<Gym> oldGym = gymRepository.activate(gymId);
 		if (oldGym.isEmpty()) {
 			throw new DomainException(DomainException.GYM_NOT_FOUND, "Gym not found");
 		}
-		
+
 		return oldGym.get();
 	}
-	
+
 	public Gym deactivate(String gymId) throws DomainException {
-		
+
 		Optional<Gym> oldGym = gymRepository.deactivate(gymId);
 		if (oldGym.isEmpty()) {
 			throw new DomainException(DomainException.GYM_NOT_FOUND, "Gym not found");
 		}
-		
+
 		return oldGym.get();
 	}
 }

@@ -288,7 +288,7 @@ class GymControllerTests {
 		response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postURI), port, null),
 				HttpMethod.POST, httpEntity, GymDto.class);
 		
-		Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(),
+		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Post error: %s", response.getStatusCode()));
 		
 		Assertions.assertEquals(1, response.getBody().getMessages().size(),
@@ -330,6 +330,7 @@ class GymControllerTests {
 
 		PutGymDto putGym = modelMapper.map(updatedGym, PutGymDto.class);
 		putGym.setGymId(gym.getGymId());
+		putGym.getContacts().remove(1);
 
 		// Act
 		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putGym);

@@ -200,7 +200,7 @@ public class GymController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> updateGym(@PathVariable("gymId") String gymId, @RequestBody PutGymDto request) {
 		Gym entity = modelMapper.map(request, Gym.class);
-		;
+		
 		try {
 			entity = gymService.update(entity);
 		} catch (DomainException e) {

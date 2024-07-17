@@ -11,7 +11,9 @@ import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.web.context.WebApplicationContext;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.isoceles.hypothenus.gym.domain.context.RequestContext;
 
@@ -29,10 +31,17 @@ public class AppConfig {
 	@Bean
 	@Primary
     ObjectMapper instanciateObjectMapper() {
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.registerModule(new PageJacksonModule());
-		mapper.registerModule(new SortJacksonModule());
-		mapper.registerModule(new JavaTimeModule());
+		
+		ObjectMapper mapper = JsonMapper.builder()
+					.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+					.addModule(new PageJacksonModule())
+					.addModule(new SortJacksonModule())
+					.addModule(new JavaTimeModule())
+					.build();
+		//mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		//mapper.registerModule(new PageJacksonModule());
+		//mapper.registerModule(new SortJacksonModule());
+		//mapper.registerModule(new JavaTimeModule());
 		 
 		return mapper;
     }
