@@ -15,7 +15,7 @@ private String firstname;
 	private String lastname;
 	
 	private Date dateOfBirth;
-	
+
 	private String email;
 	
 	private AddressDto address;

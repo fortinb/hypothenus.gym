@@ -15,7 +15,6 @@ public class LocalizedString {
 	}
 	
 	public LocalizedString(String text, LanguageEnum language) {
-		super();
 		this.text = text;
 		this.language = language;
 	}

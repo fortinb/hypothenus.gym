@@ -111,7 +111,7 @@ class GymControllerTests {
 
 		for (int i = 0; i < 10; i++) {
 			Gym item = GymBuilder.build(faker.code().isbn10());
-
+			
 			gymRepository.save(item);
 			gyms.add(item);
 		}

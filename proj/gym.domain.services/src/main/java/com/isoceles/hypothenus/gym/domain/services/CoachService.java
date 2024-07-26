@@ -55,7 +55,7 @@ public class CoachService {
 		
 		mapper = initCoachMappings(mapper);
 		mapper.map(coach, oldCoach);
-
+	
 		oldCoach.setModifiedOn(Instant.now());
 		oldCoach.setModifiedBy(requestContext.getUsername());
 		
@@ -143,15 +143,17 @@ public class CoachService {
 	    PropertyMap<Person, Person> personPropertyMap = new PropertyMap<Person, Person>() {
 			@Override
 			protected void configure() {
+
 			}
 		};
 		
 		PropertyMap<Address, Address> addressPropertyMap = new PropertyMap<Address, Address>() {
 			@Override
 			protected void configure() {
+				
 			}
 		};
-		
+				
 		PropertyMap<PhoneNumber, PhoneNumber> phoneNumberPropertyMap = new PropertyMap<PhoneNumber, PhoneNumber>() {
 			@Override
 			protected void configure() {
@@ -163,7 +165,6 @@ public class CoachService {
 			protected void configure() {
 			}
 		};
-
 		mapper.addMappings(coachPropertyMap);
 		mapper.addMappings(personPropertyMap);
 		mapper.addMappings(addressPropertyMap);

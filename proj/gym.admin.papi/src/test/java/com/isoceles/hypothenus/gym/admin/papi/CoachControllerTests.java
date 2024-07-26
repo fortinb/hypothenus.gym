@@ -300,13 +300,10 @@ class CoachControllerTests {
 	void testPutNullSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		Coach coachToUpdate = CoachBuilder.build(gymId_16034);
-		coachToUpdate.setActive(false);
-		coachToUpdate.setActivatedOn(null);
-		coachToUpdate.setDeactivatedOn(null);
 		coachToUpdate = coachRepository.save(coachToUpdate);
 		
 		Coach updatedCoach = CoachBuilder.build(gymId_16034);
-
+		
 		PutCoachDto putCoach = modelMapper.map(updatedCoach, PutCoachDto.class);
 		putCoach.setId(coachToUpdate.getId());
 		putCoach.getPerson().setEmail(null);
@@ -323,12 +320,13 @@ class CoachControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Put null error: %s", response.getStatusCode()));
 		
-		coachToUpdate.getPerson().setEmail(null);
-		coachToUpdate.getPerson().setFirstname(null);
-		coachToUpdate.getPerson().setLastname(null);
-		coachToUpdate.getPerson().setPhoneNumbers(null);
+		updatedCoach.setId(coachToUpdate.getId());
+		updatedCoach.getPerson().setEmail(null);
+		updatedCoach.getPerson().setFirstname(null);
+		updatedCoach.getPerson().setLastname(null);
+		updatedCoach.getPerson().setPhoneNumbers(null);
 		
- 		assertCoach(modelMapper.map(coachToUpdate, CoachDto.class), response.getBody());
+ 		assertCoach(modelMapper.map(updatedCoach, CoachDto.class), response.getBody());
 	}
 	
 	@ParameterizedTest
