@@ -15,8 +15,6 @@ public class PostCourseDto {
 
 	private String code;
 	
-	private boolean isActive;
-
 	private List<LocalizedStringDto> name;
 
 	private List<LocalizedStringDto> description;

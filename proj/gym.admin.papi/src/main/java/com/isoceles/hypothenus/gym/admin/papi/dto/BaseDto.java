@@ -24,4 +24,7 @@ public abstract class BaseDto {
 	
 	protected String modifiedBy;
 	protected Instant modifiedOn;
+	
+	private Instant activatedOn;
+	private Instant deactivatedOn;
 }

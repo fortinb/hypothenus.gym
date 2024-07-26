@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.isoceles.hypothenus.gym.domain.context.RequestContext;
 import com.isoceles.hypothenus.gym.domain.exception.DomainException;
+import com.isoceles.hypothenus.gym.domain.model.LocalizedString;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Course;
 import com.isoceles.hypothenus.gym.domain.repository.CourseRepository;
 
@@ -49,18 +50,7 @@ public class CourseService {
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(false);
 		
-		PropertyMap<Course, Course> coursePropertyMap = new PropertyMap<Course, Course>()
-	    {
-	        protected void configure()
-	        {
-	            skip().setId(null);
-	            skip().setActive(false);
-	            skip().setActivatedOn(null);
-	            skip().setDeactivatedOn(null);
-	        }
-	    };
-	    
-		mapper.addMappings(coursePropertyMap);
+		mapper = initCourseMappings(mapper);
 		mapper.map(course, oldCourse);
 
 		oldCourse.setModifiedOn(Instant.now());
@@ -79,18 +69,7 @@ public class CourseService {
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(true);
 		
-		PropertyMap<Course, Course> coursePropertyMap = new PropertyMap<Course, Course>()
-	    {
-	        protected void configure()
-	        {
-	            skip().setId(null);
-	            skip().setActive(false);
-	            skip().setActivatedOn(null);
-	            skip().setDeactivatedOn(null);
-	        }
-	    };
-	    
-		mapper.addMappings(coursePropertyMap);
+		mapper = initCourseMappings(mapper);
 		mapper.map(course, oldCourse);
 		
 		oldCourse.setModifiedOn(Instant.now());
@@ -144,5 +123,29 @@ public class CourseService {
 		}
 		
 		return oldCourse.get();
+	}
+	
+	private ModelMapper initCourseMappings(ModelMapper mapper) {
+		PropertyMap<Course, Course> coursePropertyMap = new PropertyMap<Course, Course>()
+	    {
+	        protected void configure()
+	        {
+	            skip().setId(null);
+	            skip().setActive(false);
+	            skip().setActivatedOn(null);
+	            skip().setDeactivatedOn(null);
+	        }
+	    };
+	    
+	    PropertyMap<LocalizedString, LocalizedString> localizedStringPropertyMap = new PropertyMap<LocalizedString, LocalizedString>() {
+			@Override
+			protected void configure() {
+			}
+		};
+
+		mapper.addMappings(coursePropertyMap);
+		mapper.addMappings(localizedStringPropertyMap);
+		
+		return mapper;
 	}
 }

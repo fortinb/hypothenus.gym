@@ -35,8 +35,8 @@ import org.springframework.util.MultiValueMap;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
-import com.isoceles.hypothenus.gym.admin.papi.dto.GymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.ContactDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.GymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.GymSearchDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.PhoneNumberDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.SocialMediaAccountDto;
@@ -327,9 +327,10 @@ class GymControllerTests {
 	void testPutSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		Gym updatedGym = GymBuilder.build(faker.code().isbn10());
+		updatedGym.setActive(true);
+		updatedGym = gymRepository.save(updatedGym);
 
 		PutGymDto putGym = modelMapper.map(updatedGym, PutGymDto.class);
-		putGym.setGymId(gym.getGymId());
 		putGym.getContacts().remove(1);
 
 		// Act
@@ -348,9 +349,10 @@ class GymControllerTests {
 	void testPutNullSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		Gym updatedGym = GymBuilder.build(faker.code().isbn10());
-
+		updatedGym.setActive(true);
+		updatedGym = gymRepository.save(updatedGym);
+		
 		PutGymDto putGym = modelMapper.map(updatedGym, PutGymDto.class);
-		putGym.setGymId(gym.getGymId());
 		
 		putGym.setEmail(null);
 		putGym.setAddress(null);
@@ -374,24 +376,27 @@ class GymControllerTests {
 	@Test
 	void testPatchSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Gym updatedGym = GymBuilder.build(faker.code().isbn10());
-
-		PatchGymDto patchGym = modelMapper.map(updatedGym, PatchGymDto.class);
-		patchGym.setGymId(gym.getGymId());
+		Gym gymToPatch = GymBuilder.build(faker.code().isbn10());
+		gymToPatch.setActive(true);
+		gymToPatch = gymRepository.save(gymToPatch);
+		
+		PatchGymDto patchGym = modelMapper.map(gymToPatch, PatchGymDto.class);
+		patchGym.getAddress().setStreetName(null);
 		patchGym.setEmail(null);
 		patchGym.setName(null);
 		
 		// Act
 		HttpEntity<PatchGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, patchGym);
 		ResponseEntity<GymDto> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(patchURI, updatedGym.getGymId())), port, null),
+				HttpUtils.createURL(URI.create(String.format(patchURI, gymToPatch.getGymId())), port, null),
 				HttpMethod.PATCH, httpEntity, GymDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
 
-		patchGym.setEmail(gym.getEmail());
-		patchGym.setName(gym.getName());
+		patchGym.setEmail(gymToPatch.getEmail());
+		patchGym.setName(gymToPatch.getName());
+		patchGym.getAddress().setStreetName(gymToPatch.getAddress().getStreetName());
 		
  		assertGym(modelMapper.map(patchGym, GymDto.class), response.getBody());
 	}
@@ -580,8 +585,8 @@ class GymControllerTests {
 			});
 		}
 
-		if (expected.getPhoneNumbers() == null) {
-			Assertions.assertNull(result.getPhoneNumbers());
+		if (expected.getContacts() == null) {
+			Assertions.assertNull(result.getContacts());
 		}
 	}
 }

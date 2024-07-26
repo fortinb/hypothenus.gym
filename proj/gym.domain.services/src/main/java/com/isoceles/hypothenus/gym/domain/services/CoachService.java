@@ -13,6 +13,10 @@ import org.springframework.stereotype.Service;
 
 import com.isoceles.hypothenus.gym.domain.context.RequestContext;
 import com.isoceles.hypothenus.gym.domain.exception.DomainException;
+import com.isoceles.hypothenus.gym.domain.model.Address;
+import com.isoceles.hypothenus.gym.domain.model.Contact;
+import com.isoceles.hypothenus.gym.domain.model.Person;
+import com.isoceles.hypothenus.gym.domain.model.PhoneNumber;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Coach;
 import com.isoceles.hypothenus.gym.domain.repository.CoachRepository;
 
@@ -49,18 +53,7 @@ public class CoachService {
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(false);
 		
-		PropertyMap<Coach, Coach> coachPropertyMap = new PropertyMap<Coach, Coach>()
-	    {
-	        protected void configure()
-	        {
-	            skip().setId(null);
-	            skip().setActive(false);
-	            skip().setActivatedOn(null);
-	            skip().setDeactivatedOn(null);
-	        }
-	    };
-	    
-		mapper.addMappings(coachPropertyMap);
+		mapper = initCoachMappings(mapper);
 		mapper.map(coach, oldCoach);
 
 		oldCoach.setModifiedOn(Instant.now());
@@ -79,18 +72,7 @@ public class CoachService {
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(true);
 		
-		PropertyMap<Coach, Coach> coachPropertyMap = new PropertyMap<Coach, Coach>()
-	    {
-	        protected void configure()
-	        {
-	            skip().setId(null);
-	            skip().setActive(false);
-	            skip().setActivatedOn(null);
-	            skip().setDeactivatedOn(null);
-	        }
-	    };
-	    
-		mapper.addMappings(coachPropertyMap);
+		mapper = initCoachMappings(mapper);
 		mapper.map(coach, oldCoach);
 		
 		oldCoach.setModifiedOn(Instant.now());
@@ -144,5 +126,50 @@ public class CoachService {
 		}
 		
 		return oldCoach.get();
+	}
+	
+	private ModelMapper initCoachMappings(ModelMapper mapper) {
+		PropertyMap<Coach, Coach> coachPropertyMap = new PropertyMap<Coach, Coach>()
+	    {
+	        protected void configure()
+	        {
+	            skip().setId(null);
+	            skip().setActive(false);
+	            skip().setActivatedOn(null);
+	            skip().setDeactivatedOn(null);
+	        }
+	    };
+		
+	    PropertyMap<Person, Person> personPropertyMap = new PropertyMap<Person, Person>() {
+			@Override
+			protected void configure() {
+			}
+		};
+		
+		PropertyMap<Address, Address> addressPropertyMap = new PropertyMap<Address, Address>() {
+			@Override
+			protected void configure() {
+			}
+		};
+		
+		PropertyMap<PhoneNumber, PhoneNumber> phoneNumberPropertyMap = new PropertyMap<PhoneNumber, PhoneNumber>() {
+			@Override
+			protected void configure() {
+			}
+		};
+		
+		PropertyMap<Contact, Contact> contactPropertyMap = new PropertyMap<Contact, Contact>() {
+			@Override
+			protected void configure() {
+			}
+		};
+
+		mapper.addMappings(coachPropertyMap);
+		mapper.addMappings(personPropertyMap);
+		mapper.addMappings(addressPropertyMap);
+		mapper.addMappings(phoneNumberPropertyMap);
+		mapper.addMappings(contactPropertyMap);
+		
+		return mapper;
 	}
 }

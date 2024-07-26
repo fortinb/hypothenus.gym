@@ -1,8 +1,5 @@
 package com.isoceles.hypothenus.gym.admin.papi.dto;
 
-import java.time.Instant;
-import java.util.List;
-
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,17 +11,7 @@ public class CoachDto extends BaseDto {
 	
 	private String gymId;
 	
-	private String firstname;
+	private PersonDto person;
 	
-	private String lastname;
-	
-	private String email;
-	
-	private String language;
-	
-	private List<PhoneNumberDto> phoneNumbers;
-	
-	private Instant activatedOn;
-	
-	private Instant deactivatedOn;
+
 }

@@ -6,6 +6,6 @@ public enum SocialMediaTypeEnum {
 	Instagram;
 
 	SocialMediaTypeEnum() {
-		// TODO Auto-generated constructor stub
+		
 	}
 }

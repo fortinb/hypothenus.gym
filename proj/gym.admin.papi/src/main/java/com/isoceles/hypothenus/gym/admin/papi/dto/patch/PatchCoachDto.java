@@ -1,8 +1,6 @@
 package com.isoceles.hypothenus.gym.admin.papi.dto.patch;
 
-import java.util.List;
-
-import com.isoceles.hypothenus.gym.admin.papi.dto.PhoneNumberDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.PersonDto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -18,13 +16,5 @@ public class PatchCoachDto {
 	@NotBlank
 	private String gymId;
 	
-	private String firstname;
-	
-	private String lastname;
-	
-	private String email;
-	
-	private String language;
-	
-	private List<PhoneNumberDto> phoneNumbers;
+	private PersonDto person;
 }

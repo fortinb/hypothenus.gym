@@ -32,7 +32,5 @@ public class PostSubscriptionDto {
 	
 	private Integer durationInMonths;
 	
-	private boolean isActive;
-	
 	private List<CourseDto> courses;
 }

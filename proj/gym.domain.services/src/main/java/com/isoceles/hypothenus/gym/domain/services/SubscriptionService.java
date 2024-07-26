@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 
 import com.isoceles.hypothenus.gym.domain.context.RequestContext;
 import com.isoceles.hypothenus.gym.domain.exception.DomainException;
+import com.isoceles.hypothenus.gym.domain.model.LocalizedString;
+import com.isoceles.hypothenus.gym.domain.model.aggregate.Course;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Subscription;
 import com.isoceles.hypothenus.gym.domain.repository.SubscriptionRepository;
 
@@ -49,18 +51,7 @@ public class SubscriptionService {
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(false);
 		
-		PropertyMap<Subscription, Subscription> subscriptionPropertyMap = new PropertyMap<Subscription, Subscription>()
-	    {
-	        protected void configure()
-	        {
-	            skip().setId(null);
-	            skip().setActive(false);
-	            skip().setActivatedOn(null);
-	            skip().setDeactivatedOn(null);
-	        }
-	    };
-	    
-		mapper.addMappings(subscriptionPropertyMap);
+		mapper = initSubscriptionMappings(mapper);
 		mapper.map(subscription, oldSubscription);
 
 		oldSubscription.setModifiedOn(Instant.now());
@@ -79,18 +70,7 @@ public class SubscriptionService {
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(true);
 		
-		PropertyMap<Subscription, Subscription> subscriptionPropertyMap = new PropertyMap<Subscription, Subscription>()
-	    {
-	        protected void configure()
-	        {
-	            skip().setId(null);
-	            skip().setActive(false);
-	            skip().setActivatedOn(null);
-	            skip().setDeactivatedOn(null);
-	        }
-	    };
-	    
-		mapper.addMappings(subscriptionPropertyMap);
+		mapper = initSubscriptionMappings(mapper);
 		mapper.map(subscription, oldSubscription);
 		
 		oldSubscription.setModifiedOn(Instant.now());
@@ -144,5 +124,36 @@ public class SubscriptionService {
 		}
 		
 		return oldSubscription.get();
+	}
+	
+	private ModelMapper initSubscriptionMappings(ModelMapper mapper) {
+		PropertyMap<Subscription, Subscription> subscriptionPropertyMap = new PropertyMap<Subscription, Subscription>()
+	    {
+	        protected void configure()
+	        {
+	            skip().setId(null);
+	            skip().setActive(false);
+	            skip().setActivatedOn(null);
+	            skip().setDeactivatedOn(null);
+	        }
+	    };
+	    
+	    PropertyMap<LocalizedString, LocalizedString> localizedStringPropertyMap = new PropertyMap<LocalizedString, LocalizedString>() {
+			@Override
+			protected void configure() {
+			}
+		};
+		
+	    PropertyMap<Course, Course> courseStringPropertyMap = new PropertyMap<Course, Course>() {
+			@Override
+			protected void configure() {
+			}
+		};
+
+		mapper.addMappings(subscriptionPropertyMap);
+		mapper.addMappings(courseStringPropertyMap);
+		mapper.addMappings(localizedStringPropertyMap);
+		
+		return mapper;
 	}
 }

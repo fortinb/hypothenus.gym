@@ -6,6 +6,6 @@ public enum PhoneNumberTypeEnum {
 	Mobile;
 
 	PhoneNumberTypeEnum() {
-		// TODO Auto-generated constructor stub
+		
 	}
 }

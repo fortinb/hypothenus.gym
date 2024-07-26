@@ -20,8 +20,7 @@ public abstract class BaseEntity {
 	protected List<Message> messages;
 	
 	protected boolean isDeleted = false;
-	
-	protected boolean isActive = true;
+	protected boolean isActive = false;
 	
 	@CreatedBy
 	protected String createdBy;
@@ -33,6 +32,9 @@ public abstract class BaseEntity {
 	@LastModifiedBy
 	protected String modifiedBy;
 	protected Instant modifiedOn;
+	
+	protected Instant activatedOn;
+	protected Instant deactivatedOn;
 	
 	public BaseEntity() {
 	}

@@ -35,6 +35,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
 import com.isoceles.hypothenus.gym.admin.papi.dto.CoachDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.ContactDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.PhoneNumberDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.patch.PatchCoachDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostCoachDto;
@@ -89,6 +90,7 @@ class CoachControllerTests {
 		coachRepository.deleteAll();
 
 		coach = CoachBuilder.build(gymId_16034);
+		coach.setActive(true);
 		coachRepository.save(coach);
 		
 		coachIsDeleted = CoachBuilder.build(gymId_16034);
@@ -97,12 +99,14 @@ class CoachControllerTests {
 
 		for (int i = 0; i < 10; i++) {
 			Coach item = CoachBuilder.build(gymId_16034);
+			item.setActive(true);
 			coachRepository.save(item);
 			coachs.add(item);
 		}
 		
 		for (int i = 0; i < 4; i++) {
 			Coach item = CoachBuilder.build(gymId_16035);
+			item.setActive(true);
 			coachRepository.save(item);
 			coachs.add(item);
 		}
@@ -305,11 +309,10 @@ class CoachControllerTests {
 
 		PutCoachDto putCoach = modelMapper.map(updatedCoach, PutCoachDto.class);
 		putCoach.setId(coachToUpdate.getId());
-		putCoach.setEmail(null);
-		putCoach.setLanguage(null);
-		putCoach.setFirstname(null);
-		putCoach.setLastname(null);
-		putCoach.setPhoneNumbers(null);
+		putCoach.getPerson().setEmail(null);
+		putCoach.getPerson().setFirstname(null);
+		putCoach.getPerson().setLastname(null);
+		putCoach.getPerson().setPhoneNumbers(null);
 		
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, putCoach);
@@ -320,11 +323,10 @@ class CoachControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Put null error: %s", response.getStatusCode()));
 		
-		coachToUpdate.setEmail(null);
-		coachToUpdate.setLanguage(null);
-		coachToUpdate.setFirstname(null);
-		coachToUpdate.setLastname(null);
-		coachToUpdate.setPhoneNumbers(null);
+		coachToUpdate.getPerson().setEmail(null);
+		coachToUpdate.getPerson().setFirstname(null);
+		coachToUpdate.getPerson().setLastname(null);
+		coachToUpdate.getPerson().setPhoneNumbers(null);
 		
  		assertCoach(modelMapper.map(coachToUpdate, CoachDto.class), response.getBody());
 	}
@@ -413,15 +415,15 @@ class CoachControllerTests {
 	void testPatchSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		Coach coachToPatch = CoachBuilder.build(gymId_16034);
+		coachToPatch.setActive(true);
 		coachToPatch = coachRepository.save(coachToPatch);
 
 		PatchCoachDto patchCoach = modelMapper.map(coachToPatch, PatchCoachDto.class);
 		patchCoach.setId(coachToPatch.getId());
-		patchCoach.setEmail(null);
-		patchCoach.setLanguage(null);
-		patchCoach.setFirstname(null);
-		patchCoach.setLastname(faker.name().lastName());
-		patchCoach.setLanguage("en-US");
+		patchCoach.getPerson().setEmail(null);
+		patchCoach.getPerson().setFirstname(null);
+		patchCoach.getPerson().getAddress().setStreetName(null);
+		patchCoach.getPerson().setLastname(faker.name().lastName());
 		
 		// Act
 		HttpEntity<PatchCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchCoach);
@@ -432,18 +434,20 @@ class CoachControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
 
-		coachToPatch.setLastname(patchCoach.getLastname());
-		coachToPatch.setLanguage(patchCoach.getLanguage());
+		coachToPatch.getPerson().setLastname(patchCoach.getPerson().getLastname());
 		
  		assertCoach(modelMapper.map(coachToPatch, CoachDto.class), response.getBody());
 	}
 
 	public static final void assertCoach(CoachDto expected, CoachDto result) {
 		Assertions.assertEquals(expected.getId(), result.getId());
-		Assertions.assertEquals(expected.getFirstname(), result.getFirstname());
-		Assertions.assertEquals(expected.getLastname(), result.getLastname());
-		Assertions.assertEquals(expected.getEmail(), result.getEmail());
-		Assertions.assertEquals(expected.getLanguage(), result.getLanguage());
+		Assertions.assertEquals(expected.getPerson().getFirstname(), result.getPerson().getFirstname());
+		Assertions.assertEquals(expected.getPerson().getLastname(), result.getPerson().getLastname());
+		Assertions.assertEquals(expected.getPerson().getEmail(), result.getPerson().getEmail());
+		Assertions.assertEquals(expected.getPerson().getDateOfBirth(), result.getPerson().getDateOfBirth());
+		Assertions.assertEquals(expected.getPerson().getPhotoUri(), result.getPerson().getPhotoUri());
+		Assertions.assertEquals(expected.getPerson().getCommunicationLanguage(), result.getPerson().getCommunicationLanguage());
+		Assertions.assertEquals(expected.getPerson().getNote(), result.getPerson().getNote());
 		Assertions.assertEquals(expected.isActive(), result.isActive());
 		
 		if (expected.getActivatedOn() != null) {
@@ -462,19 +466,67 @@ class CoachControllerTests {
 			Assertions.assertNull(result.getDeactivatedOn());
 		}
 		
-		if (expected.getPhoneNumbers() != null) {
-			Assertions.assertNotNull(result.getPhoneNumbers());
+		if (expected.getPerson().getAddress() != null) {
+			Assertions.assertEquals(expected.getPerson().getAddress().getCivicNumber(), result.getPerson().getAddress().getCivicNumber());
+			Assertions.assertEquals(expected.getPerson().getAddress().getStreetName(), result.getPerson().getAddress().getStreetName());
+			Assertions.assertEquals(expected.getPerson().getAddress().getAppartment(), result.getPerson().getAddress().getAppartment());
+			Assertions.assertEquals(expected.getPerson().getAddress().getCity(), result.getPerson().getAddress().getCity());
+			Assertions.assertEquals(expected.getPerson().getAddress().getState(), result.getPerson().getAddress().getState());
+			Assertions.assertEquals(expected.getPerson().getAddress().getZipCode(), result.getPerson().getAddress().getZipCode());
+		}
+		
+		if (expected.getPerson().getAddress() == null) {
+			Assertions.assertNull(result.getPerson().getAddress());
+		}
+		
+		if (expected.getPerson().getPhoneNumbers() != null) {
+			Assertions.assertNotNull(result.getPerson().getPhoneNumbers());
 
-			Assertions.assertEquals(expected.getPhoneNumbers().size(), result.getPhoneNumbers().size());
-			expected.getPhoneNumbers().forEach(phone -> {
-				Optional<PhoneNumberDto> previous = result.getPhoneNumbers().stream()
+			Assertions.assertEquals(expected.getPerson().getPhoneNumbers().size(), result.getPerson().getPhoneNumbers().size());
+			expected.getPerson().getPhoneNumbers().forEach(phone -> {
+				Optional<PhoneNumberDto> previous = result.getPerson().getPhoneNumbers().stream()
 						.filter(item -> item.getType().equals(phone.getType())).findFirst();
 				Assertions.assertTrue(previous.isPresent());
 			});
 		}
 
-		if (expected.getPhoneNumbers() == null) {
-			Assertions.assertNull(result.getPhoneNumbers());
+		if (expected.getPerson().getPhoneNumbers() == null) {
+			Assertions.assertNull(result.getPerson().getPhoneNumbers());
+			
+		if (expected.getPerson().getEmergencyContacts() != null) {
+			Assertions.assertNotNull(result.getPerson().getEmergencyContacts());
+
+			Assertions.assertEquals(expected.getPerson().getEmergencyContacts().size(), result.getPerson().getEmergencyContacts().size());
+			expected.getPerson().getEmergencyContacts().forEach(contact -> {
+				Optional<ContactDto> previous = result.getPerson().getEmergencyContacts().stream()
+						.filter(item -> item.getFirstname().equals(contact.getFirstname())).findFirst();
+				Assertions.assertTrue(previous.isPresent());
+				Assertions.assertEquals(previous.get().getLastname(), contact.getLastname());
+				Assertions.assertEquals(previous.get().getDescription(), contact.getDescription());
+				Assertions.assertEquals(previous.get().getEmail(), contact.getEmail());
+				
+				if (previous.get().getPhoneNumbers() != null) {
+					Assertions.assertNotNull(contact.getPhoneNumbers());
+					
+					Assertions.assertEquals(contact.getPhoneNumbers().size(), contact.getPhoneNumbers().size());
+					
+					contact.getPhoneNumbers().forEach(phone -> {
+						Optional<PhoneNumberDto> previousPhone = contact.getPhoneNumbers().stream()
+								.filter(item -> item.getType().equals(phone.getType())).findFirst();
+						Assertions.assertTrue(previousPhone.isPresent());
+						Assertions.assertEquals(previousPhone.get().getNumber(), phone.getNumber());
+					});
+				}
+				
+				if (previous.get().getPhoneNumbers() == null) {
+					Assertions.assertNull(contact.getPhoneNumbers());
+				}
+			});
+		}
+
+		if (expected.getPerson().getEmergencyContacts() == null) {
+			Assertions.assertNull(result.getPerson().getEmergencyContacts());
+		}			
 		}
 	}
 }

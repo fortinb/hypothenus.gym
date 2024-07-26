@@ -30,8 +30,6 @@ public class PostGymDto {
 	@NotBlank
 	private String email;
 	
-	private boolean isActive;
-	
 	private String note;
 	
 	private List<PhoneNumberDto> phoneNumbers;

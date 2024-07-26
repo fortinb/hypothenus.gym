@@ -1,6 +1,5 @@
 package com.isoceles.hypothenus.gym.admin.papi.dto;
 
-import java.time.Instant;
 import java.util.List;
 
 import lombok.Getter;
@@ -29,12 +28,6 @@ public class SubscriptionDto extends BaseDto {
 	private Integer price;
 	
 	private Integer durationInMonths;
-	
-	private boolean isActive;
-
-	private Instant activatedOn;
-
-	private Instant deactivatedOn;
 	
 	private List<CourseDto> courses;
 }

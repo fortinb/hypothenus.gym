@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.github.javafaker.Faker;
+import com.isoceles.hypothenus.gym.domain.model.LanguageEnum;
 import com.isoceles.hypothenus.gym.domain.model.LocalizedString;
 import com.isoceles.hypothenus.gym.domain.model.SubscriptionPaymentOptionEnum;
 import com.isoceles.hypothenus.gym.domain.model.SubscriptionPeriodEnum;
@@ -22,16 +23,16 @@ public class SubscriptionBuilder {
 
 	public static List<LocalizedString> buildName() {
 		ArrayList<LocalizedString> items = new ArrayList<LocalizedString>();
-		items.add(new LocalizedString(faker.esports().game(), "fr-CA"));
-		items.add(new LocalizedString(faker.esports().game(), "en-US"));
+		items.add(new LocalizedString(faker.esports().game(), LanguageEnum.fr));
+		items.add(new LocalizedString(faker.esports().game(), LanguageEnum.en));
 
 		return items;
 	}
 	
 	public static List<LocalizedString> buildDescription() {
 		ArrayList<LocalizedString> items = new ArrayList<LocalizedString>();
-		items.add(new LocalizedString(faker.lorem().sentence(), "fr-CA"));
-		items.add(new LocalizedString(faker.lorem().sentence(), "en-US"));
+		items.add(new LocalizedString(faker.lorem().sentence(), LanguageEnum.fr));
+		items.add(new LocalizedString(faker.lorem().sentence(), LanguageEnum.en));
 
 		return items;
 	}

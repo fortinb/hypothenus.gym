@@ -1,8 +1,6 @@
 package com.isoceles.hypothenus.gym.admin.papi.dto.put;
 
-import java.util.List;
-
-import com.isoceles.hypothenus.gym.admin.papi.dto.PhoneNumberDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.PersonDto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -18,18 +16,5 @@ public class PutCoachDto {
 	@NotBlank
 	private String gymId;
 	
-	@NotBlank
-	private String firstname;
-	
-	@NotBlank
-	private String lastname;
-	
-	@NotBlank
-	private String email;
-	
-	private String language;
-	
-	private boolean isActive;
-	
-	private List<PhoneNumberDto> phoneNumbers;
+	private PersonDto person;
 }

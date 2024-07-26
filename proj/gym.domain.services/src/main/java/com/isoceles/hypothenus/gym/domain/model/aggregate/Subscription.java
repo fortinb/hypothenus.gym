@@ -43,10 +43,6 @@ public class Subscription extends BaseEntity {
 	
 	private Integer durationInMonths;
 	
-	private Instant activatedOn;
-
-	private Instant deactivatedOn;
-	
 	@DBRef
 	private List<Course> courses;
 	

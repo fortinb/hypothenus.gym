@@ -30,10 +30,6 @@ public class Course extends BaseEntity {
 
 	private List<LocalizedString> description;
 
-	private Instant activatedOn;
-
-	private Instant deactivatedOn;
-
 	public Course() {
 	}
 

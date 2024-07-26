@@ -41,10 +41,6 @@ public class Gym extends BaseEntity {
 	
 	private List<SocialMediaAccount> socialMediaAccounts;
 	
-	private Instant activatedOn;
-
-	private Instant deactivatedOn;
-
 	public Gym() {
 	}
 	

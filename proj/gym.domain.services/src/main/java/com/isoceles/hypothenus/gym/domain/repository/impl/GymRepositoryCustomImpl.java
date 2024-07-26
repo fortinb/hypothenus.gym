@@ -100,6 +100,10 @@ public class GymRepositoryCustomImpl implements GymRepositoryCustom {
 														new Document("autocomplete",
 																new Document()
 																	.append("query", criteria)
+																	.append("path", "gymId")),
+														new Document("autocomplete",
+																new Document()
+																	.append("query", criteria)
 																	.append("path", "name")),
 														new Document("autocomplete",
 																new Document()

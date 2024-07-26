@@ -9,12 +9,12 @@ public class LocalizedString {
 
 	private String text;
 	
-	private String language;
+	private LanguageEnum language;
 	
 	public LocalizedString() {
 	}
 	
-	public LocalizedString(String text, String language) {
+	public LocalizedString(String text, LanguageEnum language) {
 		super();
 		this.text = text;
 		this.language = language;
