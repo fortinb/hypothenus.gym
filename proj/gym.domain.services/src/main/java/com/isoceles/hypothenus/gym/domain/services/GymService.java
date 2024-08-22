@@ -56,6 +56,7 @@ public class GymService {
 		PropertyMap<Gym, Gym> gymPropertyMap = new PropertyMap<Gym, Gym>() {
 			protected void configure() {
 				skip().setId(null);
+				skip().setActive(false);
 			}
 		};
 		

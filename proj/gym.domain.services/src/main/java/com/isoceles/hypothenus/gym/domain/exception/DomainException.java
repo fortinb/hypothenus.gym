@@ -7,6 +7,7 @@ public class DomainException extends Exception {
 		
 	public static final String GYM_NOT_FOUND = "404";
 	public static final String GYM_CODE_ALREADY_EXIST = "1001";
+	public static final String COURSE_CODE_ALREADY_EXIST = "1002";
 	public static final String COACH_NOT_FOUND = "404";
 	public static final String COURSE_NOT_FOUND = "404";
 	public static final String SUBSCRIPTION_NOT_FOUND = "404";

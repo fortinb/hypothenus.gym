@@ -132,14 +132,14 @@ public class GymRepositoryCustomImpl implements GymRepositoryCustom {
 		// Create a pipeline that searches, projects, and limits the number of results returned.
 		AggregateIterable<GymSearchResult> aggregationResults = collection.aggregate(
 				Arrays.asList(searchStage,
-						project(fields(excludeId(), include("gymId", "name", "address", "email"), metaSearchScore("score"),
+						project(fields(excludeId(), include("gymId", "name", "address", "email", "isActive"),
+								metaSearchScore("score"),
 								meta("scoreDetails", "searchScoreDetails"))),
 						sort(Sorts.ascending("name")),
 						skip(pageable.getPageNumber() * pageable.getPageSize()),
 						limit(searchLimit)),
 				GymSearchResult.class);
 		
-		//return mongoTemplate.count(searchStage, GymSearchResult.class);
 		List<GymSearchResult> searchResults = StreamSupport.stream(aggregationResults.spliterator(), false).collect(Collectors.toList());
 		return new PageImpl<GymSearchResult>(searchResults, pageable, searchResults.size());
 	}

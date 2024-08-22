@@ -63,26 +63,19 @@ public class SubscriptionController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> listSubscription(
-			@PathVariable("gymId") String gymId,
-			@Parameter(description = "only active") @RequestParam(name = "isActive", required = false, defaultValue = "true") boolean isActive,
+	public ResponseEntity<Object> listSubscription(@PathVariable("gymId") String gymId,
 			@Parameter(description = "page number") @RequestParam(name = "page", required = true) int page,
-			@Parameter(description = "page size") @RequestParam(name = "pageSize", required = true) int pageSize) {
+			@Parameter(description = "page size") @RequestParam(name = "pageSize", required = true) int pageSize,
+			@Parameter(description = "includeInactive") @RequestParam(name = "includeInactive", required = false, defaultValue = "false") boolean includeInactive) {
 
 		Page<Subscription> entities = null;
 		try {
-			if (isActive)
-				entities = subscriptionService.listActive(gymId, page, pageSize);
-			else {
-				entities = subscriptionService.list(gymId, page, pageSize);
-			}
-			
+			entities = subscriptionService.list(gymId, page, pageSize, includeInactive);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body(new ErrorDto(e.getCode(), e.getMessage(), null));
-
 		}
 
 		return ResponseEntity.ok(entities.map(item -> modelMapper.map(item, SubscriptionDto.class)));
@@ -90,17 +83,15 @@ public class SubscriptionController {
 
 	@GetMapping("/gyms/{gymId}/subscriptions/{subscriptionId}")
 	@Operation(summary = "Retrieve a specific subscription")
-	@ApiResponses({
-			@ApiResponse(responseCode = "200", content = {
-					@Content(schema = @Schema(implementation = SubscriptionDto.class), mediaType = "application/json") }),
+	@ApiResponses({ @ApiResponse(responseCode = "200", content = {
+			@Content(schema = @Schema(implementation = SubscriptionDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "404", description = "Not found.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> getSubscription(
-			@PathVariable("gymId") String gymId,
+	public ResponseEntity<Object> getSubscription(@PathVariable("gymId") String gymId,
 			@PathVariable("subscriptionId") String subscriptionId) {
 		Subscription entity = null;
 		try {
@@ -122,15 +113,13 @@ public class SubscriptionController {
 
 	@PostMapping("/gyms/{gymId}/subscriptions")
 	@Operation(summary = "Create a new subscription")
-	@ApiResponses({
-			@ApiResponse(responseCode = "201", content = {
-					@Content(schema = @Schema(implementation = SubscriptionDto.class), mediaType = "application/json") }),
+	@ApiResponses({ @ApiResponse(responseCode = "201", content = {
+			@Content(schema = @Schema(implementation = SubscriptionDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.CREATED)
-	public ResponseEntity<Object> createSubscription(
-			@PathVariable("gymId") String gymId,
+	public ResponseEntity<Object> createSubscription(@PathVariable("gymId") String gymId,
 			@RequestBody PostSubscriptionDto request) {
 		Subscription entity = modelMapper.map(request, Subscription.class);
 
@@ -149,22 +138,20 @@ public class SubscriptionController {
 
 	@PutMapping("/gyms/{gymId}/subscriptions/{subscriptionId}")
 	@Operation(summary = "Update a subscription")
-	@ApiResponses({
-			@ApiResponse(responseCode = "200", content = {
-					@Content(schema = @Schema(implementation = SubscriptionDto.class), mediaType = "application/json") }),
+	@ApiResponses({ @ApiResponse(responseCode = "200", content = {
+			@Content(schema = @Schema(implementation = SubscriptionDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "404", description = "Not found.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> updateSubscription(
-			@PathVariable("gymId") String gymId,
+	public ResponseEntity<Object> updateSubscription(@PathVariable("gymId") String gymId,
 			@PathVariable("subscriptionId") String subscriptionId,
 			@Parameter(description = "activate or deactivate subscription") @RequestParam(name = "isActive", required = false, defaultValue = "true") boolean isActive,
 			@RequestBody PutSubscriptionDto request) {
 		Subscription entity = modelMapper.map(request, Subscription.class);
-		
+
 		try {
 			entity = subscriptionService.update(gymId, entity);
 		} catch (DomainException e) {
@@ -184,20 +171,18 @@ public class SubscriptionController {
 
 	@PostMapping("/gyms/{gymId}/subscriptions/{subscriptionId}/activate")
 	@Operation(summary = "Activate a subscription")
-	@ApiResponses({
-			@ApiResponse(responseCode = "200", content = {
-					@Content(schema = @Schema(implementation = SubscriptionDto.class), mediaType = "application/json") }),
+	@ApiResponses({ @ApiResponse(responseCode = "200", content = {
+			@Content(schema = @Schema(implementation = SubscriptionDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "404", description = "Not found.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> activateSubscription(
-			@PathVariable("gymId") String gymId,
+	public ResponseEntity<Object> activateSubscription(@PathVariable("gymId") String gymId,
 			@PathVariable("subscriptionId") String subscriptionId) {
 		Subscription entity;
-		
+
 		try {
 			entity = subscriptionService.activate(gymId, subscriptionId);
 		} catch (DomainException e) {
@@ -214,23 +199,21 @@ public class SubscriptionController {
 
 		return ResponseEntity.ok(modelMapper.map(entity, SubscriptionDto.class));
 	}
-	
+
 	@PostMapping("/gyms/{gymId}/subscriptions/{subscriptionId}/deactivate")
 	@Operation(summary = "Deactivate a subscription")
-	@ApiResponses({
-			@ApiResponse(responseCode = "200", content = {
-					@Content(schema = @Schema(implementation = SubscriptionDto.class), mediaType = "application/json") }),
+	@ApiResponses({ @ApiResponse(responseCode = "200", content = {
+			@Content(schema = @Schema(implementation = SubscriptionDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "404", description = "Not found.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> deactivateSubscription(
-			@PathVariable("gymId") String gymId,
+	public ResponseEntity<Object> deactivateSubscription(@PathVariable("gymId") String gymId,
 			@PathVariable("subscriptionId") String subscriptionId) {
 		Subscription entity;
-		
+
 		try {
 			entity = subscriptionService.deactivate(gymId, subscriptionId);
 		} catch (DomainException e) {
@@ -247,24 +230,21 @@ public class SubscriptionController {
 
 		return ResponseEntity.ok(modelMapper.map(entity, SubscriptionDto.class));
 	}
-	
+
 	@PatchMapping("/gyms/{gymId}/subscriptions/{subscriptionId}")
 	@Operation(summary = "Patch a subscription")
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
-	@ApiResponses({
-			@ApiResponse(responseCode = "200", content = {
-					@Content(schema = @Schema(implementation = SubscriptionDto.class), mediaType = "application/json") }),
+	@ApiResponses({ @ApiResponse(responseCode = "200", content = {
+			@Content(schema = @Schema(implementation = SubscriptionDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "404", description = "Not found.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> patchSubscription(
-			@PathVariable("gymId") String gymId,
-			@PathVariable("subscriptionId") String subscriptionId,
-			@RequestBody PatchSubscriptionDto request) {
+	public ResponseEntity<Object> patchSubscription(@PathVariable("gymId") String gymId,
+			@PathVariable("subscriptionId") String subscriptionId, @RequestBody PatchSubscriptionDto request) {
 		Subscription entity = modelMapper.map(request, Subscription.class);
-		
+
 		try {
 			entity = subscriptionService.patch(gymId, entity);
 		} catch (DomainException e) {
@@ -291,8 +271,7 @@ public class SubscriptionController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.ACCEPTED)
-	public ResponseEntity<Object> deleteSubscription(
-			@PathVariable("gymId") String gymId,
+	public ResponseEntity<Object> deleteSubscription(@PathVariable("gymId") String gymId,
 			@PathVariable("subscriptionId") String subscriptionId) {
 		try {
 			subscriptionService.delete(gymId, subscriptionId);

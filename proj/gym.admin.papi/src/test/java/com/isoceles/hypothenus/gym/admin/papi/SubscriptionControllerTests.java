@@ -58,7 +58,7 @@ class SubscriptionControllerTests {
 	public static final String patchURI = "/v1/admin/gyms/%s/subscriptions/%s";
 	public static final String pageNumber = "page";
 	public static final String pageSize = "pageSize";
-	public static final String isActive = "isActive";
+	public static final String includeInactive = "includeInactive";
 
 	public static final String gymId_16034 = "16034";
 	public static final String gymId_16035 = "16035";
@@ -129,7 +129,7 @@ class SubscriptionControllerTests {
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
 		params.add(pageNumber, "0");
 		params.add(pageSize, "5");
-		params.add(isActive, "true");
+		params.add(includeInactive, "false");
 
 		// Act
 		ResponseEntity<String> response = restTemplate.exchange(
@@ -166,7 +166,7 @@ class SubscriptionControllerTests {
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
 		params.add(pageNumber, "0");
 		params.add(pageSize, "5");
-		params.add(isActive, "false");
+		params.add(includeInactive, "true");
 
 		// Act
 		ResponseEntity<String> response = restTemplate.exchange(
@@ -220,6 +220,8 @@ class SubscriptionControllerTests {
 				String.format("Subscription list second page number invalid: %d", page.getPageable().getPageNumber()));
 		Assertions.assertEquals(2, page.getNumberOfElements(),
 				String.format("Subscription list second page number of elements invalid: %d", page.getNumberOfElements()));
+		
+		page.get().forEach(subscription -> Assertions.assertTrue(subscription.isActive()));
 		page.get().forEach(subscription -> Assertions.assertTrue(subscription.isDeleted() == false));
 	}
 

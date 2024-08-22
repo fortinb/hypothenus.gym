@@ -34,6 +34,11 @@ public class CourseService {
 			throw new DomainException(DomainException.INVALID_GYM, "Invalid gym");
 		}
 		
+		Optional<Course> existingCourse = courseRepository.findByGymIdAndCodeAndIsDeletedIsFalse(course.getGymId(), course.getCode());
+		if (existingCourse.isPresent()) {
+			throw new DomainException(DomainException.COURSE_CODE_ALREADY_EXIST, "Duplicate course code");
+		}
+		
 		course.setCreatedOn(Instant.now());
 		course.setCreatedBy(requestContext.getUsername());
 		
@@ -97,11 +102,11 @@ public class CourseService {
 		return entity.get();
 	}
 
-	public Page<Course> list(String gymId, int page, int pageSize) throws DomainException {
-		return courseRepository.findAllByGymIdAndIsDeletedIsFalse(gymId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
-	}
-	
-	public Page<Course> listActive(String gymId, int page, int pageSize) throws DomainException {
+	public Page<Course> list(String gymId, int page, int pageSize, boolean includeInactive) throws DomainException {
+		if (includeInactive) {
+			return courseRepository.findAllByGymIdAndIsDeletedIsFalse(gymId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
+		}
+
 		return courseRepository.findAllByGymIdAndIsDeletedIsFalseAndIsActiveIsTrue(gymId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
 	}
 	

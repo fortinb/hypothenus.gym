@@ -12,6 +12,4 @@ public class CoachDto extends BaseDto {
 	private String gymId;
 	
 	private PersonDto person;
-	
-
 }

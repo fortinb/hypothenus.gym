@@ -10,7 +10,7 @@ import lombok.Setter;
 @Setter
 public class PersonDto  {
 	
-private String firstname;
+	private String firstname;
 	
 	private String lastname;
 	
@@ -22,11 +22,11 @@ private String firstname;
 	
 	private List<PhoneNumberDto> phoneNumbers;
 	
-	private List<ContactDto> emergencyContacts;
+	private List<ContactDto> contacts;
 	
 	private String photoUri;
 	
-	private String communicationLanguage;
+	private LanguageEnum communicationLanguage;
 	
 	private String note;
 }

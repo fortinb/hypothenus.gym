@@ -1,6 +1,5 @@
 package com.isoceles.hypothenus.gym.admin.papi.dto;
 
-import java.time.Instant;
 import java.util.List;
 
 import lombok.Getter;
@@ -19,8 +18,4 @@ public class CourseDto extends BaseDto {
 	private List<LocalizedStringDto> name;
 
 	private List<LocalizedStringDto> description;
-
-	private Instant activatedOn;
-
-	private Instant deactivatedOn;
 }

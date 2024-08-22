@@ -58,7 +58,7 @@ class CoachControllerTests {
 	public static final String patchURI = "/v1/admin/gyms/%s/coachs/%s";
 	public static final String pageNumber = "page";
 	public static final String pageSize = "pageSize";
-	public static final String isActive = "isActive";
+	public static final String includeInactive = "includeInactive";
 	
 	public static final String gymId_16034 = "16034";
 	public static final String gymId_16035 = "16035";
@@ -131,7 +131,7 @@ class CoachControllerTests {
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
 		params.add(pageNumber, "0");
 		params.add(pageSize, "5");
-		params.add(isActive, "true");
+		params.add(includeInactive, "false");
 
 		// Act
 		ResponseEntity<String> response = restTemplate.exchange(HttpUtils.createURL(URI.create(String.format(listURI, gymId_16035)), port, params),
@@ -166,7 +166,7 @@ class CoachControllerTests {
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
 		params.add(pageNumber, "0");
 		params.add(pageSize, "5");
-		params.add(isActive, "false");
+		params.add(includeInactive, "true");
 		
 		// Act
 		ResponseEntity<String> response = restTemplate.exchange(HttpUtils.createURL(URI.create(String.format(listURI, gymId_16035)), port, params),
@@ -217,6 +217,8 @@ class CoachControllerTests {
 				String.format("Coach list second page number invalid: %d", page.getPageable().getPageNumber()));
 		Assertions.assertEquals(2, page.getNumberOfElements(),
 				String.format("Coach list second page number of elements invalid: %d", page.getNumberOfElements()));
+		
+		page.get().forEach(coach ->Assertions.assertTrue(coach.isActive()));
 		page.get().forEach(coach ->Assertions.assertTrue(coach.isDeleted() == false));
 	}
 
@@ -491,12 +493,12 @@ class CoachControllerTests {
 		if (expected.getPerson().getPhoneNumbers() == null) {
 			Assertions.assertNull(result.getPerson().getPhoneNumbers());
 			
-		if (expected.getPerson().getEmergencyContacts() != null) {
-			Assertions.assertNotNull(result.getPerson().getEmergencyContacts());
+		if (expected.getPerson().getContacts() != null) {
+			Assertions.assertNotNull(result.getPerson().getContacts());
 
-			Assertions.assertEquals(expected.getPerson().getEmergencyContacts().size(), result.getPerson().getEmergencyContacts().size());
-			expected.getPerson().getEmergencyContacts().forEach(contact -> {
-				Optional<ContactDto> previous = result.getPerson().getEmergencyContacts().stream()
+			Assertions.assertEquals(expected.getPerson().getContacts().size(), result.getPerson().getContacts().size());
+			expected.getPerson().getContacts().forEach(contact -> {
+				Optional<ContactDto> previous = result.getPerson().getContacts().stream()
 						.filter(item -> item.getFirstname().equals(contact.getFirstname())).findFirst();
 				Assertions.assertTrue(previous.isPresent());
 				Assertions.assertEquals(previous.get().getLastname(), contact.getLastname());
@@ -522,8 +524,8 @@ class CoachControllerTests {
 			});
 		}
 
-		if (expected.getPerson().getEmergencyContacts() == null) {
-			Assertions.assertNull(result.getPerson().getEmergencyContacts());
+		if (expected.getPerson().getContacts() == null) {
+			Assertions.assertNull(result.getPerson().getContacts());
 		}			
 		}
 	}

@@ -100,11 +100,11 @@ public class CoachService {
 		return entity.get();
 	}
 
-	public Page<Coach> list(String gymId, int page, int pageSize) throws DomainException {
-		return coachRepository.findAllByGymIdAndIsDeletedIsFalse(gymId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
-	}
-	
-	public Page<Coach> listActive(String gymId, int page, int pageSize) throws DomainException {
+	public Page<Coach> list(String gymId, int page, int pageSize, boolean includeInactive) throws DomainException {
+		if (includeInactive) {
+			return coachRepository.findAllByGymIdAndIsDeletedIsFalse(gymId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
+		}
+
 		return coachRepository.findAllByGymIdAndIsDeletedIsFalseAndIsActiveIsTrue(gymId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
 	}
 	

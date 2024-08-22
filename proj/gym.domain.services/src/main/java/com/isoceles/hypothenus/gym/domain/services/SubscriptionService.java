@@ -98,11 +98,11 @@ public class SubscriptionService {
 		return entity.get();
 	}
 
-	public Page<Subscription> list(String gymId, int page, int pageSize) throws DomainException {
-		return subscriptionRepository.findAllByGymIdAndIsDeletedIsFalse(gymId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
-	}
-	
-	public Page<Subscription> listActive(String gymId, int page, int pageSize) throws DomainException {
+	public Page<Subscription> list(String gymId, int page, int pageSize, boolean includeInactive) throws DomainException {
+		if (includeInactive) {
+			return subscriptionRepository.findAllByGymIdAndIsDeletedIsFalse(gymId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
+		}
+
 		return subscriptionRepository.findAllByGymIdAndIsDeletedIsFalseAndIsActiveIsTrue(gymId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
 	}
 	

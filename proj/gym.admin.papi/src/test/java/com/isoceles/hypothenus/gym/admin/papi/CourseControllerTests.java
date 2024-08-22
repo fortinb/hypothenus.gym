@@ -9,12 +9,13 @@ import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.api.Assertions;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,16 +35,18 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
-
 import com.isoceles.hypothenus.gym.admin.papi.dto.CourseDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.LocalizedStringDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.patch.PatchCourseDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostCourseDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutCourseDto;
+import com.isoceles.hypothenus.gym.domain.exception.DomainException;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Course;
 import com.isoceles.hypothenus.gym.domain.repository.CourseRepository;
 import com.isoceles.hypothenus.tests.http.HttpUtils;
 import com.isoceles.hypothenus.tests.model.CourseBuilder;
+import com.isoceles.hypothenus.tests.security.Roles;
+import com.isoceles.hypothenus.tests.security.Users;
 
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(Lifecycle.PER_CLASS)
@@ -58,7 +61,7 @@ class CourseControllerTests {
 	public static final String patchURI = "/v1/admin/gyms/%s/courses/%s";
 	public static final String pageNumber = "page";
 	public static final String pageSize = "pageSize";
-	public static final String isActive = "isActive";
+	public static final String includeInactive = "includeInactive";
 
 	public static final String gymId_16034 = "16034";
 	public static final String gymId_16035 = "16035";
@@ -129,7 +132,7 @@ class CourseControllerTests {
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
 		params.add(pageNumber, "0");
 		params.add(pageSize, "5");
-		params.add(isActive, "true");
+		params.add(includeInactive, "false");
 
 		// Act
 		ResponseEntity<String> response = restTemplate.exchange(
@@ -166,7 +169,7 @@ class CourseControllerTests {
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
 		params.add(pageNumber, "0");
 		params.add(pageSize, "5");
-		params.add(isActive, "false");
+		params.add(includeInactive, "true");
 
 		// Act
 		ResponseEntity<String> response = restTemplate.exchange(
@@ -220,6 +223,8 @@ class CourseControllerTests {
 				String.format("Course list second page number invalid: %d", page.getPageable().getPageNumber()));
 		Assertions.assertEquals(2, page.getNumberOfElements(),
 				String.format("Course list second page number of elements invalid: %d", page.getNumberOfElements()));
+		
+		page.get().forEach(course -> Assertions.assertTrue(course.isActive()));
 		page.get().forEach(course -> Assertions.assertTrue(course.isDeleted() == false));
 	}
 
@@ -242,6 +247,34 @@ class CourseControllerTests {
 		assertCourse(modelMapper.map(postCourse, CourseDto.class), response.getBody());
 	}
 
+	@Test
+	void testPostDuplicateFailure() throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		PostCourseDto postCourse = modelMapper.map(CourseBuilder.build(gymId_16034), PostCourseDto.class);
+		HttpEntity<PostCourseDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postCourse);
+
+		ResponseEntity<CourseDto> response = restTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(postURI, gymId_16034)), port, null), HttpMethod.POST,
+				httpEntity, CourseDto.class);
+
+		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
+				String.format("Post error: %s", response.getStatusCode()));
+
+		// Act
+		response = restTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(postURI, gymId_16034)), port, null), HttpMethod.POST,
+				httpEntity, CourseDto.class);
+		
+		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
+				String.format("Post error: %s", response.getStatusCode()));
+		
+		Assertions.assertEquals(1, response.getBody().getMessages().size(),
+				String.format("Duplicate error ,missing message: %s", response.getBody().getMessages().size()));
+		
+		Assertions.assertEquals(DomainException.COURSE_CODE_ALREADY_EXIST, response.getBody().getMessages().getFirst().getCode(),
+				String.format("Duplicate error, missing message: %s", response.getBody().getMessages().getFirst().getCode()));
+	}
+	
 	@ParameterizedTest
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testGetSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {

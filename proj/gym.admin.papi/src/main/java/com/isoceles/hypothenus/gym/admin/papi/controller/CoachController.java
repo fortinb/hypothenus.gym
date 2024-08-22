@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.isoceles.hypothenus.gym.admin.papi.config.security.Roles;
@@ -65,18 +67,13 @@ public class CoachController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> listCoach(
 			@PathVariable("gymId") String gymId,
-			@Parameter(description = "only active") @RequestParam(name = "isActive", required = false, defaultValue = "true") boolean isActive,
 			@Parameter(description = "page number") @RequestParam(name = "page", required = true) int page,
-			@Parameter(description = "page size") @RequestParam(name = "pageSize", required = true) int pageSize) {
+			@Parameter(description = "page size") @RequestParam(name = "pageSize", required = true) int pageSize,
+			@Parameter(description = "includeInactive") @RequestParam(name = "includeInactive", required = false, defaultValue="false") boolean includeInactive) {
 
 		Page<Coach> entities = null;
 		try {
-			if (isActive)
-				entities = coachService.listActive(gymId, page, pageSize);
-			else {
-				entities = coachService.list(gymId, page, pageSize);
-			}
-			
+			entities = coachService.list(gymId, page, pageSize, includeInactive);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
@@ -182,6 +179,15 @@ public class CoachController {
 		return ResponseEntity.ok(modelMapper.map(entity, CoachDto.class));
 	}
 
+	@PostMapping("/gyms/{gymId}/coachs/{coachId}/photo")
+	public ResponseEntity<String> handlePhotoUpload(@RequestParam("file") MultipartFile file,
+			RedirectAttributes redirectAttributes) {
+
+		//storageService.store(file);
+
+		return ResponseEntity.ok("new photo url");
+	}
+	
 	@PostMapping("/gyms/{gymId}/coachs/{coachId}/activate")
 	@Operation(summary = "Activate a coach")
 	@ApiResponses({

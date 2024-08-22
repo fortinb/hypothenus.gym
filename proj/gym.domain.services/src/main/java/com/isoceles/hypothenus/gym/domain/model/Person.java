@@ -22,7 +22,7 @@ public class Person {
 	
 	private List<PhoneNumber> phoneNumbers;
 	
-	private List<Contact> emergencyContacts;
+	private List<Contact> contacts;
 	
 	private String photoUri;
 	
@@ -42,7 +42,7 @@ public class Person {
 		this.email = email;
 		this.address = address;
 		this.phoneNumbers = phoneNumbers;
-		this.emergencyContacts = emergencyContacts;
+		this.contacts = emergencyContacts;
 		this.photoUri = photoUri;
 		this.communicationLanguage = communicationLanguage;
 		this.note = note;
