@@ -1,5 +1,6 @@
 package com.isoceles.hypothenus.gym.admin.papi.dto;
 
+import java.util.Date;
 import java.util.List;
 
 import lombok.Getter;
@@ -18,4 +19,10 @@ public class CourseDto extends BaseDto {
 	private List<LocalizedStringDto> name;
 
 	private List<LocalizedStringDto> description;
+	
+	private Date startDate;
+	
+	private Date endDate;
+	
+	private List<CoachDto> coachs;
 }

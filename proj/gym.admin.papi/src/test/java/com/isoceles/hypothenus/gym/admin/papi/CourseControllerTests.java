@@ -41,9 +41,12 @@ import com.isoceles.hypothenus.gym.admin.papi.dto.patch.PatchCourseDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostCourseDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutCourseDto;
 import com.isoceles.hypothenus.gym.domain.exception.DomainException;
+import com.isoceles.hypothenus.gym.domain.model.aggregate.Coach;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Course;
+import com.isoceles.hypothenus.gym.domain.repository.CoachRepository;
 import com.isoceles.hypothenus.gym.domain.repository.CourseRepository;
 import com.isoceles.hypothenus.tests.http.HttpUtils;
+import com.isoceles.hypothenus.tests.model.CoachBuilder;
 import com.isoceles.hypothenus.tests.model.CourseBuilder;
 import com.isoceles.hypothenus.tests.security.Roles;
 import com.isoceles.hypothenus.tests.security.Users;
@@ -71,6 +74,9 @@ class CourseControllerTests {
 
 	@Autowired
 	CourseRepository courseRepository;
+	
+	@Autowired
+	CoachRepository coachRepository;
 
 	@Autowired
 	ObjectMapper objectMapper;
@@ -82,6 +88,7 @@ class CourseControllerTests {
 
 	private TestRestTemplate restTemplate = new TestRestTemplate();
 
+	private List<Coach> coachs = new ArrayList<Coach>();
 	private Course course;
 	private Course courseIsDeleted;
 	private List<Course> courses = new ArrayList<Course>();
@@ -92,26 +99,32 @@ class CourseControllerTests {
 
 		courseRepository.deleteAll();
 
-		course = CourseBuilder.build(gymId_16034);
+		for (int i = 0; i < 5; i++) {
+			Coach coach = CoachBuilder.build(gymId_16034);
+			coachRepository.save(coach);
+			coachs.add(coach);
+		}
+		
+		course = CourseBuilder.build(gymId_16034, coachs);
 		courseRepository.save(course);
 
-		courseIsDeleted = CourseBuilder.build(gymId_16034);
+		courseIsDeleted = CourseBuilder.build(gymId_16034, coachs);
 		courseIsDeleted.setDeleted(true);
 		courseIsDeleted = courseRepository.save(courseIsDeleted);
 
 		for (int i = 0; i < 10; i++) {
-			Course item = CourseBuilder.build(gymId_16034);
+			Course item = CourseBuilder.build(gymId_16034, coachs);
 			courseRepository.save(item);
 			courses.add(item);
 		}
 
 		for (int i = 0; i < 4; i++) {
-			Course item = CourseBuilder.build(gymId_16035);
+			Course item = CourseBuilder.build(gymId_16035, null);
 			courseRepository.save(item);
 			courses.add(item);
 		}
 
-		Course item = CourseBuilder.build(gymId_16035);
+		Course item = CourseBuilder.build(gymId_16035, null);
 		item.setActive(false);
 		courseRepository.save(item);
 	}
@@ -232,7 +245,7 @@ class CourseControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testPostSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostCourseDto postCourse = modelMapper.map(CourseBuilder.build(gymId_16034), PostCourseDto.class);
+		PostCourseDto postCourse = modelMapper.map(CourseBuilder.build(gymId_16034, coachs), PostCourseDto.class);
 
 		HttpEntity<PostCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, postCourse);
 
@@ -250,7 +263,7 @@ class CourseControllerTests {
 	@Test
 	void testPostDuplicateFailure() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostCourseDto postCourse = modelMapper.map(CourseBuilder.build(gymId_16034), PostCourseDto.class);
+		PostCourseDto postCourse = modelMapper.map(CourseBuilder.build(gymId_16034, null), PostCourseDto.class);
 		HttpEntity<PostCourseDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postCourse);
 
 		ResponseEntity<CourseDto> response = restTemplate.exchange(
@@ -279,7 +292,7 @@ class CourseControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testGetSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostCourseDto postCourse = modelMapper.map(CourseBuilder.build(gymId_16034), PostCourseDto.class);
+		PostCourseDto postCourse = modelMapper.map(CourseBuilder.build(gymId_16034, coachs), PostCourseDto.class);
 
 		HttpEntity<PostCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, postCourse);
 
@@ -306,13 +319,13 @@ class CourseControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testPutSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Course courseToUpdate = CourseBuilder.build(gymId_16034);
+		Course courseToUpdate = CourseBuilder.build(gymId_16034, coachs);
 		courseToUpdate.setActive(false);
 		courseToUpdate.setActivatedOn(null);
 		courseToUpdate.setDeactivatedOn(null);
 		courseToUpdate = courseRepository.save(courseToUpdate);
 
-		Course updatedCourse = CourseBuilder.build(gymId_16034);
+		Course updatedCourse = CourseBuilder.build(gymId_16034, coachs);
 		updatedCourse.setId(courseToUpdate.getId());
 		updatedCourse.setActive(false);
 		updatedCourse.setActivatedOn(null);
@@ -337,13 +350,13 @@ class CourseControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testPutNullSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Course courseToUpdate = CourseBuilder.build(gymId_16034);
+		Course courseToUpdate = CourseBuilder.build(gymId_16034, null);
 		courseToUpdate.setActive(false);
 		courseToUpdate.setActivatedOn(null);
 		courseToUpdate.setDeactivatedOn(null);
 		courseToUpdate = courseRepository.save(courseToUpdate);
 
-		Course updatedCourse = CourseBuilder.build(gymId_16034);
+		Course updatedCourse = CourseBuilder.build(gymId_16034, null);
 
 		PutCourseDto putCourse = modelMapper.map(updatedCourse, PutCourseDto.class);
 		putCourse.setId(courseToUpdate.getId());
@@ -371,7 +384,7 @@ class CourseControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testActivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Course courseToActivate = CourseBuilder.build(gymId_16034);
+		Course courseToActivate = CourseBuilder.build(gymId_16034, null);
 		courseToActivate.setActive(false);
 		courseToActivate.setActivatedOn(null);
 		courseToActivate.setDeactivatedOn(null);
@@ -413,7 +426,7 @@ class CourseControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testDeactivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Course courseToDeactivate = CourseBuilder.build(gymId_16034);
+		Course courseToDeactivate = CourseBuilder.build(gymId_16034, null);
 		courseToDeactivate.setActive(true);
 		courseToDeactivate.setActivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
 		courseToDeactivate = courseRepository.save(courseToDeactivate);
@@ -452,7 +465,7 @@ class CourseControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testPatchSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Course courseToPatch = CourseBuilder.build(gymId_16034);
+		Course courseToPatch = CourseBuilder.build(gymId_16034, null);
 		courseToPatch = courseRepository.save(courseToPatch);
 
 		PatchCourseDto patchCourse = modelMapper.map(courseToPatch, PatchCourseDto.class);
