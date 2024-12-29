@@ -41,7 +41,7 @@ public class Course extends BaseEntity {
 
 	public Course() {
 	}
-
+ 
 	public Course(String gymId, String code, List<LocalizedString> name, List<LocalizedString> description,
 			List<Coach> coachs, Date startDate, Date endDate, boolean isActive, Instant activatedOn, Instant deactivatedOn) {
 		super(isActive);
