@@ -11,7 +11,7 @@ public class SpringDocConfig {
 
 	@Bean
 	GroupedOpenApi publicApi() {
-		return GroupedOpenApi.builder().group("add-user-id-header").addOperationCustomizer((operation, $) -> {
+		return GroupedOpenApi.builder().group("add-user-id-header").addOperationCustomizer((operation, _) -> {
 			operation
 					.addParametersItem(
 							new HeaderParameter().name("x-authorization").description("Roles").required(true))

@@ -1,14 +1,14 @@
 plugins {
     id 'java-library'
-    id 'org.springframework.boot' version '3.3.4'
-	id 'io.spring.dependency-management' version '1.1.5'
+    id 'org.springframework.boot' version '3.4.3'
+	id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'isoceles.hypothenus'
 version = '0.0.1'
 
 java {
-	sourceCompatibility = '21'
+	sourceCompatibility = '23'
 }
 
 repositories {
