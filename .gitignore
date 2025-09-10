@@ -1,5 +1,5 @@
 #JAVA
-proj/*/bin/
+proj/*/bin/**
 proj/*/build/
 *.log
 *.class
@@ -22,7 +22,4 @@ bin/
 
 ### VS Code ###
 .vscode/
-
-
-
-/proj/gym.domain.services/bin/**
+/proj/*/bin
