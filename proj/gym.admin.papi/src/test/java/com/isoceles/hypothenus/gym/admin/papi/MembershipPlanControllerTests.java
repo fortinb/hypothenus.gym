@@ -447,7 +447,7 @@ class MembershipPlanControllerTests {
 	}
 
 	public static final void assertMembershipPlan(MembershipPlanDto expected, MembershipPlanDto result) {
-		Assertions.assertEquals(expected.getId(), result.getId());
+		Assertions.assertEquals(expected.getBrandId(), result.getBrandId());
 		Assertions.assertEquals(expected.getCode(), result.getCode());
 		Assertions.assertEquals(expected.getDurationInMonths(), result.getDurationInMonths());
 		Assertions.assertEquals(expected.getMaxNumberOfClassesPerPeriod(), result.getMaxNumberOfClassesPerPeriod());

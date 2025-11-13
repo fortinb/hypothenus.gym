@@ -11,11 +11,11 @@ import com.isoceles.hypothenus.gym.domain.model.aggregate.Coach;
 
 public interface CoachRepository extends PagingAndSortingRepository<Coach, String>, CrudRepository<Coach, String>, CoachRepositoryCustom {
 	
-	Optional<Coach> findByGymIdAndIdAndIsDeletedIsFalse(String gymId, String id);
+	Optional<Coach> findByBrandIdAndGymIdAndIdAndIsDeletedIsFalse(String brandId, String gymId, String id);
 	
-	Page<Coach> findAllByGymIdAndIsDeletedIsFalse(String gymId, Pageable pageable);
+	Page<Coach> findAllByBrandIdAndGymIdAndIsDeletedIsFalse(String brandId,String gymId, Pageable pageable);
 	
-	Page<Coach> findAllByGymIdAndIsDeletedIsFalseAndIsActiveIsTrue(String gymId, Pageable pageable);
+	Page<Coach> findAllByBrandIdAndGymIdAndIsDeletedIsFalseAndIsActiveIsTrue(String brandId,String gymId, Pageable pageable);
 	
 	
 }

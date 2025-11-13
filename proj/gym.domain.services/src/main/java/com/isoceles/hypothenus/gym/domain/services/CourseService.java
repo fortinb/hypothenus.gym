@@ -29,12 +29,16 @@ public class CourseService {
 		this.courseRepository = courseRepository;
 	}
 
-	public Course create(String gymId, Course course) throws DomainException {
-		if (!course.getGymId().equals(gymId)) {
-			throw new DomainException(DomainException.INVALID_BRAND, "Invalid gym");
+	public Course create(String brandId, String gymId, Course course) throws DomainException {
+		if (!course.getBrandId().equals(brandId)) {
+			throw new DomainException(DomainException.INVALID_BRAND, "Invalid brand");
 		}
 		
-		Optional<Course> existingCourse = courseRepository.findByGymIdAndCodeAndIsDeletedIsFalse(course.getGymId(), course.getCode());
+		if (!course.getGymId().equals(gymId)) {
+			throw new DomainException(DomainException.INVALID_GYM, "Invalid gym");
+		}
+		
+		Optional<Course> existingCourse = courseRepository.findByBrandIdAndGymIdAndCodeAndIsDeletedIsFalse(brandId, gymId, course.getCode());
 		if (existingCourse.isPresent()) {
 			throw new DomainException(DomainException.COURSE_CODE_ALREADY_EXIST, "Duplicate course code");
 		}
@@ -45,12 +49,16 @@ public class CourseService {
 		return courseRepository.save(course);
 	}
 
-	public Course update(String gymId, Course course) throws DomainException {
-		if (!course.getGymId().equals(gymId)) {
-			throw new DomainException(DomainException.INVALID_BRAND, "Invalid gym");
+	public Course update(String brandId, String gymId, Course course) throws DomainException {
+		if (!course.getBrandId().equals(brandId)) {
+			throw new DomainException(DomainException.INVALID_BRAND, "Invalid brand");
 		}
 		
-		Course oldCourse = this.findByCourseId(gymId, course.getId());
+		if (!course.getGymId().equals(gymId)) {
+			throw new DomainException(DomainException.INVALID_GYM, "Invalid gym");
+		}
+				
+		Course oldCourse = this.findByCourseId(brandId, gymId, course.getId());
 
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(false);
@@ -64,12 +72,16 @@ public class CourseService {
 		return courseRepository.save(oldCourse);
 	}
 
-	public Course patch(String gymId, Course course) throws DomainException {
-		if (!course.getGymId().equals(gymId)) {
-			throw new DomainException(DomainException.INVALID_BRAND, "Invalid gym");
+	public Course patch(String brandId, String gymId, Course course) throws DomainException {
+		if (!course.getBrandId().equals(brandId)) {
+			throw new DomainException(DomainException.INVALID_BRAND, "Invalid brand");
 		}
 		
-		Course oldCourse = this.findByCourseId(gymId, course.getId());
+		if (!course.getGymId().equals(gymId)) {
+			throw new DomainException(DomainException.INVALID_GYM, "Invalid gym");
+		}
+		
+		Course oldCourse = this.findByCourseId(brandId, gymId, course.getId());
 
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(true);
@@ -83,8 +95,8 @@ public class CourseService {
 		return courseRepository.save(oldCourse);
 	}
 
-	public void delete(String gymId, String courseId) throws DomainException {
-		Course oldCourse = this.findByCourseId(gymId,  courseId);
+	public void delete(String brandId, String gymId, String courseId) throws DomainException {
+		Course oldCourse = this.findByCourseId(brandId, gymId,  courseId);
 		oldCourse.setDeleted(true);
 
 		oldCourse.setDeletedOn(Instant.now());
@@ -93,8 +105,8 @@ public class CourseService {
 		courseRepository.save(oldCourse);
 	}
 
-	public Course findByCourseId(String gymId, String id) throws DomainException {
-		Optional<Course> entity = courseRepository.findByGymIdAndIdAndIsDeletedIsFalse(gymId, id);
+	public Course findByCourseId(String brandId, String gymId, String id) throws DomainException {
+		Optional<Course> entity = courseRepository.findByBrandIdAndGymIdAndIdAndIsDeletedIsFalse(brandId, gymId, id);
 		if (entity.isEmpty()) {
 			throw new DomainException(DomainException.COURSE_NOT_FOUND, "Course not found");
 		}
@@ -102,17 +114,17 @@ public class CourseService {
 		return entity.get();
 	}
 
-	public Page<Course> list(String gymId, int page, int pageSize, boolean includeInactive) throws DomainException {
+	public Page<Course> list(String brandId, String gymId, int page, int pageSize, boolean includeInactive) throws DomainException {
 		if (includeInactive) {
-			return courseRepository.findAllByGymIdAndIsDeletedIsFalse(gymId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
+			return courseRepository.findAllByBrandIdAndGymIdAndIsDeletedIsFalse(brandId, gymId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
 		}
 
-		return courseRepository.findAllByGymIdAndIsDeletedIsFalseAndIsActiveIsTrue(gymId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
+		return courseRepository.findAllByBrandIdAndGymIdAndIsDeletedIsFalseAndIsActiveIsTrue(brandId, gymId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
 	}
 	
-	public Course activate(String gymId, String id) throws DomainException {
+	public Course activate(String brandId, String gymId, String id) throws DomainException {
 		
-		Optional<Course> oldCourse = courseRepository.activate(gymId, id);
+		Optional<Course> oldCourse = courseRepository.activate(brandId, gymId, id);
 		if (oldCourse.isEmpty()) {
 			throw new DomainException(DomainException.COURSE_NOT_FOUND, "Course not found");
 		}
@@ -120,9 +132,9 @@ public class CourseService {
 		return oldCourse.get();
 	}
 	
-	public Course deactivate(String gymId, String id) throws DomainException {
+	public Course deactivate(String brandId, String gymId, String id) throws DomainException {
 		
-		Optional<Course> oldCourse = courseRepository.deactivate(gymId, id);
+		Optional<Course> oldCourse = courseRepository.deactivate(brandId, gymId, id);
 		if (oldCourse.isEmpty()) {
 			throw new DomainException(DomainException.COURSE_NOT_FOUND, "Course not found");
 		}

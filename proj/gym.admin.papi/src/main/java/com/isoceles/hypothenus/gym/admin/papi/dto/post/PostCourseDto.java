@@ -3,9 +3,11 @@ package com.isoceles.hypothenus.gym.admin.papi.dto.post;
 import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.isoceles.hypothenus.gym.admin.papi.dto.CoachDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.LocalizedStringDto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,6 +15,12 @@ import lombok.Setter;
 @Setter
 public class PostCourseDto {
 	
+	private String id;
+	
+	@NotBlank
+	private String brandId;
+
+	@NotBlank
 	private String gymId;
 
 	private String code;

@@ -15,7 +15,6 @@ import lombok.Setter;
 @Setter
 public class PostGymDto {
 	
-	@JsonIgnore
 	private String id;
 	
 	@NotBlank

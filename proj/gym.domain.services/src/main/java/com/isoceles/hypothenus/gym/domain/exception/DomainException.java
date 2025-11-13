@@ -17,6 +17,7 @@ public class DomainException extends Exception {
 	public static final String MEMBERSHIPPLAN_NOT_FOUND = "404";
 	
 	public static final String INVALID_BRAND = "404";
+	public static final String INVALID_GYM = "404";
 	
 	private static final long serialVersionUID = 1L;
 	private String code;

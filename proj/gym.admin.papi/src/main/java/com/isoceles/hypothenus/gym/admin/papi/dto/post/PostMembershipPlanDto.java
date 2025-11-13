@@ -2,11 +2,12 @@ package com.isoceles.hypothenus.gym.admin.papi.dto.post;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.isoceles.hypothenus.gym.admin.papi.dto.CourseDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.LocalizedStringDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.MembershipPlanPaymentOptionEnum;
 import com.isoceles.hypothenus.gym.admin.papi.dto.MembershipPlanPeriodEnum;
-
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,6 +15,9 @@ import lombok.Setter;
 @Setter
 public class PostMembershipPlanDto {
 	
+	private String id;
+	
+	@NotBlank
 	private String brandId;
 
 	private String code;

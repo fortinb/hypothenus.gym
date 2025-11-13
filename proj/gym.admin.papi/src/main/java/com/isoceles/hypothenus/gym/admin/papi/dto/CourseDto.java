@@ -11,6 +11,8 @@ import lombok.Setter;
 public class CourseDto extends BaseDto {
 	
 	private String id;
+	
+	private String brandId;
 
 	private String gymId;
 

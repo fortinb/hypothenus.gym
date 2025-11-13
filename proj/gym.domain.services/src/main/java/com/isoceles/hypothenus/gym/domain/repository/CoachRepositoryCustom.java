@@ -6,7 +6,7 @@ import com.isoceles.hypothenus.gym.domain.model.aggregate.Coach;
 
 public interface CoachRepositoryCustom {
 
-	Optional<Coach> activate(String gymId, String id);
+	Optional<Coach> activate(String brandId, String gymId, String id);
 	
-	Optional<Coach> deactivate(String gymId, String id);
+	Optional<Coach> deactivate(String brandId, String gymId, String id);
 }

@@ -60,7 +60,7 @@ public class CourseController {
 		this.courseService = courseService;
 	}
 
-	@GetMapping("/gyms/{gymId}/courses")
+	@GetMapping("/brands/{brandId}/gyms/{gymId}/courses")
 	@Operation(summary = "Retrieve a list of courses")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -69,14 +69,16 @@ public class CourseController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> listCourse(@PathVariable("gymId") String gymId,
+	public ResponseEntity<Object> listCourse(
+			@PathVariable("brandId") String brandId,
+			@PathVariable("gymId") String gymId,
 			@Parameter(description = "page number") @RequestParam(name = "page", required = true) int page,
 			@Parameter(description = "page size") @RequestParam(name = "pageSize", required = true) int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(name = "includeInactive", required = false, defaultValue = "false") boolean includeInactive) {
 
 		Page<Course> entities = null;
 		try {
-			entities = courseService.list(gymId, page, pageSize, includeInactive);
+			entities = courseService.list(brandId, gymId, page, pageSize, includeInactive);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
@@ -87,7 +89,7 @@ public class CourseController {
 		return ResponseEntity.ok(entities.map(item -> modelMapper.map(item, CourseDto.class)));
 	}
 
-	@GetMapping("/gyms/{gymId}/courses/{courseId}")
+	@GetMapping("/brands/{brandId}/gyms/{gymId}/courses/{courseId}")
 	@Operation(summary = "Retrieve a specific course")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -98,11 +100,13 @@ public class CourseController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> getCourse(@PathVariable("gymId") String gymId,
+	public ResponseEntity<Object> getCourse(
+			@PathVariable("brandId") String brandId,
+			@PathVariable("gymId") String gymId,
 			@PathVariable("courseId") String courseId) {
 		Course entity = null;
 		try {
-			entity = courseService.findByCourseId(gymId, courseId);
+			entity = courseService.findByCourseId(brandId, gymId, courseId);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
@@ -118,7 +122,7 @@ public class CourseController {
 		return ResponseEntity.ok(modelMapper.map(entity, CourseDto.class));
 	}
 
-	@PostMapping("/gyms/{gymId}/courses")
+	@PostMapping("/brands/{brandId}/gyms/{gymId}/courses")
 	@Operation(summary = "Create a new course")
 	@ApiResponses({
 			@ApiResponse(responseCode = "201", content = {
@@ -127,12 +131,14 @@ public class CourseController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.CREATED)
-	public ResponseEntity<Object> createCourse(@PathVariable("gymId") String gymId,
+	public ResponseEntity<Object> createCourse(
+			@PathVariable("brandId") String brandId,
+			@PathVariable("gymId") String gymId,
 			@RequestBody PostCourseDto request) {
 		Course entity = modelMapper.map(request, Course.class);
 
 		try {
-			courseService.create(gymId, entity);
+			courseService.create(brandId, gymId, entity);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 			
@@ -158,7 +164,7 @@ public class CourseController {
 				.body(modelMapper.map(entity, CourseDto.class));
 	}
 
-	@PutMapping("/gyms/{gymId}/courses/{courseId}")
+	@PutMapping("/brands/{brandId}/gyms/{gymId}/courses/{courseId}")
 	@Operation(summary = "Update a course")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -169,14 +175,16 @@ public class CourseController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> updateCourse(@PathVariable("gymId") String gymId,
+	public ResponseEntity<Object> updateCourse(
+			@PathVariable("brandId") String brandId,
+			@PathVariable("gymId") String gymId,
 			@PathVariable("courseId") String courseId,
 			@Parameter(description = "activate or deactivate course") @RequestParam(name = "isActive", required = false, defaultValue = "true") boolean isActive,
 			@RequestBody PutCourseDto request) {
 		Course entity = modelMapper.map(request, Course.class);
 
 		try {
-			entity = courseService.update(gymId, entity);
+			entity = courseService.update(brandId, gymId, entity);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
@@ -192,7 +200,7 @@ public class CourseController {
 		return ResponseEntity.ok(modelMapper.map(entity, CourseDto.class));
 	}
 
-	@PostMapping("/gyms/{gymId}/courses/{courseId}/activate")
+	@PostMapping("/brands/{brandId}/gyms/{gymId}/courses/{courseId}/activate")
 	@Operation(summary = "Activate a course")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -203,12 +211,14 @@ public class CourseController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> activateCourse(@PathVariable("gymId") String gymId,
+	public ResponseEntity<Object> activateCourse(
+			@PathVariable("brandId") String brandId,
+			@PathVariable("gymId") String gymId,
 			@PathVariable("courseId") String courseId) {
 		Course entity;
 
 		try {
-			entity = courseService.activate(gymId, courseId);
+			entity = courseService.activate(brandId, gymId, courseId);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
@@ -224,7 +234,7 @@ public class CourseController {
 		return ResponseEntity.ok(modelMapper.map(entity, CourseDto.class));
 	}
 
-	@PostMapping("/gyms/{gymId}/courses/{courseId}/deactivate")
+	@PostMapping("/brands/{brandId}/gyms/{gymId}/courses/{courseId}/deactivate")
 	@Operation(summary = "Deactivate a course")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -235,12 +245,14 @@ public class CourseController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> deactivateCourse(@PathVariable("gymId") String gymId,
+	public ResponseEntity<Object> deactivateCourse(
+			@PathVariable("brandId") String brandId,
+			@PathVariable("gymId") String gymId,
 			@PathVariable("courseId") String courseId) {
 		Course entity;
 
 		try {
-			entity = courseService.deactivate(gymId, courseId);
+			entity = courseService.deactivate(brandId, gymId, courseId);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
@@ -256,7 +268,7 @@ public class CourseController {
 		return ResponseEntity.ok(modelMapper.map(entity, CourseDto.class));
 	}
 
-	@PatchMapping("/gyms/{gymId}/courses/{courseId}")
+	@PatchMapping("/brands/{brandId}/gyms/{gymId}/courses/{courseId}")
 	@Operation(summary = "Patch a course")
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ApiResponses({
@@ -267,12 +279,14 @@ public class CourseController {
 			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> patchCourse(@PathVariable("gymId") String gymId,
+	public ResponseEntity<Object> patchCourse(
+			@PathVariable("brandId") String brandId,
+			@PathVariable("gymId") String gymId,
 			@PathVariable("courseId") String courseId, @RequestBody PatchCourseDto request) {
 		Course entity = modelMapper.map(request, Course.class);
 
 		try {
-			entity = courseService.patch(gymId, entity);
+			entity = courseService.patch(brandId, gymId, entity);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
@@ -288,7 +302,7 @@ public class CourseController {
 		return ResponseEntity.ok(modelMapper.map(entity, CourseDto.class));
 	}
 
-	@DeleteMapping("/gyms/{gymId}/courses/{courseId}")
+	@DeleteMapping("/brands/{brandId}/gyms/{gymId}/courses/{courseId}")
 	@Operation(summary = "Delete a course")
 	@ApiResponses({ @ApiResponse(responseCode = "202"),
 			@ApiResponse(responseCode = "404", description = "Not found.", content = {
@@ -297,10 +311,12 @@ public class CourseController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.ACCEPTED)
-	public ResponseEntity<Object> deleteCourse(@PathVariable("gymId") String gymId,
+	public ResponseEntity<Object> deleteCourse(
+			@PathVariable("brandId") String brandId,
+			@PathVariable("gymId") String gymId,
 			@PathVariable("courseId") String courseId) {
 		try {
-			courseService.delete(gymId, courseId);
+			courseService.delete(brandId, gymId, courseId);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 

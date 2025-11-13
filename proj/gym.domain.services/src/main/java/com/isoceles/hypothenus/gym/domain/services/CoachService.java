@@ -32,9 +32,13 @@ public class CoachService {
 		this.coachRepository = coachRepository;
 	}
 
-	public Coach create(String gymId, Coach coach) throws DomainException {
+	public Coach create(String brandId, String gymId, Coach coach) throws DomainException {
+		if (!coach.getBrandId().equals(brandId)) {
+			throw new DomainException(DomainException.INVALID_BRAND, "Invalid brand");
+		}
+		
 		if (!coach.getGymId().equals(gymId)) {
-			throw new DomainException(DomainException.INVALID_BRAND, "Invalid gym");
+			throw new DomainException(DomainException.INVALID_GYM, "Invalid gym");
 		}
 		
 		coach.setCreatedOn(Instant.now());
@@ -43,12 +47,16 @@ public class CoachService {
 		return coachRepository.save(coach);
 	}
 
-	public Coach update(String gymId, Coach coach) throws DomainException {
-		if (!coach.getGymId().equals(gymId)) {
-			throw new DomainException(DomainException.INVALID_BRAND, "Invalid gym");
+	public Coach update(String brandId, String gymId, Coach coach) throws DomainException {
+		if (!coach.getBrandId().equals(brandId)) {
+			throw new DomainException(DomainException.INVALID_BRAND, "Invalid brand");
 		}
 		
-		Coach oldCoach = this.findByCoachId(gymId, coach.getId());
+		if (!coach.getGymId().equals(gymId)) {
+			throw new DomainException(DomainException.INVALID_GYM, "Invalid gym");
+		}
+		
+		Coach oldCoach = this.findByCoachId(brandId, gymId, coach.getId());
 
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(false);
@@ -62,12 +70,12 @@ public class CoachService {
 		return coachRepository.save(oldCoach);
 	}
 
-	public Coach patch(String gymId, Coach coach) throws DomainException {
+	public Coach patch(String brandId, String gymId, Coach coach) throws DomainException {
 		if (!coach.getGymId().equals(gymId)) {
 			throw new DomainException(DomainException.INVALID_BRAND, "Invalid gym");
 		}
 		
-		Coach oldCoach = this.findByCoachId(gymId, coach.getId());
+		Coach oldCoach = this.findByCoachId(brandId, gymId, coach.getId());
 
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(true);
@@ -81,8 +89,8 @@ public class CoachService {
 		return coachRepository.save(oldCoach);
 	}
 
-	public void delete(String gymId, String coachId) throws DomainException {
-		Coach oldCoach = this.findByCoachId(gymId,  coachId);
+	public void delete(String brandId, String gymId, String coachId) throws DomainException {
+		Coach oldCoach = this.findByCoachId(brandId, gymId,  coachId);
 		oldCoach.setDeleted(true);
 
 		oldCoach.setDeletedOn(Instant.now());
@@ -91,8 +99,8 @@ public class CoachService {
 		coachRepository.save(oldCoach);
 	}
 
-	public Coach findByCoachId(String gymId, String id) throws DomainException {
-		Optional<Coach> entity = coachRepository.findByGymIdAndIdAndIsDeletedIsFalse(gymId, id);
+	public Coach findByCoachId(String brandId, String gymId, String id) throws DomainException {
+		Optional<Coach> entity = coachRepository.findByBrandIdAndGymIdAndIdAndIsDeletedIsFalse(brandId, gymId, id);
 		if (entity.isEmpty()) {
 			throw new DomainException(DomainException.COACH_NOT_FOUND, "Coach not found");
 		}
@@ -100,17 +108,17 @@ public class CoachService {
 		return entity.get();
 	}
 
-	public Page<Coach> list(String gymId, int page, int pageSize, boolean includeInactive) throws DomainException {
+	public Page<Coach> list(String brandId, String gymId, int page, int pageSize, boolean includeInactive) throws DomainException {
 		if (includeInactive) {
-			return coachRepository.findAllByGymIdAndIsDeletedIsFalse(gymId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
+			return coachRepository.findAllByBrandIdAndGymIdAndIsDeletedIsFalse(brandId, gymId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
 		}
 
-		return coachRepository.findAllByGymIdAndIsDeletedIsFalseAndIsActiveIsTrue(gymId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
+		return coachRepository.findAllByBrandIdAndGymIdAndIsDeletedIsFalseAndIsActiveIsTrue(brandId, gymId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
 	}
 	
-	public Coach activate(String gymId, String id) throws DomainException {
+	public Coach activate(String brandId, String gymId, String id) throws DomainException {
 		
-		Optional<Coach> oldCoach = coachRepository.activate(gymId, id);
+		Optional<Coach> oldCoach = coachRepository.activate(brandId, gymId, id);
 		if (oldCoach.isEmpty()) {
 			throw new DomainException(DomainException.COACH_NOT_FOUND, "Coach not found");
 		}
@@ -118,9 +126,9 @@ public class CoachService {
 		return oldCoach.get();
 	}
 	
-	public Coach deactivate(String gymId, String id) throws DomainException {
+	public Coach deactivate(String brandId, String gymId, String id) throws DomainException {
 		
-		Optional<Coach> oldCoach = coachRepository.deactivate(gymId, id);
+		Optional<Coach> oldCoach = coachRepository.deactivate(brandId, gymId, id);
 		if (oldCoach.isEmpty()) {
 			throw new DomainException(DomainException.COACH_NOT_FOUND, "Coach not found");
 		}

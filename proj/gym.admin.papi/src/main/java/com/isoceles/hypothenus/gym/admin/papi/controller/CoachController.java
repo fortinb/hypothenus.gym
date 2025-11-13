@@ -56,7 +56,7 @@ public class CoachController {
 		this.coachService = coachService;
 	}
 
-	@GetMapping("/gyms/{gymId}/coachs")
+	@GetMapping("/brands/{brandId}/gyms/{gymId}/coachs")
 	@Operation(summary = "Retrieve a list of coachs")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -66,6 +66,7 @@ public class CoachController {
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> listCoach(
+			@PathVariable("brandId") String brandId,
 			@PathVariable("gymId") String gymId,
 			@Parameter(description = "page number") @RequestParam(name = "page", required = true) int page,
 			@Parameter(description = "page size") @RequestParam(name = "pageSize", required = true) int pageSize,
@@ -73,7 +74,7 @@ public class CoachController {
 
 		Page<Coach> entities = null;
 		try {
-			entities = coachService.list(gymId, page, pageSize, includeInactive);
+			entities = coachService.list(brandId, gymId, page, pageSize, includeInactive);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
@@ -85,7 +86,7 @@ public class CoachController {
 		return ResponseEntity.ok(entities.map(item -> modelMapper.map(item, CoachDto.class)));
 	}
 
-	@GetMapping("/gyms/{gymId}/coachs/{coachId}")
+	@GetMapping("/brands/{brandId}/gyms/{gymId}/coachs/{coachId}")
 	@Operation(summary = "Retrieve a specific coach")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -97,11 +98,12 @@ public class CoachController {
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> getCoach(
+			@PathVariable("brandId") String brandId,
 			@PathVariable("gymId") String gymId,
 			@PathVariable("coachId") String coachId) {
 		Coach entity = null;
 		try {
-			entity = coachService.findByCoachId(gymId, coachId);
+			entity = coachService.findByCoachId(brandId, gymId, coachId);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
@@ -117,7 +119,7 @@ public class CoachController {
 		return ResponseEntity.ok(modelMapper.map(entity, CoachDto.class));
 	}
 
-	@PostMapping("/gyms/{gymId}/coachs")
+	@PostMapping("/brands/{brandId}/gyms/{gymId}/coachs")
 	@Operation(summary = "Create a new coach")
 	@ApiResponses({
 			@ApiResponse(responseCode = "201", content = {
@@ -127,12 +129,13 @@ public class CoachController {
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.CREATED)
 	public ResponseEntity<Object> createCoach(
+			@PathVariable("brandId") String brandId,
 			@PathVariable("gymId") String gymId,
 			@RequestBody PostCoachDto request) {
 		Coach entity = modelMapper.map(request, Coach.class);
 
 		try {
-			coachService.create(gymId, entity);
+			coachService.create(brandId, gymId, entity);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
@@ -144,7 +147,7 @@ public class CoachController {
 				.body(modelMapper.map(entity, CoachDto.class));
 	}
 
-	@PutMapping("/gyms/{gymId}/coachs/{coachId}")
+	@PutMapping("/brands/{brandId}/gyms/{gymId}/coachs/{coachId}")
 	@Operation(summary = "Update a coach")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -156,6 +159,7 @@ public class CoachController {
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> updateCoach(
+			@PathVariable("brandId") String brandId,
 			@PathVariable("gymId") String gymId,
 			@PathVariable("coachId") String coachId,
 			@Parameter(description = "activate or deactivate coach") @RequestParam(name = "isActive", required = false, defaultValue = "true") boolean isActive,
@@ -163,7 +167,7 @@ public class CoachController {
 		Coach entity = modelMapper.map(request, Coach.class);
 		
 		try {
-			entity = coachService.update(gymId, entity);
+			entity = coachService.update(brandId, gymId, entity);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
@@ -179,7 +183,7 @@ public class CoachController {
 		return ResponseEntity.ok(modelMapper.map(entity, CoachDto.class));
 	}
 
-	@PostMapping("/gyms/{gymId}/coachs/{coachId}/photo")
+	@PostMapping("/brands/{brandId}/gyms/{gymId}/coachs/{coachId}/photo")
 	public ResponseEntity<String> handlePhotoUpload(@RequestParam("file") MultipartFile file,
 			RedirectAttributes redirectAttributes) {
 
@@ -188,7 +192,7 @@ public class CoachController {
 		return ResponseEntity.ok("new photo url");
 	}
 	
-	@PostMapping("/gyms/{gymId}/coachs/{coachId}/activate")
+	@PostMapping("/brands/{brandId}/gyms/{gymId}/coachs/{coachId}/activate")
 	@Operation(summary = "Activate a coach")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -200,12 +204,13 @@ public class CoachController {
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> activateCoach(
+			@PathVariable("brandId") String brandId,
 			@PathVariable("gymId") String gymId,
 			@PathVariable("coachId") String coachId) {
 		Coach entity;
 		
 		try {
-			entity = coachService.activate(gymId, coachId);
+			entity = coachService.activate(brandId, gymId, coachId);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
@@ -221,7 +226,7 @@ public class CoachController {
 		return ResponseEntity.ok(modelMapper.map(entity, CoachDto.class));
 	}
 	
-	@PostMapping("/gyms/{gymId}/coachs/{coachId}/deactivate")
+	@PostMapping("/brands/{brandId}/gyms/{gymId}/coachs/{coachId}/deactivate")
 	@Operation(summary = "Deactivate a coach")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -233,12 +238,13 @@ public class CoachController {
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> deactivateCoach(
+			@PathVariable("brandId") String brandId,
 			@PathVariable("gymId") String gymId,
 			@PathVariable("coachId") String coachId) {
 		Coach entity;
 		
 		try {
-			entity = coachService.deactivate(gymId, coachId);
+			entity = coachService.deactivate(brandId, gymId, coachId);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
@@ -254,7 +260,7 @@ public class CoachController {
 		return ResponseEntity.ok(modelMapper.map(entity, CoachDto.class));
 	}
 	
-	@PatchMapping("/gyms/{gymId}/coachs/{coachId}")
+	@PatchMapping("/brands/{brandId}/gyms/{gymId}/coachs/{coachId}")
 	@Operation(summary = "Patch a coach")
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ApiResponses({
@@ -266,13 +272,14 @@ public class CoachController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> patchCoach(
+			@PathVariable("brandId") String brandId,
 			@PathVariable("gymId") String gymId,
 			@PathVariable("coachId") String coachId,
 			@RequestBody PatchCoachDto request) {
 		Coach entity = modelMapper.map(request, Coach.class);
 		
 		try {
-			entity = coachService.patch(gymId, entity);
+			entity = coachService.patch(brandId, gymId, entity);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
@@ -288,7 +295,7 @@ public class CoachController {
 		return ResponseEntity.ok(modelMapper.map(entity, CoachDto.class));
 	}
 
-	@DeleteMapping("/gyms/{gymId}/coachs/{coachId}")
+	@DeleteMapping("/brands/{brandId}/gyms/{gymId}/coachs/{coachId}")
 	@Operation(summary = "Delete a coach")
 	@ApiResponses({ @ApiResponse(responseCode = "202"),
 			@ApiResponse(responseCode = "404", description = "Not found.", content = {
@@ -298,10 +305,11 @@ public class CoachController {
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.ACCEPTED)
 	public ResponseEntity<Object> deleteCoach(
+			@PathVariable("brandId") String brandId,
 			@PathVariable("gymId") String gymId,
 			@PathVariable("coachId") String coachId) {
 		try {
-			coachService.delete(gymId, coachId);
+			coachService.delete(brandId, gymId, coachId);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 

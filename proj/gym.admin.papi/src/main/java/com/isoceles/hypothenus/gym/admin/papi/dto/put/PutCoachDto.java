@@ -14,6 +14,9 @@ public class PutCoachDto {
 	private String id;
 	
 	@NotBlank
+	private String brandId;
+	
+	@NotBlank
 	private String gymId;
 	
 	private PersonDto person;

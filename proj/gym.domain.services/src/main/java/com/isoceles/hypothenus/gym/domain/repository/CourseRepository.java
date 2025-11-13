@@ -11,13 +11,13 @@ import com.isoceles.hypothenus.gym.domain.model.aggregate.Course;
 
 public interface CourseRepository extends PagingAndSortingRepository<Course, String>, CrudRepository<Course, String>, CourseRepositoryCustom {
 	
-	Optional<Course> findByGymIdAndIdAndIsDeletedIsFalse(String gymId, String id);
+	Optional<Course> findByBrandIdAndGymIdAndIdAndIsDeletedIsFalse(String brandId, String gymId, String id);
 	
-	Optional<Course> findByGymIdAndCodeAndIsDeletedIsFalse(String gymId, String code);
+	Optional<Course> findByBrandIdAndGymIdAndCodeAndIsDeletedIsFalse(String brandId, String gymId, String code);
 	
-	Page<Course> findAllByGymIdAndIsDeletedIsFalse(String gymId, Pageable pageable);
+	Page<Course> findAllByBrandIdAndGymIdAndIsDeletedIsFalse(String brandId, String gymId, Pageable pageable);
 	
-	Page<Course> findAllByGymIdAndIsDeletedIsFalseAndIsActiveIsTrue(String gymId, Pageable pageable);
+	Page<Course> findAllByBrandIdAndGymIdAndIsDeletedIsFalseAndIsActiveIsTrue(String brandId, String gymId, Pageable pageable);
 	
 	
 }

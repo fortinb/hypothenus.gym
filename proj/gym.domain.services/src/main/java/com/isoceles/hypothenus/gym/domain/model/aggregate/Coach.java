@@ -20,6 +20,9 @@ public class Coach extends BaseEntity {
 	private String id;
 	
 	@Indexed
+	private String brandId;
+	
+	@Indexed
 	private String gymId;
 	
 	private Person person;
@@ -27,10 +30,12 @@ public class Coach extends BaseEntity {
 	public Coach() {
 	}
 	
-	public Coach(String gymId, 
+	public Coach(String brandId,
+				 String gymId, 
 			     Person person, 
 			     boolean isActive, Instant activatedOn, Instant deactivatedOn) {
 		super(isActive);
+		this.brandId = brandId;
 		this.gymId = gymId;
 		this.person = person;
 		this.activatedOn = activatedOn;

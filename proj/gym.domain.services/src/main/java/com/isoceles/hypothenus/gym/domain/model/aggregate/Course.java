@@ -22,6 +22,9 @@ public class Course extends BaseEntity {
 
 	@Id
 	private String id;
+	
+	@Indexed
+	private String brandId;
 
 	@Indexed
 	private String gymId;
@@ -42,9 +45,10 @@ public class Course extends BaseEntity {
 	public Course() {
 	}
  
-	public Course(String gymId, String code, List<LocalizedString> name, List<LocalizedString> description,
+	public Course(String brandId, String gymId, String code, List<LocalizedString> name, List<LocalizedString> description,
 			List<Coach> coachs, Date startDate, Date endDate, boolean isActive, Instant activatedOn, Instant deactivatedOn) {
 		super(isActive);
+		this.brandId = brandId;
 		this.gymId = gymId;
 		this.code = code;
 		this.name = name;
