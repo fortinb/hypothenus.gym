@@ -34,30 +34,30 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-import com.isoceles.hypothenus.gym.domain.model.GymSearchResult;
-import com.isoceles.hypothenus.gym.domain.model.aggregate.Gym;
-import com.isoceles.hypothenus.gym.domain.repository.GymRepositoryCustom;
+import com.isoceles.hypothenus.gym.domain.model.BrandSearchResult;
+import com.isoceles.hypothenus.gym.domain.model.aggregate.Brand;
+import com.isoceles.hypothenus.gym.domain.repository.BrandRepositoryCustom;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Sorts;
 
-public class GymRepositoryCustomImpl implements GymRepositoryCustom {
+public class BrandRepositoryCustomImpl implements BrandRepositoryCustom {
 	private final MongoTemplate mongoTemplate;
 
 	@Value("${spring.data.mongodb.search.index.limit}")
 	private int searchLimit;
 
-	@Value("${spring.data.mongodb.search.index.gym.name}")
+	@Value("${spring.data.mongodb.search.index.brand.name}")
 	private String indexName;
 
-	public GymRepositoryCustomImpl(MongoTemplate mongoTemplate) {
+	public BrandRepositoryCustomImpl(MongoTemplate mongoTemplate) {
 		this.mongoTemplate = mongoTemplate;
 	}
 
 	@Override
-	public Page<GymSearchResult> searchAutocomplete(String criteria, Pageable pageable, boolean includeInactive) {
+	public Page<BrandSearchResult> searchAutocomplete(String criteria, Pageable pageable, boolean includeInactive) {
 
-		MongoCollection<Document> collection = mongoTemplate.getCollection("gym");
+		MongoCollection<Document> collection = mongoTemplate.getCollection("brand");
 
 //		Bson searchStage = search(
 //				compound()
@@ -104,10 +104,6 @@ public class GymRepositoryCustomImpl implements GymRepositoryCustom {
 														new Document("autocomplete",
 																new Document()
 																	.append("query", criteria)
-																	.append("path", "gymId")),
-														new Document("autocomplete",
-																new Document()
-																	.append("query", criteria)
 																	.append("path", "name")),
 														new Document("autocomplete",
 																new Document()
@@ -134,45 +130,45 @@ public class GymRepositoryCustomImpl implements GymRepositoryCustom {
 		
 		// String query = searchStage.toJson();
 		// Create a pipeline that searches, projects, and limits the number of results returned.
-		AggregateIterable<GymSearchResult> aggregationResults = collection.aggregate(
+		AggregateIterable<BrandSearchResult> aggregationResults = collection.aggregate(
 				Arrays.asList(searchStage,
-						project(fields(excludeId(), include("brandId", "gymId", "name", "address", "email", "isActive"),
+						project(fields(excludeId(), include("brandId", "name", "address", "email", "isActive"),
 								metaSearchScore("score"),
 								meta("scoreDetails", "searchScoreDetails"))),
 						sort(Sorts.ascending("name")),
 						skip(pageable.getPageNumber() * pageable.getPageSize()),
 						limit(searchLimit)),
-				GymSearchResult.class);
+				BrandSearchResult.class);
 		
-		List<GymSearchResult> searchResults = StreamSupport.stream(aggregationResults.spliterator(), false).collect(Collectors.toList());
-		return new PageImpl<GymSearchResult>(searchResults, pageable, searchResults.size());
+		List<BrandSearchResult> searchResults = StreamSupport.stream(aggregationResults.spliterator(), false).collect(Collectors.toList());
+		return new PageImpl<BrandSearchResult>(searchResults, pageable, searchResults.size());
 	}
 	
 	@Override
-	public Optional<Gym> activate(String brandId, String gymId) {
+	public Optional<Brand> activate(String brandId) {
 
 		Query query = new Query(
-				Criteria.where("brandId").is(brandId).and("gymId").is(gymId));
+	            Criteria.where("brandId").is(brandId));
 		
 		Update update = new Update()
 					.set("isActive", true)
 					.set("activatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
 					.set("deactivatedOn", null);
 
-		Gym gym = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Gym.class);
+		Brand gym = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Brand.class);
 		return gym == null ? Optional.empty() : Optional.of(gym);
 	}
 
 	@Override
-	public Optional<Gym> deactivate(String brandId, String gymId) {
+	public Optional<Brand> deactivate(String brandId) {
 		Query query = new Query(
-				 Criteria.where("brandId").is(brandId).and("gymId").is(gymId));
+	            Criteria.where("brandId").is(brandId));
 		
 		Update update = new Update()
 					.set("isActive", false)
 					.set("deactivatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS));
 
-		Gym gym = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Gym.class);
+		Brand gym = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Brand.class);
 		return gym == null ? Optional.empty() : Optional.of(gym);
 	}
 	
