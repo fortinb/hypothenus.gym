@@ -100,6 +100,10 @@ public class GymRepositoryCustomImpl implements GymRepositoryCustom {
 														new Document("autocomplete",
 																new Document()
 																	.append("query", criteria)
+																	.append("path", "brandId")),
+														new Document("autocomplete",
+																new Document()
+																	.append("query", criteria)
 																	.append("path", "gymId")),
 														new Document("autocomplete",
 																new Document()
@@ -132,7 +136,7 @@ public class GymRepositoryCustomImpl implements GymRepositoryCustom {
 		// Create a pipeline that searches, projects, and limits the number of results returned.
 		AggregateIterable<GymSearchResult> aggregationResults = collection.aggregate(
 				Arrays.asList(searchStage,
-						project(fields(excludeId(), include("gymId", "name", "address", "email", "isActive"),
+						project(fields(excludeId(), include("brandId", "gymId", "name", "address", "email", "isActive"),
 								metaSearchScore("score"),
 								meta("scoreDetails", "searchScoreDetails"))),
 						sort(Sorts.ascending("name")),
@@ -145,10 +149,10 @@ public class GymRepositoryCustomImpl implements GymRepositoryCustom {
 	}
 	
 	@Override
-	public Optional<Gym> activate(String gymId) {
+	public Optional<Gym> activate(String brandId, String gymId) {
 
 		Query query = new Query(
-	            Criteria.where("gymId").is(gymId));
+				Criteria.where("brandId").is(brandId).and("gymId").is(gymId));
 		
 		Update update = new Update()
 					.set("isActive", true)
@@ -160,9 +164,9 @@ public class GymRepositoryCustomImpl implements GymRepositoryCustom {
 	}
 
 	@Override
-	public Optional<Gym> deactivate(String gymId) {
+	public Optional<Gym> deactivate(String brandId, String gymId) {
 		Query query = new Query(
-	            Criteria.where("gymId").is(gymId));
+				 Criteria.where("brandId").is(brandId).and("gymId").is(gymId));
 		
 		Update update = new Update()
 					.set("isActive", false)

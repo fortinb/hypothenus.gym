@@ -1,6 +1,6 @@
 package com.isoceles.hypothenus.gym.domain.model;
 
-public enum SubscriptionPaymentOptionEnum {
+public enum MembershipPlanPaymentOptionEnum {
 	oneTime,
 	monthly,
 	annual,

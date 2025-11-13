@@ -1,8 +1,8 @@
 package com.isoceles.hypothenus.gym.domain.model;
 
-public enum SubscriptionPeriodEnum {
+public enum MembershipPlanPeriodEnum {
 	week,
 	month,
 	annual,
-	occurence
+	courses
 }

@@ -39,7 +39,6 @@ import com.isoceles.hypothenus.gym.admin.papi.dto.ContactDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.GymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.GymSearchDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.PhoneNumberDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.SocialMediaAccountDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.patch.PatchGymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostGymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutGymDto;
@@ -56,18 +55,21 @@ import com.isoceles.hypothenus.tests.utils.StringUtils;
 @TestInstance(Lifecycle.PER_CLASS)
 class GymControllerTests {
 
-	public static final String searchURI = "/v1/admin/gyms/search";
-	public static final String listURI = "/v1/admin/gyms";
-	public static final String postURI = "/v1/admin/gyms";
-	public static final String getURI = "/v1/admin/gyms/%s";
-	public static final String putURI = "/v1/admin/gyms/%s";
-	public static final String patchURI = "/v1/admin/gyms/%s";
-	public static final String postActivateURI = "/v1/admin/gyms/%s/activate";
-	public static final String postDeactivateURI = "/v1/admin/gyms/%s/deactivate";
+	public static final String searchURI = "/v1/admin/brands/%s/gyms/search";
+	public static final String listURI = "/v1/admin/brands/%s/gyms";
+	public static final String postURI = "/v1/admin/brands/%s/gyms";
+	public static final String getURI = "/v1/admin/brands/%s/gyms/%s";
+	public static final String putURI = "/v1/admin/brands/%s/gyms/%s";
+	public static final String patchURI = "/v1/admin/brands/%s/gyms/%s";
+	public static final String postActivateURI = "/v1/admin/brands/%s/gyms/%s/activate";
+	public static final String postDeactivateURI = "/v1/admin/brands/%s/gyms/%s/deactivate";
 	public static final String searchCriteria = "criteria";
 	public static final String pageNumber = "page";
 	public static final String pageSize = "pageSize";
 
+	public static final String brandId_FitnessBoxing = "FitnessBoxing";
+	public static final String brandId_CrossfitExtreme= "CrossfitExtreme";
+	
 	public static final String gymId_16034 = "16034";
 	public static final String gymId_16035 = "16035";
 	
@@ -102,22 +104,22 @@ class GymControllerTests {
 		//testRestTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory());
 		gymRepository.deleteAll();
 
-		gym = GymBuilder.build(faker.code().isbn10());
+		gym = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10());
 		gymRepository.save(gym);
 		
-		gymIsDeleted = GymBuilder.build(faker.code().isbn10());
+		gymIsDeleted = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10());
 		gymIsDeleted.setDeleted(true);
 		gymIsDeleted = gymRepository.save(gymIsDeleted);
 
 		for (int i = 0; i < 10; i++) {
-			Gym item = GymBuilder.build(faker.code().isbn10());
+			Gym item = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10());
 			
 			gymRepository.save(item);
 			gyms.add(item);
 		}
 		
 		for (int i = 0; i < 5; i++) {
-			Gym item = GymBuilder.build(faker.code().isbn10());
+			Gym item = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10());
 			item.setActive(false);
 			gymRepository.save(item);
 			gyms.add(item);
@@ -216,7 +218,7 @@ class GymControllerTests {
 		params.add(pageSize, "4");
 
 		// Act
-		ResponseEntity<Page<GymDto>> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(listURI), port, params),
+		ResponseEntity<Page<GymDto>> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(listURI, brandId_FitnessBoxing)), port, params),
 				HttpMethod.GET, httpEntity, new ParameterizedTypeReference<Page<GymDto>>() {
 				});
 
@@ -241,7 +243,7 @@ class GymControllerTests {
 		params.add(pageSize, "4");
 
 		// Act
-		ResponseEntity<Page<GymDto>> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(listURI), port, params),
+		ResponseEntity<Page<GymDto>> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(listURI, brandId_FitnessBoxing)), port, params),
 				HttpMethod.GET, httpEntity, new ParameterizedTypeReference<Page<GymDto>>() {
 				});
 
@@ -259,11 +261,11 @@ class GymControllerTests {
 	@Test
 	void testPostSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostGymDto postGym = modelMapper.map(GymBuilder.build(faker.code().isbn10()), PostGymDto.class);
+		PostGymDto postGym = modelMapper.map(GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10()), PostGymDto.class);
 		HttpEntity<PostGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postGym);
 
 		// Act
-		ResponseEntity<GymDto> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postURI), port, null),
+		ResponseEntity<GymDto> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(postURI, brandId_FitnessBoxing)), port, null),
 				HttpMethod.POST, httpEntity, GymDto.class);
 
 		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
@@ -275,17 +277,17 @@ class GymControllerTests {
 	@Test
 	void testPostDuplicateFailure() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostGymDto postGym = modelMapper.map(GymBuilder.build(faker.code().isbn10()), PostGymDto.class);
+		PostGymDto postGym = modelMapper.map(GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10()), PostGymDto.class);
 		HttpEntity<PostGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postGym);
 
-		ResponseEntity<GymDto> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postURI), port, null),
+		ResponseEntity<GymDto> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(postURI, brandId_FitnessBoxing)), port, null),
 				HttpMethod.POST, httpEntity, GymDto.class);
 
 		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
 				String.format("Post error: %s", response.getStatusCode()));
 
 		// Act
-		response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postURI), port, null),
+		response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(postURI, brandId_FitnessBoxing)), port, null),
 				HttpMethod.POST, httpEntity, GymDto.class);
 		
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -302,11 +304,11 @@ class GymControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis", "Member, Guillaume Fortin", })
 	void testGetSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostGymDto postGym = modelMapper.map(GymBuilder.build(faker.code().isbn10()), PostGymDto.class);
+		PostGymDto postGym = modelMapper.map(GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10()), PostGymDto.class);
 		HttpEntity<PostGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postGym);
 
 		ResponseEntity<GymDto> responsePost = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(postURI), port, null), HttpMethod.POST, httpEntity, GymDto.class);
+				HttpUtils.createURL(URI.create(String.format(postURI, brandId_FitnessBoxing)), port, null), HttpMethod.POST, httpEntity, GymDto.class);
 
 		Assertions.assertEquals(HttpStatus.CREATED, responsePost.getStatusCode(),
 				String.format("Post error: %s", responsePost.getStatusCode()));
@@ -314,7 +316,7 @@ class GymControllerTests {
 		// Act
 		httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		ResponseEntity<GymDto> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(getURI, responsePost.getBody().getGymId())), port, null),
+				HttpUtils.createURL(URI.create(String.format(getURI, responsePost.getBody().getBrandId(), responsePost.getBody().getGymId())), port, null),
 				HttpMethod.GET, httpEntity, GymDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -326,7 +328,7 @@ class GymControllerTests {
 	@Test
 	void testPutSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Gym updatedGym = GymBuilder.build(faker.code().isbn10());
+		Gym updatedGym = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10());
 		updatedGym.setActive(true);
 		updatedGym = gymRepository.save(updatedGym);
 
@@ -336,7 +338,7 @@ class GymControllerTests {
 		// Act
 		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putGym);
 		ResponseEntity<GymDto> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, updatedGym.getGymId())), port, null),
+				HttpUtils.createURL(URI.create(String.format(putURI, updatedGym.getBrandId(), updatedGym.getGymId())), port, null),
 				HttpMethod.PUT, httpEntity, GymDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -348,7 +350,7 @@ class GymControllerTests {
 	@Test
 	void testPutNullSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Gym updatedGym = GymBuilder.build(faker.code().isbn10());
+		Gym updatedGym = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10());
 		updatedGym.setActive(true);
 		updatedGym = gymRepository.save(updatedGym);
 		
@@ -358,13 +360,12 @@ class GymControllerTests {
 		putGym.setAddress(null);
 		putGym.setName(null);
 		putGym.setPhoneNumbers(null);
-		putGym.setSocialMediaAccounts(null);
 		putGym.setContacts(null);
 		
 		// Act
 		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putGym);
 		ResponseEntity<GymDto> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, updatedGym.getGymId())), port, null),
+				HttpUtils.createURL(URI.create(String.format(putURI, updatedGym.getBrandId(), updatedGym.getGymId())), port, null),
 				HttpMethod.PUT, httpEntity, GymDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -376,7 +377,7 @@ class GymControllerTests {
 	@Test
 	void testPatchSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Gym gymToPatch = GymBuilder.build(faker.code().isbn10());
+		Gym gymToPatch = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10());
 		gymToPatch.setActive(true);
 		gymToPatch = gymRepository.save(gymToPatch);
 		
@@ -388,7 +389,7 @@ class GymControllerTests {
 		// Act
 		HttpEntity<PatchGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, patchGym);
 		ResponseEntity<GymDto> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(patchURI, gymToPatch.getGymId())), port, null),
+				HttpUtils.createURL(URI.create(String.format(patchURI, gymToPatch.getBrandId(), gymToPatch.getGymId())), port, null),
 				HttpMethod.PATCH, httpEntity, GymDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -405,7 +406,7 @@ class GymControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testActivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Gym gymToActivate = GymBuilder.build(faker.code().isbn10());
+		Gym gymToActivate = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10());
 		gymToActivate.setActive(false);
 		gymToActivate.setActivatedOn(null);
 		gymToActivate.setDeactivatedOn(null);
@@ -418,7 +419,7 @@ class GymControllerTests {
 		// Act
 		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		ResponseEntity<GymDto> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postActivateURI, gymToActivate.getGymId())),
+				HttpUtils.createURL(URI.create(String.format(postActivateURI, gymToActivate.getBrandId(), gymToActivate.getGymId())),
 						port, null),
 				HttpMethod.POST, httpEntity, GymDto.class);
 
@@ -436,7 +437,7 @@ class GymControllerTests {
 		// Act
 		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		ResponseEntity<Object> response = testRestTemplate.exchange(HttpUtils
-				.createURL(URI.create(String.format(postActivateURI, faker.code().isbn10())), port, null),
+				.createURL(URI.create(String.format(postActivateURI, brandId_FitnessBoxing, faker.code().isbn10())), port, null),
 				HttpMethod.POST, httpEntity, Object.class);
 																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																											
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
@@ -447,7 +448,7 @@ class GymControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testDeactivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Gym gymToDeactivate = GymBuilder.build(faker.code().isbn10());
+		Gym gymToDeactivate = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10());
 		gymToDeactivate.setActive(true);
 		gymToDeactivate.setActivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
 		gymToDeactivate = gymRepository.save(gymToDeactivate);
@@ -458,7 +459,7 @@ class GymControllerTests {
 		// Act
 		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		ResponseEntity<GymDto> response = testRestTemplate.exchange(HttpUtils.createURL(
-				URI.create(String.format(postDeactivateURI, gymToDeactivate.getGymId())), port, null),
+				URI.create(String.format(postDeactivateURI, brandId_FitnessBoxing, gymToDeactivate.getGymId())), port, null),
 				HttpMethod.POST, httpEntity, GymDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -475,7 +476,7 @@ class GymControllerTests {
 		// Act
 		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		ResponseEntity<Object> response = testRestTemplate.exchange(HttpUtils
-				.createURL(URI.create(String.format(postDeactivateURI, faker.code().ean13())), port, null),
+				.createURL(URI.create(String.format(postDeactivateURI, brandId_FitnessBoxing, faker.code().ean13())), port, null),
 				HttpMethod.POST, httpEntity, Object.class);
 
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
@@ -494,7 +495,7 @@ class GymControllerTests {
 		
 		// Act
 		ResponseEntity<Page<GymSearchDto>> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(searchURI), port, params), HttpMethod.GET, httpEntity,
+				HttpUtils.createURL(URI.create(String.format(searchURI, brandId_FitnessBoxing) ), port, params), HttpMethod.GET, httpEntity,
 				new ParameterizedTypeReference<Page<GymSearchDto>>() {
 				});
 
@@ -537,23 +538,7 @@ class GymControllerTests {
 			Assertions.assertNull(result.getPhoneNumbers());
 		}
 
-		if (expected.getSocialMediaAccounts() != null) {
-			Assertions.assertNotNull(result.getSocialMediaAccounts());
-
-			Assertions.assertEquals(expected.getSocialMediaAccounts().size(), result.getSocialMediaAccounts().size());
-			expected.getSocialMediaAccounts().forEach(account -> {
-				Optional<SocialMediaAccountDto> previous = result.getSocialMediaAccounts().stream()
-						.filter(item -> item.getSocialMedia().equals(account.getSocialMedia())).findFirst();
-				Assertions.assertTrue(previous.isPresent());
-				Assertions.assertEquals(previous.get().getAccountName(), account.getAccountName());
-				Assertions.assertEquals(previous.get().getUrl(), account.getUrl());
-			});
-		}
-
-		if (expected.getSocialMediaAccounts() == null) {
-			Assertions.assertNull(result.getSocialMediaAccounts());
-		}
-		
+	
 		if (expected.getContacts() != null) {
 			Assertions.assertNotNull(result.getContacts());
 

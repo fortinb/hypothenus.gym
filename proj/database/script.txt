@@ -29,63 +29,49 @@ db.createUser({"user": "hypothenus", "pwd":"test.1", "roles": ["readWrite"]})
 db.gym.createIndex({ "name": "text", "address.streetName": "text", "address.city": "text", "address.zipcode" : "text", "email": "text" }, { "name": "Gym_TextIndex", "v": 2, "collation": { locale: "simple", caseLevel: false, caseFirst: "off", strength: 3, numericOrdering: false, alternate: "non-ignorable", maxVariable: "punct", normalization: false, backwards: true, version: "57.1" }})
 
 
-[
-  {
-    $search: {
-      index: "Gym_SearchIndex",
-      compound: {
-        filter: [
-          {
-            equals: {
-              value: false,
-              path: "isDeleted",
-            },
+{
+  "mappings": {
+    "dynamic": true,
+    "fields": {
+      "address": {
+        "fields": {
+          "city": {
+            "type": "autocomplete"
           },
-        ],
-        must: {
-          compound: {
-            should: [
-              {
-                autocomplete: {
-                  query: "Kerluke-Ke",
-                  path: "name",
-                },
-              },
-              {
-                autocomplete: {
-                  query: "Kerluke-Ke",
-                  path: "email",
-                },
-              },
-              {
-                autocomplete: {
-                  query: "Kerluke-Ke",
-                  path: "address.streetName",
-                },
-              },
-              {
-                autocomplete: {
-                  query: "Kerluke-Ke",
-                  path: "address.city",
-                },
-              },
-              {
-                autocomplete: {
-                  query: "Kerluke-Ke",
-                  path: "address.state",
-                },
-              },
-              {
-                autocomplete: {
-                  query: "Kerluke-Ke",
-                  path: "address.zipCode",
-                },
-              },
-            ],
+          "state": {
+            "type": "string"
           },
+          "streetName": {
+            "type": "autocomplete"
+          },
+          "zipCode": {
+            "type": "autocomplete"
+          }
         },
+        "type": "document"
       },
-      returnStoredSource: true,
-    },
+      "brandId": {
+        "type": "autocomplete"
+      },
+      "email": {
+        "type": "autocomplete"
+      },
+      "gymId": {
+        "type": "autocomplete"
+      },
+      "name": {
+        "type": "autocomplete"
+      }
+    }
   },
-] 
+  "storedSource": {
+    "include": [
+      "address",
+      "email",
+      "name",
+      "brandId",
+      "gymId",
+      "isActive"
+    ]
+  }
+}

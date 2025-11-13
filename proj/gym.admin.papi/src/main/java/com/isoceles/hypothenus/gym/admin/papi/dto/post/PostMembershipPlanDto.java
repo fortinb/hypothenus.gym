@@ -4,17 +4,17 @@ import java.util.List;
 
 import com.isoceles.hypothenus.gym.admin.papi.dto.CourseDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.LocalizedStringDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.SubscriptionPaymentOptionEnum;
-import com.isoceles.hypothenus.gym.admin.papi.dto.SubscriptionPeriodEnum;
+import com.isoceles.hypothenus.gym.admin.papi.dto.MembershipPlanPaymentOptionEnum;
+import com.isoceles.hypothenus.gym.admin.papi.dto.MembershipPlanPeriodEnum;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class PostSubscriptionDto {
+public class PostMembershipPlanDto {
 	
-	private String gymId;
+	private String brandId;
 
 	private String code;
 
@@ -24,9 +24,9 @@ public class PostSubscriptionDto {
 
 	private Integer maxNumberOfClassesPerPeriod;
 	
-	private SubscriptionPeriodEnum period;
+	private MembershipPlanPeriodEnum period;
 	
-	private SubscriptionPaymentOptionEnum paymentOption;
+	private MembershipPlanPaymentOptionEnum paymentOption;
 	
 	private Integer price;
 	

@@ -17,7 +17,6 @@ import com.isoceles.hypothenus.gym.domain.model.Address;
 import com.isoceles.hypothenus.gym.domain.model.Contact;
 import com.isoceles.hypothenus.gym.domain.model.GymSearchResult;
 import com.isoceles.hypothenus.gym.domain.model.PhoneNumber;
-import com.isoceles.hypothenus.gym.domain.model.SocialMediaAccount;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Gym;
 import com.isoceles.hypothenus.gym.domain.repository.GymRepository;
 
@@ -34,7 +33,7 @@ public class GymService {
 	}
 
 	public Gym create(Gym gym) throws DomainException {
-		Optional<Gym> existingGym = gymRepository.findByGymId(gym.getGymId());
+		Optional<Gym> existingGym = gymRepository.findByBrandIdAndGymId(gym.getBrandId(), gym.getGymId());
 		if (existingGym.isPresent()) {
 			throw new DomainException(DomainException.GYM_CODE_ALREADY_EXIST, "Duplicate gym code");
 		}
@@ -46,7 +45,7 @@ public class GymService {
 	}
 
 	public Gym update(Gym gym) throws DomainException {
-		Gym oldGym = this.findByGymId(gym.getGymId());
+		Gym oldGym = this.findByGymId(gym.getBrandId(), gym.getGymId());
 
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration()
@@ -72,7 +71,7 @@ public class GymService {
 	}
 
 	public Gym patch(Gym gym) throws DomainException {
-		Gym oldGym = this.findByGymId(gym.getGymId());
+		Gym oldGym = this.findByGymId(gym.getBrandId(), gym.getGymId());
 
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(true);
@@ -82,7 +81,6 @@ public class GymService {
 				skip().setId(null);
 				skip().setContacts(null);
 				skip().setPhoneNumbers(null);
-				skip().setSocialMediaAccounts(null);
 			}
 		};
 		
@@ -97,8 +95,8 @@ public class GymService {
 		return gymRepository.save(oldGym);
 	}
 
-	public void delete(String gymId) throws DomainException {
-		Gym oldGym = this.findByGymId(gymId);
+	public void delete(String brandId, String gymId) throws DomainException {
+		Gym oldGym = this.findByGymId(brandId, gymId);
 		oldGym.setDeleted(true);
 
 		oldGym.setDeletedOn(Instant.now());
@@ -107,8 +105,8 @@ public class GymService {
 		gymRepository.save(oldGym);
 	}
 
-	public Gym findByGymId(String id) throws DomainException {
-		Optional<Gym> entity = gymRepository.findByGymIdAndIsDeletedIsFalse(id);
+	public Gym findByGymId(String brandId, String id) throws DomainException {
+		Optional<Gym> entity = gymRepository.findByBrandIdAndGymIdAndIsDeletedIsFalse(brandId, id);
 		if (entity.isEmpty()) {
 			throw new DomainException(DomainException.GYM_NOT_FOUND, "Gym not found");
 		}
@@ -122,18 +120,18 @@ public class GymService {
 				includeInactive);
 	}
 
-	public Page<Gym> list(int page, int pageSize, boolean includeInactive) throws DomainException {
+	public Page<Gym> list(String brandId, int page, int pageSize, boolean includeInactive) throws DomainException {
 		if (includeInactive) {
-			return gymRepository.findAllByIsDeletedIsFalse(PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"));
+			return gymRepository.findAllByBrandIdAndIsDeletedIsFalse(brandId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"));
 		}
 
 		return gymRepository
-				.findAllByIsDeletedIsFalseAndIsActiveIsTrue(PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"));
+				.findAllByBrandIdAndIsDeletedIsFalseAndIsActiveIsTrue(brandId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"));
 	}
 
-	public Gym activate(String gymId) throws DomainException {
+	public Gym activate(String brandId, String gymId) throws DomainException {
 
-		Optional<Gym> oldGym = gymRepository.activate(gymId);
+		Optional<Gym> oldGym = gymRepository.activate(brandId, gymId);
 		if (oldGym.isEmpty()) {
 			throw new DomainException(DomainException.GYM_NOT_FOUND, "Gym not found");
 		}
@@ -141,9 +139,9 @@ public class GymService {
 		return oldGym.get();
 	}
 
-	public Gym deactivate(String gymId) throws DomainException {
+	public Gym deactivate(String brandId, String gymId) throws DomainException {
 
-		Optional<Gym> oldGym = gymRepository.deactivate(gymId);
+		Optional<Gym> oldGym = gymRepository.deactivate(brandId, gymId);
 		if (oldGym.isEmpty()) {
 			throw new DomainException(DomainException.GYM_NOT_FOUND, "Gym not found");
 		}
@@ -166,22 +164,15 @@ public class GymService {
 			}
 		};
 		
-		PropertyMap<SocialMediaAccount, SocialMediaAccount> socialMediaAccountPropertyMap = new PropertyMap<SocialMediaAccount, SocialMediaAccount>() {
-			@Override
-			protected void configure() {
-			}
-		};
-		
+
 		PropertyMap<Contact, Contact> contactPropertyMap = new PropertyMap<Contact, Contact>() {
 			@Override
 			protected void configure() {
 			}
 		};
 
-		
 		mapper.addMappings(addressPropertyMap);
 		mapper.addMappings(phoneNumberPropertyMap);
-		mapper.addMappings(socialMediaAccountPropertyMap);
 		mapper.addMappings(contactPropertyMap);
 		
 		return mapper;

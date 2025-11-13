@@ -11,7 +11,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.isoceles.hypothenus.gym.domain.model.Address;
 import com.isoceles.hypothenus.gym.domain.model.Contact;
 import com.isoceles.hypothenus.gym.domain.model.PhoneNumber;
-import com.isoceles.hypothenus.gym.domain.model.SocialMediaAccount;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -23,6 +22,9 @@ public class Gym extends BaseEntity {
 	
 	@Id
 	private String id;
+	
+	@Indexed
+	private String brandId;
 	
 	@Indexed (unique = true)
 	private String gymId;
@@ -39,20 +41,20 @@ public class Gym extends BaseEntity {
 	
 	private List<PhoneNumber> phoneNumbers;
 	
-	private List<SocialMediaAccount> socialMediaAccounts;
+	
 	
 	public Gym() {
 	}
 	
-	public Gym(String gymId, String name, Address address, String email, boolean isActive,
-			List<PhoneNumber> phoneNumbers, List<SocialMediaAccount> socialMediaAccounts, List<Contact> contacts, Instant activatedOn, Instant deactivatedOn) {
+	public Gym(String brandId, String gymId, String name, Address address, String email, boolean isActive,
+			List<PhoneNumber> phoneNumbers, List<Contact> contacts, Instant activatedOn, Instant deactivatedOn) {
 		super(isActive);
+		this.brandId = brandId;
 		this.gymId = gymId;
 		this.name = name;
 		this.address = address;
 		this.email = email;
 		this.phoneNumbers = phoneNumbers;
-		this.socialMediaAccounts = socialMediaAccounts;
 		this.contacts = contacts;
 		this.activatedOn = activatedOn;
 		this.deactivatedOn = deactivatedOn;

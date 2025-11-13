@@ -10,21 +10,21 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-import com.isoceles.hypothenus.gym.domain.model.aggregate.Subscription;
-import com.isoceles.hypothenus.gym.domain.repository.SubscriptionRepositoryCustom;
+import com.isoceles.hypothenus.gym.domain.model.aggregate.MembershipPlan;
+import com.isoceles.hypothenus.gym.domain.repository.MembershipPlanRepositoryCustom;
 
-public class SubscriptionRepositoryCustomImpl implements SubscriptionRepositoryCustom {
+public class MembershipPlanRepositoryCustomImpl implements MembershipPlanRepositoryCustom {
 	private final MongoTemplate mongoTemplate;
 
-	public SubscriptionRepositoryCustomImpl(MongoTemplate mongoTemplate) {
+	public MembershipPlanRepositoryCustomImpl(MongoTemplate mongoTemplate) {
 		this.mongoTemplate = mongoTemplate;
 	}
 
 	@Override
-	public Optional<Subscription> activate(String gymId, String id) {
+	public Optional<MembershipPlan> activate(String brandId, String id) {
 
 		Query query = new Query(
-	            Criteria.where("gymId").is(gymId)
+	            Criteria.where("brandId").is(brandId)
 	            		  .and("_id").is(id));
 		
 		Update update = new Update()
@@ -32,21 +32,21 @@ public class SubscriptionRepositoryCustomImpl implements SubscriptionRepositoryC
 					.set("activatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
 					.set("deactivatedOn", null);
 
-		Subscription subscription = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Subscription.class);
+		MembershipPlan subscription = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), MembershipPlan.class);
 		return subscription == null ? Optional.empty() : Optional.of(subscription);
 	}
 
 	@Override
-	public Optional<Subscription> deactivate(String gymId, String id) {
+	public Optional<MembershipPlan> deactivate(String brandId, String id) {
 		Query query = new Query(
-	            Criteria.where("gymId").is(gymId)
+	            Criteria.where("brandId").is(brandId)
 	            		  .and("_id").is(id));
 		
 		Update update = new Update()
 					.set("isActive", false)
 					.set("deactivatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS));
 
-		Subscription subscription = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Subscription.class);
+		MembershipPlan subscription = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), MembershipPlan.class);
 		return subscription == null ? Optional.empty() : Optional.of(subscription);
 	}
 }

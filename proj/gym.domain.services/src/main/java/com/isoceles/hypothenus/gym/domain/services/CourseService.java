@@ -31,7 +31,7 @@ public class CourseService {
 
 	public Course create(String gymId, Course course) throws DomainException {
 		if (!course.getGymId().equals(gymId)) {
-			throw new DomainException(DomainException.INVALID_GYM, "Invalid gym");
+			throw new DomainException(DomainException.INVALID_BRAND, "Invalid gym");
 		}
 		
 		Optional<Course> existingCourse = courseRepository.findByGymIdAndCodeAndIsDeletedIsFalse(course.getGymId(), course.getCode());
@@ -47,7 +47,7 @@ public class CourseService {
 
 	public Course update(String gymId, Course course) throws DomainException {
 		if (!course.getGymId().equals(gymId)) {
-			throw new DomainException(DomainException.INVALID_GYM, "Invalid gym");
+			throw new DomainException(DomainException.INVALID_BRAND, "Invalid gym");
 		}
 		
 		Course oldCourse = this.findByCourseId(gymId, course.getId());
@@ -66,7 +66,7 @@ public class CourseService {
 
 	public Course patch(String gymId, Course course) throws DomainException {
 		if (!course.getGymId().equals(gymId)) {
-			throw new DomainException(DomainException.INVALID_GYM, "Invalid gym");
+			throw new DomainException(DomainException.INVALID_BRAND, "Invalid gym");
 		}
 		
 		Course oldCourse = this.findByCourseId(gymId, course.getId());

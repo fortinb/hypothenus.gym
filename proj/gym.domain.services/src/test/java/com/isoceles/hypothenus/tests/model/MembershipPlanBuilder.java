@@ -7,16 +7,16 @@ import java.util.List;
 import com.github.javafaker.Faker;
 import com.isoceles.hypothenus.gym.domain.model.LanguageEnum;
 import com.isoceles.hypothenus.gym.domain.model.LocalizedString;
-import com.isoceles.hypothenus.gym.domain.model.SubscriptionPaymentOptionEnum;
-import com.isoceles.hypothenus.gym.domain.model.SubscriptionPeriodEnum;
-import com.isoceles.hypothenus.gym.domain.model.aggregate.Subscription;
+import com.isoceles.hypothenus.gym.domain.model.MembershipPlanPaymentOptionEnum;
+import com.isoceles.hypothenus.gym.domain.model.MembershipPlanPeriodEnum;
+import com.isoceles.hypothenus.gym.domain.model.aggregate.MembershipPlan;
 
-public class SubscriptionBuilder {
+public class MembershipPlanBuilder {
 	private static Faker faker = new Faker();
 	
-	public static Subscription build(String gymId) {
-		Subscription entity = new Subscription(gymId, faker.code().isbn10(), buildName(), buildDescription(),
-				faker.number().numberBetween(2, 3), SubscriptionPeriodEnum.month, SubscriptionPaymentOptionEnum.monthly,
+	public static MembershipPlan build(String brandId) {
+		MembershipPlan entity = new MembershipPlan(brandId, faker.code().isbn10(), buildName(), buildDescription(),
+				faker.number().numberBetween(2, 3), MembershipPlanPeriodEnum.month, MembershipPlanPaymentOptionEnum.monthly,
 				150, 12, null, true, Instant.now(), null);
 		return entity;
 	}

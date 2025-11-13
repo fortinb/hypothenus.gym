@@ -34,7 +34,7 @@ public class CoachService {
 
 	public Coach create(String gymId, Coach coach) throws DomainException {
 		if (!coach.getGymId().equals(gymId)) {
-			throw new DomainException(DomainException.INVALID_GYM, "Invalid gym");
+			throw new DomainException(DomainException.INVALID_BRAND, "Invalid gym");
 		}
 		
 		coach.setCreatedOn(Instant.now());
@@ -45,7 +45,7 @@ public class CoachService {
 
 	public Coach update(String gymId, Coach coach) throws DomainException {
 		if (!coach.getGymId().equals(gymId)) {
-			throw new DomainException(DomainException.INVALID_GYM, "Invalid gym");
+			throw new DomainException(DomainException.INVALID_BRAND, "Invalid gym");
 		}
 		
 		Coach oldCoach = this.findByCoachId(gymId, coach.getId());
@@ -64,7 +64,7 @@ public class CoachService {
 
 	public Coach patch(String gymId, Coach coach) throws DomainException {
 		if (!coach.getGymId().equals(gymId)) {
-			throw new DomainException(DomainException.INVALID_GYM, "Invalid gym");
+			throw new DomainException(DomainException.INVALID_BRAND, "Invalid gym");
 		}
 		
 		Coach oldCoach = this.findByCoachId(gymId, coach.getId());

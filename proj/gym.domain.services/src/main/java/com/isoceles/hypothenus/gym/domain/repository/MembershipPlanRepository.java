@@ -1,0 +1,21 @@
+package com.isoceles.hypothenus.gym.domain.repository;
+
+import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.PagingAndSortingRepository;
+
+import com.isoceles.hypothenus.gym.domain.model.aggregate.MembershipPlan;
+
+public interface MembershipPlanRepository extends PagingAndSortingRepository<MembershipPlan, String>, CrudRepository<MembershipPlan, String>, MembershipPlanRepositoryCustom {
+	
+	Optional<MembershipPlan> findByBrandIdAndIdAndIsDeletedIsFalse(String brandId, String id);
+	
+	Page<MembershipPlan> findAllByBrandIdAndIsDeletedIsFalse(String brandId, Pageable pageable);
+	
+	Page<MembershipPlan> findAllByBrandIdAndIsDeletedIsFalseAndIsActiveIsTrue(String brandId, Pageable pageable);
+	
+	
+}

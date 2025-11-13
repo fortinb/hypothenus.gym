@@ -12,7 +12,7 @@ public interface GymRepositoryCustom {
 
 	Page<GymSearchResult> searchAutocomplete(String criteria, Pageable pageable, boolean includeInactive);
 	
-	Optional<Gym> activate(String gymId);
+	Optional<Gym> activate(String brandId, String gymId);
 	
-	Optional<Gym> deactivate(String gymId);
+	Optional<Gym> deactivate(String brandId, String gymId);
 }

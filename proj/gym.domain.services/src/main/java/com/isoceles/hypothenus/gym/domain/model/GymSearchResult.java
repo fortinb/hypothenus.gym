@@ -6,6 +6,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class GymSearchResult {
+	
+	private String brandId;
 
 	private String gymId;
 	

@@ -62,7 +62,7 @@ public class GymController {
 		this.gymService = gymService;
 	}
 
-	@GetMapping("/gyms/search")
+	@GetMapping("/brands/{brandId}/gyms/search")
 	@Operation(summary = "Search for gyms")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -75,7 +75,8 @@ public class GymController {
 			@Parameter(description = "search criteria") @RequestParam(name = "criteria", required = true) String criteria,
 			@Parameter(description = "page number") @RequestParam(name = "page", required = true) int page,
 			@Parameter(description = "page size") @RequestParam(name = "pageSize", required = true) int pageSize,
-			@Parameter(description = "includeInactive") @RequestParam(name = "includeInactive", required = false, defaultValue="false") boolean includeInactive) {
+			@Parameter(description = "includeInactive") @RequestParam(name = "includeInactive", required = false, defaultValue="false") boolean includeInactive,
+			@PathVariable("brandId") String brandId) {
 
 		Page<GymSearchResult> entities = null;
 		try {
@@ -90,7 +91,7 @@ public class GymController {
 		return ResponseEntity.ok(entities.map(item -> modelMapper.map(item, GymSearchDto.class)));
 	}
 
-	@GetMapping("/gyms")
+	@GetMapping("/brands/{brandId}/gyms")
 	@PreAuthorize("hasRole('" + Roles.Admin + "')")
 	@Operation(summary = "Retrieve a list of gyms")
 	@ApiResponses({
@@ -102,11 +103,12 @@ public class GymController {
 	public ResponseEntity<Object> listGym(
 			@Parameter(description = "page number") @RequestParam(name = "page", required = true) int page,
 			@Parameter(description = "page size") @RequestParam(name = "pageSize", required = true) int pageSize,
-			@Parameter(description = "includeInactive") @RequestParam(name = "includeInactive", required = false, defaultValue="false") boolean includeInactive) {
+			@Parameter(description = "includeInactive") @RequestParam(name = "includeInactive", required = false, defaultValue="false") boolean includeInactive,
+			@PathVariable("brandId") String brandId) {
 
 		Page<Gym> entities = null;
 		try {
-			entities = gymService.list(page, pageSize, includeInactive);
+			entities = gymService.list(brandId, page, pageSize, includeInactive);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
@@ -118,7 +120,7 @@ public class GymController {
 		return ResponseEntity.ok(entities.map(item -> modelMapper.map(item, GymDto.class)));
 	}
 
-	@GetMapping("/gyms/{gymId}")
+	@GetMapping("/brands/{brandId}/gyms/{gymId}")
 	@Operation(summary = "Retrieve a specific gym")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -129,10 +131,11 @@ public class GymController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "','" + Roles.Member + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> getGym(@PathVariable("gymId") String gymId) {
+	public ResponseEntity<Object> getGym(@PathVariable("gymId") String gymId,
+										 @PathVariable("brandId") String brandId) {
 		Gym entity = null;
 		try {
-			entity = gymService.findByGymId(gymId);
+			entity = gymService.findByGymId(brandId, gymId);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
@@ -148,7 +151,7 @@ public class GymController {
 		return ResponseEntity.ok(modelMapper.map(entity, GymDto.class));
 	}
 
-	@PostMapping("/gyms")
+	@PostMapping("/brands/{brandId}/gyms")
 	@Operation(summary = "Create a new gym")
 	@ApiResponses({
 			@ApiResponse(responseCode = "201", content = {
@@ -157,7 +160,8 @@ public class GymController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasRole('" + Roles.Admin + "')")
 	@ResponseStatus(value = HttpStatus.CREATED)
-	public ResponseEntity<Object> createGym(@RequestBody PostGymDto request) {
+	public ResponseEntity<Object> createGym(@PathVariable("brandId") String brandId, 
+											@RequestBody PostGymDto request) {
 		Gym entity = modelMapper.map(request, Gym.class);
 
 		try {
@@ -187,7 +191,7 @@ public class GymController {
 				.body(modelMapper.map(entity, GymDto.class));
 	}
 
-	@PutMapping("/gyms/{gymId}")
+	@PutMapping("/brands/{brandId}/gyms/{gymId}")
 	@Operation(summary = "Update a gym")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -198,7 +202,9 @@ public class GymController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> updateGym(@PathVariable("gymId") String gymId, @RequestBody PutGymDto request) {
+	public ResponseEntity<Object> updateGym(@PathVariable("brandId") String brandId,
+										    @PathVariable("gymId") String gymId, 
+											@RequestBody PutGymDto request) {
 		Gym entity = modelMapper.map(request, Gym.class);
 		
 		try {
@@ -218,7 +224,7 @@ public class GymController {
 		return ResponseEntity.ok(modelMapper.map(entity, GymDto.class));
 	}
 
-	@PatchMapping("/gyms/{gymId}")
+	@PatchMapping("/brands/{brandId}/gyms/{gymId}")
 	@Operation(summary = "Patch a gym")
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ApiResponses({
@@ -229,7 +235,9 @@ public class GymController {
 			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> patchGym(@PathVariable("gymId") String gymId, @RequestBody PatchGymDto request) {
+	public ResponseEntity<Object> patchGym(@PathVariable("gymId") String gymId, 
+										   @PathVariable("brandId") String brandId,
+										   @RequestBody PatchGymDto request) {
 		Gym entity = modelMapper.map(request, Gym.class);
 		
 		try {
@@ -250,7 +258,7 @@ public class GymController {
 	}
 
 	
-	@PostMapping("/gyms/{gymId}/activate")
+	@PostMapping("/brands/{brandId}/gyms/{gymId}/activate")
 	@Operation(summary = "Activate a gym")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -262,11 +270,12 @@ public class GymController {
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> activateGym(
-			@PathVariable("gymId") String gymId) {
+			@PathVariable("gymId") String gymId,
+		    @PathVariable("brandId") String brandId) {
 		Gym entity;
 		
 		try {
-			entity = gymService.activate(gymId);
+			entity = gymService.activate(brandId, gymId);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
@@ -282,7 +291,7 @@ public class GymController {
 		return ResponseEntity.ok(modelMapper.map(entity, GymDto.class));
 	}
 	
-	@PostMapping("/gyms/{gymId}/deactivate")
+	@PostMapping("/brands/{brandId}/gyms/{gymId}/deactivate")
 	@Operation(summary = "Deactivate a gym")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -294,12 +303,13 @@ public class GymController {
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> deactivateGym(
-			@PathVariable("gymId") String gymId) {
+			@PathVariable("gymId") String gymId,
+			@PathVariable("brandId") String brandId) {
 		
 		Gym entity;
 		
 		try {
-			entity = gymService.deactivate(gymId);
+			entity = gymService.deactivate(brandId, gymId);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
@@ -315,7 +325,7 @@ public class GymController {
 		return ResponseEntity.ok(modelMapper.map(entity, GymDto.class));
 	}
 	
-	@DeleteMapping("/gyms/{gymId}")
+	@DeleteMapping("/brands/{brandId}/gyms/{gymId}")
 	@Operation(summary = "Delete a gym")
 	@ApiResponses({ @ApiResponse(responseCode = "202"),
 			@ApiResponse(responseCode = "404", description = "Not found.", content = {
@@ -324,9 +334,10 @@ public class GymController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasRole('" + Roles.Admin + "')")
 	@ResponseStatus(value = HttpStatus.ACCEPTED)
-	public ResponseEntity<Object> deleteGym(@PathVariable("gymId") String gymId) {
+	public ResponseEntity<Object> deleteGym(@PathVariable("brandId") String brandId,
+											@PathVariable("gymId") String gymId) {
 		try {
-			gymService.delete(gymId);
+			gymService.delete(brandId, gymId);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 

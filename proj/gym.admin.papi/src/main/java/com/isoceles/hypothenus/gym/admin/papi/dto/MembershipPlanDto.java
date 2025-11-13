@@ -7,11 +7,11 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class SubscriptionDto extends BaseDto {
+public class MembershipPlanDto extends BaseDto {
 	
 	private String id;
 
-	private String gymId;
+	private String brandId;
 
 	private String code;
 
@@ -21,9 +21,9 @@ public class SubscriptionDto extends BaseDto {
 
 	private Integer maxNumberOfClassesPerPeriod;
 	
-	private SubscriptionPeriodEnum period;
+	private MembershipPlanPeriodEnum period;
 	
-	private SubscriptionPaymentOptionEnum paymentOption;
+	private MembershipPlanPaymentOptionEnum paymentOption;
 	
 	private Integer price;
 	

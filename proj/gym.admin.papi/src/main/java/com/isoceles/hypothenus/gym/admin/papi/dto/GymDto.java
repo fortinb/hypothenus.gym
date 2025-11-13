@@ -11,6 +11,8 @@ public class GymDto extends BaseDto {
 	
 	private String id;
 	
+	private String brandId;
+	
 	private String gymId;
 	
 	private String name;
@@ -22,8 +24,6 @@ public class GymDto extends BaseDto {
 	private String note;
 	
 	private List<PhoneNumberDto> phoneNumbers;
-	
-	private List<SocialMediaAccountDto> socialMediaAccounts;
 	
 	private List<ContactDto> contacts;
 }

@@ -10,22 +10,22 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.isoceles.hypothenus.gym.domain.model.LocalizedString;
-import com.isoceles.hypothenus.gym.domain.model.SubscriptionPaymentOptionEnum;
-import com.isoceles.hypothenus.gym.domain.model.SubscriptionPeriodEnum;
+import com.isoceles.hypothenus.gym.domain.model.MembershipPlanPaymentOptionEnum;
+import com.isoceles.hypothenus.gym.domain.model.MembershipPlanPeriodEnum;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-@Document("subscription")
-public class Subscription extends BaseEntity {
+@Document("membershipplans")
+public class MembershipPlan extends BaseEntity {
 
 	@Id
 	private String id;
 
 	@Indexed
-	private String gymId;
+	private String brandId;
 
 	private String code;
 
@@ -35,9 +35,9 @@ public class Subscription extends BaseEntity {
 
 	private Integer maxNumberOfClassesPerPeriod;
 	
-	private SubscriptionPeriodEnum period;
+	private MembershipPlanPeriodEnum period;
 	
-	private SubscriptionPaymentOptionEnum paymentOption;
+	private MembershipPlanPaymentOptionEnum paymentOption;
 	
 	private Integer price;
 	
@@ -46,14 +46,15 @@ public class Subscription extends BaseEntity {
 	@DBRef
 	private List<Course> courses;
 	
-	public Subscription() {
+	public MembershipPlan() {
+		
 	}
 
-	public Subscription(String gymId, String code, List<LocalizedString> name, List<LocalizedString> description,
-			Integer maxNumberOfClassesPerPeriod, SubscriptionPeriodEnum period, SubscriptionPaymentOptionEnum paymentOption, Integer price,
+	public MembershipPlan(String brandId, String code, List<LocalizedString> name, List<LocalizedString> description,
+			Integer maxNumberOfClassesPerPeriod, MembershipPlanPeriodEnum period, MembershipPlanPaymentOptionEnum paymentOption, Integer price,
 			Integer durationInMonths, List<Course> courses, boolean isActive, Instant startedOn, Instant endedOn) {
 		super(isActive);
-		this.gymId = gymId;
+		this.brandId = brandId;
 		this.code = code;
 		this.name = name;
 		this.description = description;
