@@ -5,11 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.github.javafaker.Faker;
-import com.isoceles.hypothenus.gym.domain.model.Address;
-import com.isoceles.hypothenus.gym.domain.model.Contact;
-import com.isoceles.hypothenus.gym.domain.model.PhoneNumber;
-import com.isoceles.hypothenus.gym.domain.model.PhoneNumberTypeEnum;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Brand;
+import com.isoceles.hypothenus.gym.domain.model.contact.Contact;
+import com.isoceles.hypothenus.gym.domain.model.contact.PhoneNumber;
+import com.isoceles.hypothenus.gym.domain.model.enumeration.PhoneNumberTypeEnum;
+import com.isoceles.hypothenus.gym.domain.model.location.Address;
 
 public class BrandBuilder {
 	private static Faker faker = new Faker();

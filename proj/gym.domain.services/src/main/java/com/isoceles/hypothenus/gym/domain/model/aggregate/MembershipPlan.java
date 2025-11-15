@@ -10,8 +10,10 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.isoceles.hypothenus.gym.domain.model.LocalizedString;
-import com.isoceles.hypothenus.gym.domain.model.MembershipPlanPaymentOptionEnum;
-import com.isoceles.hypothenus.gym.domain.model.MembershipPlanPeriodEnum;
+import com.isoceles.hypothenus.gym.domain.model.enumeration.BillingFrequencyEnum;
+import com.isoceles.hypothenus.gym.domain.model.enumeration.MembershipPlanPeriodEnum;
+import com.isoceles.hypothenus.gym.domain.model.pricing.Cost;
+import com.isoceles.hypothenus.gym.domain.model.pricing.OneTimeFee;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -33,37 +35,55 @@ public class MembershipPlan extends BaseEntity {
 
 	private List<LocalizedString> description;
 
-	private Integer maxNumberOfClassesPerPeriod;
+	private Integer numberOfClasses;
 	
 	private MembershipPlanPeriodEnum period;
+	// weekly,# classes per week - Monday to Sunday
+	// monthly # classes per month - 1 to 31
+	// days, # classes for x days
+	// hours, # hours
+	// classes, # classes 
 	
-	private MembershipPlanPaymentOptionEnum paymentOption;
+	private BillingFrequencyEnum billingFrequency;
 	
-	private Integer price;
+	private Cost cost;
+	
+	private List<OneTimeFee> oneTimeFees;
 	
 	private Integer durationInMonths;
 	
+	private Boolean guestPrivilege;
+	
+	private Boolean isPromotional;
+	
 	@DBRef
 	private List<Course> courses;
+	
+	@DBRef
+	private List<Gym> includedGyms;
 	
 	public MembershipPlan() {
 		
 	}
 
 	public MembershipPlan(String brandId, String code, List<LocalizedString> name, List<LocalizedString> description,
-			Integer maxNumberOfClassesPerPeriod, MembershipPlanPeriodEnum period, MembershipPlanPaymentOptionEnum paymentOption, Integer price,
-			Integer durationInMonths, List<Course> courses, boolean isActive, Instant startedOn, Instant endedOn) {
+			Integer numberOfClasses, MembershipPlanPeriodEnum period, BillingFrequencyEnum billingFrequency, Cost cost,
+			List<OneTimeFee> oneTimeFees, Integer durationInMonths, List<Course> courses, List<Gym> includedGyms, Boolean guestPrivilege, Boolean isPromotional, boolean isActive, Instant startedOn, Instant endedOn) {
 		super(isActive);
 		this.brandId = brandId;
 		this.code = code;
 		this.name = name;
 		this.description = description;
-		this.maxNumberOfClassesPerPeriod = maxNumberOfClassesPerPeriod;
+		this.numberOfClasses = numberOfClasses;
 		this.period = period;
-		this.paymentOption = paymentOption;
-		this.price = price;
+		this.billingFrequency = billingFrequency;
+		this.oneTimeFees = oneTimeFees;
+		this.guestPrivilege = guestPrivilege;
+		this.isPromotional = isPromotional;
+		this.cost = cost;
 		this.durationInMonths = durationInMonths;
 		this.courses = courses;
+		this.includedGyms = includedGyms;
 		this.activatedOn = startedOn;
 		this.deactivatedOn = endedOn;
 	}

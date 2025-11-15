@@ -1,7 +1,7 @@
 package com.isoceles.hypothenus.gym.admin.papi.dto.post;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.isoceles.hypothenus.gym.admin.papi.dto.PersonDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.contact.PersonDto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;

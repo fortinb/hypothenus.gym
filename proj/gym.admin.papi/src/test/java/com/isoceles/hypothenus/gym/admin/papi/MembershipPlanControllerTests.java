@@ -34,11 +34,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
-
-import com.isoceles.hypothenus.gym.admin.papi.dto.MembershipPlanDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.LocalizedStringDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.model.MembershipPlanDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.patch.PatchMembershipPlanDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostMembershipPlanDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.pricing.OneTimeFeeDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutMembershipPlanDto;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.MembershipPlan;
 import com.isoceles.hypothenus.gym.domain.repository.MembershipPlanRepository;
@@ -447,13 +447,20 @@ class MembershipPlanControllerTests {
 	}
 
 	public static final void assertMembershipPlan(MembershipPlanDto expected, MembershipPlanDto result) {
+		if (expected.getId() != null) {
+			Assertions.assertEquals(expected.getId(), result.getId());
+		}
+		
+		Assertions.assertEquals(expected.getBrandId(), result.getBrandId());
 		Assertions.assertEquals(expected.getBrandId(), result.getBrandId());
 		Assertions.assertEquals(expected.getCode(), result.getCode());
 		Assertions.assertEquals(expected.getDurationInMonths(), result.getDurationInMonths());
-		Assertions.assertEquals(expected.getMaxNumberOfClassesPerPeriod(), result.getMaxNumberOfClassesPerPeriod());
-		Assertions.assertEquals(expected.getPrice(), result.getPrice());
+		Assertions.assertEquals(expected.getNumberOfClasses(), result.getNumberOfClasses());
+		Assertions.assertEquals(expected.getGuestPrivilege(), result.getGuestPrivilege());
+		Assertions.assertEquals(expected.getIsPromotional(), result.getIsPromotional());
+		
 		Assertions.assertEquals(expected.getPeriod(), result.getPeriod());
-		Assertions.assertEquals(expected.getPaymentOption(), result.getPaymentOption());
+		Assertions.assertEquals(expected.getBillingFrequency(), result.getBillingFrequency());
 
 		Assertions.assertEquals(expected.isActive(), result.isActive());
 
@@ -505,6 +512,49 @@ class MembershipPlanControllerTests {
 
 		if (expected.getDescription() == null) {
 			Assertions.assertNull(result.getDescription());
+		}
+		
+		if (expected.getCost() == null) {
+			Assertions.assertNull(result.getCost());
+		}
+		
+		if (expected.getCost() != null) {
+			Assertions.assertNotNull(result.getCost());
+			
+			Assertions.assertEquals(expected.getCost().getCost(), result.getCost().getCost());
+			Assertions.assertNotNull(result.getCost().getCurrency());
+			Assertions.assertEquals(expected.getCost().getCurrency().getCode(), result.getCost().getCurrency().getCode());
+			Assertions.assertEquals(expected.getCost().getCurrency().getName(), result.getCost().getCurrency().getName());
+			Assertions.assertEquals(expected.getCost().getCurrency().getSymbol(), result.getCost().getCurrency().getSymbol());
+		}
+		
+		if (expected.getCost() == null) {
+			Assertions.assertNull(result.getCost());
+		}
+		
+		if (expected.getOneTimeFees() != null) {
+			Assertions.assertNotNull(result.getOneTimeFees());
+
+			Assertions.assertEquals(expected.getOneTimeFees().size(), result.getOneTimeFees().size());
+			
+			expected.getOneTimeFees().forEach(oneTimeFee -> {
+				Optional<OneTimeFeeDto> previous = result.getOneTimeFees().stream()
+				.filter(item -> item.getCode().equals(oneTimeFee.getCode())).findFirst();
+				Assertions.assertEquals(previous.get().getCost().getCost(), oneTimeFee.getCost().getCost());
+				
+				Assertions.assertNotNull(previous.get().getCost().getCurrency());
+				Assertions.assertEquals(previous.get().getCost().getCurrency().getCode(), oneTimeFee.getCost().getCurrency().getCode());
+				Assertions.assertEquals(previous.get().getCost().getCurrency().getName(), oneTimeFee.getCost().getCurrency().getName());
+				Assertions.assertEquals(previous.get().getCost().getCurrency().getSymbol(), oneTimeFee.getCost().getCurrency().getSymbol());
+
+			
+				oneTimeFee.getDescription().forEach(description -> {
+					Optional<LocalizedStringDto> previousDescription = previous.get().getDescription().stream()
+							.filter(item -> item.getLanguage().equals(description.getLanguage())).findFirst();
+					Assertions.assertTrue(previousDescription.isPresent());
+					Assertions.assertEquals(previousDescription.get().getText(), description.getText());
+				});
+			});
 		}
 	}
 }

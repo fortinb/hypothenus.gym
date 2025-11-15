@@ -4,8 +4,8 @@ import java.util.Date;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.isoceles.hypothenus.gym.admin.papi.dto.CoachDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.LocalizedStringDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.model.CoachDto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;

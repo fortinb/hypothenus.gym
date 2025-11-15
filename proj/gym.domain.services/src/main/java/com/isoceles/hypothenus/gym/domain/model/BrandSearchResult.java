@@ -1,5 +1,7 @@
 package com.isoceles.hypothenus.gym.domain.model;
 
+import com.isoceles.hypothenus.gym.domain.model.location.Address;
+
 import lombok.Getter;
 import lombok.Setter;
 

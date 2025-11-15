@@ -13,11 +13,11 @@ import org.springframework.stereotype.Service;
 
 import com.isoceles.hypothenus.gym.domain.context.RequestContext;
 import com.isoceles.hypothenus.gym.domain.exception.DomainException;
-import com.isoceles.hypothenus.gym.domain.model.Address;
-import com.isoceles.hypothenus.gym.domain.model.Contact;
-import com.isoceles.hypothenus.gym.domain.model.Person;
-import com.isoceles.hypothenus.gym.domain.model.PhoneNumber;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Coach;
+import com.isoceles.hypothenus.gym.domain.model.contact.Contact;
+import com.isoceles.hypothenus.gym.domain.model.contact.Person;
+import com.isoceles.hypothenus.gym.domain.model.contact.PhoneNumber;
+import com.isoceles.hypothenus.gym.domain.model.location.Address;
 import com.isoceles.hypothenus.gym.domain.repository.CoachRepository;
 
 @Service

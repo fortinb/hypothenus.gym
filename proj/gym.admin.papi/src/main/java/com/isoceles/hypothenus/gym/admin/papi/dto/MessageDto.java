@@ -1,5 +1,7 @@
 package com.isoceles.hypothenus.gym.admin.papi.dto;
 
+import com.isoceles.hypothenus.gym.admin.papi.dto.enumeration.MessageSeverityEnum;
+
 import lombok.Getter;
 import lombok.Setter;
 

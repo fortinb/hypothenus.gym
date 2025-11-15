@@ -8,9 +8,9 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.isoceles.hypothenus.gym.domain.model.Address;
-import com.isoceles.hypothenus.gym.domain.model.Contact;
-import com.isoceles.hypothenus.gym.domain.model.PhoneNumber;
+import com.isoceles.hypothenus.gym.domain.model.contact.Contact;
+import com.isoceles.hypothenus.gym.domain.model.contact.PhoneNumber;
+import com.isoceles.hypothenus.gym.domain.model.location.Address;
 
 import lombok.Getter;
 import lombok.Setter;

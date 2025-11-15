@@ -26,13 +26,13 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.isoceles.hypothenus.gym.admin.papi.config.security.Roles;
 import com.isoceles.hypothenus.gym.admin.papi.dto.ErrorDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.GymDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.GymSearchDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.MessageDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.MessageSeverityEnum;
+import com.isoceles.hypothenus.gym.admin.papi.dto.enumeration.MessageSeverityEnum;
+import com.isoceles.hypothenus.gym.admin.papi.dto.model.GymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.patch.PatchGymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostGymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutGymDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.search.GymSearchDto;
 import com.isoceles.hypothenus.gym.domain.exception.DomainException;
 import com.isoceles.hypothenus.gym.domain.model.GymSearchResult;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Gym;

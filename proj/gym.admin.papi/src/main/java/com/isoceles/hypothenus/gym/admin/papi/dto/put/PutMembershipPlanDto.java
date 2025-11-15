@@ -2,11 +2,15 @@ package com.isoceles.hypothenus.gym.admin.papi.dto.put;
 
 import java.util.List;
 
-import com.isoceles.hypothenus.gym.admin.papi.dto.CourseDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.LocalizedStringDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.MembershipPlanPaymentOptionEnum;
-import com.isoceles.hypothenus.gym.admin.papi.dto.MembershipPlanPeriodEnum;
+import com.isoceles.hypothenus.gym.admin.papi.dto.enumeration.BillingFrequencyEnum;
+import com.isoceles.hypothenus.gym.admin.papi.dto.enumeration.MembershipPlanPeriodEnum;
+import com.isoceles.hypothenus.gym.admin.papi.dto.model.CourseDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.model.GymDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.pricing.CostDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.pricing.OneTimeFeeDto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,8 +18,10 @@ import lombok.Setter;
 @Setter
 public class PutMembershipPlanDto {
 	
+	@NotBlank
 	private String id;
 	
+	@NotBlank
 	private String brandId;
 
 	private String code;
@@ -24,17 +30,23 @@ public class PutMembershipPlanDto {
 
 	private List<LocalizedStringDto> description;
 
-	private Integer maxNumberOfClassesPerPeriod;
+	private Integer numberOfClasses;
 	
 	private MembershipPlanPeriodEnum period;
 	
-	private MembershipPlanPaymentOptionEnum paymentOption;
+	private BillingFrequencyEnum billingFrequency;
 	
-	private Integer price;
+	private CostDto cost;
+	
+	private List<OneTimeFeeDto> oneTimeFees;
+	
+	private Boolean guestPrivilege;
 	
 	private Integer durationInMonths;
 	
-	private boolean isActive;
+	private Boolean isPromotional;
 	
 	private List<CourseDto> courses;
+	
+	private List<GymDto> includedGyms;
 }

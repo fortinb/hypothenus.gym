@@ -35,8 +35,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
-import com.isoceles.hypothenus.gym.admin.papi.dto.CourseDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.LocalizedStringDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.model.CourseDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.patch.PatchCourseDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostCourseDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutCourseDto;
@@ -491,6 +491,10 @@ class CourseControllerTests {
 	}
 
 	public static final void assertCourse(CourseDto expected, CourseDto result) {
+		if (expected.getId() != null) {
+			Assertions.assertEquals(expected.getId(), result.getId());
+		}
+		
 		Assertions.assertEquals(expected.getBrandId(), result.getBrandId());
 		Assertions.assertEquals(expected.getGymId(), result.getGymId());
 		Assertions.assertEquals(expected.getCode(), result.getCode());

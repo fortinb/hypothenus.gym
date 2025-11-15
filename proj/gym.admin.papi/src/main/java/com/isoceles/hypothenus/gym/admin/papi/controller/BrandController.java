@@ -26,13 +26,13 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.isoceles.hypothenus.gym.admin.papi.config.security.Roles;
 import com.isoceles.hypothenus.gym.admin.papi.dto.ErrorDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.BrandDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.BrandSearchDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.MessageDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.MessageSeverityEnum;
+import com.isoceles.hypothenus.gym.admin.papi.dto.enumeration.MessageSeverityEnum;
+import com.isoceles.hypothenus.gym.admin.papi.dto.model.BrandDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.patch.PatchBrandDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostBrandDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutBrandDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.search.BrandSearchDto;
 import com.isoceles.hypothenus.gym.domain.exception.DomainException;
 import com.isoceles.hypothenus.gym.domain.model.BrandSearchResult;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Brand;

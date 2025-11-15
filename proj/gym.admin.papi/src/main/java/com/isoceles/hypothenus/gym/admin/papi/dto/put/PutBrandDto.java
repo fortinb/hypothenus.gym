@@ -2,9 +2,9 @@ package com.isoceles.hypothenus.gym.admin.papi.dto.put;
 
 import java.util.List;
 
-import com.isoceles.hypothenus.gym.admin.papi.dto.AddressDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.ContactDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.PhoneNumberDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.contact.ContactDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.contact.PhoneNumberDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.location.AddressDto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;

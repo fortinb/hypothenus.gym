@@ -25,7 +25,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.isoceles.hypothenus.gym.admin.papi.config.security.Roles;
 import com.isoceles.hypothenus.gym.admin.papi.dto.ErrorDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.CoachDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.model.CoachDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.patch.PatchCoachDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostCoachDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutCoachDto;

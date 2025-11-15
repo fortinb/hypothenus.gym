@@ -35,13 +35,13 @@ import org.springframework.util.MultiValueMap;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
-import com.isoceles.hypothenus.gym.admin.papi.dto.ContactDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.GymDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.GymSearchDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.PhoneNumberDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.contact.ContactDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.contact.PhoneNumberDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.model.GymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.patch.PatchGymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostGymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutGymDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.search.GymSearchDto;
 import com.isoceles.hypothenus.gym.domain.exception.DomainException;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Gym;
 import com.isoceles.hypothenus.gym.domain.repository.GymRepository;
@@ -505,6 +505,10 @@ class GymControllerTests {
 	}
 
 	public static final void assertGym(GymDto expected, GymDto result) {
+		if (expected.getId() != null) {
+			Assertions.assertEquals(expected.getId(), result.getId());
+		}
+		
 		Assertions.assertEquals(expected.getGymId(), result.getGymId());
 		Assertions.assertEquals(expected.getName(), result.getName());
 		Assertions.assertEquals(expected.getEmail(), result.getEmail());

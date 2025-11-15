@@ -25,10 +25,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.isoceles.hypothenus.gym.admin.papi.config.security.Roles;
-import com.isoceles.hypothenus.gym.admin.papi.dto.CourseDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.ErrorDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.MessageDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.MessageSeverityEnum;
+import com.isoceles.hypothenus.gym.admin.papi.dto.enumeration.MessageSeverityEnum;
+import com.isoceles.hypothenus.gym.admin.papi.dto.model.CourseDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.patch.PatchCourseDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostCourseDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutCourseDto;

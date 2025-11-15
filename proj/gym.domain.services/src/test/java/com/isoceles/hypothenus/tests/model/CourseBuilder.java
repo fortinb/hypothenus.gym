@@ -6,10 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.github.javafaker.Faker;
-import com.isoceles.hypothenus.gym.domain.model.LanguageEnum;
 import com.isoceles.hypothenus.gym.domain.model.LocalizedString;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Coach;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Course;
+import com.isoceles.hypothenus.gym.domain.model.enumeration.LanguageEnum;
 
 public class CourseBuilder {
 	private static Faker faker = new Faker();

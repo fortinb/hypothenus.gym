@@ -6,7 +6,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.isoceles.hypothenus.gym.domain.model.Person;
+import com.isoceles.hypothenus.gym.domain.model.contact.Person;
 
 import lombok.Getter;
 import lombok.Setter;

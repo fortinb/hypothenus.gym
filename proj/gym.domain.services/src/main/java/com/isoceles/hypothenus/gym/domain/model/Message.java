@@ -1,5 +1,7 @@
 package com.isoceles.hypothenus.gym.domain.model;
 
+import com.isoceles.hypothenus.gym.domain.model.enumeration.MessageSeverityEnum;
+
 import lombok.Getter;
 import lombok.Setter;
 

@@ -15,7 +15,10 @@ import com.isoceles.hypothenus.gym.domain.context.RequestContext;
 import com.isoceles.hypothenus.gym.domain.exception.DomainException;
 import com.isoceles.hypothenus.gym.domain.model.LocalizedString;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Course;
+import com.isoceles.hypothenus.gym.domain.model.aggregate.Gym;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.MembershipPlan;
+import com.isoceles.hypothenus.gym.domain.model.pricing.Cost;
+import com.isoceles.hypothenus.gym.domain.model.pricing.OneTimeFee;
 import com.isoceles.hypothenus.gym.domain.repository.MembershipPlanRepository;
 
 @Service
@@ -144,15 +147,36 @@ public class MembershipPlanService {
 			}
 		};
 		
-	    PropertyMap<Course, Course> courseStringPropertyMap = new PropertyMap<Course, Course>() {
+	    PropertyMap<Course, Course> coursePropertyMap = new PropertyMap<Course, Course>() {
+			@Override
+			protected void configure() {
+			}
+		};
+		
+	    PropertyMap<OneTimeFee, OneTimeFee> oneTimeFeePropertyMap = new PropertyMap<OneTimeFee, OneTimeFee>() {
+			@Override
+			protected void configure() {
+			}
+		};
+		
+	    PropertyMap<Gym, Gym> includedGymsPropertyMap = new PropertyMap<Gym, Gym>() {
 			@Override
 			protected void configure() {
 			}
 		};
 
+	    PropertyMap<Cost, Cost> costPropertyMap = new PropertyMap<Cost, Cost>() {
+			@Override
+			protected void configure() {
+			}
+		};
+		
 		mapper.addMappings(membershipPlanPropertyMap);
-		mapper.addMappings(courseStringPropertyMap);
 		mapper.addMappings(localizedStringPropertyMap);
+		mapper.addMappings(coursePropertyMap);
+		mapper.addMappings(oneTimeFeePropertyMap);
+		mapper.addMappings(includedGymsPropertyMap);
+		mapper.addMappings(costPropertyMap);
 		
 		return mapper;
 	}

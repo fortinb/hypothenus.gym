@@ -23,7 +23,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.isoceles.hypothenus.gym.admin.papi.config.security.Roles;
 import com.isoceles.hypothenus.gym.admin.papi.dto.ErrorDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.MembershipPlanDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.model.MembershipPlanDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.patch.PatchMembershipPlanDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostMembershipPlanDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutMembershipPlanDto;

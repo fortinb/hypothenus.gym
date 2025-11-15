@@ -1,6 +1,6 @@
 package com.isoceles.hypothenus.gym.admin.papi.dto.patch;
 
-import com.isoceles.hypothenus.gym.admin.papi.dto.PersonDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.contact.PersonDto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;

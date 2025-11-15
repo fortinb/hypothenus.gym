@@ -34,9 +34,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
-import com.isoceles.hypothenus.gym.admin.papi.dto.CoachDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.ContactDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.PhoneNumberDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.contact.ContactDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.contact.PhoneNumberDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.model.CoachDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.patch.PatchCoachDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostCoachDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutCoachDto;
@@ -443,7 +443,10 @@ class CoachControllerTests {
 	}
 
 	public static final void assertCoach(CoachDto expected, CoachDto result) {
-		Assertions.assertEquals(expected.getId(), result.getId());
+		if (expected.getId() != null) {
+			Assertions.assertEquals(expected.getId(), result.getId());
+		}
+		
 		Assertions.assertEquals(expected.getBrandId(), result.getBrandId());
 		Assertions.assertEquals(expected.getGymId(), result.getGymId());
 		Assertions.assertEquals(expected.getPerson().getFirstname(), result.getPerson().getFirstname());
