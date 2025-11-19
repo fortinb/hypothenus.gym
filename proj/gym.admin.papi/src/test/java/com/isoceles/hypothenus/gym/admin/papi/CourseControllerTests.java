@@ -55,13 +55,13 @@ import com.isoceles.hypothenus.tests.security.Users;
 @TestInstance(Lifecycle.PER_CLASS)
 class CourseControllerTests {
 
-	public static final String listURI = "/v1/admin/brands/%s/gyms/%s/courses";
-	public static final String postURI = "/v1/admin/brands/%s/gyms/%s/courses";
-	public static final String getURI = "/v1/admin/brands/%s/gyms/%s/courses/%s";
-	public static final String putURI = "/v1/admin/brands/%s/gyms/%s/courses/%s";
-	public static final String postActivateURI = "/v1/admin/brands/%s/gyms/%s/courses/%s/activate";
-	public static final String postDeactivateURI = "/v1/admin/brands/%s/gyms/%s/courses/%s/deactivate";
-	public static final String patchURI = "/v1/admin/brands/%s/gyms/%s/courses/%s";
+	public static final String listURI = "/v1/brands/%s/gyms/%s/courses";
+	public static final String postURI = "/v1/brands/%s/gyms/%s/courses";
+	public static final String getURI = "/v1/brands/%s/gyms/%s/courses/%s";
+	public static final String putURI = "/v1/brands/%s/gyms/%s/courses/%s";
+	public static final String postActivateURI = "/v1/brands/%s/gyms/%s/courses/%s/activate";
+	public static final String postDeactivateURI = "/v1/brands/%s/gyms/%s/courses/%s/deactivate";
+	public static final String patchURI = "/v1/brands/%s/gyms/%s/courses/%s";
 	public static final String pageNumber = "page";
 	public static final String pageSize = "pageSize";
 	public static final String includeInactive = "includeInactive";

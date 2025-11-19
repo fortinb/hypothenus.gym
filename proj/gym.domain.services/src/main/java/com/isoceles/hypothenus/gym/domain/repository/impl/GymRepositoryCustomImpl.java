@@ -34,8 +34,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-import com.isoceles.hypothenus.gym.domain.model.GymSearchResult;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Gym;
+import com.isoceles.hypothenus.gym.domain.model.search.GymSearchResult;
 import com.isoceles.hypothenus.gym.domain.repository.GymRepositoryCustom;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.MongoCollection;

@@ -1,8 +1,5 @@
 package com.isoceles.hypothenus.gym.admin.papi.controller;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,27 +23,24 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.isoceles.hypothenus.gym.admin.papi.config.security.Roles;
 import com.isoceles.hypothenus.gym.admin.papi.dto.ErrorDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.MessageDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.enumeration.MessageSeverityEnum;
-import com.isoceles.hypothenus.gym.admin.papi.dto.model.CourseDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.patch.PatchCourseDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostCourseDto;
-import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutCourseDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.model.MembershipDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.patch.PatchMembershipDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostMembershipDto;
+import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutMembershipDto;
 import com.isoceles.hypothenus.gym.domain.exception.DomainException;
-import com.isoceles.hypothenus.gym.domain.model.aggregate.Course;
-import com.isoceles.hypothenus.gym.domain.services.CourseService;
+import com.isoceles.hypothenus.gym.domain.model.aggregate.Membership;
+import com.isoceles.hypothenus.gym.domain.services.MembershipService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.*;
 
 @RestController
 @RequestMapping("/v1")
 @Validated
-public class CourseController {
+public class MembershipController {
 
 	@Autowired
 	private Logger logger;
@@ -54,14 +48,14 @@ public class CourseController {
 	@Autowired
 	private ModelMapper modelMapper;
 
-	private CourseService courseService;
+	private MembershipService membershipService;
 
-	public CourseController(CourseService courseService) {
-		this.courseService = courseService;
+	public MembershipController(MembershipService membershipService) {
+		this.membershipService = membershipService;
 	}
 
-	@GetMapping("/brands/{brandId}/gyms/{gymId}/courses")
-	@Operation(summary = "Retrieve a list of courses")
+	@GetMapping("/brands/{brandId}/memberships")
+	@Operation(summary = "Retrieve a list of memberships")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
 					@Content(schema = @Schema(implementation = Page.class), mediaType = "application/json") }),
@@ -69,16 +63,14 @@ public class CourseController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> listCourse(
-			@PathVariable("brandId") String brandId,
-			@PathVariable("gymId") String gymId,
+	public ResponseEntity<Object> listMemberships(@PathVariable("brandId") String brandId,
 			@Parameter(description = "page number") @RequestParam(name = "page", required = true) int page,
 			@Parameter(description = "page size") @RequestParam(name = "pageSize", required = true) int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(name = "includeInactive", required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<Course> entities = null;
+		Page<Membership> entities = null;
 		try {
-			entities = courseService.list(brandId, gymId, page, pageSize, includeInactive);
+			entities = membershipService.list(brandId, page, pageSize, includeInactive);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
@@ -86,224 +78,192 @@ public class CourseController {
 					.body(new ErrorDto(e.getCode(), e.getMessage(), null));
 		}
 
-		return ResponseEntity.ok(entities.map(item -> modelMapper.map(item, CourseDto.class)));
+		return ResponseEntity.ok(entities.map(item -> modelMapper.map(item, MembershipDto.class)));
 	}
 
-	@GetMapping("/brands/{brandId}/gyms/{gymId}/courses/{courseId}")
-	@Operation(summary = "Retrieve a specific course")
-	@ApiResponses({
-			@ApiResponse(responseCode = "200", content = {
-					@Content(schema = @Schema(implementation = CourseDto.class), mediaType = "application/json") }),
+	@GetMapping("/brands/{brandId}/memberships/{membershipId}")
+	@Operation(summary = "Retrieve a specific membership")
+	@ApiResponses({ @ApiResponse(responseCode = "200", content = {
+			@Content(schema = @Schema(implementation = MembershipDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "404", description = "Not found.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> getCourse(
-			@PathVariable("brandId") String brandId,
-			@PathVariable("gymId") String gymId,
-			@PathVariable("courseId") String courseId) {
-		Course entity = null;
+	public ResponseEntity<Object> getMembership(@PathVariable("brandId") String brandId,
+			@PathVariable("membershipId") String membershipId) {
+		Membership entity = null;
 		try {
-			entity = courseService.findByCourseId(brandId, gymId, courseId);
+			entity = membershipService.findByMembershipId(brandId, membershipId);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.COURSE_NOT_FOUND) {
+			if (e.getCode() == DomainException.MEMBERSHIP_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), courseId));
+						.body(new ErrorDto(e.getCode(), e.getMessage(), membershipId));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), courseId));
+					.body(new ErrorDto(e.getCode(), e.getMessage(), membershipId));
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, CourseDto.class));
+		return ResponseEntity.ok(modelMapper.map(entity, MembershipDto.class));
 	}
 
-	@PostMapping("/brands/{brandId}/gyms/{gymId}/courses")
-	@Operation(summary = "Create a new course")
-	@ApiResponses({
-			@ApiResponse(responseCode = "201", content = {
-					@Content(schema = @Schema(implementation = CourseDto.class), mediaType = "application/json") }),
+	@PostMapping("/brands/{brandId}/memberships")
+	@Operation(summary = "Create a new membership")
+	@ApiResponses({ @ApiResponse(responseCode = "201", content = {
+			@Content(schema = @Schema(implementation = MembershipDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.CREATED)
-	public ResponseEntity<Object> createCourse(
-			@PathVariable("brandId") String brandId,
-			@PathVariable("gymId") String gymId,
-			@RequestBody PostCourseDto request) {
-		Course entity = modelMapper.map(request, Course.class);
+	public ResponseEntity<Object> createMembership(@PathVariable("brandId") String brandId,
+			@RequestBody PostMembershipDto request) {
+		Membership entity = modelMapper.map(request, Membership.class);
 
 		try {
-			courseService.create(brandId, gymId, entity);
+			membershipService.create(brandId, entity);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
-			
-			if (e.getCode() == DomainException.COURSE_CODE_ALREADY_EXIST) {
-				CourseDto errorResponse = modelMapper.map(request, CourseDto.class);
-				List<MessageDto> messages = new ArrayList<MessageDto>();
-				
-				MessageDto message = new MessageDto();
-				message.setCode(e.getCode());
-				message.setDescription(e.getMessage());
-				message.setSeverity(MessageSeverityEnum.Warning);
-				messages.add(message);
-				
-				errorResponse.setMessages(messages);
-				return ResponseEntity.status(HttpStatus.OK).body(errorResponse);
-			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
 		}
 
 		return ResponseEntity.created(
 				ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(entity.getId()).toUri())
-				.body(modelMapper.map(entity, CourseDto.class));
+				.body(modelMapper.map(entity, MembershipDto.class));
 	}
 
-	@PutMapping("/brands/{brandId}/gyms/{gymId}/courses/{courseId}")
-	@Operation(summary = "Update a course")
-	@ApiResponses({
-			@ApiResponse(responseCode = "200", content = {
-					@Content(schema = @Schema(implementation = CourseDto.class), mediaType = "application/json") }),
+	@PutMapping("/brands/{brandId}/memberships/{membershipId}")
+	@Operation(summary = "Update a membership")
+	@ApiResponses({ @ApiResponse(responseCode = "200", content = {
+			@Content(schema = @Schema(implementation = MembershipDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "404", description = "Not found.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> updateCourse(
-			@PathVariable("brandId") String brandId,
-			@PathVariable("gymId") String gymId,
-			@PathVariable("courseId") String courseId,
-			@Parameter(description = "activate or deactivate course") @RequestParam(name = "isActive", required = false, defaultValue = "true") boolean isActive,
-			@RequestBody PutCourseDto request) {
-		Course entity = modelMapper.map(request, Course.class);
+	public ResponseEntity<Object> updateMembership(@PathVariable("brandId") String brandId,
+			@PathVariable("membershipId") String membershipId,
+			@Parameter(description = "activate or deactivate Membership") @RequestParam(name = "isActive", required = false, defaultValue = "true") boolean isActive,
+			@RequestBody PutMembershipDto request) {
+		Membership entity = modelMapper.map(request, Membership.class);
 
 		try {
-			entity = courseService.update(brandId, gymId, entity);
+			entity = membershipService.update(brandId, entity);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.COURSE_NOT_FOUND) {
+			if (e.getCode() == DomainException.MEMBERSHIP_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), courseId));
+						.body(new ErrorDto(e.getCode(), e.getMessage(), membershipId));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), courseId));
+					.body(new ErrorDto(e.getCode(), e.getMessage(), membershipId));
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, CourseDto.class));
+		return ResponseEntity.ok(modelMapper.map(entity, MembershipDto.class));
 	}
 
-	@PostMapping("/brands/{brandId}/gyms/{gymId}/courses/{courseId}/activate")
-	@Operation(summary = "Activate a course")
-	@ApiResponses({
-			@ApiResponse(responseCode = "200", content = {
-					@Content(schema = @Schema(implementation = CourseDto.class), mediaType = "application/json") }),
+	@PostMapping("/brands/{brandId}/memberships/{membershipId}/activate")
+	@Operation(summary = "Activate a membership")
+	@ApiResponses({ @ApiResponse(responseCode = "200", content = {
+			@Content(schema = @Schema(implementation = MembershipDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "404", description = "Not found.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> activateCourse(
-			@PathVariable("brandId") String brandId,
-			@PathVariable("gymId") String gymId,
-			@PathVariable("courseId") String courseId) {
-		Course entity;
+	public ResponseEntity<Object> activateMembership(@PathVariable("brandId") String brandId,
+			@PathVariable("membershipId") String membershipId) {
+		Membership entity;
 
 		try {
-			entity = courseService.activate(brandId, gymId, courseId);
+			entity = membershipService.activate(brandId, membershipId);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.COURSE_NOT_FOUND) {
+			if (e.getCode() == DomainException.MEMBERSHIP_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), courseId));
+						.body(new ErrorDto(e.getCode(), e.getMessage(), membershipId));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), courseId));
+					.body(new ErrorDto(e.getCode(), e.getMessage(), membershipId));
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, CourseDto.class));
+		return ResponseEntity.ok(modelMapper.map(entity, MembershipDto.class));
 	}
 
-	@PostMapping("/brands/{brandId}/gyms/{gymId}/courses/{courseId}/deactivate")
-	@Operation(summary = "Deactivate a course")
-	@ApiResponses({
-			@ApiResponse(responseCode = "200", content = {
-					@Content(schema = @Schema(implementation = CourseDto.class), mediaType = "application/json") }),
+	@PostMapping("/brands/{brandId}/memberships/{membershipId}/deactivate")
+	@Operation(summary = "Deactivate a membership")
+	@ApiResponses({ @ApiResponse(responseCode = "200", content = {
+			@Content(schema = @Schema(implementation = MembershipDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "404", description = "Not found.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> deactivateCourse(
-			@PathVariable("brandId") String brandId,
-			@PathVariable("gymId") String gymId,
-			@PathVariable("courseId") String courseId) {
-		Course entity;
+	public ResponseEntity<Object> deactivateMembership(@PathVariable("brandId") String brandId,
+			@PathVariable("membershipId") String membershipId) {
+		Membership entity;
 
 		try {
-			entity = courseService.deactivate(brandId, gymId, courseId);
+			entity = membershipService.deactivate(brandId, membershipId);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.COURSE_NOT_FOUND) {
+			if (e.getCode() == DomainException.MEMBERSHIP_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), courseId));
+						.body(new ErrorDto(e.getCode(), e.getMessage(), membershipId));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), courseId));
+					.body(new ErrorDto(e.getCode(), e.getMessage(), membershipId));
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, CourseDto.class));
+		return ResponseEntity.ok(modelMapper.map(entity, MembershipDto.class));
 	}
 
-	@PatchMapping("/brands/{brandId}/gyms/{gymId}/courses/{courseId}")
-	@Operation(summary = "Patch a course")
+	@PatchMapping("/brands/{brandId}/memberships/{membershipId}")
+	@Operation(summary = "Patch a membership")
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
-	@ApiResponses({
-			@ApiResponse(responseCode = "200", content = {
-					@Content(schema = @Schema(implementation = CourseDto.class), mediaType = "application/json") }),
+	@ApiResponses({ @ApiResponse(responseCode = "200", content = {
+			@Content(schema = @Schema(implementation = MembershipDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "404", description = "Not found.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> patchCourse(
-			@PathVariable("brandId") String brandId,
-			@PathVariable("gymId") String gymId,
-			@PathVariable("courseId") String courseId, @RequestBody PatchCourseDto request) {
-		Course entity = modelMapper.map(request, Course.class);
+	public ResponseEntity<Object> patchMembership(@PathVariable("brandId") String brandId,
+			@PathVariable("membershipId") String membershipId, @RequestBody PatchMembershipDto request) {
+		Membership entity = modelMapper.map(request, Membership.class);
 
 		try {
-			entity = courseService.patch(brandId, gymId, entity);
+			entity = membershipService.patch(brandId, entity);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.COURSE_NOT_FOUND) {
+			if (e.getCode() == DomainException.MEMBERSHIP_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), courseId));
+						.body(new ErrorDto(e.getCode(), e.getMessage(), membershipId));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), courseId));
+					.body(new ErrorDto(e.getCode(), e.getMessage(), membershipId));
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, CourseDto.class));
+		return ResponseEntity.ok(modelMapper.map(entity, MembershipDto.class));
 	}
 
-	@DeleteMapping("/brands/{brandId}/gyms/{gymId}/courses/{courseId}")
-	@Operation(summary = "Delete a course")
+	@DeleteMapping("/brands/{brandId}/memberships/{membershipId}")
+	@Operation(summary = "Delete a membership")
 	@ApiResponses({ @ApiResponse(responseCode = "202"),
 			@ApiResponse(responseCode = "404", description = "Not found.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
@@ -311,24 +271,22 @@ public class CourseController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.ACCEPTED)
-	public ResponseEntity<Object> deleteCourse(
-			@PathVariable("brandId") String brandId,
-			@PathVariable("gymId") String gymId,
-			@PathVariable("courseId") String courseId) {
+	public ResponseEntity<Object> deleteMembership(@PathVariable("brandId") String brandId,
+			@PathVariable("membershipId") String membershipId) {
 		try {
-			courseService.delete(brandId, gymId, courseId);
+			membershipService.delete(brandId, membershipId);
 		} catch (DomainException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.COURSE_NOT_FOUND) {
+			if (e.getCode() == DomainException.MEMBERSHIP_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), courseId));
+						.body(new ErrorDto(e.getCode(), e.getMessage(), membershipId));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), courseId));
+					.body(new ErrorDto(e.getCode(), e.getMessage(), membershipId));
 		}
 
-		return ResponseEntity.ok(courseId);
+		return ResponseEntity.ok(membershipId);
 	}
 }

@@ -1,4 +1,4 @@
-package com.isoceles.hypothenus.gym.domain.model;
+package com.isoceles.hypothenus.gym.domain.model.search;
 
 import com.isoceles.hypothenus.gym.domain.model.location.Address;
 
@@ -7,12 +7,10 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class GymSearchResult {
+public class BrandSearchResult {
 	
 	private String brandId;
 
-	private String gymId;
-	
 	private String name;
 	
 	private String email;

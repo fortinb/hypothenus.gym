@@ -20,7 +20,7 @@ public class MembershipPlanBuilder {
 	public static MembershipPlan build(String brandId) {
 		MembershipPlan entity = new MembershipPlan(brandId, faker.code().isbn10(), buildName(), buildDescription(),
 				faker.number().numberBetween(2, 3), MembershipPlanPeriodEnum.monthly, BillingFrequencyEnum.monthly,
-				BuildCost(), BuildOneTimeFees(), 12, null, null, true, false, true, Instant.now(), null);
+				BuildCost(), BuildOneTimeFees(), 12, null, null, true, false, false, true, Instant.now(), null);
 		return entity;
 	}
 

@@ -5,7 +5,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import com.isoceles.hypothenus.gym.domain.model.BrandSearchResult;
+import com.isoceles.hypothenus.gym.domain.model.search.BrandSearchResult;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Brand;
 
 public interface BrandRepositoryCustom {

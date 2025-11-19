@@ -49,13 +49,13 @@ import com.isoceles.hypothenus.tests.model.MembershipPlanBuilder;
 @TestInstance(Lifecycle.PER_CLASS)
 class MembershipPlanControllerTests {
 
-	public static final String listURI = "/v1/admin/brands/%s/membership/plans";
-	public static final String postURI = "/v1/admin/brands/%s/membership/plans";
-	public static final String getURI = "/v1/admin/brands/%s/membership/plans/%s";
-	public static final String putURI = "/v1/admin/brands/%s/membership/plans/%s";
-	public static final String postActivateURI = "/v1/admin/brands/%s/membership/plans/%s/activate";
-	public static final String postDeactivateURI = "/v1/admin/brands/%s/membership/plans/%s/deactivate";
-	public static final String patchURI = "/v1/admin/brands/%s/membership/plans/%s";
+	public static final String listURI = "/v1/brands/%s/membership/plans";
+	public static final String postURI = "/v1/brands/%s/membership/plans";
+	public static final String getURI = "/v1/brands/%s/membership/plans/%s";
+	public static final String putURI = "/v1/brands/%s/membership/plans/%s";
+	public static final String postActivateURI = "/v1/brands/%s/membership/plans/%s/activate";
+	public static final String postDeactivateURI = "/v1/brands/%s/membership/plans/%s/deactivate";
+	public static final String patchURI = "/v1/brands/%s/membership/plans/%s";
 	public static final String pageNumber = "page";
 	public static final String pageSize = "pageSize";
 	public static final String includeInactive = "includeInactive";
@@ -456,8 +456,9 @@ class MembershipPlanControllerTests {
 		Assertions.assertEquals(expected.getCode(), result.getCode());
 		Assertions.assertEquals(expected.getDurationInMonths(), result.getDurationInMonths());
 		Assertions.assertEquals(expected.getNumberOfClasses(), result.getNumberOfClasses());
-		Assertions.assertEquals(expected.getGuestPrivilege(), result.getGuestPrivilege());
-		Assertions.assertEquals(expected.getIsPromotional(), result.getIsPromotional());
+		Assertions.assertEquals(expected.isGuestPrivilege(), result.isGuestPrivilege());
+		Assertions.assertEquals(expected.isPromotional(), result.isPromotional());
+		Assertions.assertEquals(expected.isGiftCard(), result.isGiftCard());
 		
 		Assertions.assertEquals(expected.getPeriod(), result.getPeriod());
 		Assertions.assertEquals(expected.getBillingFrequency(), result.getBillingFrequency());

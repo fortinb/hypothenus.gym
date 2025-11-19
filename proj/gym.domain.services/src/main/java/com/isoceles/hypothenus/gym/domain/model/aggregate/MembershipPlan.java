@@ -20,7 +20,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Document("membershipplans")
+@Document("membershipplan")
 public class MembershipPlan extends BaseEntity {
 
 	@Id
@@ -36,39 +36,43 @@ public class MembershipPlan extends BaseEntity {
 	private List<LocalizedString> description;
 
 	private Integer numberOfClasses;
-	
+
 	private MembershipPlanPeriodEnum period;
 	// weekly,# classes per week - Monday to Sunday
 	// monthly # classes per month - 1 to 31
 	// days, # classes for x days
 	// hours, # hours
-	// classes, # classes 
-	
+	// classes, # classes
+
 	private BillingFrequencyEnum billingFrequency;
-	
+
 	private Cost cost;
-	
+
 	private List<OneTimeFee> oneTimeFees;
-	
+
 	private Integer durationInMonths;
-	
-	private Boolean guestPrivilege;
-	
-	private Boolean isPromotional;
-	
+
+	private boolean guestPrivilege;
+
+	private boolean isPromotional;
+
+	private boolean isGiftCard;
+
 	@DBRef
 	private List<Course> courses;
-	
+
 	@DBRef
 	private List<Gym> includedGyms;
-	
+
 	public MembershipPlan() {
-		
+
 	}
 
 	public MembershipPlan(String brandId, String code, List<LocalizedString> name, List<LocalizedString> description,
 			Integer numberOfClasses, MembershipPlanPeriodEnum period, BillingFrequencyEnum billingFrequency, Cost cost,
-			List<OneTimeFee> oneTimeFees, Integer durationInMonths, List<Course> courses, List<Gym> includedGyms, Boolean guestPrivilege, Boolean isPromotional, boolean isActive, Instant startedOn, Instant endedOn) {
+			List<OneTimeFee> oneTimeFees, Integer durationInMonths, List<Course> courses, List<Gym> includedGyms,
+			boolean guestPrivilege, boolean isGiftCard, boolean isPromotional, boolean isActive, Instant startedOn,
+			Instant endedOn) {
 		super(isActive);
 		this.brandId = brandId;
 		this.code = code;
@@ -79,6 +83,7 @@ public class MembershipPlan extends BaseEntity {
 		this.billingFrequency = billingFrequency;
 		this.oneTimeFees = oneTimeFees;
 		this.guestPrivilege = guestPrivilege;
+		this.isGiftCard = isGiftCard;
 		this.isPromotional = isPromotional;
 		this.cost = cost;
 		this.durationInMonths = durationInMonths;

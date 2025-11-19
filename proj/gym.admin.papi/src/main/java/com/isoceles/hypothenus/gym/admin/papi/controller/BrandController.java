@@ -34,7 +34,7 @@ import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostBrandDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutBrandDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.search.BrandSearchDto;
 import com.isoceles.hypothenus.gym.domain.exception.DomainException;
-import com.isoceles.hypothenus.gym.domain.model.BrandSearchResult;
+import com.isoceles.hypothenus.gym.domain.model.search.BrandSearchResult;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Brand;
 import com.isoceles.hypothenus.gym.domain.services.BrandService;
 
@@ -46,7 +46,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 @RestController
-@RequestMapping("/v1/admin")
+@RequestMapping("/v1")
 @Validated
 public class BrandController {
 

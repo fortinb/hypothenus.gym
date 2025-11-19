@@ -38,7 +38,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.media.*;
 
 @RestController
-@RequestMapping("/v1/admin")
+@RequestMapping("/v1")
 @Validated
 public class MembershipPlanController {
 

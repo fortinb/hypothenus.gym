@@ -34,8 +34,8 @@ import com.isoceles.hypothenus.gym.admin.papi.dto.post.PostGymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.put.PutGymDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.search.GymSearchDto;
 import com.isoceles.hypothenus.gym.domain.exception.DomainException;
-import com.isoceles.hypothenus.gym.domain.model.GymSearchResult;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Gym;
+import com.isoceles.hypothenus.gym.domain.model.search.GymSearchResult;
 import com.isoceles.hypothenus.gym.domain.services.GymService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,7 +46,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 @RestController
-@RequestMapping("/v1/admin")
+@RequestMapping("/v1")
 @Validated
 public class GymController {
 

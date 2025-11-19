@@ -15,6 +15,7 @@ public class DomainException extends Exception {
 	public static final String COACH_NOT_FOUND = "404";
 	public static final String COURSE_NOT_FOUND = "404";
 	public static final String MEMBERSHIPPLAN_NOT_FOUND = "404";
+	public static final String MEMBERSHIP_NOT_FOUND = "404";
 	
 	public static final String INVALID_BRAND = "404";
 	public static final String INVALID_GYM = "404";

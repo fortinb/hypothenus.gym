@@ -2,7 +2,6 @@ package com.isoceles.hypothenus.gym.admin.papi.dto.post;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.isoceles.hypothenus.gym.admin.papi.dto.LocalizedStringDto;
 import com.isoceles.hypothenus.gym.admin.papi.dto.enumeration.BillingFrequencyEnum;
 import com.isoceles.hypothenus.gym.admin.papi.dto.enumeration.MembershipPlanPeriodEnum;
@@ -40,11 +39,13 @@ public class PostMembershipPlanDto {
 	
 	private List<OneTimeFeeDto> oneTimeFees;
 	
-	private Boolean guestPrivilege;
+	private boolean guestPrivilege;
+	
+	private boolean isGiftCard;
 	
 	private Integer durationInMonths;
 	
-	private Boolean isPromotional;
+	private boolean isPromotional;
 	
 	private List<CourseDto> courses;
 	

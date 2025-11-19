@@ -5,8 +5,8 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import com.isoceles.hypothenus.gym.domain.model.GymSearchResult;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Gym;
+import com.isoceles.hypothenus.gym.domain.model.search.GymSearchResult;
 
 public interface GymRepositoryCustom {
 

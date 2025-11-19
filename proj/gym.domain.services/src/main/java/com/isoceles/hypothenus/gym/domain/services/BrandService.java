@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.isoceles.hypothenus.gym.domain.context.RequestContext;
 import com.isoceles.hypothenus.gym.domain.exception.DomainException;
-import com.isoceles.hypothenus.gym.domain.model.BrandSearchResult;
+import com.isoceles.hypothenus.gym.domain.model.search.BrandSearchResult;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Brand;
 import com.isoceles.hypothenus.gym.domain.model.contact.Contact;
 import com.isoceles.hypothenus.gym.domain.model.contact.PhoneNumber;

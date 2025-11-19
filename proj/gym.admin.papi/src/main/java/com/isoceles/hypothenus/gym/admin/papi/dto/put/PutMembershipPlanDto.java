@@ -40,11 +40,13 @@ public class PutMembershipPlanDto {
 	
 	private List<OneTimeFeeDto> oneTimeFees;
 	
-	private Boolean guestPrivilege;
+	private boolean guestPrivilege;
+	
+	private boolean isGiftCard;
 	
 	private Integer durationInMonths;
 	
-	private Boolean isPromotional;
+	private boolean isPromotional;
 	
 	private List<CourseDto> courses;
 	

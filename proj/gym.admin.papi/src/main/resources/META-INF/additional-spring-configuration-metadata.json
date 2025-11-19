@@ -18,5 +18,20 @@
     "name": "feign.autoconfiguration.jackson.enabled",
     "type": "java.lang.String",
     "description": "A description for 'feign.autoconfiguration.jackson.enabled'"
+  },
+  {
+    "name": "search.index.gym.name",
+    "type": "java.lang.String",
+    "description": "A description for 'search.index.gym.name'"
+  },
+  {
+    "name": "spring.data.mongodb.search.index.gym.name",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.data.mongodb.search.index.gym.name'"
+  },
+  {
+    "name": "spring.data.mongodb.search.index.brand.name",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.data.mongodb.search.index.brand.name'"
   }
 ]}

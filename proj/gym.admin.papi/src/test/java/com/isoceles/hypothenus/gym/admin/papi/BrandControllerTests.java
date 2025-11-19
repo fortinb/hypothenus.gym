@@ -55,14 +55,14 @@ import com.isoceles.hypothenus.tests.utils.StringUtils;
 @TestInstance(Lifecycle.PER_CLASS)
 class BrandControllerTests {
 
-	public static final String searchURI = "/v1/admin/brands/search";
-	public static final String listURI = "/v1/admin/brands";
-	public static final String postURI = "/v1/admin/brands";
-	public static final String getURI = "/v1/admin/brands/%s";
-	public static final String putURI = "/v1/admin/brands/%s";
-	public static final String patchURI = "/v1/admin/brands/%s";
-	public static final String postActivateURI = "/v1/admin/brands/%s/activate";
-	public static final String postDeactivateURI = "/v1/admin/brands/%s/deactivate";
+	public static final String searchURI = "/v1/brands/search";
+	public static final String listURI = "/v1/brands";
+	public static final String postURI = "/v1/brands";
+	public static final String getURI = "/v1/brands/%s";
+	public static final String putURI = "/v1/brands/%s";
+	public static final String patchURI = "/v1/brands/%s";
+	public static final String postActivateURI = "/v1/brands/%s/activate";
+	public static final String postDeactivateURI = "/v1/brands/%s/deactivate";
 	public static final String searchCriteria = "criteria";
 	public static final String pageNumber = "page";
 	public static final String pageSize = "pageSize";
