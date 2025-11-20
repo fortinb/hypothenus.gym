@@ -14,8 +14,8 @@ import com.isoceles.hypothenus.gym.domain.model.location.Address;
 public class BrandBuilder {
 	private static Faker faker = new Faker();
 	
-	public static Brand build(String brandId) {
-		Brand entity = new Brand(brandId, faker.company().name(), buildAddress(),
+	public static Brand build(String brandId, String companyName) {
+		Brand entity = new Brand(brandId, companyName, buildAddress(),
 				faker.internet().emailAddress(), faker.internet().url(), true, buildPhoneNumbers(), 
 				buildContacts(), Instant.now(), null);
 		return entity;

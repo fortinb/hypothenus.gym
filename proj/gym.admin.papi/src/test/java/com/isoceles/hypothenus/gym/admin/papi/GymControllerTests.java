@@ -70,8 +70,8 @@ class GymControllerTests {
 	public static final String brandId_FitnessBoxing = "FitnessBoxing";
 	public static final String brandId_CrossfitExtreme= "CrossfitExtreme";
 	
-	public static final String gymId_16034 = "16034";
-	public static final String gymId_16035 = "16035";
+	public static final String gymId_Boucherville = "BoxingBoucherville";
+	public static final String gymId_Longueuil = "CrossfitLongueuil";
 	
 	@LocalServerPort
 	private int port;
@@ -104,22 +104,25 @@ class GymControllerTests {
 		//testRestTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory());
 		gymRepository.deleteAll();
 
-		gym = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10());
+		gym = GymBuilder.build(brandId_FitnessBoxing, gymId_Boucherville, "Fitness Boxing Boucherville");
 		gymRepository.save(gym);
 		
-		gymIsDeleted = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10());
+		gym = GymBuilder.build(brandId_FitnessBoxing, gymId_Longueuil, "Crossfit Longueuil");
+		gymRepository.save(gym);
+		
+		gymIsDeleted = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10(),faker.company().name());
 		gymIsDeleted.setDeleted(true);
 		gymIsDeleted = gymRepository.save(gymIsDeleted);
 
 		for (int i = 0; i < 10; i++) {
-			Gym item = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10());
+			Gym item = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10(),faker.company().name());
 			
 			gymRepository.save(item);
 			gyms.add(item);
 		}
 		
 		for (int i = 0; i < 5; i++) {
-			Gym item = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10());
+			Gym item = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10(),faker.company().name());
 			item.setActive(false);
 			gymRepository.save(item);
 			gyms.add(item);
@@ -261,7 +264,7 @@ class GymControllerTests {
 	@Test
 	void testPostSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostGymDto postGym = modelMapper.map(GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10()), PostGymDto.class);
+		PostGymDto postGym = modelMapper.map(GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10(),faker.company().name()), PostGymDto.class);
 		HttpEntity<PostGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postGym);
 
 		// Act
@@ -277,7 +280,7 @@ class GymControllerTests {
 	@Test
 	void testPostDuplicateFailure() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostGymDto postGym = modelMapper.map(GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10()), PostGymDto.class);
+		PostGymDto postGym = modelMapper.map(GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10(),faker.company().name()), PostGymDto.class);
 		HttpEntity<PostGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postGym);
 
 		ResponseEntity<GymDto> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(postURI, brandId_FitnessBoxing)), port, null),
@@ -304,7 +307,7 @@ class GymControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis", "Member, Guillaume Fortin", })
 	void testGetSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostGymDto postGym = modelMapper.map(GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10()), PostGymDto.class);
+		PostGymDto postGym = modelMapper.map(GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10(),faker.company().name()), PostGymDto.class);
 		HttpEntity<PostGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postGym);
 
 		ResponseEntity<GymDto> responsePost = testRestTemplate.exchange(
@@ -328,7 +331,7 @@ class GymControllerTests {
 	@Test
 	void testPutSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Gym updatedGym = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10());
+		Gym updatedGym = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10(),faker.company().name());
 		updatedGym.setActive(true);
 		updatedGym = gymRepository.save(updatedGym);
 
@@ -350,7 +353,7 @@ class GymControllerTests {
 	@Test
 	void testPutNullSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Gym updatedGym = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10());
+		Gym updatedGym = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10(),faker.company().name());
 		updatedGym.setActive(true);
 		updatedGym = gymRepository.save(updatedGym);
 		
@@ -377,7 +380,7 @@ class GymControllerTests {
 	@Test
 	void testPatchSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Gym gymToPatch = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10());
+		Gym gymToPatch = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10(),faker.company().name());
 		gymToPatch.setActive(true);
 		gymToPatch = gymRepository.save(gymToPatch);
 		
@@ -406,7 +409,7 @@ class GymControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testActivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Gym gymToActivate = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10());
+		Gym gymToActivate = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10(),faker.company().name());
 		gymToActivate.setActive(false);
 		gymToActivate.setActivatedOn(null);
 		gymToActivate.setDeactivatedOn(null);
@@ -448,7 +451,7 @@ class GymControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testDeactivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Gym gymToDeactivate = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10());
+		Gym gymToDeactivate = GymBuilder.build(brandId_FitnessBoxing, faker.code().isbn10(),faker.company().name());
 		gymToDeactivate.setActive(true);
 		gymToDeactivate.setActivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
 		gymToDeactivate = gymRepository.save(gymToDeactivate);

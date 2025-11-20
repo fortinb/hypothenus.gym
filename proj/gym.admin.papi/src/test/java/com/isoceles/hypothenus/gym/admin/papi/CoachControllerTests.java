@@ -63,8 +63,8 @@ class CoachControllerTests {
 	public static final String brandId_FitnessBoxing = "FitnessBoxing";
 	public static final String brandId_CrossfitExtreme= "CrossfitExtreme";
 	
-	public static final String gymId_16034 = "16034";
-	public static final String gymId_16035 = "16035";
+	public static final String gymId_Boucherville = "BoxingBoucherville";
+	public static final String gymId_Longueuil = "CrossfitLongueuil";
 	
 	@LocalServerPort
 	private int port;
@@ -92,29 +92,29 @@ class CoachControllerTests {
 		
 		coachRepository.deleteAll();
 
-		coach = CoachBuilder.build(brandId_FitnessBoxing, gymId_16034);
+		coach = CoachBuilder.build(brandId_FitnessBoxing, gymId_Boucherville);
 		coach.setActive(true);
 		coachRepository.save(coach);
 		
-		coachIsDeleted = CoachBuilder.build(brandId_FitnessBoxing, gymId_16034);
+		coachIsDeleted = CoachBuilder.build(brandId_FitnessBoxing, gymId_Boucherville);
 		coachIsDeleted.setDeleted(true);
 		coachIsDeleted = coachRepository.save(coachIsDeleted);
 
 		for (int i = 0; i < 10; i++) {
-			Coach item = CoachBuilder.build(brandId_FitnessBoxing, gymId_16034);
+			Coach item = CoachBuilder.build(brandId_FitnessBoxing, gymId_Boucherville);
 			item.setActive(true);
 			coachRepository.save(item);
 			coachs.add(item);
 		}
 		
 		for (int i = 0; i < 4; i++) {
-			Coach item = CoachBuilder.build(brandId_CrossfitExtreme, gymId_16035);
+			Coach item = CoachBuilder.build(brandId_CrossfitExtreme, gymId_Longueuil);
 			item.setActive(true);
 			coachRepository.save(item);
 			coachs.add(item);
 		}
 		
-		Coach item = CoachBuilder.build(brandId_CrossfitExtreme, gymId_16035);
+		Coach item = CoachBuilder.build(brandId_CrossfitExtreme, gymId_Longueuil);
 		item.setActive(false);
 		coachRepository.save(item);
 	}
@@ -137,7 +137,7 @@ class CoachControllerTests {
 		params.add(includeInactive, "false");
 
 		// Act
-		ResponseEntity<String> response = restTemplate.exchange(HttpUtils.createURL(URI.create(String.format(listURI, brandId_CrossfitExtreme, gymId_16035)), port, params),
+		ResponseEntity<String> response = restTemplate.exchange(HttpUtils.createURL(URI.create(String.format(listURI, brandId_CrossfitExtreme, gymId_Longueuil)), port, params),
 				HttpMethod.GET, httpEntity, new ParameterizedTypeReference<String>() {
 				});
 
@@ -172,7 +172,7 @@ class CoachControllerTests {
 		params.add(includeInactive, "true");
 		
 		// Act
-		ResponseEntity<String> response = restTemplate.exchange(HttpUtils.createURL(URI.create(String.format(listURI, brandId_CrossfitExtreme, gymId_16035)), port, params),
+		ResponseEntity<String> response = restTemplate.exchange(HttpUtils.createURL(URI.create(String.format(listURI, brandId_CrossfitExtreme, gymId_Longueuil)), port, params),
 				HttpMethod.GET, httpEntity, new ParameterizedTypeReference<String>() {
 				});
 
@@ -205,7 +205,7 @@ class CoachControllerTests {
 		params.add(pageSize, "2");
 
 		// Act
-		ResponseEntity<String> response = restTemplate.exchange(HttpUtils.createURL(URI.create(String.format(listURI, brandId_CrossfitExtreme, gymId_16035)), port, params),
+		ResponseEntity<String> response = restTemplate.exchange(HttpUtils.createURL(URI.create(String.format(listURI, brandId_CrossfitExtreme, gymId_Longueuil)), port, params),
 				HttpMethod.GET, httpEntity, new ParameterizedTypeReference<String>() {
 				});
 
@@ -229,12 +229,12 @@ class CoachControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testPostSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostCoachDto postCoach = modelMapper.map(CoachBuilder.build(brandId_FitnessBoxing, gymId_16034), PostCoachDto.class);
+		PostCoachDto postCoach = modelMapper.map(CoachBuilder.build(brandId_FitnessBoxing, gymId_Boucherville), PostCoachDto.class);
 		
 		HttpEntity<PostCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, postCoach);
 
 		// Act
-		ResponseEntity<CoachDto> response = restTemplate.exchange(HttpUtils.createURL(URI.create(String.format(postURI, brandId_FitnessBoxing, gymId_16034)), port, null),
+		ResponseEntity<CoachDto> response = restTemplate.exchange(HttpUtils.createURL(URI.create(String.format(postURI, brandId_FitnessBoxing, gymId_Boucherville)), port, null),
 				HttpMethod.POST, httpEntity, CoachDto.class);
 
 		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
@@ -247,12 +247,12 @@ class CoachControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testGetSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostCoachDto postCoach = modelMapper.map(CoachBuilder.build(brandId_FitnessBoxing , gymId_16034), PostCoachDto.class);
+		PostCoachDto postCoach = modelMapper.map(CoachBuilder.build(brandId_FitnessBoxing , gymId_Boucherville), PostCoachDto.class);
 
 		HttpEntity<PostCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, postCoach);
 
 		ResponseEntity<CoachDto> responsePost = restTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postURI, brandId_FitnessBoxing, gymId_16034)), port, null), HttpMethod.POST, httpEntity, CoachDto.class);
+				HttpUtils.createURL(URI.create(String.format(postURI, brandId_FitnessBoxing, gymId_Boucherville)), port, null), HttpMethod.POST, httpEntity, CoachDto.class);
 
 		Assertions.assertEquals(HttpStatus.CREATED, responsePost.getStatusCode(),
 				String.format("Post error: %s", responsePost.getStatusCode()));
@@ -260,7 +260,7 @@ class CoachControllerTests {
 		// Act
 		httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		ResponseEntity<CoachDto> response = restTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(getURI, brandId_FitnessBoxing, gymId_16034, responsePost.getBody().getId())), port, null),
+				HttpUtils.createURL(URI.create(String.format(getURI, brandId_FitnessBoxing, gymId_Boucherville, responsePost.getBody().getId())), port, null),
 				HttpMethod.GET, httpEntity, CoachDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -273,13 +273,13 @@ class CoachControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testPutSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Coach coachToUpdate = CoachBuilder.build(brandId_FitnessBoxing, gymId_16034);
+		Coach coachToUpdate = CoachBuilder.build(brandId_FitnessBoxing, gymId_Boucherville);
 		coachToUpdate.setActive(false);
 		coachToUpdate.setActivatedOn(null);
 		coachToUpdate.setDeactivatedOn(null);
 		coachToUpdate = coachRepository.save(coachToUpdate);
 		
-		Coach updatedCoach = CoachBuilder.build(brandId_FitnessBoxing, gymId_16034);
+		Coach updatedCoach = CoachBuilder.build(brandId_FitnessBoxing, gymId_Boucherville);
 		updatedCoach.setId(coachToUpdate.getId());
 		updatedCoach.setActive(false);
 		updatedCoach.setActivatedOn(null);
@@ -291,7 +291,7 @@ class CoachControllerTests {
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, putCoach);
 		ResponseEntity<CoachDto> response = restTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, brandId_FitnessBoxing, gymId_16034, putCoach.getId())), port, null),
+				HttpUtils.createURL(URI.create(String.format(putURI, brandId_FitnessBoxing, gymId_Boucherville, putCoach.getId())), port, null),
 				HttpMethod.PUT, httpEntity, CoachDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -304,10 +304,10 @@ class CoachControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testPutNullSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Coach coachToUpdate = CoachBuilder.build(brandId_FitnessBoxing, gymId_16034);
+		Coach coachToUpdate = CoachBuilder.build(brandId_FitnessBoxing, gymId_Boucherville);
 		coachToUpdate = coachRepository.save(coachToUpdate);
 		
-		Coach updatedCoach = CoachBuilder.build(brandId_FitnessBoxing, gymId_16034);
+		Coach updatedCoach = CoachBuilder.build(brandId_FitnessBoxing, gymId_Boucherville);
 		
 		PutCoachDto putCoach = modelMapper.map(updatedCoach, PutCoachDto.class);
 		putCoach.setId(coachToUpdate.getId());
@@ -319,7 +319,7 @@ class CoachControllerTests {
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, putCoach);
 		ResponseEntity<CoachDto> response = restTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, brandId_FitnessBoxing, gymId_16034, putCoach.getId())), port, null),
+				HttpUtils.createURL(URI.create(String.format(putURI, brandId_FitnessBoxing, gymId_Boucherville, putCoach.getId())), port, null),
 				HttpMethod.PUT, httpEntity, CoachDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -338,7 +338,7 @@ class CoachControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testActivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Coach coachToActivate = CoachBuilder.build(brandId_FitnessBoxing, gymId_16034);
+		Coach coachToActivate = CoachBuilder.build(brandId_FitnessBoxing, gymId_Boucherville);
 		coachToActivate.setActive(false);
 		coachToActivate.setActivatedOn(null);
 		coachToActivate.setDeactivatedOn(null);
@@ -350,7 +350,7 @@ class CoachControllerTests {
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		ResponseEntity<CoachDto> response = restTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postActivateURI, brandId_FitnessBoxing, gymId_16034, coachToActivate.getId())), port, null),
+				HttpUtils.createURL(URI.create(String.format(postActivateURI, brandId_FitnessBoxing, gymId_Boucherville, coachToActivate.getId())), port, null),
 				HttpMethod.POST, httpEntity, CoachDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -367,7 +367,7 @@ class CoachControllerTests {
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		ResponseEntity<CoachDto> response = restTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postActivateURI, brandId_FitnessBoxing, gymId_16034, faker.code().isbn10())), port, null),
+				HttpUtils.createURL(URI.create(String.format(postActivateURI, brandId_FitnessBoxing, gymId_Boucherville, faker.code().isbn10())), port, null),
 				HttpMethod.POST, httpEntity, CoachDto.class);
 
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
@@ -378,8 +378,8 @@ class CoachControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testDeactivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Coach coachToDeactivate = CoachBuilder.build(brandId_FitnessBoxing, gymId_16034);
-		coachToDeactivate.setGymId(gymId_16034);
+		Coach coachToDeactivate = CoachBuilder.build(brandId_FitnessBoxing, gymId_Boucherville);
+		coachToDeactivate.setGymId(gymId_Boucherville);
 		coachToDeactivate.setActive(true);
 		coachToDeactivate.setActivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
 		coachToDeactivate = coachRepository.save(coachToDeactivate);
@@ -389,7 +389,7 @@ class CoachControllerTests {
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		ResponseEntity<CoachDto> response = restTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postDeactivateURI, brandId_FitnessBoxing, gymId_16034, coachToDeactivate.getId())), port, null),
+				HttpUtils.createURL(URI.create(String.format(postDeactivateURI, brandId_FitnessBoxing, gymId_Boucherville, coachToDeactivate.getId())), port, null),
 				HttpMethod.POST, httpEntity, CoachDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -406,7 +406,7 @@ class CoachControllerTests {
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		ResponseEntity<CoachDto> response = restTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postDeactivateURI, brandId_FitnessBoxing, gymId_16034, faker.code().ean13())), port, null),
+				HttpUtils.createURL(URI.create(String.format(postDeactivateURI, brandId_FitnessBoxing, gymId_Boucherville, faker.code().ean13())), port, null),
 				HttpMethod.POST, httpEntity, CoachDto.class);
 
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
@@ -417,7 +417,7 @@ class CoachControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testPatchSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Coach coachToPatch = CoachBuilder.build(brandId_FitnessBoxing, gymId_16034);
+		Coach coachToPatch = CoachBuilder.build(brandId_FitnessBoxing, gymId_Boucherville);
 		coachToPatch.setActive(true);
 		coachToPatch = coachRepository.save(coachToPatch);
 
@@ -431,7 +431,7 @@ class CoachControllerTests {
 		// Act
 		HttpEntity<PatchCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchCoach);
 		ResponseEntity<CoachDto> response = restTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(patchURI, brandId_FitnessBoxing, gymId_16034, patchCoach.getId())), port, null),
+				HttpUtils.createURL(URI.create(String.format(patchURI, brandId_FitnessBoxing, gymId_Boucherville, patchCoach.getId())), port, null),
 				HttpMethod.PATCH, httpEntity, CoachDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),

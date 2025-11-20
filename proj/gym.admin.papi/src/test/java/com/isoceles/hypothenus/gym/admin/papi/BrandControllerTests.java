@@ -101,22 +101,28 @@ class BrandControllerTests {
 		//testRestTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory());
 		brandRepository.deleteAll();
 
-		brand = BrandBuilder.build(faker.code().isbn10());
+		brand = BrandBuilder.build(brandId_FitnessBoxing, "Fitness Boxing");
 		brandRepository.save(brand);
 		
-		brandIsDeleted = BrandBuilder.build(faker.code().isbn10());
+		brand = BrandBuilder.build(brandId_CrossfitExtreme, "Crossfit Extreme");
+		brandRepository.save(brand);
+		
+		brand = BrandBuilder.build(faker.code().isbn10(),faker.company().name());
+		brandRepository.save(brand);
+		
+		brandIsDeleted = BrandBuilder.build(faker.code().isbn10(), faker.company().name());
 		brandIsDeleted.setDeleted(true);
 		brandIsDeleted = brandRepository.save(brandIsDeleted);
 
 		for (int i = 0; i < 10; i++) {
-			Brand item = BrandBuilder.build(faker.code().isbn10());
+			Brand item = BrandBuilder.build(faker.code().isbn10(), faker.company().name());
 			
 			brandRepository.save(item);
 			brands.add(item);
 		}
 		
 		for (int i = 0; i < 5; i++) {
-			Brand item = BrandBuilder.build(faker.code().isbn10());
+			Brand item = BrandBuilder.build(faker.code().isbn10(),faker.company().name());
 			item.setActive(false);
 			brandRepository.save(item);
 			brands.add(item);
@@ -258,7 +264,7 @@ class BrandControllerTests {
 	@Test
 	void testPostSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostBrandDto postBrand = modelMapper.map(BrandBuilder.build(faker.code().isbn10()), PostBrandDto.class);
+		PostBrandDto postBrand = modelMapper.map(BrandBuilder.build(faker.code().isbn10(),faker.company().name()), PostBrandDto.class);
 		HttpEntity<PostBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postBrand);
 
 		// Act
@@ -274,7 +280,7 @@ class BrandControllerTests {
 	@Test
 	void testPostDuplicateFailure() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostBrandDto postBrand = modelMapper.map(BrandBuilder.build(faker.code().isbn10()), PostBrandDto.class);
+		PostBrandDto postBrand = modelMapper.map(BrandBuilder.build(faker.code().isbn10(),faker.company().name()), PostBrandDto.class);
 		HttpEntity<PostBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postBrand);
 
 		ResponseEntity<BrandDto> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postURI), port, null),
@@ -301,7 +307,7 @@ class BrandControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis", "Member, Guillaume Fortin", })
 	void testGetSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostBrandDto postBrand = modelMapper.map(BrandBuilder.build(faker.code().isbn10()), PostBrandDto.class);
+		PostBrandDto postBrand = modelMapper.map(BrandBuilder.build(faker.code().isbn10(),faker.company().name()), PostBrandDto.class);
 		HttpEntity<PostBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postBrand);
 
 		ResponseEntity<BrandDto> responsePost = testRestTemplate.exchange(
@@ -325,7 +331,7 @@ class BrandControllerTests {
 	@Test
 	void testPutSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Brand updatedBrand = BrandBuilder.build(faker.code().isbn10());
+		Brand updatedBrand = BrandBuilder.build(faker.code().isbn10(),faker.company().name());
 		updatedBrand.setActive(true);
 		updatedBrand = brandRepository.save(updatedBrand);
 
@@ -347,7 +353,7 @@ class BrandControllerTests {
 	@Test
 	void testPutNullSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Brand updatedBrand = BrandBuilder.build(faker.code().isbn10());
+		Brand updatedBrand = BrandBuilder.build(faker.code().isbn10(),faker.company().name());
 		updatedBrand.setActive(true);
 		updatedBrand = brandRepository.save(updatedBrand);
 		
@@ -374,7 +380,7 @@ class BrandControllerTests {
 	@Test
 	void testPatchSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Brand brandToPatch = BrandBuilder.build(faker.code().isbn10());
+		Brand brandToPatch = BrandBuilder.build(faker.code().isbn10(),faker.company().name());
 		brandToPatch.setActive(true);
 		brandToPatch = brandRepository.save(brandToPatch);
 		
@@ -403,7 +409,7 @@ class BrandControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testActivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Brand brandToActivate = BrandBuilder.build(faker.code().isbn10());
+		Brand brandToActivate = BrandBuilder.build(faker.code().isbn10(),faker.company().name());
 		brandToActivate.setActive(false);
 		brandToActivate.setActivatedOn(null);
 		brandToActivate.setDeactivatedOn(null);
@@ -445,7 +451,7 @@ class BrandControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testDeactivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Brand brandToDeactivate = BrandBuilder.build(faker.code().isbn10());
+		Brand brandToDeactivate = BrandBuilder.build(faker.code().isbn10(),faker.company().name());
 		brandToDeactivate.setActive(true);
 		brandToDeactivate.setActivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
 		brandToDeactivate = brandRepository.save(brandToDeactivate);
