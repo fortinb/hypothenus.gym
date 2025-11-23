@@ -16,7 +16,7 @@ public class BrandBuilder {
 	
 	public static Brand build(String brandId, String companyName) {
 		Brand entity = new Brand(brandId, companyName, buildAddress(),
-				faker.internet().emailAddress(), faker.internet().url(), true, buildPhoneNumbers(), 
+				faker.internet().emailAddress(), faker.internet().image(), true, buildPhoneNumbers(), 
 				buildContacts(), Instant.now(), null);
 		return entity;
 	}

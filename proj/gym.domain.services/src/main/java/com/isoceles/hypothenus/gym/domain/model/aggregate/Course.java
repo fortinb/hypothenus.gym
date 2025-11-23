@@ -11,6 +11,7 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.isoceles.hypothenus.gym.domain.model.LocalizedString;
+import com.mongodb.lang.NonNull;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -24,11 +25,14 @@ public class Course extends BaseEntity {
 	private String id;
 	
 	@Indexed
+	@NonNull
 	private String brandId;
 
 	@Indexed
+	@NonNull
 	private String gymId;
 
+	@NonNull
 	private String code;
 
 	private List<LocalizedString> name;

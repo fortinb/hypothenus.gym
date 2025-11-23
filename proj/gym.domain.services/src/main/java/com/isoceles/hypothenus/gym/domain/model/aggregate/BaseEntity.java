@@ -20,7 +20,7 @@ public abstract class BaseEntity {
 	protected List<Message> messages;
 	
 	protected boolean isDeleted = false;
-	protected boolean isActive = false;
+	protected boolean isActive = true;
 	
 	@CreatedBy
 	protected String createdBy;

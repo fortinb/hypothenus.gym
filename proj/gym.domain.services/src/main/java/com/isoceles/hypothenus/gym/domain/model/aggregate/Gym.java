@@ -11,6 +11,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.isoceles.hypothenus.gym.domain.model.contact.Contact;
 import com.isoceles.hypothenus.gym.domain.model.contact.PhoneNumber;
 import com.isoceles.hypothenus.gym.domain.model.location.Address;
+import com.mongodb.lang.NonNull;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -24,11 +25,14 @@ public class Gym extends BaseEntity {
 	private String id;
 	
 	@Indexed
+	@NonNull
 	private String brandId;
 	
 	@Indexed (unique = true)
+	@NonNull
 	private String gymId;
 	
+	@NonNull
 	private String name;
 	
 	private Address address;

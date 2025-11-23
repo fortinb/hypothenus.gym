@@ -361,11 +361,13 @@ class CourseControllerTests {
 
 		Course updatedCourse = CourseBuilder.build(brandId_FitnessBoxing, gymId_Boucherville,  null);
 
+		PutCourseDto courseToUpdateDto = modelMapper.map(courseToUpdate, PutCourseDto.class);
+		
 		PutCourseDto putCourse = modelMapper.map(updatedCourse, PutCourseDto.class);
 		putCourse.setId(courseToUpdate.getId());
-		putCourse.setCode(null);
+		putCourse.setCode(courseToUpdateDto.getCode());
+		putCourse.setName(courseToUpdateDto.getName());
 		putCourse.setDescription(null);
-		putCourse.setName(null);
 
 		// Act
 		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, putCourse);
@@ -376,9 +378,7 @@ class CourseControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Put null error: %s", response.getStatusCode()));
 
-		courseToUpdate.setCode(null);
 		courseToUpdate.setDescription(null);
-		courseToUpdate.setName(null);
 
 		assertCourse(modelMapper.map(courseToUpdate, CourseDto.class), response.getBody());
 	}

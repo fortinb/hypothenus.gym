@@ -14,6 +14,7 @@ import com.isoceles.hypothenus.gym.domain.model.enumeration.BillingFrequencyEnum
 import com.isoceles.hypothenus.gym.domain.model.enumeration.MembershipPlanPeriodEnum;
 import com.isoceles.hypothenus.gym.domain.model.pricing.Cost;
 import com.isoceles.hypothenus.gym.domain.model.pricing.OneTimeFee;
+import com.mongodb.lang.NonNull;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -27,8 +28,10 @@ public class MembershipPlan extends BaseEntity {
 	private String id;
 
 	@Indexed
+	@NonNull
 	private String brandId;
 
+	@NonNull
 	private String code;
 
 	private List<LocalizedString> name;

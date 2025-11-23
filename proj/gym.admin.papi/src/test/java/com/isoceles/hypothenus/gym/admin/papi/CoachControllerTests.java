@@ -312,8 +312,6 @@ class CoachControllerTests {
 		PutCoachDto putCoach = modelMapper.map(updatedCoach, PutCoachDto.class);
 		putCoach.setId(coachToUpdate.getId());
 		putCoach.getPerson().setEmail(null);
-		putCoach.getPerson().setFirstname(null);
-		putCoach.getPerson().setLastname(null);
 		putCoach.getPerson().setPhoneNumbers(null);
 		
 		// Act
@@ -327,8 +325,6 @@ class CoachControllerTests {
 		
 		updatedCoach.setId(coachToUpdate.getId());
 		updatedCoach.getPerson().setEmail(null);
-		updatedCoach.getPerson().setFirstname(null);
-		updatedCoach.getPerson().setLastname(null);
 		updatedCoach.getPerson().setPhoneNumbers(null);
 		
  		assertCoach(modelMapper.map(updatedCoach, CoachDto.class), response.getBody());

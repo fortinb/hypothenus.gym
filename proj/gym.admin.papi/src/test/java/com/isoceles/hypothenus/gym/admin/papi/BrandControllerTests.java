@@ -107,9 +107,6 @@ class BrandControllerTests {
 		brand = BrandBuilder.build(brandId_CrossfitExtreme, "Crossfit Extreme");
 		brandRepository.save(brand);
 		
-		brand = BrandBuilder.build(faker.code().isbn10(),faker.company().name());
-		brandRepository.save(brand);
-		
 		brandIsDeleted = BrandBuilder.build(faker.code().isbn10(), faker.company().name());
 		brandIsDeleted.setDeleted(true);
 		brandIsDeleted = brandRepository.save(brandIsDeleted);
@@ -361,7 +358,6 @@ class BrandControllerTests {
 		
 		putBrand.setEmail(null);
 		putBrand.setAddress(null);
-		putBrand.setName(null);
 		putBrand.setPhoneNumbers(null);
 		putBrand.setContacts(null);
 		
@@ -387,7 +383,6 @@ class BrandControllerTests {
 		PatchBrandDto patchBrand = modelMapper.map(brandToPatch, PatchBrandDto.class);
 		patchBrand.getAddress().setStreetName(null);
 		patchBrand.setEmail(null);
-		patchBrand.setName(null);
 		
 		// Act
 		HttpEntity<PatchBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, patchBrand);
@@ -399,7 +394,6 @@ class BrandControllerTests {
 				String.format("Get error: %s", response.getStatusCode()));
 
 		patchBrand.setEmail(brandToPatch.getEmail());
-		patchBrand.setName(brandToPatch.getName());
 		patchBrand.getAddress().setStreetName(brandToPatch.getAddress().getStreetName());
 		
  		assertBrand(modelMapper.map(patchBrand, BrandDto.class), response.getBody());

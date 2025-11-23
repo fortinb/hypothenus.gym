@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.isoceles.hypothenus.gym.domain.model.contact.Person;
+import com.mongodb.lang.NonNull;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -20,6 +21,7 @@ public class Member extends BaseEntity {
 	private String id;
 
 	@Indexed
+	@NonNull
 	private String brandId;
 
 	private Person person;

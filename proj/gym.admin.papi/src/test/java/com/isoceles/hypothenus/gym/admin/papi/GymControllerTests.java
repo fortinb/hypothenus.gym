@@ -361,7 +361,6 @@ class GymControllerTests {
 		
 		putGym.setEmail(null);
 		putGym.setAddress(null);
-		putGym.setName(null);
 		putGym.setPhoneNumbers(null);
 		putGym.setContacts(null);
 		

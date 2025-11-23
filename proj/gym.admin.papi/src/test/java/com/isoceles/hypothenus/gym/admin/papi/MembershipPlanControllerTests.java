@@ -317,9 +317,10 @@ class MembershipPlanControllerTests {
 		updatedMembershipPlan.setActivatedOn(null);
 		updatedMembershipPlan.setDeactivatedOn(null);
 		
+		PutMembershipPlanDto membershipPlanToUpdateDto = modelMapper.map(membershipPlanToUpdate, PutMembershipPlanDto.class);
 		PutMembershipPlanDto putMembershipPlan = modelMapper.map(updatedMembershipPlan, PutMembershipPlanDto.class);
 		putMembershipPlan.setId(membershipPlanToUpdate.getId());
-		putMembershipPlan.setCode(null);
+		putMembershipPlan.setCode(membershipPlanToUpdateDto.getCode());
 		putMembershipPlan.setDescription(null);
 		putMembershipPlan.setName(null);
 
@@ -332,7 +333,6 @@ class MembershipPlanControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Put null error: %s", response.getStatusCode()));
 
-		updatedMembershipPlan.setCode(null);
 		updatedMembershipPlan.setDescription(null);
 		updatedMembershipPlan.setName(null);
 
