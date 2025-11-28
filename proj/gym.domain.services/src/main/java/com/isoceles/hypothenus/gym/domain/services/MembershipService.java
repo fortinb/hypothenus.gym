@@ -13,12 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.isoceles.hypothenus.gym.domain.context.RequestContext;
 import com.isoceles.hypothenus.gym.domain.exception.DomainException;
-import com.isoceles.hypothenus.gym.domain.model.LocalizedString;
-import com.isoceles.hypothenus.gym.domain.model.aggregate.Course;
-import com.isoceles.hypothenus.gym.domain.model.aggregate.Gym;
 import com.isoceles.hypothenus.gym.domain.model.aggregate.Membership;
-import com.isoceles.hypothenus.gym.domain.model.pricing.Cost;
-import com.isoceles.hypothenus.gym.domain.model.pricing.OneTimeFee;
 import com.isoceles.hypothenus.gym.domain.repository.MembershipRepository;
 
 @Service
