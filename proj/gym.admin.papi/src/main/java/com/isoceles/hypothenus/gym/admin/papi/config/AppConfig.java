@@ -22,33 +22,26 @@ import jakarta.servlet.http.HttpServletRequest;
 @Configuration
 @EnableMongoRepositories("com.isoceles.hypothenus.gym.domain.repository")
 public class AppConfig {
-	
+
 	@Bean
-    ModelMapper instanciateModelMapper() {
-        return new ModelMapper();
-    }
-	
+	ModelMapper instanciateModelMapper() {
+		return new ModelMapper();
+	}
+
 	@Bean
 	@Primary
-    ObjectMapper instanciateObjectMapper() {
-		
-		ObjectMapper mapper = JsonMapper.builder()
-					.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-					.addModule(new PageJacksonModule())
-					.addModule(new SortJacksonModule())
-					.addModule(new JavaTimeModule())
-					.build();
-		//mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-		//mapper.registerModule(new PageJacksonModule());
-		//mapper.registerModule(new SortJacksonModule());
-		//mapper.registerModule(new JavaTimeModule());
-		 
-		return mapper;
-    }
+	ObjectMapper instanciateObjectMapper() {
 
-    @Bean
-    @Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
-    RequestContext requestContext(HttpServletRequest request) {
-	    return new RequestContext(request);
+		ObjectMapper mapper = JsonMapper.builder().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+				.addModule(new PageJacksonModule()).addModule(new SortJacksonModule()).addModule(new JavaTimeModule())
+				.build();
+		return mapper;
 	}
+
+	@Bean
+	@Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
+	RequestContext requestContext(HttpServletRequest request) {
+		return new RequestContext(request);
+	}
+
 }

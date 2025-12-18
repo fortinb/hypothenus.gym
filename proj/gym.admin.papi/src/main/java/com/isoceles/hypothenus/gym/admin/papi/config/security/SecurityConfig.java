@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.AuthenticationUserDetailsService;
@@ -20,54 +21,49 @@ import org.springframework.security.web.authentication.preauth.RequestHeaderAuth
 @Configuration
 public class SecurityConfig {
 
-    @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		http
-			
-		 	.addFilterBefore(authorizationFilter(), RequestHeaderAuthenticationFilter.class)
-		 	.csrf((i) -> i.disable())
-			.authorizeHttpRequests((authorize) -> 
-					 authorize
-					 
-					 .requestMatchers("/swagger-ui/**").anonymous()
-					 .requestMatchers("/*/api-docs/**").anonymous()
-					 .anyRequest().authenticated()
-					);
-			
+	@Bean
+	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+		http.cors(Customizer.withDefaults())
+				.addFilterBefore(authorizationFilter(), RequestHeaderAuthenticationFilter.class)
+				.csrf((i) -> i.disable()).authorizeHttpRequests((authorize) -> authorize
+
+						.requestMatchers("/swagger-ui/**").anonymous().requestMatchers("/*/api-docs/**").anonymous()
+						.anyRequest().authenticated());
+
 		return http.build();
 	}
 
-    @Bean(name = "authorizationFilter")
-    RequestHeaderAuthenticationFilter authorizationFilter() {
-    	
-    	 RequestHeaderAuthenticationFilter requestHeaderAuthenticationFilter = new RequestHeaderAuthenticationFilter();
+	@Bean(name = "authorizationFilter")
+	RequestHeaderAuthenticationFilter authorizationFilter() {
 
-         requestHeaderAuthenticationFilter.setPrincipalRequestHeader("x-authorization");
-         requestHeaderAuthenticationFilter.setCredentialsRequestHeader("x-credentials");
+		RequestHeaderAuthenticationFilter requestHeaderAuthenticationFilter = new RequestHeaderAuthenticationFilter();
 
-         requestHeaderAuthenticationFilter.setAuthenticationManager(authenticationManager());
-        
-         requestHeaderAuthenticationFilter.setExceptionIfHeaderMissing(false);
-         
-         return requestHeaderAuthenticationFilter;
+		requestHeaderAuthenticationFilter.setPrincipalRequestHeader("x-authorization");
+		requestHeaderAuthenticationFilter.setCredentialsRequestHeader("x-credentials");
+
+		requestHeaderAuthenticationFilter.setAuthenticationManager(authenticationManager());
+
+		requestHeaderAuthenticationFilter.setExceptionIfHeaderMissing(false);
+
+		return requestHeaderAuthenticationFilter;
 	}
-    
-    @Bean(name = "customAuthenticationManager")
-    AuthenticationManager authenticationManager() {
-    	final List<AuthenticationProvider> providers = new ArrayList<>(1);
-        providers.add(preAuthCustomProvider());
-        return new ProviderManager(providers);
-    }
 
-    @Bean(name = "preAuthProvider")
-    PreAuthenticatedAuthenticationProvider preAuthCustomProvider() {
-        PreAuthenticatedAuthenticationProvider provider = new PreAuthenticatedAuthenticationProvider();
-        provider.setPreAuthenticatedUserDetailsService(userDetailsService());
-        return provider;
-    }
+	@Bean(name = "customAuthenticationManager")
+	AuthenticationManager authenticationManager() {
+		final List<AuthenticationProvider> providers = new ArrayList<>(1);
+		providers.add(preAuthCustomProvider());
+		return new ProviderManager(providers);
+	}
 
-    @Bean
-    AuthenticationUserDetailsService<PreAuthenticatedAuthenticationToken> userDetailsService() {
-        return new AuthorizationUserDetailsService();
-    }
+	@Bean(name = "preAuthProvider")
+	PreAuthenticatedAuthenticationProvider preAuthCustomProvider() {
+		PreAuthenticatedAuthenticationProvider provider = new PreAuthenticatedAuthenticationProvider();
+		provider.setPreAuthenticatedUserDetailsService(userDetailsService());
+		return provider;
+	}
+
+	@Bean
+	AuthenticationUserDetailsService<PreAuthenticatedAuthenticationToken> userDetailsService() {
+		return new AuthorizationUserDetailsService();
+	}
 }
