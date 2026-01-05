@@ -16,7 +16,7 @@ public class GymBuilder {
 	
 	public static Gym build(String brandId, String gymId, String gymName) {
 		Gym entity = new Gym(brandId, gymId, gymName, buildAddress(),
-				faker.internet().emailAddress(), true, buildPhoneNumbers(), 
+				faker.internet().emailAddress(), faker.internet().image(), true, buildPhoneNumbers(), 
 				buildContacts(), Instant.now(), null);
 		return entity;
 	}

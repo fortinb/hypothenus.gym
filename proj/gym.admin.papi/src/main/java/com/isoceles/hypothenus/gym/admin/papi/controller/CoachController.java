@@ -19,8 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.isoceles.hypothenus.gym.admin.papi.config.security.Roles;
@@ -35,9 +33,10 @@ import com.isoceles.hypothenus.gym.domain.services.CoachService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.media.*;
 
 @RestController
 @RequestMapping("/v1")
@@ -183,15 +182,6 @@ public class CoachController {
 		return ResponseEntity.ok(modelMapper.map(entity, CoachDto.class));
 	}
 
-	@PostMapping("/brands/{brandId}/gyms/{gymId}/coachs/{coachId}/photo")
-	public ResponseEntity<String> handlePhotoUpload(@RequestParam("file") MultipartFile file,
-			RedirectAttributes redirectAttributes) {
-
-		//storageService.store(file);
-
-		return ResponseEntity.ok("new photo url");
-	}
-	
 	@PostMapping("/brands/{brandId}/gyms/{gymId}/coachs/{coachId}/activate")
 	@Operation(summary = "Activate a coach")
 	@ApiResponses({

@@ -28,7 +28,7 @@ public class PutBrandDto {
 	
 	private String note;
 	
-	private String logoUrl;
+	private String logoUri;
 	
 	private List<PhoneNumberDto> phoneNumbers;
 	

@@ -29,6 +29,8 @@ public class PatchGymDto {
 	
 	private String email;
 	
+	private String logoUri;
+	
 	private String note;
 	
 	private List<PhoneNumberDto> phoneNumbers;

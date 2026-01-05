@@ -37,7 +37,7 @@ public class Brand extends BaseEntity {
 	
 	private String note;
 	
-	private String logoUrl;
+	private String logoUri;
 	
 	private List<Contact> contacts;
 	
@@ -46,14 +46,14 @@ public class Brand extends BaseEntity {
 	public Brand() {
 	}
 	
-	public Brand(String brandId, String name, Address address, String email, String logoUrl, boolean isActive,
+	public Brand(String brandId, String name, Address address, String email, String logoUri, boolean isActive,
 			List<PhoneNumber> phoneNumbers, List<Contact> contacts, Instant activatedOn, Instant deactivatedOn) {
 		super(isActive);
 		this.brandId = brandId;
 		this.name = name;
 		this.address = address;
 		this.email = email;
-		this.logoUrl = logoUrl;
+		this.logoUri = logoUri;
 		this.phoneNumbers = phoneNumbers;
 		this.contacts = contacts;
 		this.activatedOn = activatedOn;

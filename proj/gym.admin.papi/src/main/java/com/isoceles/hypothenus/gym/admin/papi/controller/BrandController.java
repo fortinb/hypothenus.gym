@@ -63,7 +63,7 @@ public class BrandController {
 	}
 
 	@GetMapping("/brands/search")
-	@Operation(summary = "Search for gyms")
+	@Operation(summary = "Search for brands")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
 					@Content(schema = @Schema(implementation = Page.class), mediaType = "application/json") }),
@@ -92,7 +92,7 @@ public class BrandController {
 
 	@GetMapping("/brands")
 	@PreAuthorize("hasRole('" + Roles.Admin + "')")
-	@Operation(summary = "Retrieve a list of gyms")
+	@Operation(summary = "Retrieve a list of brands")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
 					@Content(schema = @Schema(implementation = Page.class), mediaType = "application/json") }),

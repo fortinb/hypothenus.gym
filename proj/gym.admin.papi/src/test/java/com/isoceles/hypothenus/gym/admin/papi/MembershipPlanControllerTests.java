@@ -313,6 +313,7 @@ class MembershipPlanControllerTests {
 
 		MembershipPlan updatedMembershipPlan = MembershipPlanBuilder.build(brandId_FitnessBoxing);
 		updatedMembershipPlan.setId(membershipPlanToUpdate.getId());
+		updatedMembershipPlan.setCode(membershipPlanToUpdate.getCode());
 		updatedMembershipPlan.setActive(false);
 		updatedMembershipPlan.setActivatedOn(null);
 		updatedMembershipPlan.setDeactivatedOn(null);
@@ -451,7 +452,6 @@ class MembershipPlanControllerTests {
 			Assertions.assertEquals(expected.getId(), result.getId());
 		}
 		
-		Assertions.assertEquals(expected.getBrandId(), result.getBrandId());
 		Assertions.assertEquals(expected.getBrandId(), result.getBrandId());
 		Assertions.assertEquals(expected.getCode(), result.getCode());
 		Assertions.assertEquals(expected.getDurationInMonths(), result.getDurationInMonths());

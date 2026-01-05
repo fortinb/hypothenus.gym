@@ -26,6 +26,8 @@ public class GymDto extends BaseDto {
 	
 	private String email;
 	
+	private String logoUri;
+	
 	private String note;
 	
 	private List<PhoneNumberDto> phoneNumbers;

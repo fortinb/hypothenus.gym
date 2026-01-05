@@ -15,10 +15,10 @@ public abstract class BaseDto {
 	protected List<MessageDto> messages;
 	
 	@JsonProperty(value="isDeleted")   
-	protected boolean isDeleted;
+	protected boolean isDeleted = false;
 	
 	@JsonProperty(value="isActive")   
-	protected boolean isActive;
+	protected boolean isActive = true;
 	
 	protected String createdBy;
 	protected Instant createdOn;

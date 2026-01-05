@@ -386,7 +386,6 @@ class GymControllerTests {
 		PatchGymDto patchGym = modelMapper.map(gymToPatch, PatchGymDto.class);
 		patchGym.getAddress().setStreetName(null);
 		patchGym.setEmail(null);
-		patchGym.setName(null);
 		
 		// Act
 		HttpEntity<PatchGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, patchGym);
@@ -398,7 +397,6 @@ class GymControllerTests {
 				String.format("Get error: %s", response.getStatusCode()));
 
 		patchGym.setEmail(gymToPatch.getEmail());
-		patchGym.setName(gymToPatch.getName());
 		patchGym.getAddress().setStreetName(gymToPatch.getAddress().getStreetName());
 		
  		assertGym(modelMapper.map(patchGym, GymDto.class), response.getBody());

@@ -39,6 +39,8 @@ public class Gym extends BaseEntity {
 	
 	private String email;
 	
+	private String logoUri;
+	
 	private String note;
 	
 	private List<Contact> contacts;
@@ -48,7 +50,7 @@ public class Gym extends BaseEntity {
 	public Gym() {
 	}
 	
-	public Gym(String brandId, String gymId, String name, Address address, String email, boolean isActive,
+	public Gym(String brandId, String gymId, String name, Address address, String email, String logoUri, boolean isActive,
 			List<PhoneNumber> phoneNumbers, List<Contact> contacts, Instant activatedOn, Instant deactivatedOn) {
 		super(isActive);
 		this.brandId = brandId;
@@ -56,6 +58,7 @@ public class Gym extends BaseEntity {
 		this.name = name;
 		this.address = address;
 		this.email = email;
+		this.logoUri = logoUri;
 		this.phoneNumbers = phoneNumbers;
 		this.contacts = contacts;
 		this.activatedOn = activatedOn;

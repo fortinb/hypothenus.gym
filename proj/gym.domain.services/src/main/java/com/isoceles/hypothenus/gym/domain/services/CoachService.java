@@ -110,10 +110,10 @@ public class CoachService {
 
 	public Page<Coach> list(String brandId, String gymId, int page, int pageSize, boolean includeInactive) throws DomainException {
 		if (includeInactive) {
-			return coachRepository.findAllByBrandIdAndGymIdAndIsDeletedIsFalse(brandId, gymId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
+			return coachRepository.findAllByBrandIdAndGymIdAndIsDeletedIsFalse(brandId, gymId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "person.lastname"));
 		}
 
-		return coachRepository.findAllByBrandIdAndGymIdAndIsDeletedIsFalseAndIsActiveIsTrue(brandId, gymId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
+		return coachRepository.findAllByBrandIdAndGymIdAndIsDeletedIsFalseAndIsActiveIsTrue(brandId, gymId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "person.lastname"));
 	}
 	
 	public Coach activate(String brandId, String gymId, String id) throws DomainException {

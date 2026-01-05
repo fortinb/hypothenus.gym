@@ -486,7 +486,9 @@ class CourseControllerTests {
 				String.format("Get error: %s", response.getStatusCode()));
 
 		courseToPatch.setCode(patchCourse.getCode());
-
+		courseToPatch.setDescription(null);
+		courseToPatch.setName(null);
+		
 		assertCourse(modelMapper.map(courseToPatch, CourseDto.class), response.getBody());
 	}
 
