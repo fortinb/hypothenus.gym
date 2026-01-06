@@ -44,9 +44,9 @@ public class PersonBuilder {
 	
 	public static List<Contact> buildContacts() {
 		ArrayList<Contact> contacts = new ArrayList<Contact>();
-		contacts.add(new Contact(faker.name().firstName(), faker.name().lastName(),faker.gameOfThrones().dragon(),
+		contacts.add(new Contact(faker.name().firstName(), faker.name().lastName(),faker.cat().name(),
 				faker.internet().emailAddress(), buildPhoneNumbers()));
-		contacts.add(new Contact(faker.name().firstName(), faker.name().lastName(),faker.gameOfThrones().dragon(),
+		contacts.add(new Contact(faker.name().firstName(), faker.name().lastName(),faker.cat().name(),
 				faker.internet().emailAddress(), buildPhoneNumbers()));
 
 		return contacts;

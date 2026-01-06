@@ -312,8 +312,7 @@ class CoachControllerTests {
 		PutCoachDto putCoach = modelMapper.map(updatedCoach, PutCoachDto.class);
 		putCoach.setId(coachToUpdate.getId());
 		putCoach.getPerson().setEmail(null);
-		putCoach.getPerson().setPhoneNumbers(null);
-		
+				
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, putCoach);
 		ResponseEntity<CoachDto> response = restTemplate.exchange(
@@ -325,7 +324,6 @@ class CoachControllerTests {
 		
 		updatedCoach.setId(coachToUpdate.getId());
 		updatedCoach.getPerson().setEmail(null);
-		updatedCoach.getPerson().setPhoneNumbers(null);
 		
  		assertCoach(modelMapper.map(updatedCoach, CoachDto.class), response.getBody());
 	}
