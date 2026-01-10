@@ -20,7 +20,15 @@ import com.iso.hypo.common.context.RequestContext;
 import jakarta.servlet.http.HttpServletRequest;
 
 @Configuration
-@EnableMongoRepositories("com.iso.hypo.gym.repository")
+@EnableMongoRepositories(basePackages = {
+        "com.iso.hypo.brand.repository",
+        "com.iso.hypo.gym.repository",
+        "com.iso.hypo.coach.repository",
+        "com.iso.hypo.course.repository",
+        "com.iso.hypo.member.repository",
+        "com.iso.hypo.membership.repository",
+        "com.iso.hypo.membershipPlan.repository"
+})
 public class AppConfig {
 
 	@Bean

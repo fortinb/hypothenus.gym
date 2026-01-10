@@ -7,8 +7,6 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.LastModifiedBy;
 
-import com.iso.hypo.common.domain.Message;
-
 import lombok.Getter;
 import lombok.Setter;
 
