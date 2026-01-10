@@ -5,14 +5,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.github.javafaker.Faker;
-import com.iso.hypo.gym.domain.model.LocalizedString;
-import com.iso.hypo.gym.domain.model.aggregate.MembershipPlan;
-import com.iso.hypo.gym.domain.model.enumeration.BillingFrequencyEnum;
-import com.iso.hypo.gym.domain.model.enumeration.LanguageEnum;
-import com.iso.hypo.gym.domain.model.enumeration.MembershipPlanPeriodEnum;
-import com.iso.hypo.gym.domain.model.pricing.Cost;
-import com.iso.hypo.gym.domain.model.pricing.Currency;
-import com.iso.hypo.gym.domain.model.pricing.OneTimeFee;
+import com.iso.hypo.common.domain.LocalizedString;
+import com.iso.hypo.membershipPlan.domain.aggregate.MembershipPlan;
+import com.iso.hypo.membershipPlan.domain.enumeration.BillingFrequencyEnum;
+import com.iso.hypo.common.domain.enumeration.LanguageEnum;
+import com.iso.hypo.membershipPlan.domain.enumeration.MembershipPlanPeriodEnum;
+import com.iso.hypo.common.domain.pricing.Cost;
+import com.iso.hypo.common.domain.pricing.Currency;
+import com.iso.hypo.common.domain.pricing.OneTimeFee;
 
 public class MembershipPlanBuilder {
 	private static Faker faker = new Faker();

@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.iso.hypo.gym.domain.services.FileService;
+import com.iso.hypo.gym.services.FileService;
 
 @RestController
 @RequestMapping("/v1")

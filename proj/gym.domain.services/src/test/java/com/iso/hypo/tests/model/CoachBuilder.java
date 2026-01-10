@@ -2,7 +2,7 @@ package com.iso.hypo.tests.model;
 
 import java.time.Instant;
 
-import com.iso.hypo.gym.domain.model.aggregate.Coach;
+import com.iso.hypo.coach.domain.aggregate.Coach;
 
 public class CoachBuilder {
 	

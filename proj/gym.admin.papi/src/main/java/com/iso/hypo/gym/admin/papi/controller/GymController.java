@@ -33,10 +33,10 @@ import com.iso.hypo.gym.admin.papi.dto.patch.PatchGymDto;
 import com.iso.hypo.gym.admin.papi.dto.post.PostGymDto;
 import com.iso.hypo.gym.admin.papi.dto.put.PutGymDto;
 import com.iso.hypo.gym.admin.papi.dto.search.GymSearchDto;
-import com.iso.hypo.gym.domain.exception.DomainException;
-import com.iso.hypo.gym.domain.model.aggregate.Gym;
-import com.iso.hypo.gym.domain.model.search.GymSearchResult;
-import com.iso.hypo.gym.domain.services.GymService;
+import com.iso.hypo.common.exception.DomainException;
+import com.iso.hypo.gym.domain.aggregate.Gym;
+import com.iso.hypo.gym.dto.GymSearchResult;
+import com.iso.hypo.gym.services.GymService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

@@ -33,10 +33,10 @@ import com.iso.hypo.gym.admin.papi.dto.patch.PatchBrandDto;
 import com.iso.hypo.gym.admin.papi.dto.post.PostBrandDto;
 import com.iso.hypo.gym.admin.papi.dto.put.PutBrandDto;
 import com.iso.hypo.gym.admin.papi.dto.search.BrandSearchDto;
-import com.iso.hypo.gym.domain.exception.DomainException;
-import com.iso.hypo.gym.domain.model.search.BrandSearchResult;
-import com.iso.hypo.gym.domain.model.aggregate.Brand;
-import com.iso.hypo.gym.domain.services.BrandService;
+import com.iso.hypo.common.exception.DomainException;
+import com.iso.hypo.brand.dto.BrandSearchResult;
+import com.iso.hypo.brand.domain.aggregate.Brand;
+import com.iso.hypo.brand.services.BrandService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

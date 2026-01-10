@@ -27,9 +27,9 @@ import com.iso.hypo.gym.admin.papi.dto.model.CoachDto;
 import com.iso.hypo.gym.admin.papi.dto.patch.PatchCoachDto;
 import com.iso.hypo.gym.admin.papi.dto.post.PostCoachDto;
 import com.iso.hypo.gym.admin.papi.dto.put.PutCoachDto;
-import com.iso.hypo.gym.domain.exception.DomainException;
-import com.iso.hypo.gym.domain.model.aggregate.Coach;
-import com.iso.hypo.gym.domain.services.CoachService;
+import com.iso.hypo.common.exception.DomainException;
+import com.iso.hypo.coach.domain.aggregate.Coach;
+import com.iso.hypo.coach.services.CoachService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

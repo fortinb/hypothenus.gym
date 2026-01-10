@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.github.javafaker.Faker;
-import com.iso.hypo.gym.domain.model.contact.Contact;
-import com.iso.hypo.gym.domain.model.contact.Person;
-import com.iso.hypo.gym.domain.model.contact.PhoneNumber;
-import com.iso.hypo.gym.domain.model.enumeration.LanguageEnum;
-import com.iso.hypo.gym.domain.model.enumeration.PhoneNumberTypeEnum;
-import com.iso.hypo.gym.domain.model.location.Address;
+import com.iso.hypo.common.domain.contact.Contact;
+import com.iso.hypo.common.domain.contact.Person;
+import com.iso.hypo.common.domain.contact.PhoneNumber;
+import com.iso.hypo.common.domain.enumeration.LanguageEnum;
+import com.iso.hypo.common.domain.enumeration.PhoneNumberTypeEnum;
+import com.iso.hypo.common.domain.location.Address;
 
 public class PersonBuilder {
 	private static Faker faker = new Faker();

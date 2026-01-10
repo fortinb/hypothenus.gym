@@ -27,9 +27,9 @@ import com.iso.hypo.gym.admin.papi.dto.model.MembershipPlanDto;
 import com.iso.hypo.gym.admin.papi.dto.patch.PatchMembershipPlanDto;
 import com.iso.hypo.gym.admin.papi.dto.post.PostMembershipPlanDto;
 import com.iso.hypo.gym.admin.papi.dto.put.PutMembershipPlanDto;
-import com.iso.hypo.gym.domain.exception.DomainException;
-import com.iso.hypo.gym.domain.model.aggregate.MembershipPlan;
-import com.iso.hypo.gym.domain.services.MembershipPlanService;
+import com.iso.hypo.common.exception.DomainException;
+import com.iso.hypo.membershipPlan.domain.aggregate.MembershipPlan;
+import com.iso.hypo.membershipPlan.services.MembershipPlanService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

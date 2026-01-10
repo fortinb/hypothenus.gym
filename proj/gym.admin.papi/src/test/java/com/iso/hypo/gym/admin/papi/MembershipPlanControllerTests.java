@@ -40,8 +40,8 @@ import com.iso.hypo.gym.admin.papi.dto.patch.PatchMembershipPlanDto;
 import com.iso.hypo.gym.admin.papi.dto.post.PostMembershipPlanDto;
 import com.iso.hypo.gym.admin.papi.dto.pricing.OneTimeFeeDto;
 import com.iso.hypo.gym.admin.papi.dto.put.PutMembershipPlanDto;
-import com.iso.hypo.gym.domain.model.aggregate.MembershipPlan;
-import com.iso.hypo.gym.domain.repository.MembershipPlanRepository;
+import com.iso.hypo.membershipPlan.domain.aggregate.MembershipPlan;
+import com.iso.hypo.membershipPlan.repository.MembershipPlanRepository;
 import com.iso.hypo.tests.http.HttpUtils;
 import com.iso.hypo.tests.model.MembershipPlanBuilder;
 

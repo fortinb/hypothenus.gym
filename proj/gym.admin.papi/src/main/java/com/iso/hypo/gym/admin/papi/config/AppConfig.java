@@ -15,12 +15,12 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.iso.hypo.gym.domain.context.RequestContext;
+import com.iso.hypo.common.context.RequestContext;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 @Configuration
-@EnableMongoRepositories("com.iso.hypo.gym.domain.repository")
+@EnableMongoRepositories("com.iso.hypo.gym.repository")
 public class AppConfig {
 
 	@Bean

@@ -32,9 +32,9 @@ import com.iso.hypo.gym.admin.papi.dto.model.CourseDto;
 import com.iso.hypo.gym.admin.papi.dto.patch.PatchCourseDto;
 import com.iso.hypo.gym.admin.papi.dto.post.PostCourseDto;
 import com.iso.hypo.gym.admin.papi.dto.put.PutCourseDto;
-import com.iso.hypo.gym.domain.exception.DomainException;
-import com.iso.hypo.gym.domain.model.aggregate.Course;
-import com.iso.hypo.gym.domain.services.CourseService;
+import com.iso.hypo.common.exception.DomainException;
+import com.iso.hypo.course.domain.aggregate.Course;
+import com.iso.hypo.course.services.CourseService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
