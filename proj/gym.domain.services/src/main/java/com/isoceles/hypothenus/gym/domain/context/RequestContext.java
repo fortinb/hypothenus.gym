@@ -12,6 +12,8 @@ public class RequestContext {
 	
 	private String trackingNumber;
 	
+	private String brandId;
+	
 	private String gymId;
 
 	public RequestContext(final HttpServletRequest request) {
@@ -19,6 +21,7 @@ public class RequestContext {
 		
 		username = request.getHeader("x-credentials");
 		trackingNumber = request.getHeader("x-tracking-number");
+		brandId = request.getParameter("brandId");
 		gymId = request.getParameter("gymId");
 	}
 	

@@ -4,6 +4,7 @@ import java.time.Instant;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.isoceles.hypothenus.gym.domain.model.contact.Person;
@@ -23,8 +24,11 @@ public class Member extends BaseEntity {
 	@Indexed
 	@NonNull
 	private String brandId;
-
+	
 	private Person person;
+	
+	@DBRef
+	private Gym preferredGym;
 	
 	public Member() {
 		

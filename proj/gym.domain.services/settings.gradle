@@ -11,4 +11,3 @@ plugins {
 }
 
 rootProject.name = 'gym.domain.services'
-include('lib')

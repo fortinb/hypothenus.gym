@@ -1,16 +1,16 @@
 package com.isoceles.hypothenus.gym.domain.services;
 
-import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.isoceles.hypothenus.gym.domain.context.RequestContext;
+//import com.isoceles.hypothenus.gym.domain.context.RequestContext;
 
 @Service
 public class FileService {
 
-	@Autowired
-	private RequestContext requestContext;
+//	@Autowired
+	//private RequestContext requestContext;
 	
 	public FileService() {
 	}
