@@ -541,7 +541,7 @@ class BrandControllerTests {
 			Assertions.assertEquals(expected.getContacts().size(), result.getContacts().size());
 			expected.getContacts().forEach(contact -> {
 				Optional<ContactDto> previous = result.getContacts().stream()
-						.filter(item -> item.getFirstname().equals(contact.getFirstname())).findFirst();
+						.filter(item -> item.getFirstname().equals(contact.getFirstname()) && item.getLastname().equals(contact.getLastname())).findFirst();
 				Assertions.assertTrue(previous.isPresent());
 				Assertions.assertEquals(previous.get().getLastname(), contact.getLastname());
 				Assertions.assertEquals(previous.get().getDescription(), contact.getDescription());
