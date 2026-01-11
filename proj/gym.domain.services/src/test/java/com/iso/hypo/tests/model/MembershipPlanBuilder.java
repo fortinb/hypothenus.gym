@@ -6,10 +6,10 @@ import java.util.List;
 
 import com.github.javafaker.Faker;
 import com.iso.hypo.common.domain.LocalizedString;
-import com.iso.hypo.membershipPlan.domain.aggregate.MembershipPlan;
-import com.iso.hypo.membershipPlan.domain.enumeration.BillingFrequencyEnum;
+import com.iso.hypo.brand.domain.aggregate.MembershipPlan;
+import com.iso.hypo.brand.domain.enumeration.BillingFrequencyEnum;
 import com.iso.hypo.common.domain.enumeration.LanguageEnum;
-import com.iso.hypo.membershipPlan.domain.enumeration.MembershipPlanPeriodEnum;
+import com.iso.hypo.brand.domain.enumeration.MembershipPlanPeriodEnum;
 import com.iso.hypo.common.domain.pricing.Cost;
 import com.iso.hypo.common.domain.pricing.Currency;
 import com.iso.hypo.common.domain.pricing.OneTimeFee;

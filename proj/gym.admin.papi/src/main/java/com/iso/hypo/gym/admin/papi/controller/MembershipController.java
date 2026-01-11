@@ -27,9 +27,9 @@ import com.iso.hypo.gym.admin.papi.dto.model.MembershipDto;
 import com.iso.hypo.gym.admin.papi.dto.patch.PatchMembershipDto;
 import com.iso.hypo.gym.admin.papi.dto.post.PostMembershipDto;
 import com.iso.hypo.gym.admin.papi.dto.put.PutMembershipDto;
-import com.iso.hypo.common.exception.DomainException;
-import com.iso.hypo.membership.domain.aggregate.Membership;
-import com.iso.hypo.membership.services.MembershipService;
+import com.iso.hypo.member.exception.MemberException;
+import com.iso.hypo.member.domain.aggregate.Membership;
+import com.iso.hypo.member.services.MembershipService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -71,7 +71,7 @@ public class MembershipController {
 		Page<Membership> entities = null;
 		try {
 			entities = membershipService.list(brandId, page, pageSize, includeInactive);
-		} catch (DomainException e) {
+		} catch (MemberException e) {
 			logger.error(e.getMessage(), e);
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -96,10 +96,10 @@ public class MembershipController {
 		Membership entity = null;
 		try {
 			entity = membershipService.findByMembershipId(brandId, membershipId);
-		} catch (DomainException e) {
+		} catch (MemberException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.MEMBERSHIP_NOT_FOUND) {
+			if (e.getCode() == MemberException.MEMBERSHIP_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), membershipId));
 			}
@@ -125,7 +125,7 @@ public class MembershipController {
 
 		try {
 			membershipService.create(brandId, entity);
-		} catch (DomainException e) {
+		} catch (MemberException e) {
 			logger.error(e.getMessage(), e);
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -154,10 +154,10 @@ public class MembershipController {
 
 		try {
 			entity = membershipService.update(brandId, entity);
-		} catch (DomainException e) {
+		} catch (MemberException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.MEMBERSHIP_NOT_FOUND) {
+			if (e.getCode() == MemberException.MEMBERSHIP_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), membershipId));
 			}
@@ -185,10 +185,10 @@ public class MembershipController {
 
 		try {
 			entity = membershipService.activate(brandId, membershipId);
-		} catch (DomainException e) {
+		} catch (MemberException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.MEMBERSHIP_NOT_FOUND) {
+			if (e.getCode() == MemberException.MEMBERSHIP_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), membershipId));
 			}
@@ -216,10 +216,10 @@ public class MembershipController {
 
 		try {
 			entity = membershipService.deactivate(brandId, membershipId);
-		} catch (DomainException e) {
+		} catch (MemberException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.MEMBERSHIP_NOT_FOUND) {
+			if (e.getCode() == MemberException.MEMBERSHIP_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), membershipId));
 			}
@@ -247,10 +247,10 @@ public class MembershipController {
 
 		try {
 			entity = membershipService.patch(brandId, entity);
-		} catch (DomainException e) {
+		} catch (MemberException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.MEMBERSHIP_NOT_FOUND) {
+			if (e.getCode() == MemberException.MEMBERSHIP_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), membershipId));
 			}
@@ -275,10 +275,10 @@ public class MembershipController {
 			@PathVariable("membershipId") String membershipId) {
 		try {
 			membershipService.delete(brandId, membershipId);
-		} catch (DomainException e) {
+		} catch (MemberException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.MEMBERSHIP_NOT_FOUND) {
+			if (e.getCode() == MemberException.MEMBERSHIP_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), membershipId));
 			}

@@ -7,8 +7,8 @@ import java.util.List;
 
 import com.github.javafaker.Faker;
 import com.iso.hypo.common.domain.LocalizedString;
-import com.iso.hypo.coach.domain.aggregate.Coach;
-import com.iso.hypo.course.domain.aggregate.Course;
+import com.iso.hypo.gym.domain.aggregate.Coach;
+import com.iso.hypo.gym.domain.aggregate.Course;
 import com.iso.hypo.common.domain.enumeration.LanguageEnum;
 
 public class CourseBuilder {

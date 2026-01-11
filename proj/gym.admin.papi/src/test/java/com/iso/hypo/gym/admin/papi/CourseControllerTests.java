@@ -40,11 +40,11 @@ import com.iso.hypo.gym.admin.papi.dto.model.CourseDto;
 import com.iso.hypo.gym.admin.papi.dto.patch.PatchCourseDto;
 import com.iso.hypo.gym.admin.papi.dto.post.PostCourseDto;
 import com.iso.hypo.gym.admin.papi.dto.put.PutCourseDto;
-import com.iso.hypo.common.exception.DomainException;
-import com.iso.hypo.coach.domain.aggregate.Coach;
-import com.iso.hypo.course.domain.aggregate.Course;
-import com.iso.hypo.coach.repository.CoachRepository;
-import com.iso.hypo.course.repository.CourseRepository;
+import com.iso.hypo.gym.exception.GymException;
+import com.iso.hypo.gym.domain.aggregate.Coach;
+import com.iso.hypo.gym.domain.aggregate.Course;
+import com.iso.hypo.gym.repository.CoachRepository;
+import com.iso.hypo.gym.repository.CourseRepository;
 import com.iso.hypo.tests.http.HttpUtils;
 import com.iso.hypo.tests.model.CoachBuilder;
 import com.iso.hypo.tests.model.CourseBuilder;
@@ -287,7 +287,7 @@ class CourseControllerTests {
 		Assertions.assertEquals(1, response.getBody().getMessages().size(),
 				String.format("Duplicate error ,missing message: %s", response.getBody().getMessages().size()));
 		
-		Assertions.assertEquals(DomainException.COURSE_CODE_ALREADY_EXIST, response.getBody().getMessages().getFirst().getCode(),
+		Assertions.assertEquals(GymException.COURSE_CODE_ALREADY_EXIST, response.getBody().getMessages().getFirst().getCode(),
 				String.format("Duplicate error, missing message: %s", response.getBody().getMessages().getFirst().getCode()));
 	}
 	

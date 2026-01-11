@@ -12,7 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.iso.hypo.common.context.RequestContext;
-import com.iso.hypo.common.exception.DomainException;
+import com.iso.hypo.gym.exception.GymException;
 import com.iso.hypo.gym.domain.aggregate.Gym;
 import com.iso.hypo.common.domain.contact.Contact;
 import com.iso.hypo.common.domain.contact.PhoneNumber;
@@ -32,10 +32,10 @@ public class GymService {
 		this.gymRepository = gymRepository;
 	}
 
-	public Gym create(Gym gym) throws DomainException {
+	public Gym create(Gym gym) throws GymException {
 		Optional<Gym> existingGym = gymRepository.findByBrandIdAndGymId(gym.getBrandId(), gym.getGymId());
 		if (existingGym.isPresent()) {
-			throw new DomainException(DomainException.GYM_CODE_ALREADY_EXIST, "Duplicate gym code");
+			throw new GymException(GymException.GYM_CODE_ALREADY_EXIST, "Duplicate gym code");
 		}
 
 		gym.setCreatedOn(Instant.now());
@@ -44,7 +44,7 @@ public class GymService {
 		return gymRepository.save(gym);
 	}
 
-	public Gym update(Gym gym) throws DomainException {
+	public Gym update(Gym gym) throws GymException {
 		Gym oldGym = this.findByGymId(gym.getBrandId(), gym.getGymId());
 
 		ModelMapper mapper = new ModelMapper();
@@ -70,7 +70,7 @@ public class GymService {
 		return gymRepository.save(oldGym);
 	}
 
-	public Gym patch(Gym gym) throws DomainException {
+	public Gym patch(Gym gym) throws GymException {
 		Gym oldGym = this.findByGymId(gym.getBrandId(), gym.getGymId());
 
 		ModelMapper mapper = new ModelMapper();
@@ -95,7 +95,7 @@ public class GymService {
 		return gymRepository.save(oldGym);
 	}
 
-	public void delete(String brandId, String gymId) throws DomainException {
+	public void delete(String brandId, String gymId) throws GymException {
 		Gym oldGym = this.findByGymId(brandId, gymId);
 		oldGym.setDeleted(true);
 
@@ -105,22 +105,22 @@ public class GymService {
 		gymRepository.save(oldGym);
 	}
 
-	public Gym findByGymId(String brandId, String id) throws DomainException {
+	public Gym findByGymId(String brandId, String id) throws GymException {
 		Optional<Gym> entity = gymRepository.findByBrandIdAndGymIdAndIsDeletedIsFalse(brandId, id);
 		if (entity.isEmpty()) {
-			throw new DomainException(DomainException.GYM_NOT_FOUND, "Gym not found");
+			throw new GymException(GymException.GYM_NOT_FOUND, "Gym not found");
 		}
 
 		return entity.get();
 	}
 
 	public Page<GymSearchResult> search(int page, int pageSize, String criteria, boolean includeInactive)
-			throws DomainException {
+			throws GymException {
 		return gymRepository.searchAutocomplete(criteria, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"),
 				includeInactive);
 	}
 
-	public Page<Gym> list(String brandId, int page, int pageSize, boolean includeInactive) throws DomainException {
+	public Page<Gym> list(String brandId, int page, int pageSize, boolean includeInactive) throws GymException {
 		if (includeInactive) {
 			return gymRepository.findAllByBrandIdAndIsDeletedIsFalse(brandId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"));
 		}
@@ -129,21 +129,21 @@ public class GymService {
 				.findAllByBrandIdAndIsDeletedIsFalseAndIsActiveIsTrue(brandId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"));
 	}
 
-	public Gym activate(String brandId, String gymId) throws DomainException {
+	public Gym activate(String brandId, String gymId) throws GymException {
 
 		Optional<Gym> oldGym = gymRepository.activate(brandId, gymId);
 		if (oldGym.isEmpty()) {
-			throw new DomainException(DomainException.GYM_NOT_FOUND, "Gym not found");
+			throw new GymException(GymException.GYM_NOT_FOUND, "Gym not found");
 		}
 
 		return oldGym.get();
 	}
 
-	public Gym deactivate(String brandId, String gymId) throws DomainException {
+	public Gym deactivate(String brandId, String gymId) throws GymException {
 
 		Optional<Gym> oldGym = gymRepository.deactivate(brandId, gymId);
 		if (oldGym.isEmpty()) {
-			throw new DomainException(DomainException.GYM_NOT_FOUND, "Gym not found");
+			throw new GymException(GymException.GYM_NOT_FOUND, "Gym not found");
 		}
 
 		return oldGym.get();

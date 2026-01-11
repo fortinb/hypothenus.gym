@@ -12,11 +12,9 @@ import com.iso.hypo.gym.admin.papi.config.CorsProperties;
 		"com.iso.hypo.gym.admin", 
 		"com.iso.hypo.brand.services", 
 		"com.iso.hypo.gym.services",
-		"com.iso.hypo.coach.services", 
-		"com.iso.hypo.course.services", 
 		"com.iso.hypo.member.services",
-		"com.iso.hypo.membership.services", 
-		"com.iso.hypo.membershipPlan.services" })
+		"com.iso.hypo.common.services"
+})
 @EnableConfigurationProperties(CorsProperties.class)
 public class Application {
 

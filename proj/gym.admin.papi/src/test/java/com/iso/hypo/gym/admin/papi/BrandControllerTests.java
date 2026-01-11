@@ -42,7 +42,7 @@ import com.iso.hypo.gym.admin.papi.dto.patch.PatchBrandDto;
 import com.iso.hypo.gym.admin.papi.dto.post.PostBrandDto;
 import com.iso.hypo.gym.admin.papi.dto.put.PutBrandDto;
 import com.iso.hypo.gym.admin.papi.dto.search.BrandSearchDto;
-import com.iso.hypo.common.exception.DomainException;
+import com.iso.hypo.brand.exception.BrandException;
 import com.iso.hypo.brand.domain.aggregate.Brand;
 import com.iso.hypo.brand.repository.BrandRepository;
 import com.iso.hypo.tests.http.HttpUtils;
@@ -296,7 +296,7 @@ class BrandControllerTests {
 		Assertions.assertEquals(1, response.getBody().getMessages().size(),
 				String.format("Duplicate error ,missing message: %s", response.getBody().getMessages().size()));
 		
-		Assertions.assertEquals(DomainException.BRAND_CODE_ALREADY_EXIST, response.getBody().getMessages().getFirst().getCode(),
+		Assertions.assertEquals(BrandException.BRAND_CODE_ALREADY_EXIST, response.getBody().getMessages().getFirst().getCode(),
 				String.format("Duplicate error, missing message: %s", response.getBody().getMessages().getFirst().getCode()));
 	}
 

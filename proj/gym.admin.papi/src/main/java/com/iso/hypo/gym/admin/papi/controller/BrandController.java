@@ -33,7 +33,7 @@ import com.iso.hypo.gym.admin.papi.dto.patch.PatchBrandDto;
 import com.iso.hypo.gym.admin.papi.dto.post.PostBrandDto;
 import com.iso.hypo.gym.admin.papi.dto.put.PutBrandDto;
 import com.iso.hypo.gym.admin.papi.dto.search.BrandSearchDto;
-import com.iso.hypo.common.exception.DomainException;
+import com.iso.hypo.brand.exception.BrandException;
 import com.iso.hypo.brand.dto.BrandSearchResult;
 import com.iso.hypo.brand.domain.aggregate.Brand;
 import com.iso.hypo.brand.services.BrandService;
@@ -80,7 +80,7 @@ public class BrandController {
 		Page<BrandSearchResult> entities = null;
 		try {
 			entities = brandService.search(page, pageSize, criteria, includeInactive);
-		} catch (DomainException e) {
+		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -107,7 +107,7 @@ public class BrandController {
 		Page<Brand> entities = null;
 		try {
 			entities = brandService.list(page, pageSize, includeInactive);
-		} catch (DomainException e) {
+		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -133,10 +133,10 @@ public class BrandController {
 		Brand entity = null;
 		try {
 			entity = brandService.findByBrandId(brandId);
-		} catch (DomainException e) {
+		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.BRAND_NOT_FOUND) {
+			if (e.getCode() == BrandException.BRAND_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), brandId));
 			}
@@ -162,10 +162,10 @@ public class BrandController {
 
 		try {
 			brandService.create(entity);
-		} catch (DomainException e) {
+		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 			
-			if (e.getCode() == DomainException.BRAND_CODE_ALREADY_EXIST) {
+			if (e.getCode() == BrandException.BRAND_CODE_ALREADY_EXIST) {
 				BrandDto errorResponse = modelMapper.map(request, BrandDto.class);
 				List<MessageDto> messages = new ArrayList<MessageDto>();
 				
@@ -203,10 +203,10 @@ public class BrandController {
 		
 		try {
 			entity = brandService.update(entity);
-		} catch (DomainException e) {
+		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.BRAND_NOT_FOUND) {
+			if (e.getCode() == BrandException.BRAND_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), brandId));
 			}
@@ -234,10 +234,10 @@ public class BrandController {
 		
 		try {
 			entity = brandService.patch(entity);
-		} catch (DomainException e) {
+		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.BRAND_NOT_FOUND) {
+			if (e.getCode() == BrandException.BRAND_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), brandId));
 			}
@@ -267,10 +267,10 @@ public class BrandController {
 		
 		try {
 			entity = brandService.activate(brandId);
-		} catch (DomainException e) {
+		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.BRAND_NOT_FOUND) {
+			if (e.getCode() == BrandException.BRAND_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), brandId));
 			}
@@ -300,10 +300,10 @@ public class BrandController {
 		
 		try {
 			entity = brandService.deactivate(brandId);
-		} catch (DomainException e) {
+		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.BRAND_NOT_FOUND) {
+			if (e.getCode() == BrandException.BRAND_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), brandId));
 			}
@@ -327,10 +327,10 @@ public class BrandController {
 	public ResponseEntity<Object> deleteBrand(@PathVariable("brandId") String brandId) {
 		try {
 			brandService.delete(brandId);
-		} catch (DomainException e) {
+		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.BRAND_NOT_FOUND) {
+			if (e.getCode() == BrandException.BRAND_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), brandId));
 			}

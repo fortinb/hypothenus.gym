@@ -27,9 +27,9 @@ import com.iso.hypo.gym.admin.papi.dto.model.CoachDto;
 import com.iso.hypo.gym.admin.papi.dto.patch.PatchCoachDto;
 import com.iso.hypo.gym.admin.papi.dto.post.PostCoachDto;
 import com.iso.hypo.gym.admin.papi.dto.put.PutCoachDto;
-import com.iso.hypo.common.exception.DomainException;
-import com.iso.hypo.coach.domain.aggregate.Coach;
-import com.iso.hypo.coach.services.CoachService;
+import com.iso.hypo.gym.exception.GymException;
+import com.iso.hypo.gym.domain.aggregate.Coach;
+import com.iso.hypo.gym.services.CoachService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -74,7 +74,7 @@ public class CoachController {
 		Page<Coach> entities = null;
 		try {
 			entities = coachService.list(brandId, gymId, page, pageSize, includeInactive);
-		} catch (DomainException e) {
+		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -103,10 +103,10 @@ public class CoachController {
 		Coach entity = null;
 		try {
 			entity = coachService.findByCoachId(brandId, gymId, coachId);
-		} catch (DomainException e) {
+		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.COACH_NOT_FOUND) {
+			if (e.getCode() == GymException.COACH_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), coachId));
 			}
@@ -135,7 +135,7 @@ public class CoachController {
 
 		try {
 			coachService.create(brandId, gymId, entity);
-		} catch (DomainException e) {
+		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -167,10 +167,10 @@ public class CoachController {
 		
 		try {
 			entity = coachService.update(brandId, gymId, entity);
-		} catch (DomainException e) {
+		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.COACH_NOT_FOUND) {
+			if (e.getCode() == GymException.COACH_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), coachId));
 			}
@@ -201,10 +201,10 @@ public class CoachController {
 		
 		try {
 			entity = coachService.activate(brandId, gymId, coachId);
-		} catch (DomainException e) {
+		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.COACH_NOT_FOUND) {
+			if (e.getCode() == GymException.COACH_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), coachId));
 			}
@@ -235,10 +235,10 @@ public class CoachController {
 		
 		try {
 			entity = coachService.deactivate(brandId, gymId, coachId);
-		} catch (DomainException e) {
+		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.COACH_NOT_FOUND) {
+			if (e.getCode() == GymException.COACH_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), coachId));
 			}
@@ -270,10 +270,10 @@ public class CoachController {
 		
 		try {
 			entity = coachService.patch(brandId, gymId, entity);
-		} catch (DomainException e) {
+		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.COACH_NOT_FOUND) {
+			if (e.getCode() == GymException.COACH_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), coachId));
 			}
@@ -300,10 +300,10 @@ public class CoachController {
 			@PathVariable("coachId") String coachId) {
 		try {
 			coachService.delete(brandId, gymId, coachId);
-		} catch (DomainException e) {
+		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.COACH_NOT_FOUND) {
+			if (e.getCode() == GymException.COACH_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), coachId));
 			}

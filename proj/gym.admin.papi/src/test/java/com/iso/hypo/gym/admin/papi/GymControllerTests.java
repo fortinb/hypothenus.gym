@@ -42,7 +42,7 @@ import com.iso.hypo.gym.admin.papi.dto.patch.PatchGymDto;
 import com.iso.hypo.gym.admin.papi.dto.post.PostGymDto;
 import com.iso.hypo.gym.admin.papi.dto.put.PutGymDto;
 import com.iso.hypo.gym.admin.papi.dto.search.GymSearchDto;
-import com.iso.hypo.common.exception.DomainException;
+import com.iso.hypo.gym.exception.GymException;
 import com.iso.hypo.gym.domain.aggregate.Gym;
 import com.iso.hypo.gym.repository.GymRepository;
 import com.iso.hypo.tests.http.HttpUtils;
@@ -299,7 +299,7 @@ class GymControllerTests {
 		Assertions.assertEquals(1, response.getBody().getMessages().size(),
 				String.format("Duplicate error ,missing message: %s", response.getBody().getMessages().size()));
 		
-		Assertions.assertEquals(DomainException.GYM_CODE_ALREADY_EXIST, response.getBody().getMessages().getFirst().getCode(),
+		Assertions.assertEquals(GymException.GYM_CODE_ALREADY_EXIST, response.getBody().getMessages().getFirst().getCode(),
 				String.format("Duplicate error, missing message: %s", response.getBody().getMessages().getFirst().getCode()));
 	}
 

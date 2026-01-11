@@ -40,8 +40,8 @@ import com.iso.hypo.gym.admin.papi.dto.model.CoachDto;
 import com.iso.hypo.gym.admin.papi.dto.patch.PatchCoachDto;
 import com.iso.hypo.gym.admin.papi.dto.post.PostCoachDto;
 import com.iso.hypo.gym.admin.papi.dto.put.PutCoachDto;
-import com.iso.hypo.coach.domain.aggregate.Coach;
-import com.iso.hypo.coach.repository.CoachRepository;
+import com.iso.hypo.gym.domain.aggregate.Coach;
+import com.iso.hypo.gym.repository.CoachRepository;
 import com.iso.hypo.tests.http.HttpUtils;
 import com.iso.hypo.tests.model.CoachBuilder;
 

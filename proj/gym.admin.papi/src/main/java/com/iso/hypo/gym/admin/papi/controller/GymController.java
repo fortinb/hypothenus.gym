@@ -33,7 +33,7 @@ import com.iso.hypo.gym.admin.papi.dto.patch.PatchGymDto;
 import com.iso.hypo.gym.admin.papi.dto.post.PostGymDto;
 import com.iso.hypo.gym.admin.papi.dto.put.PutGymDto;
 import com.iso.hypo.gym.admin.papi.dto.search.GymSearchDto;
-import com.iso.hypo.common.exception.DomainException;
+import com.iso.hypo.gym.exception.GymException;
 import com.iso.hypo.gym.domain.aggregate.Gym;
 import com.iso.hypo.gym.dto.GymSearchResult;
 import com.iso.hypo.gym.services.GymService;
@@ -81,7 +81,7 @@ public class GymController {
 		Page<GymSearchResult> entities = null;
 		try {
 			entities = gymService.search(page, pageSize, criteria, includeInactive);
-		} catch (DomainException e) {
+		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -109,7 +109,7 @@ public class GymController {
 		Page<Gym> entities = null;
 		try {
 			entities = gymService.list(brandId, page, pageSize, includeInactive);
-		} catch (DomainException e) {
+		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -136,10 +136,10 @@ public class GymController {
 		Gym entity = null;
 		try {
 			entity = gymService.findByGymId(brandId, gymId);
-		} catch (DomainException e) {
+		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.GYM_NOT_FOUND) {
+			if (e.getCode() == GymException.GYM_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), gymId));
 			}
@@ -166,10 +166,10 @@ public class GymController {
 
 		try {
 			gymService.create(entity);
-		} catch (DomainException e) {
+		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 			
-			if (e.getCode() == DomainException.GYM_CODE_ALREADY_EXIST) {
+			if (e.getCode() == GymException.GYM_CODE_ALREADY_EXIST) {
 				GymDto errorResponse = modelMapper.map(request, GymDto.class);
 				List<MessageDto> messages = new ArrayList<MessageDto>();
 				
@@ -209,10 +209,10 @@ public class GymController {
 		
 		try {
 			entity = gymService.update(entity);
-		} catch (DomainException e) {
+		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.GYM_NOT_FOUND) {
+			if (e.getCode() == GymException.GYM_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), gymId));
 			}
@@ -242,10 +242,10 @@ public class GymController {
 		
 		try {
 			entity = gymService.patch(entity);
-		} catch (DomainException e) {
+		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.GYM_NOT_FOUND) {
+			if (e.getCode() == GymException.GYM_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), gymId));
 			}
@@ -276,10 +276,10 @@ public class GymController {
 		
 		try {
 			entity = gymService.activate(brandId, gymId);
-		} catch (DomainException e) {
+		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.GYM_NOT_FOUND) {
+			if (e.getCode() == GymException.GYM_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), gymId));
 			}
@@ -310,10 +310,10 @@ public class GymController {
 		
 		try {
 			entity = gymService.deactivate(brandId, gymId);
-		} catch (DomainException e) {
+		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.GYM_NOT_FOUND) {
+			if (e.getCode() == GymException.GYM_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), gymId));
 			}
@@ -338,10 +338,10 @@ public class GymController {
 											@PathVariable("gymId") String gymId) {
 		try {
 			gymService.delete(brandId, gymId);
-		} catch (DomainException e) {
+		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.GYM_NOT_FOUND) {
+			if (e.getCode() == GymException.GYM_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), gymId));
 			}

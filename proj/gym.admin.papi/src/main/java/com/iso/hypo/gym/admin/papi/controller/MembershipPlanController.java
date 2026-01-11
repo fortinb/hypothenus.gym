@@ -27,9 +27,9 @@ import com.iso.hypo.gym.admin.papi.dto.model.MembershipPlanDto;
 import com.iso.hypo.gym.admin.papi.dto.patch.PatchMembershipPlanDto;
 import com.iso.hypo.gym.admin.papi.dto.post.PostMembershipPlanDto;
 import com.iso.hypo.gym.admin.papi.dto.put.PutMembershipPlanDto;
-import com.iso.hypo.common.exception.DomainException;
-import com.iso.hypo.membershipPlan.domain.aggregate.MembershipPlan;
-import com.iso.hypo.membershipPlan.services.MembershipPlanService;
+import com.iso.hypo.brand.exception.BrandException;
+import com.iso.hypo.brand.domain.aggregate.MembershipPlan;
+import com.iso.hypo.brand.services.MembershipPlanService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -71,7 +71,7 @@ public class MembershipPlanController {
 		Page<MembershipPlan> entities = null;
 		try {
 			entities = membershipPlanService.list(brandId, page, pageSize, includeInactive);
-		} catch (DomainException e) {
+		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -96,10 +96,10 @@ public class MembershipPlanController {
 		MembershipPlan entity = null;
 		try {
 			entity = membershipPlanService.findByMembershipPlanId(brandId, membershipPlansId);
-		} catch (DomainException e) {
+		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.MEMBERSHIPPLAN_NOT_FOUND) {
+			if (e.getCode() == BrandException.MEMBERSHIPPLAN_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), membershipPlansId));
 			}
@@ -125,7 +125,7 @@ public class MembershipPlanController {
 
 		try {
 			membershipPlanService.create(brandId, entity);
-		} catch (DomainException e) {
+		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -154,10 +154,10 @@ public class MembershipPlanController {
 
 		try {
 			entity = membershipPlanService.update(brandId, entity);
-		} catch (DomainException e) {
+		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.MEMBERSHIPPLAN_NOT_FOUND) {
+			if (e.getCode() == BrandException.MEMBERSHIPPLAN_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), membershipPlansId));
 			}
@@ -185,10 +185,10 @@ public class MembershipPlanController {
 
 		try {
 			entity = membershipPlanService.activate(brandId, membershipPlansId);
-		} catch (DomainException e) {
+		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.MEMBERSHIPPLAN_NOT_FOUND) {
+			if (e.getCode() == BrandException.MEMBERSHIPPLAN_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), membershipPlansId));
 			}
@@ -216,10 +216,10 @@ public class MembershipPlanController {
 
 		try {
 			entity = membershipPlanService.deactivate(brandId, membershipPlansId);
-		} catch (DomainException e) {
+		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.MEMBERSHIPPLAN_NOT_FOUND) {
+			if (e.getCode() == BrandException.MEMBERSHIPPLAN_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), membershipPlansId));
 			}
@@ -247,10 +247,10 @@ public class MembershipPlanController {
 
 		try {
 			entity = membershipPlanService.patch(brandId, entity);
-		} catch (DomainException e) {
+		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.MEMBERSHIPPLAN_NOT_FOUND) {
+			if (e.getCode() == BrandException.MEMBERSHIPPLAN_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), membershipPlansId));
 			}
@@ -275,10 +275,10 @@ public class MembershipPlanController {
 			@PathVariable("membershipPlansId") String membershipPlansId) {
 		try {
 			membershipPlanService.delete(brandId, membershipPlansId);
-		} catch (DomainException e) {
+		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == DomainException.MEMBERSHIPPLAN_NOT_FOUND) {
+			if (e.getCode() == BrandException.MEMBERSHIPPLAN_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), membershipPlansId));
 			}

@@ -12,7 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.iso.hypo.common.context.RequestContext;
-import com.iso.hypo.common.exception.DomainException;
+import com.iso.hypo.brand.exception.BrandException;
 import com.iso.hypo.brand.dto.BrandSearchResult;
 import com.iso.hypo.brand.domain.aggregate.Brand;
 import com.iso.hypo.common.domain.contact.Contact;
@@ -32,10 +32,10 @@ public class BrandService {
 		this.brandRepository = brandRepository;
 	}
 
-	public Brand create(Brand brand) throws DomainException {
+	public Brand create(Brand brand) throws BrandException {
 		Optional<Brand> existingBrand = brandRepository.findByBrandId(brand.getBrandId());
 		if (existingBrand.isPresent()) {
-			throw new DomainException(DomainException.BRAND_CODE_ALREADY_EXIST, "Duplicate brand code");
+			throw new BrandException(BrandException.BRAND_CODE_ALREADY_EXIST, "Duplicate brand code");
 		}
 
 		brand.setCreatedOn(Instant.now());
@@ -44,7 +44,7 @@ public class BrandService {
 		return brandRepository.save(brand);
 	}
 
-	public Brand update(Brand brand) throws DomainException {
+	public Brand update(Brand brand) throws BrandException {
 		Brand oldBrand = this.findByBrandId(brand.getBrandId());
 
 		ModelMapper mapper = new ModelMapper();
@@ -70,7 +70,7 @@ public class BrandService {
 		return brandRepository.save(oldBrand);
 	}
 
-	public Brand patch(Brand brand) throws DomainException {
+	public Brand patch(Brand brand) throws BrandException {
 		Brand oldBrand = this.findByBrandId(brand.getBrandId());
 
 		ModelMapper mapper = new ModelMapper();
@@ -95,7 +95,7 @@ public class BrandService {
 		return brandRepository.save(oldBrand);
 	}
 
-	public void delete(String brandId) throws DomainException {
+	public void delete(String brandId) throws BrandException {
 		Brand oldBrand = this.findByBrandId(brandId);
 		oldBrand.setDeleted(true);
 
@@ -105,22 +105,22 @@ public class BrandService {
 		brandRepository.save(oldBrand);
 	}
 
-	public Brand findByBrandId(String id) throws DomainException {
+	public Brand findByBrandId(String id) throws BrandException {
 		Optional<Brand> entity = brandRepository.findByBrandIdAndIsDeletedIsFalse(id);
 		if (entity.isEmpty()) {
-			throw new DomainException(DomainException.BRAND_NOT_FOUND, "Brand not found");
+			throw new BrandException(BrandException.BRAND_NOT_FOUND, "Brand not found");
 		}
 
 		return entity.get();
 	}
 
 	public Page<BrandSearchResult> search(int page, int pageSize, String criteria, boolean includeInactive)
-			throws DomainException {
+			throws BrandException {
 		return brandRepository.searchAutocomplete(criteria, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"),
 				includeInactive);
 	}
 
-	public Page<Brand> list(int page, int pageSize, boolean includeInactive) throws DomainException {
+	public Page<Brand> list(int page, int pageSize, boolean includeInactive) throws BrandException {
 		if (includeInactive) {
 			return brandRepository.findAllByIsDeletedIsFalse(PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"));
 		}
@@ -129,21 +129,21 @@ public class BrandService {
 				.findAllByIsDeletedIsFalseAndIsActiveIsTrue(PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"));
 	}
 
-	public Brand activate(String brandId) throws DomainException {
+	public Brand activate(String brandId) throws BrandException {
 
 		Optional<Brand> oldBrand = brandRepository.activate(brandId);
 		if (oldBrand.isEmpty()) {
-			throw new DomainException(DomainException.BRAND_NOT_FOUND, "Brand not found");
+			throw new BrandException(BrandException.BRAND_NOT_FOUND, "Brand not found");
 		}
 
 		return oldBrand.get();
 	}
 
-	public Brand deactivate(String brandId) throws DomainException {
+	public Brand deactivate(String brandId) throws BrandException {
 
 		Optional<Brand> oldBrand = brandRepository.deactivate(brandId);
 		if (oldBrand.isEmpty()) {
-			throw new DomainException(DomainException.BRAND_NOT_FOUND, "Brand not found");
+			throw new BrandException(BrandException.BRAND_NOT_FOUND, "Brand not found");
 		}
 
 		return oldBrand.get();
