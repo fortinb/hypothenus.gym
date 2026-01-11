@@ -28,7 +28,6 @@ import com.iso.hypo.gym.admin.papi.dto.patch.PatchMembershipDto;
 import com.iso.hypo.gym.admin.papi.dto.post.PostMembershipDto;
 import com.iso.hypo.gym.admin.papi.dto.put.PutMembershipDto;
 import com.iso.hypo.member.exception.MemberException;
-import com.iso.hypo.member.domain.aggregate.Membership;
 import com.iso.hypo.member.services.MembershipService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -68,7 +67,7 @@ public class MembershipController {
 			@Parameter(description = "page size") @RequestParam(name = "pageSize", required = true) int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(name = "includeInactive", required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<Membership> entities = null;
+		Page<com.iso.hypo.member.dto.MembershipDto> entities = null;
 		try {
 			entities = membershipService.list(brandId, page, pageSize, includeInactive);
 		} catch (MemberException e) {
@@ -93,7 +92,7 @@ public class MembershipController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> getMembership(@PathVariable("brandId") String brandId,
 			@PathVariable("membershipId") String membershipId) {
-		Membership entity = null;
+		com.iso.hypo.member.dto.MembershipDto entity = null;
 		try {
 			entity = membershipService.findByMembershipId(brandId, membershipId);
 		} catch (MemberException e) {
@@ -121,10 +120,10 @@ public class MembershipController {
 	@ResponseStatus(value = HttpStatus.CREATED)
 	public ResponseEntity<Object> createMembership(@PathVariable("brandId") String brandId,
 			@RequestBody PostMembershipDto request) {
-		Membership entity = modelMapper.map(request, Membership.class);
+		com.iso.hypo.member.dto.MembershipDto domainDto = modelMapper.map(request, com.iso.hypo.member.dto.MembershipDto.class);
 
 		try {
-			membershipService.create(brandId, entity);
+			domainDto = membershipService.create(brandId, domainDto);
 		} catch (MemberException e) {
 			logger.error(e.getMessage(), e);
 
@@ -132,8 +131,8 @@ public class MembershipController {
 		}
 
 		return ResponseEntity.created(
-				ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(entity.getId()).toUri())
-				.body(modelMapper.map(entity, MembershipDto.class));
+				ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(domainDto.getId()).toUri())
+				.body(modelMapper.map(domainDto, MembershipDto.class));
 	}
 
 	@PutMapping("/brands/{brandId}/memberships/{membershipId}")
@@ -150,10 +149,10 @@ public class MembershipController {
 			@PathVariable("membershipId") String membershipId,
 			@Parameter(description = "activate or deactivate Membership") @RequestParam(name = "isActive", required = false, defaultValue = "true") boolean isActive,
 			@RequestBody PutMembershipDto request) {
-		Membership entity = modelMapper.map(request, Membership.class);
+		com.iso.hypo.member.dto.MembershipDto domainDto = modelMapper.map(request, com.iso.hypo.member.dto.MembershipDto.class);
 
 		try {
-			entity = membershipService.update(brandId, entity);
+			domainDto = membershipService.update(brandId, domainDto);
 		} catch (MemberException e) {
 			logger.error(e.getMessage(), e);
 
@@ -166,7 +165,7 @@ public class MembershipController {
 					.body(new ErrorDto(e.getCode(), e.getMessage(), membershipId));
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, MembershipDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, MembershipDto.class));
 	}
 
 	@PostMapping("/brands/{brandId}/memberships/{membershipId}/activate")
@@ -181,7 +180,7 @@ public class MembershipController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> activateMembership(@PathVariable("brandId") String brandId,
 			@PathVariable("membershipId") String membershipId) {
-		Membership entity;
+		com.iso.hypo.member.dto.MembershipDto entity;
 
 		try {
 			entity = membershipService.activate(brandId, membershipId);
@@ -212,7 +211,7 @@ public class MembershipController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> deactivateMembership(@PathVariable("brandId") String brandId,
 			@PathVariable("membershipId") String membershipId) {
-		Membership entity;
+		com.iso.hypo.member.dto.MembershipDto entity;
 
 		try {
 			entity = membershipService.deactivate(brandId, membershipId);
@@ -243,10 +242,10 @@ public class MembershipController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> patchMembership(@PathVariable("brandId") String brandId,
 			@PathVariable("membershipId") String membershipId, @RequestBody PatchMembershipDto request) {
-		Membership entity = modelMapper.map(request, Membership.class);
+		com.iso.hypo.member.dto.MembershipDto domainDto = modelMapper.map(request, com.iso.hypo.member.dto.MembershipDto.class);
 
 		try {
-			entity = membershipService.patch(brandId, entity);
+			domainDto = membershipService.patch(brandId, domainDto);
 		} catch (MemberException e) {
 			logger.error(e.getMessage(), e);
 
@@ -259,7 +258,7 @@ public class MembershipController {
 					.body(new ErrorDto(e.getCode(), e.getMessage(), membershipId));
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, MembershipDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, MembershipDto.class));
 	}
 
 	@DeleteMapping("/brands/{brandId}/memberships/{membershipId}")

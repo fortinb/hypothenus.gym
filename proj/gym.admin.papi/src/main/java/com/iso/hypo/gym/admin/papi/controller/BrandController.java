@@ -24,6 +24,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.iso.hypo.brand.dto.BrandSearchResult;
+import com.iso.hypo.brand.exception.BrandException;
+import com.iso.hypo.brand.services.BrandService;
 import com.iso.hypo.gym.admin.papi.config.security.Roles;
 import com.iso.hypo.gym.admin.papi.dto.ErrorDto;
 import com.iso.hypo.gym.admin.papi.dto.MessageDto;
@@ -33,10 +36,6 @@ import com.iso.hypo.gym.admin.papi.dto.patch.PatchBrandDto;
 import com.iso.hypo.gym.admin.papi.dto.post.PostBrandDto;
 import com.iso.hypo.gym.admin.papi.dto.put.PutBrandDto;
 import com.iso.hypo.gym.admin.papi.dto.search.BrandSearchDto;
-import com.iso.hypo.brand.exception.BrandException;
-import com.iso.hypo.brand.dto.BrandSearchResult;
-import com.iso.hypo.brand.domain.aggregate.Brand;
-import com.iso.hypo.brand.services.BrandService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -104,7 +103,7 @@ public class BrandController {
 			@Parameter(description = "page size") @RequestParam(name = "pageSize", required = true) int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(name = "includeInactive", required = false, defaultValue="false") boolean includeInactive) {
 
-		Page<Brand> entities = null;
+		Page<com.iso.hypo.brand.dto.BrandDto> entities = null;
 		try {
 			entities = brandService.list(page, pageSize, includeInactive);
 		} catch (BrandException e) {
@@ -130,7 +129,7 @@ public class BrandController {
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "','" + Roles.Member + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> getBrand(@PathVariable("brandId") String brandId) {
-		Brand entity = null;
+		com.iso.hypo.brand.dto.BrandDto entity = null;
 		try {
 			entity = brandService.findByBrandId(brandId);
 		} catch (BrandException e) {
@@ -158,10 +157,11 @@ public class BrandController {
 	@PreAuthorize("hasRole('" + Roles.Admin + "')")
 	@ResponseStatus(value = HttpStatus.CREATED)
 	public ResponseEntity<Object> createBrand(@RequestBody PostBrandDto request) {
-		Brand entity = modelMapper.map(request, Brand.class);
+		// map controller POST DTO to domain DTO
+		com.iso.hypo.brand.dto.BrandDto domainDto = modelMapper.map(request, com.iso.hypo.brand.dto.BrandDto.class);
 
 		try {
-			brandService.create(entity);
+			domainDto = brandService.create(domainDto);
 		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 			
@@ -182,9 +182,10 @@ public class BrandController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
 		}
 
+		// map returned domain DTO to controller DTO for response
 		return ResponseEntity.created(
-				ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(entity.getId()).toUri())
-				.body(modelMapper.map(entity, BrandDto.class));
+				ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(domainDto.getId()).toUri())
+				.body(modelMapper.map(domainDto, BrandDto.class));
 	}
 
 	@PutMapping("/brands/{brandId}")
@@ -199,10 +200,10 @@ public class BrandController {
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> updateBrand(@PathVariable("brandId") String brandId, @RequestBody PutBrandDto request) {
-		Brand entity = modelMapper.map(request, Brand.class);
+		com.iso.hypo.brand.dto.BrandDto domainDto = modelMapper.map(request, com.iso.hypo.brand.dto.BrandDto.class);
 		
 		try {
-			entity = brandService.update(entity);
+			domainDto = brandService.update(domainDto);
 		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
@@ -215,7 +216,7 @@ public class BrandController {
 					.body(new ErrorDto(e.getCode(), e.getMessage(), brandId));
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, BrandDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, BrandDto.class));
 	}
 
 	@PatchMapping("/brands/{brandId}")
@@ -230,10 +231,10 @@ public class BrandController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> patchBrand(@PathVariable("brandId") String brandId, @RequestBody PatchBrandDto request) {
-		Brand entity = modelMapper.map(request, Brand.class);
+		com.iso.hypo.brand.dto.BrandDto domainDto = modelMapper.map(request, com.iso.hypo.brand.dto.BrandDto.class);
 		
 		try {
-			entity = brandService.patch(entity);
+			domainDto = brandService.patch(domainDto);
 		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
@@ -246,7 +247,7 @@ public class BrandController {
 					.body(new ErrorDto(e.getCode(), e.getMessage(), brandId));
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, BrandDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, BrandDto.class));
 	}
 
 	
@@ -263,7 +264,7 @@ public class BrandController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> activateBrand(
 			@PathVariable("brandId") String brandId) {
-		Brand entity;
+		com.iso.hypo.brand.dto.BrandDto entity;
 		
 		try {
 			entity = brandService.activate(brandId);
@@ -296,7 +297,7 @@ public class BrandController {
 	public ResponseEntity<Object> deactivateBrand(
 			@PathVariable("brandId") String brandId) {
 		
-		Brand entity;
+		com.iso.hypo.brand.dto.BrandDto entity;
 		
 		try {
 			entity = brandService.deactivate(brandId);

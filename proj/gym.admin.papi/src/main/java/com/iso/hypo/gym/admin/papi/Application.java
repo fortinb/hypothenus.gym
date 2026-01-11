@@ -10,10 +10,10 @@ import com.iso.hypo.gym.admin.papi.config.CorsProperties;
 @SpringBootApplication()
 @ComponentScan({ 
 		"com.iso.hypo.gym.admin", 
-		"com.iso.hypo.brand.services", 
-		"com.iso.hypo.gym.services",
-		"com.iso.hypo.member.services",
-		"com.iso.hypo.common.services"
+		"com.iso.hypo.brand", 
+		"com.iso.hypo.gym",
+		"com.iso.hypo.member",
+		"com.iso.hypo.common"
 })
 @EnableConfigurationProperties(CorsProperties.class)
 public class Application {

@@ -15,20 +15,26 @@ import com.iso.hypo.common.context.RequestContext;
 import com.iso.hypo.member.exception.MemberException;
 import com.iso.hypo.member.domain.aggregate.Membership;
 import com.iso.hypo.member.repository.MembershipRepository;
+import com.iso.hypo.member.dto.MembershipDto;
+import com.iso.hypo.member.mappers.MemberMapper;
 
 @Service
 public class MembershipService {
 
 	private MembershipRepository membershipRepository;
 
+	private MemberMapper memberMapper;
+
 	@Autowired
 	private RequestContext requestContext;
 	
-	public MembershipService(MembershipRepository membershipRepository) {
+	public MembershipService(MembershipRepository membershipRepository, MemberMapper memberMapper) {
 		this.membershipRepository = membershipRepository;
+		this.memberMapper = memberMapper;
 	}
 
-	public Membership create(String brandId, Membership membership) throws MemberException {
+	public MembershipDto create(String brandId, MembershipDto membershipDto) throws MemberException {
+		Membership membership = memberMapper.toEntity(membershipDto);
 		if (!membership.getBrandId().equals(brandId)) {
 			throw new MemberException(MemberException.INVALID_BRAND, "Invalid brand");
 		}
@@ -36,15 +42,17 @@ public class MembershipService {
 		membership.setCreatedOn(Instant.now());
 		membership.setCreatedBy(requestContext.getUsername());
 		
-		return membershipRepository.save(membership);
+		Membership saved = membershipRepository.save(membership);
+		return memberMapper.toDto(saved);
 	}
 
-	public Membership update(String brandId, Membership membership) throws MemberException {
+	public MembershipDto update(String brandId, MembershipDto membershipDto) throws MemberException {
+		Membership membership = memberMapper.toEntity(membershipDto);
 		if (!membership.getBrandId().equals(brandId)) {
 			throw new MemberException(MemberException.INVALID_BRAND, "Invalid brand");
 		}
 		
-		Membership oldMembership = this.findByMembershipId(brandId, membership.getId());
+		Membership oldMembership = this.memberMapper.toEntity(this.findByMembershipId(brandId, membership.getId()));
 
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(false);
@@ -55,15 +63,17 @@ public class MembershipService {
 		oldMembership.setModifiedOn(Instant.now());
 		oldMembership.setModifiedBy(requestContext.getUsername());
 		
-		return membershipRepository.save(oldMembership);
+		Membership saved = membershipRepository.save(oldMembership);
+		return memberMapper.toDto(saved);
 	}
 
-	public Membership patch(String brandId, Membership membership) throws MemberException {
+	public MembershipDto patch(String brandId, MembershipDto membershipDto) throws MemberException {
+		Membership membership = memberMapper.toEntity(membershipDto);
 		if (!membership.getBrandId().equals(brandId)) {
 			throw new MemberException(MemberException.INVALID_BRAND, "Invalid brand");
 		}
 		
-		Membership oldMembership = this.findByMembershipId(brandId, membership.getId());
+		Membership oldMembership = this.memberMapper.toEntity(this.findByMembershipId(brandId, membership.getId()));
 
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(true);
@@ -74,11 +84,12 @@ public class MembershipService {
 		oldMembership.setModifiedOn(Instant.now());
 		oldMembership.setModifiedBy(requestContext.getUsername());
 		
-		return membershipRepository.save(oldMembership);
+		Membership saved = membershipRepository.save(oldMembership);
+		return memberMapper.toDto(saved);
 	}
 
 	public void delete(String brandId, String membershipId) throws MemberException {
-		Membership oldMembership = this.findByMembershipId(brandId,  membershipId);
+		Membership oldMembership = memberMapper.toEntity(this.findByMembershipId(brandId,  membershipId));
 		oldMembership.setDeleted(true);
 
 		oldMembership.setDeletedOn(Instant.now());
@@ -87,41 +98,41 @@ public class MembershipService {
 		membershipRepository.save(oldMembership);
 	}
 
-	public Membership findByMembershipId(String brandId, String id) throws MemberException {
+	public MembershipDto findByMembershipId(String brandId, String id) throws MemberException {
 		Optional<Membership> entity = membershipRepository.findByBrandIdAndIdAndIsDeletedIsFalse(brandId, id);
 		if (entity.isEmpty()) {
 			throw new MemberException(MemberException.MEMBERSHIP_NOT_FOUND, "Membership not found");
 		}
 
-		return entity.get();
+		return memberMapper.toDto(entity.get());
 	}
 
-	public Page<Membership> list(String brandId, int page, int pageSize, boolean includeInactive) throws MemberException {
+	public Page<MembershipDto> list(String brandId, int page, int pageSize, boolean includeInactive) throws MemberException {
 		if (includeInactive) {
-			return membershipRepository.findAllByBrandIdAndIsDeletedIsFalse(brandId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
+			return membershipRepository.findAllByBrandIdAndIsDeletedIsFalse(brandId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname")).map(m -> memberMapper.toDto(m));
 		}
 
-		return membershipRepository.findAllByBrandIdAndIsDeletedIsFalseAndIsActiveIsTrue(brandId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
+		return membershipRepository.findAllByBrandIdAndIsDeletedIsFalseAndIsActiveIsTrue(brandId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname")).map(m -> memberMapper.toDto(m));
 	}
 	
-	public Membership activate(String brandId, String id) throws MemberException {
+	public MembershipDto activate(String brandId, String id) throws MemberException {
 		
 		Optional<Membership> oldMembership = membershipRepository.activate(brandId, id);
 		if (oldMembership.isEmpty()) {
 			throw new MemberException(MemberException.MEMBERSHIP_NOT_FOUND, "Membership not found");
 		}
 		
-		return oldMembership.get();
+		return memberMapper.toDto(oldMembership.get());
 	}
 	
-	public Membership deactivate(String brandId, String id) throws MemberException {
+	public MembershipDto deactivate(String brandId, String id) throws MemberException {
 		
 		Optional<Membership> oldMembership = membershipRepository.deactivate(brandId, id);
 		if (oldMembership.isEmpty()) {
 			throw new MemberException(MemberException.MEMBERSHIP_NOT_FOUND, "Membership not found");
 		}
 		
-		return oldMembership.get();
+		return memberMapper.toDto(oldMembership.get());
 	}
 	
 	private ModelMapper initMembershipMappings(ModelMapper mapper) {

@@ -33,7 +33,6 @@ import com.iso.hypo.gym.admin.papi.dto.patch.PatchCourseDto;
 import com.iso.hypo.gym.admin.papi.dto.post.PostCourseDto;
 import com.iso.hypo.gym.admin.papi.dto.put.PutCourseDto;
 import com.iso.hypo.gym.exception.GymException;
-import com.iso.hypo.gym.domain.aggregate.Course;
 import com.iso.hypo.gym.services.CourseService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -76,7 +75,7 @@ public class CourseController {
 			@Parameter(description = "page size") @RequestParam(name = "pageSize", required = true) int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(name = "includeInactive", required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<Course> entities = null;
+		Page<com.iso.hypo.gym.dto.CourseDto> entities = null;
 		try {
 			entities = courseService.list(brandId, gymId, page, pageSize, includeInactive);
 		} catch (GymException e) {
@@ -104,7 +103,7 @@ public class CourseController {
 			@PathVariable("brandId") String brandId,
 			@PathVariable("gymId") String gymId,
 			@PathVariable("courseId") String courseId) {
-		Course entity = null;
+		com.iso.hypo.gym.dto.CourseDto entity = null;
 		try {
 			entity = courseService.findByCourseId(brandId, gymId, courseId);
 		} catch (GymException e) {
@@ -135,10 +134,10 @@ public class CourseController {
 			@PathVariable("brandId") String brandId,
 			@PathVariable("gymId") String gymId,
 			@RequestBody PostCourseDto request) {
-		Course entity = modelMapper.map(request, Course.class);
+		com.iso.hypo.gym.dto.CourseDto domainDto = modelMapper.map(request, com.iso.hypo.gym.dto.CourseDto.class);
 
 		try {
-			courseService.create(brandId, gymId, entity);
+			domainDto = courseService.create(brandId, gymId, domainDto);
 		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 			
@@ -160,8 +159,8 @@ public class CourseController {
 		}
 
 		return ResponseEntity.created(
-				ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(entity.getId()).toUri())
-				.body(modelMapper.map(entity, CourseDto.class));
+				ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(domainDto.getId()).toUri())
+				.body(modelMapper.map(domainDto, CourseDto.class));
 	}
 
 	@PutMapping("/brands/{brandId}/gyms/{gymId}/courses/{courseId}")
@@ -181,10 +180,10 @@ public class CourseController {
 			@PathVariable("courseId") String courseId,
 			@Parameter(description = "activate or deactivate course") @RequestParam(name = "isActive", required = false, defaultValue = "true") boolean isActive,
 			@RequestBody PutCourseDto request) {
-		Course entity = modelMapper.map(request, Course.class);
+		com.iso.hypo.gym.dto.CourseDto domainDto = modelMapper.map(request, com.iso.hypo.gym.dto.CourseDto.class);
 
 		try {
-			entity = courseService.update(brandId, gymId, entity);
+			domainDto = courseService.update(brandId, gymId, domainDto);
 		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
@@ -197,7 +196,7 @@ public class CourseController {
 					.body(new ErrorDto(e.getCode(), e.getMessage(), courseId));
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, CourseDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, CourseDto.class));
 	}
 
 	@PostMapping("/brands/{brandId}/gyms/{gymId}/courses/{courseId}/activate")
@@ -215,7 +214,7 @@ public class CourseController {
 			@PathVariable("brandId") String brandId,
 			@PathVariable("gymId") String gymId,
 			@PathVariable("courseId") String courseId) {
-		Course entity;
+		com.iso.hypo.gym.dto.CourseDto entity;
 
 		try {
 			entity = courseService.activate(brandId, gymId, courseId);
@@ -249,7 +248,7 @@ public class CourseController {
 			@PathVariable("brandId") String brandId,
 			@PathVariable("gymId") String gymId,
 			@PathVariable("courseId") String courseId) {
-		Course entity;
+		com.iso.hypo.gym.dto.CourseDto entity;
 
 		try {
 			entity = courseService.deactivate(brandId, gymId, courseId);
@@ -283,10 +282,10 @@ public class CourseController {
 			@PathVariable("brandId") String brandId,
 			@PathVariable("gymId") String gymId,
 			@PathVariable("courseId") String courseId, @RequestBody PatchCourseDto request) {
-		Course entity = modelMapper.map(request, Course.class);
+		com.iso.hypo.gym.dto.CourseDto domainDto = modelMapper.map(request, com.iso.hypo.gym.dto.CourseDto.class);
 
 		try {
-			entity = courseService.patch(brandId, gymId, entity);
+			domainDto = courseService.patch(brandId, gymId, domainDto);
 		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
@@ -299,7 +298,7 @@ public class CourseController {
 					.body(new ErrorDto(e.getCode(), e.getMessage(), courseId));
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, CourseDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, CourseDto.class));
 	}
 
 	@DeleteMapping("/brands/{brandId}/gyms/{gymId}/courses/{courseId}")

@@ -16,21 +16,27 @@ import com.iso.hypo.gym.exception.GymException;
 import com.iso.hypo.common.domain.LocalizedString;
 import com.iso.hypo.gym.domain.aggregate.Coach;
 import com.iso.hypo.gym.domain.aggregate.Course;
+import com.iso.hypo.gym.dto.CourseDto;
 import com.iso.hypo.gym.repository.CourseRepository;
+import com.iso.hypo.gym.mappers.GymMapper;
 
 @Service
 public class CourseService {
 
 	private CourseRepository courseRepository;
 
+	private GymMapper gymMapper;
+
 	@Autowired
 	private RequestContext requestContext;
 
-	public CourseService(CourseRepository courseRepository) {
+	public CourseService(CourseRepository courseRepository, GymMapper gymMapper) {
 		this.courseRepository = courseRepository;
+		this.gymMapper = gymMapper;
 	}
 
-	public Course create(String brandId, String gymId, Course course) throws GymException {
+	public CourseDto create(String brandId, String gymId, CourseDto courseDto) throws GymException {
+		Course course = gymMapper.toEntity(courseDto);
 		if (!course.getBrandId().equals(brandId)) {
 			throw new GymException(GymException.INVALID_BRAND, "Invalid brand");
 		}
@@ -48,10 +54,12 @@ public class CourseService {
 		course.setCreatedOn(Instant.now());
 		course.setCreatedBy(requestContext.getUsername());
 
-		return courseRepository.save(course);
+		Course saved = courseRepository.save(course);
+		return gymMapper.toDto(saved);
 	}
 
-	public Course update(String brandId, String gymId, Course course) throws GymException {
+	public CourseDto update(String brandId, String gymId, CourseDto courseDto) throws GymException {
+		Course course = gymMapper.toEntity(courseDto);
 		if (!course.getBrandId().equals(brandId)) {
 			throw new GymException(GymException.INVALID_BRAND, "Invalid brand");
 		}
@@ -60,7 +68,7 @@ public class CourseService {
 			throw new GymException(GymException.INVALID_GYM, "Invalid gym");
 		}
 
-		Course oldCourse = this.findByCourseId(brandId, gymId, course.getId());
+		Course oldCourse = this.gymMapper.toEntity(this.findByCourseId(brandId, gymId, course.getId()));
 
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration()
@@ -73,10 +81,12 @@ public class CourseService {
 		oldCourse.setModifiedOn(Instant.now());
 		oldCourse.setModifiedBy(requestContext.getUsername());
 
-		return courseRepository.save(oldCourse);
+		Course saved = courseRepository.save(oldCourse);
+		return gymMapper.toDto(saved);
 	}
 
-	public Course patch(String brandId, String gymId, Course course) throws GymException {
+	public CourseDto patch(String brandId, String gymId, CourseDto courseDto) throws GymException {
+		Course course = gymMapper.toEntity(courseDto);
 		if (!course.getBrandId().equals(brandId)) {
 			throw new GymException(GymException.INVALID_BRAND, "Invalid brand");
 		}
@@ -85,7 +95,7 @@ public class CourseService {
 			throw new GymException(GymException.INVALID_GYM, "Invalid gym");
 		}
 
-		Course oldCourse = this.findByCourseId(brandId, gymId, course.getId());
+		Course oldCourse = this.gymMapper.toEntity(this.findByCourseId(brandId, gymId, course.getId()));
 
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration()
@@ -98,11 +108,12 @@ public class CourseService {
 		oldCourse.setModifiedOn(Instant.now());
 		oldCourse.setModifiedBy(requestContext.getUsername());
 
-		return courseRepository.save(oldCourse);
+		Course saved = courseRepository.save(oldCourse);
+		return gymMapper.toDto(saved);
 	}
 
 	public void delete(String brandId, String gymId, String courseId) throws GymException {
-		Course oldCourse = this.findByCourseId(brandId, gymId, courseId);
+		Course oldCourse = gymMapper.toEntity(this.findByCourseId(brandId, gymId, courseId));
 		oldCourse.setDeleted(true);
 
 		oldCourse.setDeletedOn(Instant.now());
@@ -111,44 +122,44 @@ public class CourseService {
 		courseRepository.save(oldCourse);
 	}
 
-	public Course findByCourseId(String brandId, String gymId, String id) throws GymException {
+	public CourseDto findByCourseId(String brandId, String gymId, String id) throws GymException {
 		Optional<Course> entity = courseRepository.findByBrandIdAndGymIdAndIdAndIsDeletedIsFalse(brandId, gymId, id);
 		if (entity.isEmpty()) {
 			throw new GymException(GymException.COURSE_NOT_FOUND, "Course not found");
 		}
 
-		return entity.get();
+		return gymMapper.toDto(entity.get());
 	}
 
-	public Page<Course> list(String brandId, String gymId, int page, int pageSize, boolean includeInactive)
+	public Page<CourseDto> list(String brandId, String gymId, int page, int pageSize, boolean includeInactive)
 			throws GymException {
 		if (includeInactive) {
 			return courseRepository.findAllByBrandIdAndGymIdAndIsDeletedIsFalse(brandId, gymId,
-					PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
+					PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname")).map(c -> gymMapper.toDto(c));
 		}
 
 		return courseRepository.findAllByBrandIdAndGymIdAndIsDeletedIsFalseAndIsActiveIsTrue(brandId, gymId,
-				PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
+			PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname")).map(c -> gymMapper.toDto(c));
 	}
 
-	public Course activate(String brandId, String gymId, String id) throws GymException {
+	public CourseDto activate(String brandId, String gymId, String id) throws GymException {
 
 		Optional<Course> oldCourse = courseRepository.activate(brandId, gymId, id);
 		if (oldCourse.isEmpty()) {
 			throw new GymException(GymException.COURSE_NOT_FOUND, "Course not found");
 		}
 
-		return oldCourse.get();
+		return gymMapper.toDto(oldCourse.get());
 	}
 
-	public Course deactivate(String brandId, String gymId, String id) throws GymException {
+	public CourseDto deactivate(String brandId, String gymId, String id) throws GymException {
 
 		Optional<Course> oldCourse = courseRepository.deactivate(brandId, gymId, id);
 		if (oldCourse.isEmpty()) {
 			throw new GymException(GymException.COURSE_NOT_FOUND, "Course not found");
 		}
 
-		return oldCourse.get();
+		return gymMapper.toDto(oldCourse.get());
 	}
 
 	private ModelMapper initCourseMappings(ModelMapper mapper) {

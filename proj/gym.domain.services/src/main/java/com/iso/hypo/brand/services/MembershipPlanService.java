@@ -20,20 +20,26 @@ import com.iso.hypo.brand.domain.aggregate.MembershipPlan;
 import com.iso.hypo.common.domain.pricing.Cost;
 import com.iso.hypo.common.domain.pricing.OneTimeFee;
 import com.iso.hypo.brand.repository.MembershipPlanRepository;
+import com.iso.hypo.brand.dto.MembershipPlanDto;
+import com.iso.hypo.brand.mappers.BrandMapper;
 
 @Service
 public class MembershipPlanService {
 
 	private MembershipPlanRepository membershipPlanRepository;
 
+	private BrandMapper brandMapper;
+
 	@Autowired
 	private RequestContext requestContext;
 	
-	public MembershipPlanService(MembershipPlanRepository membershipPlanRepository) {
+	public MembershipPlanService(MembershipPlanRepository membershipPlanRepository, BrandMapper brandMapper) {
 		this.membershipPlanRepository = membershipPlanRepository;
+		this.brandMapper = brandMapper;
 	}
 
-	public MembershipPlan create(String brandId, MembershipPlan membershipPlan) throws BrandException {
+	public MembershipPlanDto create(String brandId, MembershipPlanDto membershipPlanDto) throws BrandException {
+		MembershipPlan membershipPlan = brandMapper.toEntity(membershipPlanDto);
 		if (!membershipPlan.getBrandId().equals(brandId)) {
 			throw new BrandException(BrandException.INVALID_BRAND, "Invalid brand");
 		}
@@ -41,15 +47,17 @@ public class MembershipPlanService {
 		membershipPlan.setCreatedOn(Instant.now());
 		membershipPlan.setCreatedBy(requestContext.getUsername());
 		
-		return membershipPlanRepository.save(membershipPlan);
+		MembershipPlan saved = membershipPlanRepository.save(membershipPlan);
+		return brandMapper.toDto(saved);
 	}
 
-	public MembershipPlan update(String brandId, MembershipPlan membershipPlan) throws BrandException {
+	public MembershipPlanDto update(String brandId, MembershipPlanDto membershipPlanDto) throws BrandException {
+		MembershipPlan membershipPlan = brandMapper.toEntity(membershipPlanDto);
 		if (!membershipPlan.getBrandId().equals(brandId)) {
 			throw new BrandException(BrandException.INVALID_BRAND, "Invalid brand");
 		}
 		
-		MembershipPlan oldMembershipPlan = this.findByMembershipPlanId(brandId, membershipPlan.getId());
+		MembershipPlan oldMembershipPlan = this.findByMembershipPlanIdEntity(brandId, membershipPlan.getId());
 
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(false);
@@ -60,15 +68,17 @@ public class MembershipPlanService {
 		oldMembershipPlan.setModifiedOn(Instant.now());
 		oldMembershipPlan.setModifiedBy(requestContext.getUsername());
 		
-		return membershipPlanRepository.save(oldMembershipPlan);
+		MembershipPlan saved = membershipPlanRepository.save(oldMembershipPlan);
+		return brandMapper.toDto(saved);
 	}
 
-	public MembershipPlan patch(String brandId, MembershipPlan membershipPlan) throws BrandException {
+	public MembershipPlanDto patch(String brandId, MembershipPlanDto membershipPlanDto) throws BrandException {
+		MembershipPlan membershipPlan = brandMapper.toEntity(membershipPlanDto);
 		if (!membershipPlan.getBrandId().equals(brandId)) {
 			throw new BrandException(BrandException.INVALID_BRAND, "Invalid brand");
 		}
 		
-		MembershipPlan oldMembershipPlan = this.findByMembershipPlanId(brandId, membershipPlan.getId());
+		MembershipPlan oldMembershipPlan = this.findByMembershipPlanIdEntity(brandId, membershipPlan.getId());
 
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(true);
@@ -79,11 +89,12 @@ public class MembershipPlanService {
 		oldMembershipPlan.setModifiedOn(Instant.now());
 		oldMembershipPlan.setModifiedBy(requestContext.getUsername());
 		
-		return membershipPlanRepository.save(oldMembershipPlan);
+		MembershipPlan saved = membershipPlanRepository.save(oldMembershipPlan);
+		return brandMapper.toDto(saved);
 	}
 
 	public void delete(String brandId, String membershipPlanId) throws BrandException {
-		MembershipPlan oldMembershipPlan = this.findByMembershipPlanId(brandId,  membershipPlanId);
+		MembershipPlan oldMembershipPlan = this.findByMembershipPlanIdEntity(brandId,  membershipPlanId);
 		oldMembershipPlan.setDeleted(true);
 
 		oldMembershipPlan.setDeletedOn(Instant.now());
@@ -92,7 +103,12 @@ public class MembershipPlanService {
 		membershipPlanRepository.save(oldMembershipPlan);
 	}
 
-	public MembershipPlan findByMembershipPlanId(String brandId, String id) throws BrandException {
+	public MembershipPlanDto findByMembershipPlanId(String brandId, String id) throws BrandException {
+		MembershipPlan entity = findByMembershipPlanIdEntity(brandId, id);
+		return brandMapper.toDto(entity);
+	}
+
+	private MembershipPlan findByMembershipPlanIdEntity(String brandId, String id) throws BrandException {
 		Optional<MembershipPlan> entity = membershipPlanRepository.findByBrandIdAndIdAndIsDeletedIsFalse(brandId, id);
 		if (entity.isEmpty()) {
 			throw new BrandException(BrandException.MEMBERSHIPPLAN_NOT_FOUND, "MembershipPlan not found");
@@ -101,32 +117,35 @@ public class MembershipPlanService {
 		return entity.get();
 	}
 
-	public Page<MembershipPlan> list(String brandId, int page, int pageSize, boolean includeInactive) throws BrandException {
+	public Page<MembershipPlanDto> list(String brandId, int page, int pageSize, boolean includeInactive) throws BrandException {
+		Page<MembershipPlan> pageEntities;
 		if (includeInactive) {
-			return membershipPlanRepository.findAllByBrandIdAndIsDeletedIsFalse(brandId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
+			pageEntities = membershipPlanRepository.findAllByBrandIdAndIsDeletedIsFalse(brandId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
+		} else {
+			pageEntities = membershipPlanRepository.findAllByBrandIdAndIsDeletedIsFalseAndIsActiveIsTrue(brandId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
 		}
 
-		return membershipPlanRepository.findAllByBrandIdAndIsDeletedIsFalseAndIsActiveIsTrue(brandId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"));
+		return pageEntities.map(e -> brandMapper.toDto(e));
 	}
 	
-	public MembershipPlan activate(String brandId, String id) throws BrandException {
+	public MembershipPlanDto activate(String brandId, String id) throws BrandException {
 		
 		Optional<MembershipPlan> oldMembershipPlan = membershipPlanRepository.activate(brandId, id);
 		if (oldMembershipPlan.isEmpty()) {
 			throw new BrandException(BrandException.MEMBERSHIPPLAN_NOT_FOUND, "MembershipPlan not found");
 		}
 		
-		return oldMembershipPlan.get();
+		return brandMapper.toDto(oldMembershipPlan.get());
 	}
 	
-	public MembershipPlan deactivate(String brandId, String id) throws BrandException {
+	public MembershipPlanDto deactivate(String brandId, String id) throws BrandException {
 		
 		Optional<MembershipPlan> oldMembershipPlan = membershipPlanRepository.deactivate(brandId, id);
 		if (oldMembershipPlan.isEmpty()) {
 			throw new BrandException(BrandException.MEMBERSHIPPLAN_NOT_FOUND, "MembershipPlan not found");
 		}
 		
-		return oldMembershipPlan.get();
+		return brandMapper.toDto(oldMembershipPlan.get());
 	}
 	
 	private ModelMapper initMembershipPlanMappings(ModelMapper mapper) {

@@ -18,21 +18,27 @@ import com.iso.hypo.common.domain.contact.Contact;
 import com.iso.hypo.common.domain.contact.PhoneNumber;
 import com.iso.hypo.common.domain.location.Address;
 import com.iso.hypo.gym.dto.GymSearchResult;
+import com.iso.hypo.gym.dto.GymDto;
 import com.iso.hypo.gym.repository.GymRepository;
+import com.iso.hypo.gym.mappers.GymMapper;
 
 @Service
 public class GymService {
 
 	private GymRepository gymRepository;
 
+	private GymMapper gymMapper;
+
 	@Autowired
 	private RequestContext requestContext;
 
-	public GymService(GymRepository gymRepository) {
+	public GymService(GymRepository gymRepository, GymMapper gymMapper) {
 		this.gymRepository = gymRepository;
+		this.gymMapper = gymMapper;
 	}
 
-	public Gym create(Gym gym) throws GymException {
+	public GymDto create(GymDto gymDto) throws GymException {
+		Gym gym = gymMapper.toEntity(gymDto);
 		Optional<Gym> existingGym = gymRepository.findByBrandIdAndGymId(gym.getBrandId(), gym.getGymId());
 		if (existingGym.isPresent()) {
 			throw new GymException(GymException.GYM_CODE_ALREADY_EXIST, "Duplicate gym code");
@@ -41,11 +47,13 @@ public class GymService {
 		gym.setCreatedOn(Instant.now());
 		gym.setCreatedBy(requestContext.getUsername());
 
-		return gymRepository.save(gym);
+		Gym saved = gymRepository.save(gym);
+		return gymMapper.toDto(saved);
 	}
 
-	public Gym update(Gym gym) throws GymException {
-		Gym oldGym = this.findByGymId(gym.getBrandId(), gym.getGymId());
+	public GymDto update(String brandId, GymDto gymDto) throws GymException {
+		Gym gym = gymMapper.toEntity(gymDto);
+		Gym oldGym = this.gymMapper.toEntity(this.findByGymId(gym.getBrandId(), gym.getGymId()));
 
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration()
@@ -67,11 +75,13 @@ public class GymService {
 		oldGym.setModifiedOn(Instant.now());
 		oldGym.setModifiedBy(requestContext.getUsername());
 
-		return gymRepository.save(oldGym);
+		Gym saved = gymRepository.save(oldGym);
+		return gymMapper.toDto(saved);
 	}
 
-	public Gym patch(Gym gym) throws GymException {
-		Gym oldGym = this.findByGymId(gym.getBrandId(), gym.getGymId());
+	public GymDto patch(String brandId, GymDto gymDto) throws GymException {
+		Gym gym = gymMapper.toEntity(gymDto);
+		Gym oldGym = this.gymMapper.toEntity(this.findByGymId(gym.getBrandId(), gym.getGymId()));
 
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(true);
@@ -92,11 +102,12 @@ public class GymService {
 		oldGym.setModifiedOn(Instant.now());
 		oldGym.setModifiedBy(requestContext.getUsername());
 
-		return gymRepository.save(oldGym);
+		Gym saved = gymRepository.save(oldGym);
+		return gymMapper.toDto(saved);
 	}
 
 	public void delete(String brandId, String gymId) throws GymException {
-		Gym oldGym = this.findByGymId(brandId, gymId);
+		Gym oldGym = gymMapper.toEntity(this.findByGymId(brandId, gymId));
 		oldGym.setDeleted(true);
 
 		oldGym.setDeletedOn(Instant.now());
@@ -105,13 +116,13 @@ public class GymService {
 		gymRepository.save(oldGym);
 	}
 
-	public Gym findByGymId(String brandId, String id) throws GymException {
+	public GymDto findByGymId(String brandId, String id) throws GymException {
 		Optional<Gym> entity = gymRepository.findByBrandIdAndGymIdAndIsDeletedIsFalse(brandId, id);
 		if (entity.isEmpty()) {
 			throw new GymException(GymException.GYM_NOT_FOUND, "Gym not found");
 		}
 
-		return entity.get();
+		return gymMapper.toDto(entity.get());
 	}
 
 	public Page<GymSearchResult> search(int page, int pageSize, String criteria, boolean includeInactive)
@@ -120,33 +131,35 @@ public class GymService {
 				includeInactive);
 	}
 
-	public Page<Gym> list(String brandId, int page, int pageSize, boolean includeInactive) throws GymException {
+	public Page<GymDto> list(String brandId, int page, int pageSize, boolean includeInactive) throws GymException {
 		if (includeInactive) {
-			return gymRepository.findAllByBrandIdAndIsDeletedIsFalse(brandId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"));
+			return gymRepository.findAllByBrandIdAndIsDeletedIsFalse(brandId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"))
+				.map(g -> gymMapper.toDto(g));
 		}
 
 		return gymRepository
-				.findAllByBrandIdAndIsDeletedIsFalseAndIsActiveIsTrue(brandId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"));
+				.findAllByBrandIdAndIsDeletedIsFalseAndIsActiveIsTrue(brandId, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"))
+				.map(g -> gymMapper.toDto(g));
 	}
 
-	public Gym activate(String brandId, String gymId) throws GymException {
+	public GymDto activate(String brandId, String gymId) throws GymException {
 
 		Optional<Gym> oldGym = gymRepository.activate(brandId, gymId);
 		if (oldGym.isEmpty()) {
 			throw new GymException(GymException.GYM_NOT_FOUND, "Gym not found");
 		}
 
-		return oldGym.get();
+		return gymMapper.toDto(oldGym.get());
 	}
 
-	public Gym deactivate(String brandId, String gymId) throws GymException {
+	public GymDto deactivate(String brandId, String gymId) throws GymException {
 
 		Optional<Gym> oldGym = gymRepository.deactivate(brandId, gymId);
 		if (oldGym.isEmpty()) {
 			throw new GymException(GymException.GYM_NOT_FOUND, "Gym not found");
 		}
 
-		return oldGym.get();
+		return gymMapper.toDto(oldGym.get());
 	}
 	
 	private ModelMapper initGymMappings(ModelMapper mapper) {
@@ -163,8 +176,7 @@ public class GymService {
 			protected void configure() {
 			}
 		};
-		
-
+			
 		PropertyMap<Contact, Contact> contactPropertyMap = new PropertyMap<Contact, Contact>() {
 			@Override
 			protected void configure() {

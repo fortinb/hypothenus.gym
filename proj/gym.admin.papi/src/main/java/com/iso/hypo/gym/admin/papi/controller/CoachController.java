@@ -28,7 +28,6 @@ import com.iso.hypo.gym.admin.papi.dto.patch.PatchCoachDto;
 import com.iso.hypo.gym.admin.papi.dto.post.PostCoachDto;
 import com.iso.hypo.gym.admin.papi.dto.put.PutCoachDto;
 import com.iso.hypo.gym.exception.GymException;
-import com.iso.hypo.gym.domain.aggregate.Coach;
 import com.iso.hypo.gym.services.CoachService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -71,7 +70,7 @@ public class CoachController {
 			@Parameter(description = "page size") @RequestParam(name = "pageSize", required = true) int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(name = "includeInactive", required = false, defaultValue="false") boolean includeInactive) {
 
-		Page<Coach> entities = null;
+		Page<com.iso.hypo.gym.dto.CoachDto> entities = null;
 		try {
 			entities = coachService.list(brandId, gymId, page, pageSize, includeInactive);
 		} catch (GymException e) {
@@ -100,7 +99,7 @@ public class CoachController {
 			@PathVariable("brandId") String brandId,
 			@PathVariable("gymId") String gymId,
 			@PathVariable("coachId") String coachId) {
-		Coach entity = null;
+		com.iso.hypo.gym.dto.CoachDto entity = null;
 		try {
 			entity = coachService.findByCoachId(brandId, gymId, coachId);
 		} catch (GymException e) {
@@ -131,10 +130,10 @@ public class CoachController {
 			@PathVariable("brandId") String brandId,
 			@PathVariable("gymId") String gymId,
 			@RequestBody PostCoachDto request) {
-		Coach entity = modelMapper.map(request, Coach.class);
+		com.iso.hypo.gym.dto.CoachDto domainDto = modelMapper.map(request, com.iso.hypo.gym.dto.CoachDto.class);
 
 		try {
-			coachService.create(brandId, gymId, entity);
+			domainDto = coachService.create(brandId, gymId, domainDto);
 		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
@@ -142,8 +141,8 @@ public class CoachController {
 		}
 
 		return ResponseEntity.created(
-				ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(entity.getId()).toUri())
-				.body(modelMapper.map(entity, CoachDto.class));
+				ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(domainDto.getId()).toUri())
+				.body(modelMapper.map(domainDto, CoachDto.class));
 	}
 
 	@PutMapping("/brands/{brandId}/gyms/{gymId}/coachs/{coachId}")
@@ -163,10 +162,10 @@ public class CoachController {
 			@PathVariable("coachId") String coachId,
 			@Parameter(description = "activate or deactivate coach") @RequestParam(name = "isActive", required = false, defaultValue = "true") boolean isActive,
 			@RequestBody PutCoachDto request) {
-		Coach entity = modelMapper.map(request, Coach.class);
+		com.iso.hypo.gym.dto.CoachDto domainDto = modelMapper.map(request, com.iso.hypo.gym.dto.CoachDto.class);
 		
 		try {
-			entity = coachService.update(brandId, gymId, entity);
+			domainDto = coachService.update(brandId, gymId, domainDto);
 		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
@@ -179,7 +178,7 @@ public class CoachController {
 					.body(new ErrorDto(e.getCode(), e.getMessage(), coachId));
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, CoachDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, CoachDto.class));
 	}
 
 	@PostMapping("/brands/{brandId}/gyms/{gymId}/coachs/{coachId}/activate")
@@ -197,7 +196,7 @@ public class CoachController {
 			@PathVariable("brandId") String brandId,
 			@PathVariable("gymId") String gymId,
 			@PathVariable("coachId") String coachId) {
-		Coach entity;
+		com.iso.hypo.gym.dto.CoachDto entity;
 		
 		try {
 			entity = coachService.activate(brandId, gymId, coachId);
@@ -231,7 +230,7 @@ public class CoachController {
 			@PathVariable("brandId") String brandId,
 			@PathVariable("gymId") String gymId,
 			@PathVariable("coachId") String coachId) {
-		Coach entity;
+		com.iso.hypo.gym.dto.CoachDto entity;
 		
 		try {
 			entity = coachService.deactivate(brandId, gymId, coachId);
@@ -266,10 +265,10 @@ public class CoachController {
 			@PathVariable("gymId") String gymId,
 			@PathVariable("coachId") String coachId,
 			@RequestBody PatchCoachDto request) {
-		Coach entity = modelMapper.map(request, Coach.class);
+		com.iso.hypo.gym.dto.CoachDto domainDto = modelMapper.map(request, com.iso.hypo.gym.dto.CoachDto.class);
 		
 		try {
-			entity = coachService.patch(brandId, gymId, entity);
+			domainDto = coachService.patch(brandId, gymId, domainDto);
 		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
@@ -282,7 +281,7 @@ public class CoachController {
 					.body(new ErrorDto(e.getCode(), e.getMessage(), coachId));
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, CoachDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, CoachDto.class));
 	}
 
 	@DeleteMapping("/brands/{brandId}/gyms/{gymId}/coachs/{coachId}")

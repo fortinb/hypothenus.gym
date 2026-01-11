@@ -6,9 +6,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.iso.hypo.common.domain.BaseEntity;
-import com.iso.hypo.member.domain.aggregate.Member;
 import com.iso.hypo.brand.domain.aggregate.MembershipPlan;
+import com.iso.hypo.common.domain.BaseEntity;
 import com.mongodb.lang.NonNull;
 
 import lombok.Getter;

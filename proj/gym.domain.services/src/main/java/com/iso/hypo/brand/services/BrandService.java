@@ -13,26 +13,32 @@ import org.springframework.stereotype.Service;
 
 import com.iso.hypo.common.context.RequestContext;
 import com.iso.hypo.brand.exception.BrandException;
+import com.iso.hypo.brand.dto.BrandDto;
 import com.iso.hypo.brand.dto.BrandSearchResult;
 import com.iso.hypo.brand.domain.aggregate.Brand;
 import com.iso.hypo.common.domain.contact.Contact;
 import com.iso.hypo.common.domain.contact.PhoneNumber;
 import com.iso.hypo.common.domain.location.Address;
 import com.iso.hypo.brand.repository.BrandRepository;
+import com.iso.hypo.brand.mappers.BrandMapper;
 
 @Service
 public class BrandService {
 
 	private BrandRepository brandRepository;
 
+	private BrandMapper brandMapper;
+
 	@Autowired
 	private RequestContext requestContext;
 
-	public BrandService(BrandRepository brandRepository) {
+	public BrandService(BrandRepository brandRepository, BrandMapper brandMapper) {
 		this.brandRepository = brandRepository;
+		this.brandMapper = brandMapper;
 	}
 
-	public Brand create(Brand brand) throws BrandException {
+	public BrandDto create(BrandDto brandDto) throws BrandException {
+		Brand brand = brandMapper.toEntity(brandDto);
 		Optional<Brand> existingBrand = brandRepository.findByBrandId(brand.getBrandId());
 		if (existingBrand.isPresent()) {
 			throw new BrandException(BrandException.BRAND_CODE_ALREADY_EXIST, "Duplicate brand code");
@@ -41,11 +47,13 @@ public class BrandService {
 		brand.setCreatedOn(Instant.now());
 		brand.setCreatedBy(requestContext.getUsername());
 
-		return brandRepository.save(brand);
+		Brand saved = brandRepository.save(brand);
+		return brandMapper.toDto(saved);
 	}
 
-	public Brand update(Brand brand) throws BrandException {
-		Brand oldBrand = this.findByBrandId(brand.getBrandId());
+	public BrandDto update(BrandDto brandDto) throws BrandException {
+		Brand brand = brandMapper.toEntity(brandDto);
+		Brand oldBrand = this.brandMapper.toEntity(this.findByBrandId(brand.getBrandId()));
 
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration()
@@ -67,11 +75,13 @@ public class BrandService {
 		oldBrand.setModifiedOn(Instant.now());
 		oldBrand.setModifiedBy(requestContext.getUsername());
 
-		return brandRepository.save(oldBrand);
+		Brand saved = brandRepository.save(oldBrand);
+		return brandMapper.toDto(saved);
 	}
 
-	public Brand patch(Brand brand) throws BrandException {
-		Brand oldBrand = this.findByBrandId(brand.getBrandId());
+	public BrandDto patch(BrandDto brandDto) throws BrandException {
+		Brand brand = brandMapper.toEntity(brandDto);
+		Brand oldBrand = this.brandMapper.toEntity(this.findByBrandId(brand.getBrandId()));
 
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(true);
@@ -92,11 +102,12 @@ public class BrandService {
 		oldBrand.setModifiedOn(Instant.now());
 		oldBrand.setModifiedBy(requestContext.getUsername());
 
-		return brandRepository.save(oldBrand);
+		Brand saved = brandRepository.save(oldBrand);
+		return brandMapper.toDto(saved);
 	}
 
 	public void delete(String brandId) throws BrandException {
-		Brand oldBrand = this.findByBrandId(brandId);
+		Brand oldBrand = brandMapper.toEntity(this.findByBrandId(brandId));
 		oldBrand.setDeleted(true);
 
 		oldBrand.setDeletedOn(Instant.now());
@@ -105,13 +116,13 @@ public class BrandService {
 		brandRepository.save(oldBrand);
 	}
 
-	public Brand findByBrandId(String id) throws BrandException {
+	public BrandDto findByBrandId(String id) throws BrandException {
 		Optional<Brand> entity = brandRepository.findByBrandIdAndIsDeletedIsFalse(id);
 		if (entity.isEmpty()) {
 			throw new BrandException(BrandException.BRAND_NOT_FOUND, "Brand not found");
 		}
 
-		return entity.get();
+		return brandMapper.toDto(entity.get());
 	}
 
 	public Page<BrandSearchResult> search(int page, int pageSize, String criteria, boolean includeInactive)
@@ -120,33 +131,35 @@ public class BrandService {
 				includeInactive);
 	}
 
-	public Page<Brand> list(int page, int pageSize, boolean includeInactive) throws BrandException {
+	public Page<BrandDto> list(int page, int pageSize, boolean includeInactive) throws BrandException {
 		if (includeInactive) {
-			return brandRepository.findAllByIsDeletedIsFalse(PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"));
+			return brandRepository.findAllByIsDeletedIsFalse(PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"))
+				.map(b -> brandMapper.toDto(b));
 		}
 
 		return brandRepository
-				.findAllByIsDeletedIsFalseAndIsActiveIsTrue(PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"));
+				.findAllByIsDeletedIsFalseAndIsActiveIsTrue(PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"))
+				.map(b -> brandMapper.toDto(b));
 	}
 
-	public Brand activate(String brandId) throws BrandException {
+	public BrandDto activate(String brandId) throws BrandException {
 
 		Optional<Brand> oldBrand = brandRepository.activate(brandId);
 		if (oldBrand.isEmpty()) {
 			throw new BrandException(BrandException.BRAND_NOT_FOUND, "Brand not found");
 		}
 
-		return oldBrand.get();
+		return brandMapper.toDto(oldBrand.get());
 	}
 
-	public Brand deactivate(String brandId) throws BrandException {
+	public BrandDto deactivate(String brandId) throws BrandException {
 
 		Optional<Brand> oldBrand = brandRepository.deactivate(brandId);
 		if (oldBrand.isEmpty()) {
 			throw new BrandException(BrandException.BRAND_NOT_FOUND, "Brand not found");
 		}
 
-		return oldBrand.get();
+		return brandMapper.toDto(oldBrand.get());
 	}
 	
 	private ModelMapper initBrandMappings(ModelMapper mapper) {

@@ -34,7 +34,6 @@ import com.iso.hypo.gym.admin.papi.dto.post.PostGymDto;
 import com.iso.hypo.gym.admin.papi.dto.put.PutGymDto;
 import com.iso.hypo.gym.admin.papi.dto.search.GymSearchDto;
 import com.iso.hypo.gym.exception.GymException;
-import com.iso.hypo.gym.domain.aggregate.Gym;
 import com.iso.hypo.gym.dto.GymSearchResult;
 import com.iso.hypo.gym.services.GymService;
 
@@ -93,7 +92,7 @@ public class GymController {
 
 	@GetMapping("/brands/{brandId}/gyms")
 	@PreAuthorize("hasRole('" + Roles.Admin + "')")
-	@Operation(summary = "Retrieve a list of gyms")
+	@Operation(summary = "Retrieve a list of brands")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
 					@Content(schema = @Schema(implementation = Page.class), mediaType = "application/json") }),
@@ -106,7 +105,7 @@ public class GymController {
 			@Parameter(description = "includeInactive") @RequestParam(name = "includeInactive", required = false, defaultValue="false") boolean includeInactive,
 			@PathVariable("brandId") String brandId) {
 
-		Page<Gym> entities = null;
+		Page<com.iso.hypo.gym.dto.GymDto> entities = null;
 		try {
 			entities = gymService.list(brandId, page, pageSize, includeInactive);
 		} catch (GymException e) {
@@ -132,8 +131,8 @@ public class GymController {
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "','" + Roles.Member + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> getGym(@PathVariable("gymId") String gymId,
-										 @PathVariable("brandId") String brandId) {
-		Gym entity = null;
+								 @PathVariable("brandId") String brandId) {
+		com.iso.hypo.gym.dto.GymDto entity = null;
 		try {
 			entity = gymService.findByGymId(brandId, gymId);
 		} catch (GymException e) {
@@ -161,11 +160,11 @@ public class GymController {
 	@PreAuthorize("hasRole('" + Roles.Admin + "')")
 	@ResponseStatus(value = HttpStatus.CREATED)
 	public ResponseEntity<Object> createGym(@PathVariable("brandId") String brandId, 
-											@RequestBody PostGymDto request) {
-		Gym entity = modelMapper.map(request, Gym.class);
+							@RequestBody PostGymDto request) {
+		com.iso.hypo.gym.dto.GymDto domainDto = modelMapper.map(request, com.iso.hypo.gym.dto.GymDto.class);
 
 		try {
-			gymService.create(entity);
+			domainDto = gymService.create(domainDto);
 		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 			
@@ -187,8 +186,8 @@ public class GymController {
 		}
 
 		return ResponseEntity.created(
-				ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(entity.getId()).toUri())
-				.body(modelMapper.map(entity, GymDto.class));
+				ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(domainDto.getId()).toUri())
+				.body(modelMapper.map(domainDto, GymDto.class));
 	}
 
 	@PutMapping("/brands/{brandId}/gyms/{gymId}")
@@ -203,12 +202,12 @@ public class GymController {
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> updateGym(@PathVariable("brandId") String brandId,
-										    @PathVariable("gymId") String gymId, 
-											@RequestBody PutGymDto request) {
-		Gym entity = modelMapper.map(request, Gym.class);
+						    @PathVariable("gymId") String gymId, 
+							@RequestBody PutGymDto request) {
+		com.iso.hypo.gym.dto.GymDto domainDto = modelMapper.map(request, com.iso.hypo.gym.dto.GymDto.class);
 		
 		try {
-			entity = gymService.update(entity);
+			domainDto = gymService.update(brandId, domainDto);
 		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
@@ -221,7 +220,7 @@ public class GymController {
 					.body(new ErrorDto(e.getCode(), e.getMessage(), gymId));
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, GymDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, GymDto.class));
 	}
 
 	@PatchMapping("/brands/{brandId}/gyms/{gymId}")
@@ -236,12 +235,12 @@ public class GymController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> patchGym(@PathVariable("gymId") String gymId, 
-										   @PathVariable("brandId") String brandId,
-										   @RequestBody PatchGymDto request) {
-		Gym entity = modelMapper.map(request, Gym.class);
+						   @PathVariable("brandId") String brandId,
+						   @RequestBody PatchGymDto request) {
+		com.iso.hypo.gym.dto.GymDto domainDto = modelMapper.map(request, com.iso.hypo.gym.dto.GymDto.class);
 		
 		try {
-			entity = gymService.patch(entity);
+			domainDto = gymService.patch(brandId, domainDto);
 		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
@@ -254,7 +253,7 @@ public class GymController {
 					.body(new ErrorDto(e.getCode(), e.getMessage(), gymId));
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, GymDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, GymDto.class));
 	}
 
 	
@@ -272,7 +271,7 @@ public class GymController {
 	public ResponseEntity<Object> activateGym(
 			@PathVariable("gymId") String gymId,
 		    @PathVariable("brandId") String brandId) {
-		Gym entity;
+		com.iso.hypo.gym.dto.GymDto entity;
 		
 		try {
 			entity = gymService.activate(brandId, gymId);
@@ -306,7 +305,7 @@ public class GymController {
 			@PathVariable("gymId") String gymId,
 			@PathVariable("brandId") String brandId) {
 		
-		Gym entity;
+		com.iso.hypo.gym.dto.GymDto entity;
 		
 		try {
 			entity = gymService.deactivate(brandId, gymId);

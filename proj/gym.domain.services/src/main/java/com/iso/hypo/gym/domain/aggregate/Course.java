@@ -5,12 +5,10 @@ import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
-
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.iso.hypo.gym.domain.aggregate.Coach;
 import com.iso.hypo.common.domain.BaseEntity;
 import com.iso.hypo.common.domain.LocalizedString;
 import com.mongodb.lang.NonNull;
