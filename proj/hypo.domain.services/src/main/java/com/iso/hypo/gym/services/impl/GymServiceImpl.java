@@ -17,7 +17,7 @@ import com.iso.hypo.gym.domain.aggregate.Gym;
 import com.iso.hypo.common.domain.contact.Contact;
 import com.iso.hypo.common.domain.contact.PhoneNumber;
 import com.iso.hypo.common.domain.location.Address;
-import com.iso.hypo.gym.dto.GymSearchResult;
+import com.iso.hypo.gym.dto.GymSearchDto;
 import com.iso.hypo.gym.dto.GymDto;
 import com.iso.hypo.gym.repository.GymRepository;
 import com.iso.hypo.gym.mappers.GymMapper;
@@ -132,7 +132,7 @@ public class GymServiceImpl implements GymService {
 	}
 
 	@Override
-	public Page<GymSearchResult> search(int page, int pageSize, String criteria, boolean includeInactive)
+	public Page<GymSearchDto> search(int page, int pageSize, String criteria, boolean includeInactive)
 			throws GymException {
 		return gymRepository.searchAutocomplete(criteria, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"),
 				includeInactive);

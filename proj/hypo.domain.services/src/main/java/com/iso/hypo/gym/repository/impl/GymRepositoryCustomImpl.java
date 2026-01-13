@@ -35,7 +35,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 import com.iso.hypo.gym.domain.aggregate.Gym;
-import com.iso.hypo.gym.dto.GymSearchResult;
+import com.iso.hypo.gym.dto.GymSearchDto;
 import com.iso.hypo.gym.repository.GymRepositoryCustom;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.MongoCollection;
@@ -55,7 +55,7 @@ public class GymRepositoryCustomImpl implements GymRepositoryCustom {
 	}
 
 	@Override
-	public Page<GymSearchResult> searchAutocomplete(String criteria, Pageable pageable, boolean includeInactive) {
+	public Page<GymSearchDto> searchAutocomplete(String criteria, Pageable pageable, boolean includeInactive) {
 
 		MongoCollection<Document> collection = mongoTemplate.getCollection("gym");
 
@@ -134,7 +134,7 @@ public class GymRepositoryCustomImpl implements GymRepositoryCustom {
 		
 		// String query = searchStage.toJson();
 		// Create a pipeline that searches, projects, and limits the number of results returned.
-		AggregateIterable<GymSearchResult> aggregationResults = collection.aggregate(
+		AggregateIterable<GymSearchDto> aggregationResults = collection.aggregate(
 				Arrays.asList(searchStage,
 						project(fields(excludeId(), include("brandId", "gymId", "name", "address", "email", "isActive"),
 								metaSearchScore("score"),
@@ -142,10 +142,10 @@ public class GymRepositoryCustomImpl implements GymRepositoryCustom {
 						sort(Sorts.ascending("name")),
 						skip(pageable.getPageNumber() * pageable.getPageSize()),
 						limit(searchLimit)),
-				GymSearchResult.class);
+				GymSearchDto.class);
 		
-		List<GymSearchResult> searchResults = StreamSupport.stream(aggregationResults.spliterator(), false).collect(Collectors.toList());
-		return new PageImpl<GymSearchResult>(searchResults, pageable, searchResults.size());
+		List<GymSearchDto> searchResults = StreamSupport.stream(aggregationResults.spliterator(), false).collect(Collectors.toList());
+		return new PageImpl<GymSearchDto>(searchResults, pageable, searchResults.size());
 	}
 	
 	@Override

@@ -34,7 +34,6 @@ import com.iso.hypo.gym.admin.papi.dto.post.PostGymDto;
 import com.iso.hypo.gym.admin.papi.dto.put.PutGymDto;
 import com.iso.hypo.gym.admin.papi.dto.search.GymSearchDto;
 import com.iso.hypo.gym.exception.GymException;
-import com.iso.hypo.gym.dto.GymSearchResult;
 import com.iso.hypo.gym.services.GymService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -77,7 +76,7 @@ public class GymController {
 			@Parameter(description = "includeInactive") @RequestParam(name = "includeInactive", required = false, defaultValue="false") boolean includeInactive,
 			@PathVariable("brandId") String brandId) {
 
-		Page<GymSearchResult> entities = null;
+		Page<com.iso.hypo.gym.dto.GymSearchDto> entities = null;
 		try {
 			entities = gymService.search(page, pageSize, criteria, includeInactive);
 		} catch (GymException e) {

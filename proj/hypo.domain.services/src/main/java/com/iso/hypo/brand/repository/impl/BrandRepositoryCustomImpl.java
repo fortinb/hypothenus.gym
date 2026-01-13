@@ -34,7 +34,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-import com.iso.hypo.brand.dto.BrandSearchResult;
+import com.iso.hypo.brand.dto.BrandSearchDto;
 import com.iso.hypo.brand.domain.aggregate.Brand;
 import com.iso.hypo.brand.repository.BrandRepositoryCustom;
 import com.mongodb.client.AggregateIterable;
@@ -55,7 +55,7 @@ public class BrandRepositoryCustomImpl implements BrandRepositoryCustom {
 	}
 
 	@Override
-	public Page<BrandSearchResult> searchAutocomplete(String criteria, Pageable pageable, boolean includeInactive) {
+	public Page<BrandSearchDto> searchAutocomplete(String criteria, Pageable pageable, boolean includeInactive) {
 
 		MongoCollection<Document> collection = mongoTemplate.getCollection("brand");
 
@@ -130,7 +130,7 @@ public class BrandRepositoryCustomImpl implements BrandRepositoryCustom {
 		
 		// String query = searchStage.toJson();
 		// Create a pipeline that searches, projects, and limits the number of results returned.
-		AggregateIterable<BrandSearchResult> aggregationResults = collection.aggregate(
+		AggregateIterable<BrandSearchDto> aggregationResults = collection.aggregate(
 				Arrays.asList(searchStage,
 						project(fields(excludeId(), include("brandId", "name", "address", "email", "isActive"),
 								metaSearchScore("score"),
@@ -138,10 +138,10 @@ public class BrandRepositoryCustomImpl implements BrandRepositoryCustom {
 						sort(Sorts.ascending("name")),
 						skip(pageable.getPageNumber() * pageable.getPageSize()),
 						limit(searchLimit)),
-				BrandSearchResult.class);
+				BrandSearchDto.class);
 		
-		List<BrandSearchResult> searchResults = StreamSupport.stream(aggregationResults.spliterator(), false).collect(Collectors.toList());
-		return new PageImpl<BrandSearchResult>(searchResults, pageable, searchResults.size());
+		List<BrandSearchDto> searchResults = StreamSupport.stream(aggregationResults.spliterator(), false).collect(Collectors.toList());
+		return new PageImpl<BrandSearchDto>(searchResults, pageable, searchResults.size());
 	}
 	
 	@Override

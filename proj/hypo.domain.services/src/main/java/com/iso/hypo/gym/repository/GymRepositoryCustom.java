@@ -6,11 +6,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.iso.hypo.gym.domain.aggregate.Gym;
-import com.iso.hypo.gym.dto.GymSearchResult;
+import com.iso.hypo.gym.dto.GymSearchDto;
 
 public interface GymRepositoryCustom {
 
-	Page<GymSearchResult> searchAutocomplete(String criteria, Pageable pageable, boolean includeInactive);
+	Page<GymSearchDto> searchAutocomplete(String criteria, Pageable pageable, boolean includeInactive);
 	
 	Optional<Gym> activate(String brandId, String gymId);
 	

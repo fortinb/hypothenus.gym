@@ -5,12 +5,12 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import com.iso.hypo.brand.dto.BrandSearchResult;
+import com.iso.hypo.brand.dto.BrandSearchDto;
 import com.iso.hypo.brand.domain.aggregate.Brand;
 
 public interface BrandRepositoryCustom {
 
-	Page<BrandSearchResult> searchAutocomplete(String criteria, Pageable pageable, boolean includeInactive);
+	Page<BrandSearchDto> searchAutocomplete(String criteria, Pageable pageable, boolean includeInactive);
 	
 	Optional<Brand> activate(String brandId);
 	

@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import com.iso.hypo.common.context.RequestContext;
 import com.iso.hypo.brand.exception.BrandException;
 import com.iso.hypo.brand.dto.BrandDto;
-import com.iso.hypo.brand.dto.BrandSearchResult;
+import com.iso.hypo.brand.dto.BrandSearchDto;
 import com.iso.hypo.brand.domain.aggregate.Brand;
 import com.iso.hypo.common.domain.contact.Contact;
 import com.iso.hypo.common.domain.contact.PhoneNumber;
@@ -132,7 +132,7 @@ public class BrandServiceImpl implements BrandService {
 	}
 
 	@Override
-	public Page<BrandSearchResult> search(int page, int pageSize, String criteria, boolean includeInactive)
+	public Page<BrandSearchDto> search(int page, int pageSize, String criteria, boolean includeInactive)
 			throws BrandException {
 		return brandRepository.searchAutocomplete(criteria, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"),
 				includeInactive);

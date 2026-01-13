@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.iso.hypo.brand.dto.BrandSearchResult;
 import com.iso.hypo.brand.exception.BrandException;
 import com.iso.hypo.brand.services.BrandService;
 import com.iso.hypo.gym.admin.papi.config.security.Roles;
@@ -76,7 +75,7 @@ public class BrandController {
 			@Parameter(description = "page size") @RequestParam(name = "pageSize", required = true) int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(name = "includeInactive", required = false, defaultValue="false") boolean includeInactive) {
 
-		Page<BrandSearchResult> entities = null;
+		Page<com.iso.hypo.brand.dto.BrandSearchDto> entities = null;
 		try {
 			entities = brandService.search(page, pageSize, criteria, includeInactive);
 		} catch (BrandException e) {

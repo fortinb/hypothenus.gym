@@ -1,4 +1,4 @@
-package com.iso.hypo.brand.dto;
+package com.iso.hypo.gym.dto;
 
 import com.iso.hypo.common.domain.location.Address;
 
@@ -7,10 +7,12 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class BrandSearchResult {
+public class GymSearchDto {
 	
 	private String brandId;
 
+	private String gymId;
+	
 	private String name;
 	
 	private String email;

@@ -3,7 +3,7 @@ package com.iso.hypo.brand.services;
 import org.springframework.data.domain.Page;
 
 import com.iso.hypo.brand.dto.BrandDto;
-import com.iso.hypo.brand.dto.BrandSearchResult;
+import com.iso.hypo.brand.dto.BrandSearchDto;
 import com.iso.hypo.brand.exception.BrandException;
 
 public interface BrandService {
@@ -18,7 +18,7 @@ public interface BrandService {
 
     BrandDto findByBrandId(String id) throws BrandException;
 
-    Page<BrandSearchResult> search(int page, int pageSize, String criteria, boolean includeInactive) throws BrandException;
+    Page<BrandSearchDto> search(int page, int pageSize, String criteria, boolean includeInactive) throws BrandException;
 
     Page<BrandDto> list(int page, int pageSize, boolean includeInactive) throws BrandException;
 
