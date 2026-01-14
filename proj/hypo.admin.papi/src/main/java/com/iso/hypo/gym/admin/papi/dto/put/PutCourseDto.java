@@ -15,7 +15,7 @@ import lombok.Setter;
 public class PutCourseDto {
 	
 	@NotBlank
-	private String id;
+	private String uuid;
 	
 	@NotBlank
 	private String brandId;

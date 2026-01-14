@@ -11,7 +11,7 @@ import com.iso.hypo.member.domain.aggregate.Membership;
 
 public interface MembershipRepository extends PagingAndSortingRepository<Membership, String>, CrudRepository<Membership, String>, MembershipRepositoryCustom {
 	
-	Optional<Membership> findByBrandIdAndIdAndIsDeletedIsFalse(String brandId, String id);
+	Optional<Membership> findByBrandIdAndUuidAndIsDeletedIsFalse(String brandId, String membershipUuid);
 	
 	Page<Membership> findAllByBrandIdAndIsDeletedIsFalse(String brandId, Pageable pageable);
 	

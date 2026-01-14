@@ -1,6 +1,7 @@
 package com.iso.hypo.member.domain.aggregate;
 
 import java.time.Instant;
+import java.util.UUID;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -22,6 +23,9 @@ public class Member extends BaseEntity {
 
 	@Id
 	private String id;
+	
+	@Indexed
+	private String uuid = UUID.randomUUID().toString();
 
 	@Indexed
 	@NonNull

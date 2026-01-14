@@ -13,7 +13,7 @@ import lombok.Setter;
 @Setter
 public class CourseDto extends BaseDto {
 	
-	private String id;
+	private String uuid;
 	
 	private String brandId;
 

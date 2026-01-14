@@ -19,7 +19,7 @@ import lombok.Setter;
 public class PutMembershipPlanDto {
 	
 	@NotBlank
-	private String id;
+	private String uuid;
 	
 	@NotBlank
 	private String brandId;

@@ -104,12 +104,12 @@ class CourseControllerTests {
 
 		for (int i = 0; i < 5; i++) {
 			Coach coach = CoachBuilder.build(brandId_FitnessBoxing, gymId_Boucherville);
-			coachRepository.save(coach);
+			coach = coachRepository.save(coach);
 			coachs.add(coach);
 		}
 		
 		course = CourseBuilder.build(brandId_FitnessBoxing, gymId_Boucherville, coachs);
-		courseRepository.save(course);
+		course = courseRepository.save(course);
 
 		courseIsDeleted = CourseBuilder.build(brandId_CrossfitExtreme, gymId_Boucherville, coachs);
 		courseIsDeleted.setDeleted(true);
@@ -117,13 +117,13 @@ class CourseControllerTests {
 
 		for (int i = 0; i < 10; i++) {
 			Course item = CourseBuilder.build(brandId_CrossfitExtreme, gymId_Boucherville, coachs);
-			courseRepository.save(item);
+			item = courseRepository.save(item);
 			courses.add(item);
 		}
 
 		for (int i = 0; i < 4; i++) {
 			Course item = CourseBuilder.build(brandId_CrossfitExtreme, gymId_Longueuil, null);
-			courseRepository.save(item);
+			item = courseRepository.save(item);
 			courses.add(item);
 		}
 
@@ -309,7 +309,7 @@ class CourseControllerTests {
 		// Act
 		httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		ResponseEntity<CourseDto> response = restTemplate.exchange(HttpUtils
-				.createURL(URI.create(String.format(getURI, brandId_FitnessBoxing, gymId_Boucherville, responsePost.getBody().getId())), port, null),
+				.createURL(URI.create(String.format(getURI, brandId_FitnessBoxing, gymId_Boucherville, responsePost.getBody().getUuid())), port, null),
 				HttpMethod.GET, httpEntity, CourseDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -329,18 +329,18 @@ class CourseControllerTests {
 		courseToUpdate = courseRepository.save(courseToUpdate);
 
 		Course updatedCourse = CourseBuilder.build(brandId_FitnessBoxing, gymId_Boucherville, coachs);
-		updatedCourse.setId(courseToUpdate.getId());
+		updatedCourse.setUuid(courseToUpdate.getUuid());
 		updatedCourse.setActive(false);
 		updatedCourse.setActivatedOn(null);
 		updatedCourse.setDeactivatedOn(null);
 
 		PutCourseDto putCourse = modelMapper.map(updatedCourse, PutCourseDto.class);
-		putCourse.setId(courseToUpdate.getId());
+		putCourse.setUuid(courseToUpdate.getUuid());
 
 		// Act
 		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, putCourse);
 		ResponseEntity<CourseDto> response = restTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, brandId_FitnessBoxing, gymId_Boucherville, putCourse.getId())), port, null),
+				HttpUtils.createURL(URI.create(String.format(putURI, brandId_FitnessBoxing, gymId_Boucherville, putCourse.getUuid())), port, null),
 				HttpMethod.PUT, httpEntity, CourseDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -364,7 +364,7 @@ class CourseControllerTests {
 		PutCourseDto courseToUpdateDto = modelMapper.map(courseToUpdate, PutCourseDto.class);
 		
 		PutCourseDto putCourse = modelMapper.map(updatedCourse, PutCourseDto.class);
-		putCourse.setId(courseToUpdate.getId());
+		putCourse.setUuid(courseToUpdate.getUuid());
 		putCourse.setCode(courseToUpdateDto.getCode());
 		putCourse.setName(courseToUpdateDto.getName());
 		putCourse.setDescription(null);
@@ -372,7 +372,7 @@ class CourseControllerTests {
 		// Act
 		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, putCourse);
 		ResponseEntity<CourseDto> response = restTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, brandId_FitnessBoxing, gymId_Boucherville, putCourse.getId())), port, null),
+				HttpUtils.createURL(URI.create(String.format(putURI, brandId_FitnessBoxing, gymId_Boucherville, putCourse.getUuid())), port, null),
 				HttpMethod.PUT, httpEntity, CourseDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -400,7 +400,7 @@ class CourseControllerTests {
 		// Act
 		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		ResponseEntity<CourseDto> response = restTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postActivateURI, brandId_FitnessBoxing, gymId_Boucherville, courseToActivate.getId())),
+				HttpUtils.createURL(URI.create(String.format(postActivateURI, brandId_FitnessBoxing, gymId_Boucherville, courseToActivate.getUuid())),
 						port, null),
 				HttpMethod.POST, httpEntity, CourseDto.class);
 
@@ -440,7 +440,7 @@ class CourseControllerTests {
 		// Act
 		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		ResponseEntity<CourseDto> response = restTemplate.exchange(HttpUtils.createURL(
-				URI.create(String.format(postDeactivateURI, brandId_FitnessBoxing, gymId_Boucherville, courseToDeactivate.getId())), port, null),
+				URI.create(String.format(postDeactivateURI, brandId_FitnessBoxing, gymId_Boucherville, courseToDeactivate.getUuid())), port, null),
 				HttpMethod.POST, httpEntity, CourseDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -472,14 +472,14 @@ class CourseControllerTests {
 		courseToPatch = courseRepository.save(courseToPatch);
 
 		PatchCourseDto patchCourse = modelMapper.map(courseToPatch, PatchCourseDto.class);
-		patchCourse.setId(courseToPatch.getId());
+		patchCourse.setUuid(courseToPatch.getUuid());
 		patchCourse.setDescription(null);
 		patchCourse.setName(null);
 
 		// Act
 		HttpEntity<PatchCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchCourse);
 		ResponseEntity<CourseDto> response = restTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(patchURI, brandId_FitnessBoxing, gymId_Boucherville, patchCourse.getId())), port, null),
+				HttpUtils.createURL(URI.create(String.format(patchURI, brandId_FitnessBoxing, gymId_Boucherville, patchCourse.getUuid())), port, null),
 				HttpMethod.PATCH, httpEntity, CourseDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -493,8 +493,8 @@ class CourseControllerTests {
 	}
 
 	public static final void assertCourse(CourseDto expected, CourseDto result) {
-		if (expected.getId() != null) {
-			Assertions.assertEquals(expected.getId(), result.getId());
+		if (expected.getUuid() != null) {
+			Assertions.assertEquals(expected.getUuid(), result.getUuid());
 		}
 		
 		Assertions.assertEquals(expected.getBrandId(), result.getBrandId());

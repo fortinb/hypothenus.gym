@@ -56,7 +56,7 @@ public class BrandServiceImpl implements BrandService {
 	@Override
 	public BrandDto update(BrandDto brandDto) throws BrandException {
 		Brand brand = brandMapper.toEntity(brandDto);
-		Brand oldBrand = this.brandMapper.toEntity(this.findByBrandId(brand.getBrandId()));
+		Brand oldBrand = this.readByBrandId(brand.getBrandId());
 
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration()
@@ -85,7 +85,7 @@ public class BrandServiceImpl implements BrandService {
 	@Override
 	public BrandDto patch(BrandDto brandDto) throws BrandException {
 		Brand brand = brandMapper.toEntity(brandDto);
-		Brand oldBrand = this.brandMapper.toEntity(this.findByBrandId(brand.getBrandId()));
+		Brand oldBrand = this.readByBrandId(brand.getBrandId());
 
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(true);
@@ -112,7 +112,7 @@ public class BrandServiceImpl implements BrandService {
 
 	@Override
 	public void delete(String brandId) throws BrandException {
-		Brand oldBrand = brandMapper.toEntity(this.findByBrandId(brandId));
+		Brand oldBrand = this.readByBrandId(brandId);
 		oldBrand.setDeleted(true);
 
 		oldBrand.setDeletedOn(Instant.now());
@@ -123,12 +123,7 @@ public class BrandServiceImpl implements BrandService {
 
 	@Override
 	public BrandDto findByBrandId(String id) throws BrandException {
-		Optional<Brand> entity = brandRepository.findByBrandIdAndIsDeletedIsFalse(id);
-		if (entity.isEmpty()) {
-			throw new BrandException(BrandException.BRAND_NOT_FOUND, "Brand not found");
-		}
-
-		return brandMapper.toDto(entity.get());
+		return brandMapper.toDto(this.readByBrandId(id));
 	}
 
 	@Override
@@ -152,7 +147,6 @@ public class BrandServiceImpl implements BrandService {
 
 	@Override
 	public BrandDto activate(String brandId) throws BrandException {
-
 		Optional<Brand> oldBrand = brandRepository.activate(brandId);
 		if (oldBrand.isEmpty()) {
 			throw new BrandException(BrandException.BRAND_NOT_FOUND, "Brand not found");
@@ -163,7 +157,6 @@ public class BrandServiceImpl implements BrandService {
 
 	@Override
 	public BrandDto deactivate(String brandId) throws BrandException {
-
 		Optional<Brand> oldBrand = brandRepository.deactivate(brandId);
 		if (oldBrand.isEmpty()) {
 			throw new BrandException(BrandException.BRAND_NOT_FOUND, "Brand not found");
@@ -172,9 +165,16 @@ public class BrandServiceImpl implements BrandService {
 		return brandMapper.toDto(oldBrand.get());
 	}
 	
+	private Brand readByBrandId(String id) throws BrandException {
+		Optional<Brand> entity = brandRepository.findByBrandIdAndIsDeletedIsFalse(id);
+		if (entity.isEmpty()) {
+			throw new BrandException(BrandException.BRAND_NOT_FOUND, "Brand not found");
+		}
+
+		return entity.get();
+	}
+	
 	private ModelMapper initBrandMappings(ModelMapper mapper) {
-		
-		
 		PropertyMap<Address, Address> addressPropertyMap = new PropertyMap<Address, Address>() {
 			@Override
 			protected void configure() {

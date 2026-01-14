@@ -13,13 +13,13 @@ public interface CoachService {
 
     CoachDto patch(String brandId, String gymId, CoachDto coachDto) throws GymException;
 
-    void delete(String brandId, String gymId, String coachId) throws GymException;
+    void delete(String brandId, String gymId, String coachUuid) throws GymException;
 
-    CoachDto findByCoachId(String brandId, String gymId, String id) throws GymException;
+    CoachDto findByCoachUuid(String brandId, String gymId, String coachUuid) throws GymException;
 
     Page<CoachDto> list(String brandId, String gymId, int page, int pageSize, boolean includeInactive) throws GymException;
 
-    CoachDto activate(String brandId, String gymId, String id) throws GymException;
+    CoachDto activate(String brandId, String gymId, String coachUuid) throws GymException;
 
-    CoachDto deactivate(String brandId, String gymId, String id) throws GymException;
+    CoachDto deactivate(String brandId, String gymId, String coachUuid) throws GymException;
 }

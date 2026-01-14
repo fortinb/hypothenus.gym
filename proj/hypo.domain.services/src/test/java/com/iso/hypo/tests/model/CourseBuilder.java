@@ -4,6 +4,7 @@ import java.sql.Date;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import com.github.javafaker.Faker;
 import com.iso.hypo.common.domain.LocalizedString;
@@ -18,6 +19,7 @@ public class CourseBuilder {
 		Course entity = new Course(brandId, gymId, faker.code().isbn10(), buildName(), buildDescription(),
 				coachs, Date.from(Instant.now()), Date.from(Instant.now()),
 				 true, Instant.now(), null);
+		entity.setUuid(UUID.randomUUID().toString());
 		return entity;
 	}
 

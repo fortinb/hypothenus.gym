@@ -15,9 +15,6 @@ import lombok.Setter;
 public class PatchBrandDto {
 	
 	@NotBlank
-	private String id;
-	
-	@NotBlank
 	private String brandId;
 	
 	private String name;

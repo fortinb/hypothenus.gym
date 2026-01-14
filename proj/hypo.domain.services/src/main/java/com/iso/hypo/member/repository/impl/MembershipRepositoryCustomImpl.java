@@ -21,11 +21,11 @@ public class MembershipRepositoryCustomImpl implements MembershipRepositoryCusto
 	}
 
 	@Override
-	public Optional<Membership> activate(String brandId, String id) {
+	public Optional<Membership> activate(String brandId, String membershipUuid) {
 
 		Query query = new Query(
 	            Criteria.where("brandId").is(brandId)
-	            		  .and("_id").is(id));
+	            		  .and("uuid").is(membershipUuid));
 		
 		Update update = new Update()
 				.set("isActive", true)
@@ -37,10 +37,10 @@ public class MembershipRepositoryCustomImpl implements MembershipRepositoryCusto
 	}
 
 	@Override
-	public Optional<Membership> deactivate(String brandId, String id) {
+	public Optional<Membership> deactivate(String brandId, String membershipUuid) {
 		Query query = new Query(
 	            Criteria.where("brandId").is(brandId)
-	            		  .and("_id").is(id));
+	            		  .and("uuid").is(membershipUuid));
 		
 		Update update = new Update()
 				.set("isActive", false)

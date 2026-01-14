@@ -238,8 +238,8 @@ class MembershipPlanControllerTests {
 				HttpUtils.createURL(URI.create(String.format(postURI, brandId_FitnessBoxing)), port, null), HttpMethod.POST,
 				httpEntity, MembershipPlanDto.class);
 
-				String.format("Post error: %s", response.getStatusCode());
-
+		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
+				String.format("List error: %s", response.getStatusCode()));
 		assertMembershipPlan(modelMapper.map(postMembershipPlan, MembershipPlanDto.class), response.getBody());
 	}
 
@@ -261,7 +261,7 @@ class MembershipPlanControllerTests {
 		// Act
 		httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		ResponseEntity<MembershipPlanDto> response = restTemplate.exchange(HttpUtils
-				.createURL(URI.create(String.format(getURI, brandId_FitnessBoxing, responsePost.getBody().getId())), port, null),
+				.createURL(URI.create(String.format(getURI, brandId_FitnessBoxing, responsePost.getBody().getUuid())), port, null),
 				HttpMethod.GET, httpEntity, MembershipPlanDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -281,18 +281,18 @@ class MembershipPlanControllerTests {
 		membershipPlanToUpdate = membershipPlanRepository.save(membershipPlanToUpdate);
 
 		MembershipPlan updatedMembershipPlan = MembershipPlanBuilder.build(brandId_FitnessBoxing);
-		updatedMembershipPlan.setId(membershipPlanToUpdate.getId());
+		updatedMembershipPlan.setUuid(membershipPlanToUpdate.getUuid());
 		updatedMembershipPlan.setActive(false);
 		updatedMembershipPlan.setActivatedOn(null);
 		updatedMembershipPlan.setDeactivatedOn(null);
 
 		PutMembershipPlanDto putMembershipPlan = modelMapper.map(updatedMembershipPlan, PutMembershipPlanDto.class);
-		putMembershipPlan.setId(membershipPlanToUpdate.getId());
+		putMembershipPlan.setUuid(membershipPlanToUpdate.getUuid());
 
 		// Act
 		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, putMembershipPlan);
 		ResponseEntity<MembershipPlanDto> response = restTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, brandId_FitnessBoxing, putMembershipPlan.getId())), port, null),
+				HttpUtils.createURL(URI.create(String.format(putURI, brandId_FitnessBoxing, putMembershipPlan.getUuid())), port, null),
 				HttpMethod.PUT, httpEntity, MembershipPlanDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -312,7 +312,7 @@ class MembershipPlanControllerTests {
 		membershipPlanToUpdate = membershipPlanRepository.save(membershipPlanToUpdate);
 
 		MembershipPlan updatedMembershipPlan = MembershipPlanBuilder.build(brandId_FitnessBoxing);
-		updatedMembershipPlan.setId(membershipPlanToUpdate.getId());
+		updatedMembershipPlan.setUuid(membershipPlanToUpdate.getUuid());
 		updatedMembershipPlan.setCode(membershipPlanToUpdate.getCode());
 		updatedMembershipPlan.setActive(false);
 		updatedMembershipPlan.setActivatedOn(null);
@@ -320,7 +320,7 @@ class MembershipPlanControllerTests {
 		
 		PutMembershipPlanDto membershipPlanToUpdateDto = modelMapper.map(membershipPlanToUpdate, PutMembershipPlanDto.class);
 		PutMembershipPlanDto putMembershipPlan = modelMapper.map(updatedMembershipPlan, PutMembershipPlanDto.class);
-		putMembershipPlan.setId(membershipPlanToUpdate.getId());
+		putMembershipPlan.setUuid(membershipPlanToUpdate.getUuid());
 		putMembershipPlan.setCode(membershipPlanToUpdateDto.getCode());
 		putMembershipPlan.setDescription(null);
 		putMembershipPlan.setName(null);
@@ -328,7 +328,7 @@ class MembershipPlanControllerTests {
 		// Act
 		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, putMembershipPlan);
 		ResponseEntity<MembershipPlanDto> response = restTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, brandId_FitnessBoxing, putMembershipPlan.getId())), port, null),
+				HttpUtils.createURL(URI.create(String.format(putURI, brandId_FitnessBoxing, putMembershipPlan.getUuid())), port, null),
 				HttpMethod.PUT, httpEntity, MembershipPlanDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -357,7 +357,7 @@ class MembershipPlanControllerTests {
 		// Act
 		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		ResponseEntity<MembershipPlanDto> response = restTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postActivateURI, brandId_FitnessBoxing, membershipPlanToActivate.getId())),
+				HttpUtils.createURL(URI.create(String.format(postActivateURI, brandId_FitnessBoxing, membershipPlanToActivate.getUuid())),
 						port, null),
 				HttpMethod.POST, httpEntity, MembershipPlanDto.class);
 
@@ -397,7 +397,7 @@ class MembershipPlanControllerTests {
 		// Act
 		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		ResponseEntity<MembershipPlanDto> response = restTemplate.exchange(HttpUtils.createURL(
-				URI.create(String.format(postDeactivateURI, brandId_FitnessBoxing, membershipPlanToDeactivate.getId())), port, null),
+				URI.create(String.format(postDeactivateURI, brandId_FitnessBoxing, membershipPlanToDeactivate.getUuid())), port, null),
 				HttpMethod.POST, httpEntity, MembershipPlanDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -429,14 +429,14 @@ class MembershipPlanControllerTests {
 		membershipPlanToPatch = membershipPlanRepository.save(membershipPlanToPatch);
 
 		PatchMembershipPlanDto patchMembershipPlan = modelMapper.map(membershipPlanToPatch, PatchMembershipPlanDto.class);
-		patchMembershipPlan.setId(membershipPlanToPatch.getId());
+		patchMembershipPlan.setUuid(membershipPlanToPatch.getUuid());
 		patchMembershipPlan.setDescription(null);
 		patchMembershipPlan.setName(null);
 
 		// Act
 		HttpEntity<PatchMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchMembershipPlan);
 		ResponseEntity<MembershipPlanDto> response = restTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(patchURI, brandId_FitnessBoxing, patchMembershipPlan.getId())), port, null),
+				HttpUtils.createURL(URI.create(String.format(patchURI, brandId_FitnessBoxing, patchMembershipPlan.getUuid())), port, null),
 				HttpMethod.PATCH, httpEntity, MembershipPlanDto.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -448,8 +448,8 @@ class MembershipPlanControllerTests {
 	}
 
 	public static final void assertMembershipPlan(MembershipPlanDto expected, MembershipPlanDto result) {
-		if (expected.getId() != null) {
-			Assertions.assertEquals(expected.getId(), result.getId());
+		if (expected.getUuid() != null) {
+			Assertions.assertEquals(expected.getUuid(), result.getUuid());
 		}
 		
 		Assertions.assertEquals(expected.getBrandId(), result.getBrandId());

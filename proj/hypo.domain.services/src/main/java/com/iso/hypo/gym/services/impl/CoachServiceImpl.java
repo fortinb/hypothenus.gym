@@ -2,6 +2,7 @@ package com.iso.hypo.gym.services.impl;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
@@ -49,6 +50,7 @@ public class CoachServiceImpl implements CoachService {
 			throw new GymException(GymException.INVALID_GYM, "Invalid gym");
 		}
 
+		coach.setUuid(UUID.randomUUID().toString());
 		coach.setCreatedOn(Instant.now());
 		coach.setCreatedBy(requestContext.getUsername());
 
@@ -67,7 +69,7 @@ public class CoachServiceImpl implements CoachService {
 			throw new GymException(GymException.INVALID_GYM, "Invalid gym");
 		}
 
-		Coach oldCoach = this.gymMapper.toEntity(this.findByCoachId(brandId, gymId, coach.getId()));
+		Coach oldCoach = this.readByCoachUuid(brandId, gymId, coach.getUuid());
 
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(false);
@@ -89,7 +91,7 @@ public class CoachServiceImpl implements CoachService {
 			throw new GymException(GymException.INVALID_BRAND, "Invalid gym");
 		}
 		
-		Coach oldCoach = this.gymMapper.toEntity(this.findByCoachId(brandId, gymId, coach.getId()));
+		Coach oldCoach = this.readByCoachUuid(brandId, gymId, coach.getUuid());
 
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(true);
@@ -105,19 +107,19 @@ public class CoachServiceImpl implements CoachService {
 	}
 
 	@Override
-	public void delete(String brandId, String gymId, String coachId) throws GymException {
-		Coach oldCoach = gymMapper.toEntity(this.findByCoachId(brandId, gymId, coachId));
-		oldCoach.setDeleted(true);
+	public void delete(String brandId, String gymId, String coachUuid) throws GymException {
+		Coach entity = this.readByCoachUuid(brandId, gymId, coachUuid);
+		entity.setDeleted(true);
 
-		oldCoach.setDeletedOn(Instant.now());
-		oldCoach.setDeletedBy(requestContext.getUsername());
+		entity.setDeletedOn(Instant.now());
+		entity.setDeletedBy(requestContext.getUsername());
 		
-		coachRepository.save(oldCoach);
+		coachRepository.save(entity);
 	}
 
 	@Override
-	public CoachDto findByCoachId(String brandId, String gymId, String id) throws GymException {
-		Optional<Coach> entity = coachRepository.findByBrandIdAndGymIdAndIdAndIsDeletedIsFalse(brandId, gymId, id);
+	public CoachDto findByCoachUuid(String brandId, String gymId, String coachUuid) throws GymException {
+		Optional<Coach> entity = coachRepository.findByBrandIdAndGymIdAndUuidAndIsDeletedIsFalse(brandId, gymId, coachUuid);
 		if (entity.isEmpty()) {
 			throw new GymException(GymException.COACH_NOT_FOUND, "Coach not found");
 		}
@@ -135,25 +137,32 @@ public class CoachServiceImpl implements CoachService {
 	}
 
 	@Override
-	public CoachDto activate(String brandId, String gymId, String id) throws GymException {
-		
-		Optional<Coach> oldCoach = coachRepository.activate(brandId, gymId, id);
-		if (oldCoach.isEmpty()) {
+	public CoachDto activate(String brandId, String gymId, String coachUuid) throws GymException {
+		Optional<Coach> entity = coachRepository.activate(brandId, gymId, coachUuid);
+		if (entity.isEmpty()) {
 			throw new GymException(GymException.COACH_NOT_FOUND, "Coach not found");
 		}
 		
-		return gymMapper.toDto(oldCoach.get());
+		return gymMapper.toDto(entity.get());
 	}
 	
 	@Override
-	public CoachDto deactivate(String brandId, String gymId, String id) throws GymException {
-		
-		Optional<Coach> oldCoach = coachRepository.deactivate(brandId, gymId, id);
-		if (oldCoach.isEmpty()) {
+	public CoachDto deactivate(String brandId, String gymId, String coachUuid) throws GymException {
+		Optional<Coach> entity = coachRepository.deactivate(brandId, gymId, coachUuid);
+		if (entity.isEmpty()) {
 			throw new GymException(GymException.COACH_NOT_FOUND, "Coach not found");
 		}
 		
-		return gymMapper.toDto(oldCoach.get());
+		return gymMapper.toDto(entity.get());
+	}
+	
+	private Coach readByCoachUuid(String brandId, String gymId, String coachUuid) throws GymException {
+		Optional<Coach> entity = coachRepository.findByBrandIdAndGymIdAndUuidAndIsDeletedIsFalse(brandId, gymId, coachUuid);
+		if (entity.isEmpty()) {
+			throw new GymException(GymException.COACH_NOT_FOUND, "Coach not found");
+		}
+
+		return entity.get();
 	}
 	
 	private ModelMapper initCoachMappings(ModelMapper mapper) {

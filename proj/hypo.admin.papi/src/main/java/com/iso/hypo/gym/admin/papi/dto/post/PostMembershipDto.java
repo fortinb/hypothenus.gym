@@ -13,8 +13,6 @@ import lombok.Setter;
 @Setter
 public class PostMembershipDto {
 
-    private String id;
-
     @NotBlank
     private String brandId;
 

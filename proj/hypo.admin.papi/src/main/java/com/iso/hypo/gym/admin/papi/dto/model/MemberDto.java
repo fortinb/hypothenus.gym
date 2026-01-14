@@ -10,7 +10,7 @@ import lombok.Setter;
 @Setter
 public class MemberDto extends BaseDto {
 
-    private String id;
+    private String uuid;
 
     private String brandId;
 

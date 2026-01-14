@@ -6,7 +6,7 @@ import com.iso.hypo.gym.domain.aggregate.Course;
 
 public interface CourseRepositoryCustom {
 
-	Optional<Course> activate(String brandId, String gymId, String id);
+	Optional<Course> activate(String brandId, String gymId, String courseUuid);
 	
-	Optional<Course> deactivate(String brandId, String gymId, String id);
+	Optional<Course> deactivate(String brandId, String gymId, String courseUuid);
 }

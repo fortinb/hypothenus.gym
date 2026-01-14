@@ -21,12 +21,12 @@ public class CoachRepositoryCustomImpl implements CoachRepositoryCustom {
 	}
 
 	@Override
-	public Optional<Coach> activate(String brandId, String gymId, String id) {
+	public Optional<Coach> activate(String brandId, String gymId, String coachUuid) {
 		
 		Query query = new Query(
 	            Criteria.where("brandId").is(brandId)
 	            		  .and("gymId").is(gymId)
-	            		  .and("_id").is(id));
+	            		  .and("uuid").is(coachUuid));
 		
 		Update update = new Update()
 					.set("isActive", true)
@@ -38,11 +38,11 @@ public class CoachRepositoryCustomImpl implements CoachRepositoryCustom {
 	}
 
 	@Override
-	public Optional<Coach> deactivate(String brandId, String gymId, String id) {
+	public Optional<Coach> deactivate(String brandId, String gymId, String coachUuid) {
 		Query query = new Query(
 				  Criteria.where("brandId").is(brandId)
         		  .and("gymId").is(gymId)
-        		  .and("_id").is(id));
+        		  .and("uuid").is(coachUuid));
 		
 		Update update = new Update()
 					.set("isActive", false)

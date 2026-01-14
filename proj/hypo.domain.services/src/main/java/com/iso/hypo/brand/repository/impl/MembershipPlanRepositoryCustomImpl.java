@@ -21,32 +21,32 @@ public class MembershipPlanRepositoryCustomImpl implements MembershipPlanReposit
 	}
 
 	@Override
-	public Optional<MembershipPlan> activate(String brandId, String id) {
+	public Optional<MembershipPlan> activate(String brandId, String membershipPlanUuid) {
 
 		Query query = new Query(
 	            Criteria.where("brandId").is(brandId)
-	            		  .and("_id").is(id));
+	            		  .and("uuid").is(membershipPlanUuid));
 		
 		Update update = new Update()
 					.set("isActive", true)
 					.set("activatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
 					.set("deactivatedOn", null);
 
-		MembershipPlan subscription = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), MembershipPlan.class);
-		return subscription == null ? Optional.empty() : Optional.of(subscription);
+		MembershipPlan entity = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), MembershipPlan.class);
+		return entity == null ? Optional.empty() : Optional.of(entity);
 	}
 
 	@Override
-	public Optional<MembershipPlan> deactivate(String brandId, String id) {
+	public Optional<MembershipPlan> deactivate(String brandId, String membershipPlanUuid) {
 		Query query = new Query(
 	            Criteria.where("brandId").is(brandId)
-	            		  .and("_id").is(id));
+	            		  .and("uuid").is(membershipPlanUuid));
 		
 		Update update = new Update()
 					.set("isActive", false)
 					.set("deactivatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS));
 
-		MembershipPlan subscription = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), MembershipPlan.class);
-		return subscription == null ? Optional.empty() : Optional.of(subscription);
+		MembershipPlan entity = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), MembershipPlan.class);
+		return entity == null ? Optional.empty() : Optional.of(entity);
 	}
 }

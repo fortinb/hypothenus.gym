@@ -101,7 +101,7 @@ public class CoachController {
 			@PathVariable("coachId") String coachId) {
 		com.iso.hypo.gym.dto.CoachDto entity = null;
 		try {
-			entity = coachService.findByCoachId(brandId, gymId, coachId);
+			entity = coachService.findByCoachUuid(brandId, gymId, coachId);
 		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
@@ -141,7 +141,7 @@ public class CoachController {
 		}
 
 		return ResponseEntity.created(
-				ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(domainDto.getId()).toUri())
+				ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(domainDto.getUuid()).toUri())
 				.body(modelMapper.map(domainDto, CoachDto.class));
 	}
 

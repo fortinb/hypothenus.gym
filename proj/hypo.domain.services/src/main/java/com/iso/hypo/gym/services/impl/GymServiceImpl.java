@@ -56,7 +56,7 @@ public class GymServiceImpl implements GymService {
 	@Override
 	public GymDto update(String brandId, GymDto gymDto) throws GymException {
 		Gym gym = gymMapper.toEntity(gymDto);
-		Gym oldGym = this.gymMapper.toEntity(this.findByGymId(gym.getBrandId(), gym.getGymId()));
+		Gym oldGym = this.readByGymId(gym.getBrandId(), gym.getGymId());
 
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration()
@@ -85,7 +85,7 @@ public class GymServiceImpl implements GymService {
 	@Override
 	public GymDto patch(String brandId, GymDto gymDto) throws GymException {
 		Gym gym = gymMapper.toEntity(gymDto);
-		Gym oldGym = this.gymMapper.toEntity(this.findByGymId(gym.getBrandId(), gym.getGymId()));
+		Gym oldGym = this.readByGymId(gym.getBrandId(), gym.getGymId());
 
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(true);
@@ -112,13 +112,13 @@ public class GymServiceImpl implements GymService {
 
 	@Override
 	public void delete(String brandId, String gymId) throws GymException {
-		Gym oldGym = gymMapper.toEntity(this.findByGymId(brandId, gymId));
-		oldGym.setDeleted(true);
+		Gym entity = this.readByGymId(brandId, gymId);
+		entity.setDeleted(true);
 
-		oldGym.setDeletedOn(Instant.now());
-		oldGym.setDeletedBy(requestContext.getUsername());
+		entity.setDeletedOn(Instant.now());
+		entity.setDeletedBy(requestContext.getUsername());
 
-		gymRepository.save(oldGym);
+		gymRepository.save(entity);
 	}
 
 	@Override
@@ -152,28 +152,34 @@ public class GymServiceImpl implements GymService {
 
 	@Override
 	public GymDto activate(String brandId, String gymId) throws GymException {
-
-		Optional<Gym> oldGym = gymRepository.activate(brandId, gymId);
-		if (oldGym.isEmpty()) {
+		Optional<Gym> entity = gymRepository.activate(brandId, gymId);
+		if (entity.isEmpty()) {
 			throw new GymException(GymException.GYM_NOT_FOUND, "Gym not found");
 		}
 
-		return gymMapper.toDto(oldGym.get());
+		return gymMapper.toDto(entity.get());
 	}
 
 	@Override
 	public GymDto deactivate(String brandId, String gymId) throws GymException {
-
-		Optional<Gym> oldGym = gymRepository.deactivate(brandId, gymId);
-		if (oldGym.isEmpty()) {
+		Optional<Gym> entity = gymRepository.deactivate(brandId, gymId);
+		if (entity.isEmpty()) {
 			throw new GymException(GymException.GYM_NOT_FOUND, "Gym not found");
 		}
 
-		return gymMapper.toDto(oldGym.get());
+		return gymMapper.toDto(entity.get());
+	}
+	
+	private Gym readByGymId(String brandId, String id) throws GymException {
+		Optional<Gym> entity = gymRepository.findByBrandIdAndGymIdAndIsDeletedIsFalse(brandId, id);
+		if (entity.isEmpty()) {
+			throw new GymException(GymException.GYM_NOT_FOUND, "Gym not found");
+		}
+
+		return entity.get();
 	}
 	
 	private ModelMapper initGymMappings(ModelMapper mapper) {
-		
 		
 		PropertyMap<Address, Address> addressPropertyMap = new PropertyMap<Address, Address>() {
 			@Override

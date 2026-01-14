@@ -13,13 +13,13 @@ public interface MembershipService {
 
     MembershipDto patch(String brandId, MembershipDto membershipDto) throws MemberException;
 
-    void delete(String brandId, String membershipId) throws MemberException;
+    void delete(String brandId, String membershipUuid) throws MemberException;
 
-    MembershipDto findByMembershipId(String brandId, String id) throws MemberException;
+    MembershipDto findByMembershipUuid(String brandId, String membershipUuid) throws MemberException;
 
     Page<MembershipDto> list(String brandId, int page, int pageSize, boolean includeInactive) throws MemberException;
 
-    MembershipDto activate(String brandId, String id) throws MemberException;
+    MembershipDto activate(String brandId, String membershipUuid) throws MemberException;
 
-    MembershipDto deactivate(String brandId, String id) throws MemberException;
+    MembershipDto deactivate(String brandId, String membershipUuid) throws MemberException;
 }

@@ -94,7 +94,7 @@ public class MembershipPlanController {
 			@PathVariable("membershipPlansId") String membershipPlansId) {
 		com.iso.hypo.brand.dto.MembershipPlanDto entity = null;
 		try {
-			entity = membershipPlanService.findByMembershipPlanId(brandId, membershipPlansId);
+			entity = membershipPlanService.findByMembershipPlanUuid(brandId, membershipPlansId);
 		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
@@ -131,7 +131,7 @@ public class MembershipPlanController {
 		}
 
 		return ResponseEntity.created(
-				ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(domainDto.getId()).toUri())
+				ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(domainDto.getUuid()).toUri())
 				.body(modelMapper.map(domainDto, MembershipPlanDto.class));
 	}
 

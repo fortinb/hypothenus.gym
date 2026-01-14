@@ -14,8 +14,6 @@ import lombok.Setter;
 @Setter
 public class PostGymDto {
 	
-	private String id;
-	
 	@NotBlank
 	private String brandId;
 	

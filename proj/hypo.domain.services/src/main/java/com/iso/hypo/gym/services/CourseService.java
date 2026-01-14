@@ -13,13 +13,13 @@ public interface CourseService {
 
     CourseDto patch(String brandId, String gymId, CourseDto courseDto) throws GymException;
 
-    void delete(String brandId, String gymId, String courseId) throws GymException;
+    void delete(String brandId, String gymId, String courseUuid) throws GymException;
 
-    CourseDto findByCourseId(String brandId, String gymId, String id) throws GymException;
+    CourseDto findByCourseUuid(String brandId, String gymId, String courseUuid) throws GymException;
 
     Page<CourseDto> list(String brandId, String gymId, int page, int pageSize, boolean includeInactive) throws GymException;
 
-    CourseDto activate(String brandId, String gymId, String id) throws GymException;
+    CourseDto activate(String brandId, String gymId, String courseUuid) throws GymException;
 
-    CourseDto deactivate(String brandId, String gymId, String id) throws GymException;
+    CourseDto deactivate(String brandId, String gymId, String courseUuid) throws GymException;
 }

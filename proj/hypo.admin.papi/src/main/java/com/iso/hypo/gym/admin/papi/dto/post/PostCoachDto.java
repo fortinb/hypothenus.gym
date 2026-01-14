@@ -10,8 +10,6 @@ import lombok.Setter;
 @Setter
 public class PostCoachDto {
 	
-	private String id;
-	
 	@NotBlank
 	private String brandId;
 	

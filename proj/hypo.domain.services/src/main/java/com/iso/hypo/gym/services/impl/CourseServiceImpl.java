@@ -2,6 +2,7 @@ package com.iso.hypo.gym.services.impl;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
@@ -17,6 +18,7 @@ import com.iso.hypo.common.domain.LocalizedString;
 import com.iso.hypo.gym.domain.aggregate.Coach;
 import com.iso.hypo.gym.domain.aggregate.Course;
 import com.iso.hypo.gym.dto.CourseDto;
+import com.iso.hypo.gym.repository.CoachRepository;
 import com.iso.hypo.gym.repository.CourseRepository;
 import com.iso.hypo.gym.mappers.GymMapper;
 import com.iso.hypo.gym.services.CourseService;
@@ -26,12 +28,15 @@ public class CourseServiceImpl implements CourseService {
 
 	private CourseRepository courseRepository;
 
+	private CoachRepository coachRepository;
+
 	private GymMapper gymMapper;
 
 	@Autowired
 	private RequestContext requestContext;
 
-	public CourseServiceImpl(CourseRepository courseRepository, GymMapper gymMapper) {
+	public CourseServiceImpl(CoachRepository coachRepository, CourseRepository courseRepository, GymMapper gymMapper) {
+		this.coachRepository = coachRepository;
 		this.courseRepository = courseRepository;
 		this.gymMapper = gymMapper;
 	}
@@ -53,6 +58,19 @@ public class CourseServiceImpl implements CourseService {
 			throw new GymException(GymException.COURSE_CODE_ALREADY_EXIST, "Duplicate course code");
 		}
 
+		// Validate coaches
+		if (course.getCoachs() != null) {
+			for (Coach coach : course.getCoachs()) {
+				Optional<Coach> existingCoach = coachRepository.findByBrandIdAndGymIdAndUuidAndIsDeletedIsFalse(brandId,
+						gymId, coach.getUuid());
+				if (existingCoach.isEmpty()) {
+					throw new GymException(GymException.COACH_NOT_FOUND, "Coach not found: " + coach.getUuid());
+				}
+				coach.setId(existingCoach.get().getId());
+			}
+		}
+
+		course.setUuid(UUID.randomUUID().toString());
 		course.setCreatedOn(Instant.now());
 		course.setCreatedBy(requestContext.getUsername());
 
@@ -71,15 +89,25 @@ public class CourseServiceImpl implements CourseService {
 			throw new GymException(GymException.INVALID_GYM, "Invalid gym");
 		}
 
-		Course oldCourse = this.gymMapper.toEntity(this.findByCourseId(brandId, gymId, course.getId()));
+		Course oldCourse = this.readByCourseUuid(brandId, gymId, course.getUuid());
 
 		ModelMapper mapper = new ModelMapper();
-		mapper.getConfiguration()
-			.setSkipNullEnabled(false)
-			.setCollectionsMergeEnabled(false);
+		mapper.getConfiguration().setSkipNullEnabled(false).setCollectionsMergeEnabled(false);
 
 		mapper = initCourseMappings(mapper);
 		mapper.map(course, oldCourse);
+
+		// Validate coaches
+		if (course.getCoachs() != null) {
+			for (Coach coach : oldCourse.getCoachs()) {
+				Optional<Coach> existingCoach = coachRepository.findByBrandIdAndGymIdAndUuidAndIsDeletedIsFalse(brandId,
+						gymId, coach.getUuid());
+				if (existingCoach.isEmpty()) {
+					throw new GymException(GymException.COACH_NOT_FOUND, "Coach not found: " + coach.getUuid());
+				}
+				coach.setId(existingCoach.get().getId());
+			}
+		}
 
 		oldCourse.setModifiedOn(Instant.now());
 		oldCourse.setModifiedBy(requestContext.getUsername());
@@ -99,15 +127,25 @@ public class CourseServiceImpl implements CourseService {
 			throw new GymException(GymException.INVALID_GYM, "Invalid gym");
 		}
 
-		Course oldCourse = this.gymMapper.toEntity(this.findByCourseId(brandId, gymId, course.getId()));
+		Course oldCourse = this.readByCourseUuid(brandId, gymId, course.getUuid());
 
 		ModelMapper mapper = new ModelMapper();
-		mapper.getConfiguration()
-			.setSkipNullEnabled(false)
-			.setCollectionsMergeEnabled(false);
+		mapper.getConfiguration().setSkipNullEnabled(false).setCollectionsMergeEnabled(false);
 
 		mapper = initCourseMappings(mapper);
 		mapper.map(course, oldCourse);
+
+		// Validate coaches
+		if (course.getCoachs() != null) {
+			for (Coach coach : oldCourse.getCoachs()) {
+				Optional<Coach> existingCoach = coachRepository.findByBrandIdAndGymIdAndUuidAndIsDeletedIsFalse(brandId,
+						gymId, coach.getUuid());
+				if (existingCoach.isEmpty()) {
+					throw new GymException(GymException.COACH_NOT_FOUND, "Coach not found: " + coach.getUuid());
+				}
+				coach.setId(existingCoach.get().getId());
+			}
+		}
 
 		oldCourse.setModifiedOn(Instant.now());
 		oldCourse.setModifiedBy(requestContext.getUsername());
@@ -117,19 +155,20 @@ public class CourseServiceImpl implements CourseService {
 	}
 
 	@Override
-	public void delete(String brandId, String gymId, String courseId) throws GymException {
-		Course oldCourse = gymMapper.toEntity(this.findByCourseId(brandId, gymId, courseId));
-		oldCourse.setDeleted(true);
+	public void delete(String brandId, String gymId, String courseUuid) throws GymException {
+		Course entity = this.readByCourseUuid(brandId, gymId, courseUuid);
+		entity.setDeleted(true);
 
-		oldCourse.setDeletedOn(Instant.now());
-		oldCourse.setDeletedBy(requestContext.getUsername());
+		entity.setDeletedOn(Instant.now());
+		entity.setDeletedBy(requestContext.getUsername());
 
-		courseRepository.save(oldCourse);
+		courseRepository.save(entity);
 	}
 
 	@Override
-	public CourseDto findByCourseId(String brandId, String gymId, String id) throws GymException {
-		Optional<Course> entity = courseRepository.findByBrandIdAndGymIdAndIdAndIsDeletedIsFalse(brandId, gymId, id);
+	public CourseDto findByCourseUuid(String brandId, String gymId, String courseUuid) throws GymException {
+		Optional<Course> entity = courseRepository.findByBrandIdAndGymIdAndUuidAndIsDeletedIsFalse(brandId, gymId,
+				courseUuid);
 		if (entity.isEmpty()) {
 			throw new GymException(GymException.COURSE_NOT_FOUND, "Course not found");
 		}
@@ -141,34 +180,44 @@ public class CourseServiceImpl implements CourseService {
 	public Page<CourseDto> list(String brandId, String gymId, int page, int pageSize, boolean includeInactive)
 			throws GymException {
 		if (includeInactive) {
-			return courseRepository.findAllByBrandIdAndGymIdAndIsDeletedIsFalse(brandId, gymId,
-					PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname")).map(c -> gymMapper.toDto(c));
+			return courseRepository
+					.findAllByBrandIdAndGymIdAndIsDeletedIsFalse(brandId, gymId,
+							PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"))
+					.map(c -> gymMapper.toDto(c));
 		}
 
 		return courseRepository.findAllByBrandIdAndGymIdAndIsDeletedIsFalseAndIsActiveIsTrue(brandId, gymId,
-			PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname")).map(c -> gymMapper.toDto(c));
+				PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname")).map(c -> gymMapper.toDto(c));
 	}
 
 	@Override
-	public CourseDto activate(String brandId, String gymId, String id) throws GymException {
-
-		Optional<Course> oldCourse = courseRepository.activate(brandId, gymId, id);
-		if (oldCourse.isEmpty()) {
+	public CourseDto activate(String brandId, String gymId, String courseUuid) throws GymException {
+		Optional<Course> entity = courseRepository.activate(brandId, gymId, courseUuid);
+		if (entity.isEmpty()) {
 			throw new GymException(GymException.COURSE_NOT_FOUND, "Course not found");
 		}
 
-		return gymMapper.toDto(oldCourse.get());
+		return gymMapper.toDto(entity.get());
 	}
 
 	@Override
-	public CourseDto deactivate(String brandId, String gymId, String id) throws GymException {
-
-		Optional<Course> oldCourse = courseRepository.deactivate(brandId, gymId, id);
-		if (oldCourse.isEmpty()) {
+	public CourseDto deactivate(String brandId, String gymId, String courseUuid) throws GymException {
+		Optional<Course> entity = courseRepository.deactivate(brandId, gymId, courseUuid);
+		if (entity.isEmpty()) {
 			throw new GymException(GymException.COURSE_NOT_FOUND, "Course not found");
 		}
 
-		return gymMapper.toDto(oldCourse.get());
+		return gymMapper.toDto(entity.get());
+	}
+
+	private Course readByCourseUuid(String brandId, String gymId, String courseUuid) throws GymException {
+		Optional<Course> entity = courseRepository.findByBrandIdAndGymIdAndUuidAndIsDeletedIsFalse(brandId, gymId,
+				courseUuid);
+		if (entity.isEmpty()) {
+			throw new GymException(GymException.COURSE_NOT_FOUND, "Course not found");
+		}
+
+		return entity.get();
 	}
 
 	private ModelMapper initCourseMappings(ModelMapper mapper) {

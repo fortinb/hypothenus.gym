@@ -6,7 +6,7 @@ import com.iso.hypo.brand.domain.aggregate.MembershipPlan;
 
 public interface MembershipPlanRepositoryCustom {
 
-	Optional<MembershipPlan> activate(String brandId, String id);
+	Optional<MembershipPlan> activate(String brandId, String membershipPlanUuid);
 	
-	Optional<MembershipPlan> deactivate(String brandId, String id);
+	Optional<MembershipPlan> deactivate(String brandId, String membershipPlanUuid);
 }

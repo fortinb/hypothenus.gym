@@ -21,12 +21,12 @@ public class CourseRepositoryCustomImpl implements CourseRepositoryCustom {
 	}
 
 	@Override
-	public Optional<Course> activate(String brandId, String gymId, String id) {
+	public Optional<Course> activate(String brandId, String gymId, String courseUuid) {
 
 		Query query = new Query(
 	            Criteria.where("brandId").is(brandId)
 	      		  .and("gymId").is(gymId)
-	      		  .and("_id").is(id));
+	      		  .and("uuid").is(courseUuid));
 		
 		Update update = new Update()
 					.set("isActive", true)
@@ -38,11 +38,11 @@ public class CourseRepositoryCustomImpl implements CourseRepositoryCustom {
 	}
 
 	@Override
-	public Optional<Course> deactivate(String brandId, String gymId, String id) {
+	public Optional<Course> deactivate(String brandId, String gymId, String courseUuid) {
 		Query query = new Query(
 	            Criteria.where("brandId").is(brandId)
 		      		  .and("gymId").is(gymId)
-		      		  .and("_id").is(id));
+		      		  .and("uuid").is(courseUuid));
 		
 		Update update = new Update()
 					.set("isActive", false)

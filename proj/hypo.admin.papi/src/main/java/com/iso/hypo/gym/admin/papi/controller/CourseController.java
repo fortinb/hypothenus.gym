@@ -105,7 +105,7 @@ public class CourseController {
 			@PathVariable("courseId") String courseId) {
 		com.iso.hypo.gym.dto.CourseDto entity = null;
 		try {
-			entity = courseService.findByCourseId(brandId, gymId, courseId);
+			entity = courseService.findByCourseUuid(brandId, gymId, courseId);
 		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
@@ -159,7 +159,7 @@ public class CourseController {
 		}
 
 		return ResponseEntity.created(
-				ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(domainDto.getId()).toUri())
+				ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(domainDto.getUuid()).toUri())
 				.body(modelMapper.map(domainDto, CourseDto.class));
 	}
 

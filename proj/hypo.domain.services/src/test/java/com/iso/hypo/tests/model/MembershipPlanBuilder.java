@@ -3,6 +3,7 @@ package com.iso.hypo.tests.model;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import com.github.javafaker.Faker;
 import com.iso.hypo.common.domain.LocalizedString;
@@ -21,6 +22,7 @@ public class MembershipPlanBuilder {
 		MembershipPlan entity = new MembershipPlan(brandId, faker.code().isbn10(), buildName(), buildDescription(),
 				faker.number().numberBetween(2, 3), MembershipPlanPeriodEnum.monthly, BillingFrequencyEnum.monthly,
 				BuildCost(), BuildOneTimeFees(), 12, null, null, true, false, false, true, Instant.now(), null);
+		entity.setUuid(UUID.randomUUID().toString());
 		return entity;
 	}
 

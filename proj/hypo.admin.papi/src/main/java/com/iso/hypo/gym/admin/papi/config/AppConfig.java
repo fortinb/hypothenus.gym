@@ -1,6 +1,7 @@
 package com.iso.hypo.gym.admin.papi.config;
 
 import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.cloud.openfeign.support.PageJacksonModule;
 import org.springframework.cloud.openfeign.support.SortJacksonModule;
 import org.springframework.context.annotation.Bean;
@@ -20,16 +21,19 @@ import com.iso.hypo.common.context.RequestContext;
 import jakarta.servlet.http.HttpServletRequest;
 
 @Configuration
-@EnableMongoRepositories(basePackages = {
-        "com.iso.hypo.brand.repository",
-        "com.iso.hypo.gym.repository",
-        "com.iso.hypo.member.repository"
-})
+@EnableMongoRepositories(basePackages = { "com.iso.hypo.brand.repository", "com.iso.hypo.gym.repository",
+		"com.iso.hypo.member.repository" })
 public class AppConfig {
 
 	@Bean
 	ModelMapper instanciateModelMapper() {
-		return new ModelMapper();
+		ModelMapper mapper = new ModelMapper();
+
+		mapper.getConfiguration()
+			.setMatchingStrategy(MatchingStrategies.STRICT)
+			.setFieldMatchingEnabled(true);
+
+		return mapper;
 	}
 
 	@Bean
@@ -39,6 +43,7 @@ public class AppConfig {
 		ObjectMapper mapper = JsonMapper.builder().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 				.addModule(new PageJacksonModule()).addModule(new SortJacksonModule()).addModule(new JavaTimeModule())
 				.build();
+
 		return mapper;
 	}
 

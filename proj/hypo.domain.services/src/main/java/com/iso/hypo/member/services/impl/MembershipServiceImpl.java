@@ -55,7 +55,7 @@ public class MembershipServiceImpl implements MembershipService {
 			throw new MemberException(MemberException.INVALID_BRAND, "Invalid brand");
 		}
 		
-		Membership oldMembership = this.memberMapper.toEntity(this.findByMembershipId(brandId, membership.getId()));
+		Membership oldMembership = this.readByMembershipUuid(brandId, membership.getUuid());
 
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(false);
@@ -77,8 +77,8 @@ public class MembershipServiceImpl implements MembershipService {
 			throw new MemberException(MemberException.INVALID_BRAND, "Invalid brand");
 		}
 		
-		Membership oldMembership = this.memberMapper.toEntity(this.findByMembershipId(brandId, membership.getId()));
-
+		Membership oldMembership = this.readByMembershipUuid(brandId, membership.getUuid());
+	
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(true);
 		
@@ -93,19 +93,19 @@ public class MembershipServiceImpl implements MembershipService {
 	}
 
 	@Override
-	public void delete(String brandId, String membershipId) throws MemberException {
-		Membership oldMembership = memberMapper.toEntity(this.findByMembershipId(brandId,  membershipId));
-		oldMembership.setDeleted(true);
+	public void delete(String brandId, String membershipUuid) throws MemberException {
+		Membership entity = this.readByMembershipUuid(brandId,  membershipUuid);
+		entity.setDeleted(true);
 
-		oldMembership.setDeletedOn(Instant.now());
-		oldMembership.setDeletedBy(requestContext.getUsername());
+		entity.setDeletedOn(Instant.now());
+		entity.setDeletedBy(requestContext.getUsername());
 		
-		membershipRepository.save(oldMembership);
+		membershipRepository.save(entity);
 	}
 
 	@Override
-	public MembershipDto findByMembershipId(String brandId, String id) throws MemberException {
-		Optional<Membership> entity = membershipRepository.findByBrandIdAndIdAndIsDeletedIsFalse(brandId, id);
+	public MembershipDto findByMembershipUuid(String brandId, String membershipUuid) throws MemberException {
+		Optional<Membership> entity = membershipRepository.findByBrandIdAndUuidAndIsDeletedIsFalse(brandId, membershipUuid);
 		if (entity.isEmpty()) {
 			throw new MemberException(MemberException.MEMBERSHIP_NOT_FOUND, "Membership not found");
 		}
@@ -123,25 +123,32 @@ public class MembershipServiceImpl implements MembershipService {
 	}
 	
 	@Override
-	public MembershipDto activate(String brandId, String id) throws MemberException {
-		
-		Optional<Membership> oldMembership = membershipRepository.activate(brandId, id);
-		if (oldMembership.isEmpty()) {
+	public MembershipDto activate(String brandId, String membershipUuid) throws MemberException {
+		Optional<Membership> entity = membershipRepository.activate(brandId, membershipUuid);
+		if (entity.isEmpty()) {
 			throw new MemberException(MemberException.MEMBERSHIP_NOT_FOUND, "Membership not found");
 		}
 		
-		return memberMapper.toDto(oldMembership.get());
+		return memberMapper.toDto(entity.get());
 	}
 	
 	@Override
-	public MembershipDto deactivate(String brandId, String id) throws MemberException {
-		
-		Optional<Membership> oldMembership = membershipRepository.deactivate(brandId, id);
-		if (oldMembership.isEmpty()) {
+	public MembershipDto deactivate(String brandId, String membershipUuid) throws MemberException {
+			Optional<Membership> entity = membershipRepository.deactivate(brandId, membershipUuid);
+		if (entity.isEmpty()) {
 			throw new MemberException(MemberException.MEMBERSHIP_NOT_FOUND, "Membership not found");
 		}
 		
-		return memberMapper.toDto(oldMembership.get());
+		return memberMapper.toDto(entity.get());
+	}
+	
+	private Membership readByMembershipUuid(String brandId, String membershipUuid) throws MemberException {
+		Optional<Membership> entity = membershipRepository.findByBrandIdAndUuidAndIsDeletedIsFalse(brandId, membershipUuid);
+		if (entity.isEmpty()) {
+			throw new MemberException(MemberException.MEMBERSHIP_NOT_FOUND, "Membership not found");
+		}
+
+		return entity.get();
 	}
 	
 	private ModelMapper initMembershipMappings(ModelMapper mapper) {

@@ -4,15 +4,14 @@ import java.time.Instant;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
-
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.iso.hypo.common.domain.BaseEntity;
-import com.iso.hypo.common.domain.LocalizedString;
 import com.iso.hypo.brand.domain.enumeration.BillingFrequencyEnum;
 import com.iso.hypo.brand.domain.enumeration.MembershipPlanPeriodEnum;
+import com.iso.hypo.common.domain.BaseEntity;
+import com.iso.hypo.common.domain.LocalizedString;
 import com.iso.hypo.common.domain.pricing.Cost;
 import com.iso.hypo.common.domain.pricing.OneTimeFee;
 import com.iso.hypo.gym.domain.aggregate.Course;
@@ -29,7 +28,10 @@ public class MembershipPlan extends BaseEntity {
 
 	@Id
 	private String id;
-
+	
+	@Indexed
+	private String uuid;
+	
 	@Indexed
 	@NonNull
 	private String brandId;

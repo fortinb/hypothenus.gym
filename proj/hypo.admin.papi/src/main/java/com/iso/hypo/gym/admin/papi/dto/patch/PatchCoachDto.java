@@ -11,7 +11,7 @@ import lombok.Setter;
 public class PatchCoachDto {
 	
 	@NotBlank
-	private String id;
+	private String uuid;
 	
 	@NotBlank
 	private String brandId;

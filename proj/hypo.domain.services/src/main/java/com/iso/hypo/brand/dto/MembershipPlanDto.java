@@ -18,7 +18,7 @@ import lombok.Setter;
 @Setter
 public class MembershipPlanDto extends BaseEntityDto {
 
-    private String id;
+    private String uuid;
 
     private String brandId;
 

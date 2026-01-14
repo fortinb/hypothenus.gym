@@ -11,7 +11,7 @@ import com.iso.hypo.gym.domain.aggregate.Course;
 
 public interface CourseRepository extends PagingAndSortingRepository<Course, String>, CrudRepository<Course, String>, CourseRepositoryCustom {
 	
-	Optional<Course> findByBrandIdAndGymIdAndIdAndIsDeletedIsFalse(String brandId, String gymId, String id);
+	Optional<Course> findByBrandIdAndGymIdAndUuidAndIsDeletedIsFalse(String brandId, String gymId, String courseUuid);
 	
 	Optional<Course> findByBrandIdAndGymIdAndCodeAndIsDeletedIsFalse(String brandId, String gymId, String code);
 	
