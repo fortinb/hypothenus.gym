@@ -136,7 +136,7 @@ public class GymRepositoryCustomImpl implements GymRepositoryCustom {
 		// Create a pipeline that searches, projects, and limits the number of results returned.
 		AggregateIterable<GymSearchDto> aggregationResults = collection.aggregate(
 				Arrays.asList(searchStage,
-						project(fields(excludeId(), include("brandId", "gymId", "name", "address", "email", "isActive"),
+						project(fields(excludeId(), include("uuid", "brandId", "gymId", "name", "address", "email", "isActive"),
 								metaSearchScore("score"),
 								meta("scoreDetails", "searchScoreDetails"))),
 						sort(Sorts.ascending("name")),

@@ -26,6 +26,9 @@ public class Gym extends BaseEntity {
 	private String id;
 	
 	@Indexed
+	private String uuid;
+	
+	@Indexed
 	@NonNull
 	private String brandId;
 	

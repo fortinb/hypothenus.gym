@@ -185,7 +185,7 @@ public class GymController {
 		}
 
 		return ResponseEntity.created(
-				ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(domainDto.getId()).toUri())
+				ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(domainDto.getUuid()).toUri())
 				.body(modelMapper.map(domainDto, GymDto.class));
 	}
 

@@ -15,6 +15,9 @@ import lombok.Setter;
 public class PutGymDto {
 	
 	@NotBlank
+    private String uuid;
+	
+	@NotBlank
 	private String brandId;
 	
 	@NotBlank

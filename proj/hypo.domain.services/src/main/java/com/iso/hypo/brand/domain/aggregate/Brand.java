@@ -25,6 +25,9 @@ public class Brand extends BaseEntity {
 	@Id
 	private String id;
 	
+	@Indexed
+	private String uuid;
+	
 	@Indexed (unique = true)
 	@NonNull
 	private String brandId;

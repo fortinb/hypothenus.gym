@@ -9,6 +9,8 @@ import lombok.Setter;
 @Setter
 public class GymSearchDto {
 	
+    private String uuid;
+	
 	private String brandId;
 	
 	private String gymId;

@@ -14,7 +14,7 @@ import lombok.Setter;
 @Setter
 public class GymDto extends BaseDto {
 	
-	private String id;
+    private String uuid;
 	
 	private String brandId;
 	

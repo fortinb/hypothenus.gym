@@ -132,7 +132,7 @@ public class BrandRepositoryCustomImpl implements BrandRepositoryCustom {
 		// Create a pipeline that searches, projects, and limits the number of results returned.
 		AggregateIterable<BrandSearchDto> aggregationResults = collection.aggregate(
 				Arrays.asList(searchStage,
-						project(fields(excludeId(), include("brandId", "name", "address", "email", "isActive"),
+						project(fields(excludeId(), include("uuid", "brandId", "name", "address", "email", "isActive"),
 								metaSearchScore("score"),
 								meta("scoreDetails", "searchScoreDetails"))),
 						sort(Sorts.ascending("name")),

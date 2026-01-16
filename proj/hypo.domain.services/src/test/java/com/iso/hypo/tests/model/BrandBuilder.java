@@ -3,6 +3,7 @@ package com.iso.hypo.tests.model;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import com.github.javafaker.Faker;
 import com.iso.hypo.brand.domain.aggregate.Brand;
@@ -18,6 +19,7 @@ public class BrandBuilder {
 		Brand entity = new Brand(brandId, companyName, buildAddress(),
 				faker.internet().emailAddress(), faker.internet().image(), true, buildPhoneNumbers(), 
 				buildContacts(), Instant.now(), null);
+		entity.setUuid(UUID.randomUUID().toString());
 		return entity;
 	}
 

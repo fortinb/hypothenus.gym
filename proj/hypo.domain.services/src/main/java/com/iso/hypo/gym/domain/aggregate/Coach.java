@@ -23,7 +23,7 @@ public class Coach extends BaseEntity {
 	private String id;
 	
 	@Indexed
-	private String uuid = UUID.randomUUID().toString();
+	private String uuid;
 	
 	@Indexed
 	@NonNull
@@ -41,7 +41,9 @@ public class Coach extends BaseEntity {
 	public Coach(String brandId,
 				 String gymId, 
 			     Person person, 
-			     boolean isActive, Instant activatedOn, Instant deactivatedOn) {
+			     boolean isActive, 
+			     Instant activatedOn, 
+			     Instant deactivatedOn) {
 		super(isActive);
 		this.brandId = brandId;
 		this.gymId = gymId;

@@ -15,6 +15,9 @@ import lombok.Setter;
 public class PatchGymDto {
 	
 	@NotBlank
+    private String uuid;
+	
+	@NotBlank
 	private String brandId;
 	
 	@NotBlank

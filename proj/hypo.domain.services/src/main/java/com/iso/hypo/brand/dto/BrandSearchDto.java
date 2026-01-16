@@ -8,6 +8,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class BrandSearchDto {
+
+    private String uuid;
 	
 	private String brandId;
 

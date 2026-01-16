@@ -15,6 +15,9 @@ import lombok.Setter;
 public class PutBrandDto {
 	
 	@NotBlank
+    private String uuid;
+	
+	@NotBlank
 	private String brandId;
 	
 	private String name;

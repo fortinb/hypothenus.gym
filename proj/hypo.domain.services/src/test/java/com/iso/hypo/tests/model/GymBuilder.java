@@ -3,6 +3,7 @@ package com.iso.hypo.tests.model;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import com.github.javafaker.Faker;
 import com.iso.hypo.gym.domain.aggregate.Gym;
@@ -18,6 +19,7 @@ public class GymBuilder {
 		Gym entity = new Gym(brandId, gymId, gymName, buildAddress(),
 				faker.internet().emailAddress(), faker.internet().image(), true, buildPhoneNumbers(), 
 				buildContacts(), Instant.now(), null);
+		entity.setUuid(UUID.randomUUID().toString());
 		return entity;
 	}
 

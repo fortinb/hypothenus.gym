@@ -505,8 +505,8 @@ class GymControllerTests {
 	}
 
 	public static final void assertGym(GymDto expected, GymDto result) {
-		if (expected.getId() != null) {
-			Assertions.assertEquals(expected.getId(), result.getId());
+		if (expected.getUuid() != null) {
+			Assertions.assertEquals(expected.getUuid(), result.getUuid());
 		}
 		
 		Assertions.assertEquals(expected.getGymId(), result.getGymId());
