@@ -1,10 +1,10 @@
 plugins {
     id 'java-library'
-    id 'org.springframework.boot' version '3.5.9'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'java-test-fixtures'
 }
 
-group = 'isoceles.hypothenus'
+group = "com.hypo"
 version = '0.0.1'
 
 java {
@@ -13,11 +13,24 @@ java {
   }
 }
 
+// Add compiler arg so parameter names are available at runtime
+// This ensures the '-parameters' flag is passed to javac for all JavaCompile tasks (main, test, and test-fixtures)
+tasks.withType(org.gradle.api.tasks.compile.JavaCompile).configureEach {
+    options.compilerArgs += ['-parameters']
+}
+
 
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
 }
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.boot:spring-boot-dependencies:3.5.9"
+    }
+}
+
  //  implementation 'org.mongodb:mongodb-driver-sync:5.1.0'
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
@@ -28,13 +41,15 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok:1.18.32'
 	annotationProcessor 'org.projectlombok:lombok:1.18.32'
 	testCompileOnly 'org.projectlombok:lombok:1.18.32'
-	testCompileOnly 'com.github.javafaker:javafaker:0.15'
+	testCompileOnly 'net.datafaker:datafaker:1.8.0' 
 	testAnnotationProcessor 'org.projectlombok:lombok:1.18.32'
     testImplementation libs.junit.jupiter
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
+    	
+	// Ensure test fixtures have the libraries they use (Faker, Lombok)
+	testFixturesImplementation 'net.datafaker:datafaker:1.8.0'
+	testFixturesCompileOnly 'org.projectlombok:lombok:1.18.32'
+	testFixturesAnnotationProcessor 'org.projectlombok:lombok:1.18.32'
+    	implementation "com.hypo:hypo-common-events:0.0.1"
 
-tasks.named('test') {
-    // Use JUnit Platform for unit tests.
-    useJUnitPlatform()
 }

@@ -1,1 +1,6 @@
-rootProject.name = 'hypo.admin.papi'
+rootProject.name = 'hypo-admin-papi'
+
+includeBuild("../hypo.domain.services")
+includeBuild("../../../hypothenus.common/proj/hypo.common.events")
+includeBuild("../../../hypothenus.common/proj/hypo.common.tests")
+

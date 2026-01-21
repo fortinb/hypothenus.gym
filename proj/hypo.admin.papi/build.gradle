@@ -4,13 +4,19 @@ plugins {
 	id 'io.spring.dependency-management' version '1.1.7'
 }
 
-group = 'isoceles.hypothenus'
+group = "com.hypo"
 version = '0.0.1'
 
 java {
   toolchain {
-    languageVersion = JavaLanguageVersion.of(23)
+	languageVersion = JavaLanguageVersion.of(23)
   }
+}
+
+// Add compiler arg so parameter names are available at runtime (for @RequestParam reflection)
+// This ensures the '-parameters' flag is passed to javac for all JavaCompile tasks (main and test)
+tasks.withType(org.gradle.api.tasks.compile.JavaCompile).configureEach {
+    options.compilerArgs += ['-parameters']
 }
 
 repositories {
@@ -23,7 +29,7 @@ ext {
 
 dependencies {
 	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
@@ -36,20 +42,61 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok:1.18.32'
 	annotationProcessor 'org.projectlombok:lombok:1.18.32'
 	testCompileOnly 'org.projectlombok:lombok:1.18.32'
-	testCompileOnly 'com.github.javafaker:javafaker:0.15'
+	testCompileOnly 'net.datafaker:datafaker:1.8.0'
 	testAnnotationProcessor 'org.projectlombok:lombok:1.18.32'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	
+	implementation "com.hypo:hypo-domain-services:0.0.1"
+	implementation "com.hypo:hypo-common-events:0.0.1"
+	implementation "com.hypo:hypo-common-tests:0.0.1"
+	
+	// Use coordinates for test fixtures so composite build substitution (includeBuild) can provide the project
+	// The `java-test-fixtures` plugin in the `hypo.domain.services` build will expose the fixtures
+	// as a consumable variant for the `com.hypo:hypo-domain-services:0.0.1` coordinates.
+	testImplementation(testFixtures("com.hypo:hypo-domain-services:0.0.1"))
 }
 
 dependencyManagement {
   imports {
-    mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+	mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
   }
 }
 
 
 tasks.named('test') {
-	useJUnitPlatform()
+	useJUnitPlatform {
+		// exclude tests annotated/tagged with @Tag("populator") from the main test run
+		excludeTags 'populator'
+	}
+	// ensure populatorTest runs after the main test task
+	finalizedBy 'populatorTests'
+	
+	outputs.upToDateWhen { false }
+}
+
+// Dedicated Test task for populator-tagged tests
+// It uses the same test classes/classpath as the regular tests and runs after them.
+tasks.register('populatorTests', Test) {
+    // ensure test classes are compiled before running this task
+    dependsOn testClasses
+
+    // run after the main test task
+    mustRunAfter tasks.named('test')
+
+    // Use JUnit Platform and only include the 'populator' tag
+    useJUnitPlatform {
+        includeTags 'populator'
+    }
+
+    // use the main test classes and runtime classpath
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+
+    // avoid being considered up-to-date and force a fresh fork to prevent any
+    // test-engine state from leaking between tasks
+    outputs.upToDateWhen { false }
+    // fork a new JVM for this task to avoid reuse issues
+    forkEvery = 1
 }

@@ -12,17 +12,17 @@ public class RequestContext {
 	
 	private String trackingNumber;
 	
-	private String brandId;
+	private String brandUuid;
 	
-	private String gymId;
+	private String gymUuid;
 
 	public RequestContext(final HttpServletRequest request) {
 		super();
 		
 		username = request.getHeader("x-credentials");
 		trackingNumber = request.getHeader("x-tracking-number");
-		brandId = request.getParameter("brandId");
-		gymId = request.getParameter("gymId");
+		brandUuid = request.getParameter("brandUuid");
+		gymUuid = request.getParameter("gymUuid");
 	}
 	
 	
