@@ -40,13 +40,13 @@ import com.iso.hypo.admin.papi.dto.patch.PatchMembershipPlanDto;
 import com.iso.hypo.admin.papi.dto.post.PostMembershipPlanDto;
 import com.iso.hypo.admin.papi.dto.pricing.OneTimeFeeDto;
 import com.iso.hypo.admin.papi.dto.put.PutMembershipPlanDto;
-import com.iso.hypo.model.aggregate.Brand;
-import com.iso.hypo.model.aggregate.MembershipPlan;
-import com.iso.hypo.model.repository.BrandRepository;
-import com.iso.hypo.model.repository.MembershipPlanRepository;
+import com.iso.hypo.domain.aggregate.Brand;
+import com.iso.hypo.domain.aggregate.MembershipPlan;
+import com.iso.hypo.repositories.BrandRepository;
+import com.iso.hypo.repositories.MembershipPlanRepository;
 import com.iso.hypo.tests.http.HttpUtils;
-import com.iso.hypo.model.BrandBuilder;
-import com.iso.hypo.model.MembershipPlanBuilder;
+import com.iso.hypo.domain.BrandBuilder;
+import com.iso.hypo.domain.MembershipPlanBuilder;
 
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(Lifecycle.PER_CLASS)
@@ -574,3 +574,4 @@ class MembershipPlanControllerTests {
 		}
 	}
 }
+

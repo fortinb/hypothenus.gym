@@ -36,22 +36,22 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.datafaker.Faker;
-import com.iso.hypo.model.aggregate.Brand;
-import com.iso.hypo.model.repository.BrandRepository;
+import com.iso.hypo.domain.aggregate.Brand;
+import com.iso.hypo.repositories.BrandRepository;
 import com.iso.hypo.admin.papi.dto.contact.ContactDto;
 import com.iso.hypo.admin.papi.dto.contact.PhoneNumberDto;
 import com.iso.hypo.admin.papi.dto.model.CoachDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchCoachDto;
 import com.iso.hypo.admin.papi.dto.post.PostCoachDto;
 import com.iso.hypo.admin.papi.dto.put.PutCoachDto;
-import com.iso.hypo.model.aggregate.Coach;
-import com.iso.hypo.model.aggregate.Gym;
-import com.iso.hypo.model.repository.CoachRepository;
-import com.iso.hypo.model.repository.GymRepository;
+import com.iso.hypo.domain.aggregate.Coach;
+import com.iso.hypo.domain.aggregate.Gym;
+import com.iso.hypo.repositories.CoachRepository;
+import com.iso.hypo.repositories.GymRepository;
 import com.iso.hypo.tests.http.HttpUtils;
-import com.iso.hypo.model.BrandBuilder;
-import com.iso.hypo.model.CoachBuilder;
-import com.iso.hypo.model.GymBuilder;
+import com.iso.hypo.domain.BrandBuilder;
+import com.iso.hypo.domain.CoachBuilder;
+import com.iso.hypo.domain.GymBuilder;
 
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(Lifecycle.PER_CLASS)
@@ -569,3 +569,4 @@ class CoachControllerTests {
 		}
 	}
 }
+

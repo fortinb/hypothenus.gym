@@ -33,8 +33,8 @@ import com.iso.hypo.admin.papi.dto.patch.PatchGymDto;
 import com.iso.hypo.admin.papi.dto.post.PostGymDto;
 import com.iso.hypo.admin.papi.dto.put.PutGymDto;
 import com.iso.hypo.admin.papi.dto.search.GymSearchDto;
-import com.iso.hypo.model.exception.GymException;
-import com.iso.hypo.model.services.GymService;
+import com.iso.hypo.services.exception.GymException;
+import com.iso.hypo.services.GymService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -76,7 +76,7 @@ public class GymController {
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive,
 			@PathVariable String brandUuid) {
 
-		Page<com.iso.hypo.model.dto.GymSearchDto> entities = null;
+		Page<com.iso.hypo.domain.dto.GymSearchDto> entities = null;
 		try {
 			entities = gymService.search(page, pageSize, criteria, includeInactive);
 		} catch (GymException e) {
@@ -104,7 +104,7 @@ public class GymController {
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive,
 			@PathVariable String brandUuid) {
 
-		Page<com.iso.hypo.model.dto.GymDto> entities = null;
+		Page<com.iso.hypo.domain.dto.GymDto> entities = null;
 		try {
 			entities = gymService.list(brandUuid, page, pageSize, includeInactive);
 		} catch (GymException e) {
@@ -132,7 +132,7 @@ public class GymController {
 	public ResponseEntity<Object> getGym(
 			@PathVariable String uuid,
 			@PathVariable String brandUuid) {
-		com.iso.hypo.model.dto.GymDto entity = null;
+		com.iso.hypo.domain.dto.GymDto entity = null;
 		try {
 			entity = gymService.findByCode(brandUuid, uuid);
 		} catch (GymException e) {
@@ -167,7 +167,7 @@ public class GymController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Brand UUID in path and request body do not match");
 		}
 		
-		com.iso.hypo.model.dto.GymDto domainDto = modelMapper.map(request, com.iso.hypo.model.dto.GymDto.class);
+		com.iso.hypo.domain.dto.GymDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.GymDto.class);
 		
 		try {
 			domainDto = gymService.create(domainDto);
@@ -215,7 +215,7 @@ public class GymController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Brand UUID in path and request body do not match");
 		}
 		
-		com.iso.hypo.model.dto.GymDto domainDto = modelMapper.map(request, com.iso.hypo.model.dto.GymDto.class);
+		com.iso.hypo.domain.dto.GymDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.GymDto.class);
 
 		try {
 			domainDto = gymService.update(brandUuid, domainDto);
@@ -254,7 +254,7 @@ public class GymController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Brand UUID in path and request body do not match");
 		}
 		
-		com.iso.hypo.model.dto.GymDto domainDto = modelMapper.map(request, com.iso.hypo.model.dto.GymDto.class);
+		com.iso.hypo.domain.dto.GymDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.GymDto.class);
 
 		try {
 			domainDto = gymService.patch(brandUuid, domainDto);
@@ -287,7 +287,7 @@ public class GymController {
 	public ResponseEntity<Object> activateGym(
 			@PathVariable String uuid,
 			@PathVariable String brandUuid) {
-		com.iso.hypo.model.dto.GymDto entity;
+		com.iso.hypo.domain.dto.GymDto entity;
 
 		try {
 			entity = gymService.activate(brandUuid, uuid);
@@ -321,7 +321,7 @@ public class GymController {
 			@PathVariable String uuid,
 			@PathVariable String brandUuid) {
 
-		com.iso.hypo.model.dto.GymDto entity;
+		com.iso.hypo.domain.dto.GymDto entity;
 
 		try {
 			entity = gymService.deactivate(brandUuid, uuid);
@@ -369,3 +369,4 @@ public class GymController {
 		return ResponseEntity.ok(uuid);
 	}
 }
+

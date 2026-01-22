@@ -27,8 +27,8 @@ import com.iso.hypo.admin.papi.dto.model.MembershipPlanDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchMembershipPlanDto;
 import com.iso.hypo.admin.papi.dto.post.PostMembershipPlanDto;
 import com.iso.hypo.admin.papi.dto.put.PutMembershipPlanDto;
-import com.iso.hypo.model.exception.BrandException;
-import com.iso.hypo.model.services.MembershipPlanService;
+import com.iso.hypo.services.exception.MembershipPlanException;
+import com.iso.hypo.services.MembershipPlanService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -67,10 +67,10 @@ public class MembershipPlanController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.model.dto.MembershipPlanDto> entities = null;
+		Page<com.iso.hypo.domain.dto.MembershipPlanDto> entities = null;
 		try {
 			entities = membershipPlanService.list(brandUuid, page, pageSize, includeInactive);
-		} catch (BrandException e) {
+		} catch (MembershipPlanException e) {
 			logger.error(e.getMessage(), e);
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -93,13 +93,13 @@ public class MembershipPlanController {
 	public ResponseEntity<Object> getMembershipPlan(
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.model.dto.MembershipPlanDto entity = null;
+		com.iso.hypo.domain.dto.MembershipPlanDto entity = null;
 		try {
 			entity = membershipPlanService.findByMembershipPlanUuid(brandUuid, uuid);
-		} catch (BrandException e) {
+		} catch (MembershipPlanException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == BrandException.MEMBERSHIPPLAN_NOT_FOUND) {
+			if (e.getCode() == MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
 			}
@@ -127,11 +127,11 @@ public class MembershipPlanController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Brand UUID in path and request body do not match");
 		}
 		
-		com.iso.hypo.model.dto.MembershipPlanDto domainDto = modelMapper.map(request, com.iso.hypo.model.dto.MembershipPlanDto.class);
+		com.iso.hypo.domain.dto.MembershipPlanDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.MembershipPlanDto.class);
 
 		try {
 			domainDto = membershipPlanService.create(brandUuid, domainDto);
-		} catch (BrandException e) {
+		} catch (MembershipPlanException e) {
 			logger.error(e.getMessage(), e);
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -161,14 +161,14 @@ public class MembershipPlanController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Brand UUID in path and request body do not match");
 		}
 		
-		com.iso.hypo.model.dto.MembershipPlanDto domainDto = modelMapper.map(request, com.iso.hypo.model.dto.MembershipPlanDto.class);
+		com.iso.hypo.domain.dto.MembershipPlanDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.MembershipPlanDto.class);
 
 		try {
 			domainDto = membershipPlanService.update(brandUuid, domainDto);
-		} catch (BrandException e) {
+		} catch (MembershipPlanException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == BrandException.MEMBERSHIPPLAN_NOT_FOUND) {
+			if (e.getCode() == MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
 			}
@@ -193,14 +193,14 @@ public class MembershipPlanController {
 	public ResponseEntity<Object> activateMembershipPlan(
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.model.dto.MembershipPlanDto entity;
+		com.iso.hypo.domain.dto.MembershipPlanDto entity;
 
 		try {
 			entity = membershipPlanService.activate(brandUuid, uuid);
-		} catch (BrandException e) {
+		} catch (MembershipPlanException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == BrandException.MEMBERSHIPPLAN_NOT_FOUND) {
+			if (e.getCode() == MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
 			}
@@ -225,14 +225,14 @@ public class MembershipPlanController {
 	public ResponseEntity<Object> deactivateMembershipPlan(
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.model.dto.MembershipPlanDto entity;
+		com.iso.hypo.domain.dto.MembershipPlanDto entity;
 
 		try {
 			entity = membershipPlanService.deactivate(brandUuid, uuid);
-		} catch (BrandException e) {
+		} catch (MembershipPlanException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == BrandException.MEMBERSHIPPLAN_NOT_FOUND) {
+			if (e.getCode() == MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
 			}
@@ -261,14 +261,14 @@ public class MembershipPlanController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Brand UUID in path and request body do not match");
 		}
 		
-		com.iso.hypo.model.dto.MembershipPlanDto domainDto = modelMapper.map(request, com.iso.hypo.model.dto.MembershipPlanDto.class);
+		com.iso.hypo.domain.dto.MembershipPlanDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.MembershipPlanDto.class);
 
 		try {
 			domainDto = membershipPlanService.patch(brandUuid, domainDto);
-		} catch (BrandException e) {
+		} catch (MembershipPlanException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == BrandException.MEMBERSHIPPLAN_NOT_FOUND) {
+			if (e.getCode() == MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
 			}
@@ -294,10 +294,10 @@ public class MembershipPlanController {
 			@PathVariable String uuid) {
 		try {
 			membershipPlanService.delete(brandUuid, uuid);
-		} catch (BrandException e) {
+		} catch (MembershipPlanException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == BrandException.MEMBERSHIPPLAN_NOT_FOUND) {
+			if (e.getCode() == MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
 			}
@@ -309,3 +309,4 @@ public class MembershipPlanController {
 		return ResponseEntity.ok(uuid);
 	}
 }
+

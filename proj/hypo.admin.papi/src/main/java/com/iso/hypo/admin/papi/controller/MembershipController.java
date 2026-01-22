@@ -27,8 +27,8 @@ import com.iso.hypo.admin.papi.dto.model.MembershipDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchMembershipDto;
 import com.iso.hypo.admin.papi.dto.post.PostMembershipDto;
 import com.iso.hypo.admin.papi.dto.put.PutMembershipDto;
-import com.iso.hypo.model.exception.MemberException;
-import com.iso.hypo.model.services.MembershipService;
+import com.iso.hypo.services.exception.MemberException;
+import com.iso.hypo.services.MembershipService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -67,7 +67,7 @@ public class MembershipController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.model.dto.MembershipDto> entities = null;
+		Page<com.iso.hypo.domain.dto.MembershipDto> entities = null;
 		try {
 			entities = membershipService.list(brandUuid, page, pageSize, includeInactive);
 		} catch (MemberException e) {
@@ -93,7 +93,7 @@ public class MembershipController {
 	public ResponseEntity<Object> getMembership(
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.model.dto.MembershipDto entity = null;
+		com.iso.hypo.domain.dto.MembershipDto entity = null;
 		try {
 			entity = membershipService.findByMembershipUuid(brandUuid, uuid);
 		} catch (MemberException e) {
@@ -127,7 +127,7 @@ public class MembershipController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Brand UUID in path and request body do not match");
 		}
 		
-		com.iso.hypo.model.dto.MembershipDto domainDto = modelMapper.map(request, com.iso.hypo.model.dto.MembershipDto.class);
+		com.iso.hypo.domain.dto.MembershipDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.MembershipDto.class);
 
 		try {
 			domainDto = membershipService.create(brandUuid, domainDto);
@@ -162,7 +162,7 @@ public class MembershipController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Brand UUID in path and request body do not match");
 		}
 		
-		com.iso.hypo.model.dto.MembershipDto domainDto = modelMapper.map(request, com.iso.hypo.model.dto.MembershipDto.class);
+		com.iso.hypo.domain.dto.MembershipDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.MembershipDto.class);
 
 		try {
 			domainDto = membershipService.update(brandUuid, domainDto);
@@ -195,7 +195,7 @@ public class MembershipController {
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
 		
-		com.iso.hypo.model.dto.MembershipDto entity;
+		com.iso.hypo.domain.dto.MembershipDto entity;
 
 		try {
 			entity = membershipService.activate(brandUuid, uuid);
@@ -228,7 +228,7 @@ public class MembershipController {
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
 		
-		com.iso.hypo.model.dto.MembershipDto entity;
+		com.iso.hypo.domain.dto.MembershipDto entity;
 
 		try {
 			entity = membershipService.deactivate(brandUuid, uuid);
@@ -266,7 +266,7 @@ public class MembershipController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Brand UUID in path and request body do not match");
 		}
 		
-		com.iso.hypo.model.dto.MembershipDto domainDto = modelMapper.map(request, com.iso.hypo.model.dto.MembershipDto.class);
+		com.iso.hypo.domain.dto.MembershipDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.MembershipDto.class);
 
 		try {
 			domainDto = membershipService.patch(brandUuid, domainDto);
@@ -314,3 +314,4 @@ public class MembershipController {
 		return ResponseEntity.ok(uuid);
 	}
 }
+

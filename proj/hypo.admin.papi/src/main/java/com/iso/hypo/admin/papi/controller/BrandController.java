@@ -24,8 +24,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.iso.hypo.model.exception.BrandException;
-import com.iso.hypo.model.services.BrandService;
+import com.iso.hypo.services.exception.BrandException;
+import com.iso.hypo.services.BrandService;
 import com.iso.hypo.admin.papi.config.security.Roles;
 import com.iso.hypo.admin.papi.dto.ErrorDto;
 import com.iso.hypo.admin.papi.dto.MessageDto;
@@ -75,7 +75,7 @@ public class BrandController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.model.dto.BrandSearchDto> entities = null;
+		Page<com.iso.hypo.domain.dto.BrandSearchDto> entities = null;
 		try {
 			entities = brandService.search(page, pageSize, criteria, includeInactive);
 		} catch (BrandException e) {
@@ -102,7 +102,7 @@ public class BrandController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.model.dto.BrandDto> entities = null;
+		Page<com.iso.hypo.domain.dto.BrandDto> entities = null;
 		try {
 			entities = brandService.list(page, pageSize, includeInactive);
 		} catch (BrandException e) {
@@ -128,7 +128,7 @@ public class BrandController {
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "','" + Roles.Member + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> getBrand(@PathVariable String uuid) {
-		com.iso.hypo.model.dto.BrandDto entity = null;
+		com.iso.hypo.domain.dto.BrandDto entity = null;
 		try {
 			entity = brandService.findByBrandUuid(uuid);
 		} catch (BrandException e) {
@@ -157,7 +157,7 @@ public class BrandController {
 	@ResponseStatus(value = HttpStatus.CREATED)
 	public ResponseEntity<Object> createBrand(@RequestBody PostBrandDto request) {
 		// map controller POST DTO to domain DTO
-		com.iso.hypo.model.dto.BrandDto domainDto = modelMapper.map(request, com.iso.hypo.model.dto.BrandDto.class);
+		com.iso.hypo.domain.dto.BrandDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.BrandDto.class);
 
 		try {
 			domainDto = brandService.create(domainDto);
@@ -199,7 +199,7 @@ public class BrandController {
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> updateBrand(@PathVariable String uuid, @RequestBody PutBrandDto request) {
-		com.iso.hypo.model.dto.BrandDto domainDto = modelMapper.map(request, com.iso.hypo.model.dto.BrandDto.class);
+		com.iso.hypo.domain.dto.BrandDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.BrandDto.class);
 		
 		try {
 			domainDto = brandService.update(domainDto);
@@ -230,7 +230,7 @@ public class BrandController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> patchBrand(@PathVariable String uuid, @RequestBody PatchBrandDto request) {
-		com.iso.hypo.model.dto.BrandDto domainDto = modelMapper.map(request, com.iso.hypo.model.dto.BrandDto.class);
+		com.iso.hypo.domain.dto.BrandDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.BrandDto.class);
 		
 		try {
 			domainDto = brandService.patch(domainDto);
@@ -263,7 +263,7 @@ public class BrandController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> activateBrand(
 			@PathVariable String uuid) {
-		com.iso.hypo.model.dto.BrandDto entity;
+		com.iso.hypo.domain.dto.BrandDto entity;
 		
 		try {
 			entity = brandService.activate(uuid);
@@ -296,7 +296,7 @@ public class BrandController {
 	public ResponseEntity<Object> deactivateBrand(
 			@PathVariable String uuid) {
 		
-		com.iso.hypo.model.dto.BrandDto entity;
+		com.iso.hypo.domain.dto.BrandDto entity;
 		
 		try {
 			entity = brandService.deactivate(uuid);
@@ -342,3 +342,4 @@ public class BrandController {
 		return ResponseEntity.ok(uuid);
 	}
 }
+

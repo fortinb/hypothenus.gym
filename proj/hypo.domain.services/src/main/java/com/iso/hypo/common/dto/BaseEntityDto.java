@@ -3,7 +3,7 @@ package com.iso.hypo.common.dto;
 import java.time.Instant;
 import java.util.List;
 
-import com.iso.hypo.model.domain.Message;
+import com.iso.hypo.domain.Message;
 
 import lombok.Getter;
 import lombok.Setter;

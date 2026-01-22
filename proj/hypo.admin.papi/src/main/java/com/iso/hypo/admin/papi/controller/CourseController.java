@@ -32,8 +32,8 @@ import com.iso.hypo.admin.papi.dto.model.CourseDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchCourseDto;
 import com.iso.hypo.admin.papi.dto.post.PostCourseDto;
 import com.iso.hypo.admin.papi.dto.put.PutCourseDto;
-import com.iso.hypo.model.exception.GymException;
-import com.iso.hypo.model.services.CourseService;
+import com.iso.hypo.services.exception.CourseException;
+import com.iso.hypo.services.CourseService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -75,10 +75,10 @@ public class CourseController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.model.dto.CourseDto> entities = null;
+		Page<com.iso.hypo.domain.dto.CourseDto> entities = null;
 		try {
 			entities = courseService.list(brandUuid, gymUuid, page, pageSize, includeInactive);
-		} catch (GymException e) {
+		} catch (CourseException e) {
 			logger.error(e.getMessage(), e);
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -103,13 +103,13 @@ public class CourseController {
 			@PathVariable String brandUuid,
 			@PathVariable String gymUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.model.dto.CourseDto entity = null;
+		com.iso.hypo.domain.dto.CourseDto entity = null;
 		try {
 			entity = courseService.findByCourseUuid(brandUuid, gymUuid, uuid);
-		} catch (GymException e) {
+		} catch (CourseException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == GymException.COURSE_NOT_FOUND) {
+			if (e.getCode() == CourseException.COURSE_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
 			}
@@ -143,14 +143,14 @@ public class CourseController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Gym UUID in path and request body do not match");
 		}
 		
-		com.iso.hypo.model.dto.CourseDto domainDto = modelMapper.map(request, com.iso.hypo.model.dto.CourseDto.class);
+		com.iso.hypo.domain.dto.CourseDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.CourseDto.class);
 
 		try {
 			domainDto = courseService.create(brandUuid, gymUuid, domainDto);
-		} catch (GymException e) {
+		} catch (CourseException e) {
 			logger.error(e.getMessage(), e);
 			
-			if (e.getCode() == GymException.COURSE_CODE_ALREADY_EXIST) {
+			if (e.getCode() == CourseException.COURSE_CODE_ALREADY_EXIST) {
 				CourseDto errorResponse = modelMapper.map(request, CourseDto.class);
 				List<MessageDto> messages = new ArrayList<MessageDto>();
 				
@@ -198,14 +198,14 @@ public class CourseController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Gym UUID in path and request body do not match");
 		}
 		
-		com.iso.hypo.model.dto.CourseDto domainDto = modelMapper.map(request, com.iso.hypo.model.dto.CourseDto.class);
+		com.iso.hypo.domain.dto.CourseDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.CourseDto.class);
 
 		try {
 			domainDto = courseService.update(brandUuid, gymUuid, domainDto);
-		} catch (GymException e) {
+		} catch (CourseException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == GymException.COURSE_NOT_FOUND) {
+			if (e.getCode() == CourseException.COURSE_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
 			}
@@ -232,14 +232,14 @@ public class CourseController {
 			@PathVariable String brandUuid,
 			@PathVariable String gymUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.model.dto.CourseDto entity;
+		com.iso.hypo.domain.dto.CourseDto entity;
 
 		try {
 			entity = courseService.activate(brandUuid, gymUuid, uuid);
-		} catch (GymException e) {
+		} catch (CourseException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == GymException.COURSE_NOT_FOUND) {
+			if (e.getCode() == CourseException.COURSE_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
 			}
@@ -266,14 +266,14 @@ public class CourseController {
 			@PathVariable String brandUuid,
 			@PathVariable String gymUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.model.dto.CourseDto entity;
+		com.iso.hypo.domain.dto.CourseDto entity;
 
 		try {
 			entity = courseService.deactivate(brandUuid, gymUuid, uuid);
-		} catch (GymException e) {
+		} catch (CourseException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == GymException.COURSE_NOT_FOUND) {
+			if (e.getCode() == CourseException.COURSE_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
 			}
@@ -309,14 +309,14 @@ public class CourseController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Gym UUID in path and request body do not match");
 		}
 		
-		com.iso.hypo.model.dto.CourseDto domainDto = modelMapper.map(request, com.iso.hypo.model.dto.CourseDto.class);
+		com.iso.hypo.domain.dto.CourseDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.CourseDto.class);
 
 		try {
 			domainDto = courseService.patch(brandUuid, gymUuid, domainDto);
-		} catch (GymException e) {
+		} catch (CourseException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == GymException.COURSE_NOT_FOUND) {
+			if (e.getCode() == CourseException.COURSE_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
 			}
@@ -343,10 +343,10 @@ public class CourseController {
 			@PathVariable String uuid) {
 		try {
 			courseService.delete(brandUuid, gymUuid, uuid);
-		} catch (GymException e) {
+		} catch (CourseException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == GymException.COURSE_NOT_FOUND) {
+			if (e.getCode() == CourseException.COURSE_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
 			}
@@ -358,3 +358,4 @@ public class CourseController {
 		return ResponseEntity.ok(uuid);
 	}
 }
+

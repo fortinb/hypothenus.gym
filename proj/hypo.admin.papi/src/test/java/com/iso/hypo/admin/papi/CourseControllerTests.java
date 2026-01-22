@@ -36,28 +36,29 @@ import org.springframework.util.MultiValueMap;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.datafaker.Faker;
-import com.iso.hypo.model.aggregate.Brand;
-import com.iso.hypo.model.repository.BrandRepository;
 import com.iso.hypo.admin.papi.dto.LocalizedStringDto;
 import com.iso.hypo.admin.papi.dto.model.CourseDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchCourseDto;
 import com.iso.hypo.admin.papi.dto.post.PostCourseDto;
 import com.iso.hypo.admin.papi.dto.put.PutCourseDto;
-import com.iso.hypo.model.exception.GymException;
-import com.iso.hypo.model.aggregate.Coach;
-import com.iso.hypo.model.aggregate.Course;
-import com.iso.hypo.model.aggregate.Gym;
-import com.iso.hypo.model.repository.CoachRepository;
-import com.iso.hypo.model.repository.CourseRepository;
-import com.iso.hypo.model.repository.GymRepository;
+import com.iso.hypo.domain.BrandBuilder;
+import com.iso.hypo.domain.CoachBuilder;
+import com.iso.hypo.domain.CourseBuilder;
+import com.iso.hypo.domain.GymBuilder;
+import com.iso.hypo.domain.aggregate.Brand;
+import com.iso.hypo.domain.aggregate.Coach;
+import com.iso.hypo.domain.aggregate.Course;
+import com.iso.hypo.domain.aggregate.Gym;
+import com.iso.hypo.services.exception.CourseException;
+import com.iso.hypo.repositories.BrandRepository;
+import com.iso.hypo.repositories.CoachRepository;
+import com.iso.hypo.repositories.CourseRepository;
+import com.iso.hypo.repositories.GymRepository;
 import com.iso.hypo.tests.http.HttpUtils;
-import com.iso.hypo.model.BrandBuilder;
-import com.iso.hypo.model.CoachBuilder;
-import com.iso.hypo.model.CourseBuilder;
-import com.iso.hypo.model.GymBuilder;
 import com.iso.hypo.tests.security.Roles;
 import com.iso.hypo.tests.security.Users;
+
+import net.datafaker.Faker;
 
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(Lifecycle.PER_CLASS)
@@ -318,7 +319,7 @@ class CourseControllerTests {
 		Assertions.assertEquals(1, response.getBody().getMessages().size(),
 				String.format("Duplicate error ,missing message: %s", response.getBody().getMessages().size()));
 		
-		Assertions.assertEquals(GymException.COURSE_CODE_ALREADY_EXIST, response.getBody().getMessages().getFirst().getCode(),
+		Assertions.assertEquals(CourseException.COURSE_CODE_ALREADY_EXIST, response.getBody().getMessages().getFirst().getCode(),
 				String.format("Duplicate error, missing message: %s", response.getBody().getMessages().getFirst().getCode()));
 	}
 	
@@ -602,3 +603,4 @@ class CourseControllerTests {
 		}
 	}
 }
+

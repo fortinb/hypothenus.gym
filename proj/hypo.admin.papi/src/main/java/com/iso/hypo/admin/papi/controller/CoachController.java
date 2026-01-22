@@ -27,8 +27,8 @@ import com.iso.hypo.admin.papi.dto.model.CoachDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchCoachDto;
 import com.iso.hypo.admin.papi.dto.post.PostCoachDto;
 import com.iso.hypo.admin.papi.dto.put.PutCoachDto;
-import com.iso.hypo.model.exception.GymException;
-import com.iso.hypo.model.services.CoachService;
+import com.iso.hypo.services.exception.CoachException;
+import com.iso.hypo.services.CoachService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -70,10 +70,10 @@ public class CoachController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue="false") boolean includeInactive) {
 
-		Page<com.iso.hypo.model.dto.CoachDto> entities = null;
+		Page<com.iso.hypo.domain.dto.CoachDto> entities = null;
 		try {
 			entities = coachService.list(brandUuid, gymUuid, page, pageSize, includeInactive);
-		} catch (GymException e) {
+		} catch (CoachException e) {
 			logger.error(e.getMessage(), e);
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -99,13 +99,13 @@ public class CoachController {
 			@PathVariable String brandUuid,
 			@PathVariable String gymUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.model.dto.CoachDto entity = null;
+		com.iso.hypo.domain.dto.CoachDto entity = null;
 		try {
 			entity = coachService.findByCoachUuid(brandUuid, gymUuid, uuid);
-		} catch (GymException e) {
+		} catch (CoachException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == GymException.COACH_NOT_FOUND) {
+			if (e.getCode() == CoachException.COACH_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
 			}
@@ -139,11 +139,11 @@ public class CoachController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Gym UUID in path and request body do not match");
 		}
 		
-		com.iso.hypo.model.dto.CoachDto domainDto = modelMapper.map(request, com.iso.hypo.model.dto.CoachDto.class);
+		com.iso.hypo.domain.dto.CoachDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.CoachDto.class);
 
 		try {
 			domainDto = coachService.create(brandUuid, gymUuid, domainDto);
-		} catch (GymException e) {
+		} catch (CoachException e) {
 			logger.error(e.getMessage(), e);
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -181,14 +181,14 @@ public class CoachController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Gym UUID in path and request body do not match");
 		}
 		
-		com.iso.hypo.model.dto.CoachDto domainDto = modelMapper.map(request, com.iso.hypo.model.dto.CoachDto.class);
+		com.iso.hypo.domain.dto.CoachDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.CoachDto.class);
 		
 		try {
 			domainDto = coachService.update(brandUuid, gymUuid, domainDto);
-		} catch (GymException e) {
+		} catch (CoachException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == GymException.COACH_NOT_FOUND) {
+			if (e.getCode() == CoachException.COACH_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
 			}
@@ -215,14 +215,14 @@ public class CoachController {
 			@PathVariable String brandUuid,
 			@PathVariable String gymUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.model.dto.CoachDto entity;
+		com.iso.hypo.domain.dto.CoachDto entity;
 		
 		try {
 			entity = coachService.activate(brandUuid, gymUuid, uuid);
-		} catch (GymException e) {
+		} catch (CoachException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == GymException.COACH_NOT_FOUND) {
+			if (e.getCode() == CoachException.COACH_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
 			}
@@ -249,14 +249,14 @@ public class CoachController {
 			@PathVariable String brandUuid,
 			@PathVariable String gymUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.model.dto.CoachDto entity;
+		com.iso.hypo.domain.dto.CoachDto entity;
 		
 		try {
 			entity = coachService.deactivate(brandUuid, gymUuid, uuid);
-		} catch (GymException e) {
+		} catch (CoachException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == GymException.COACH_NOT_FOUND) {
+			if (e.getCode() == CoachException.COACH_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
 			}
@@ -293,14 +293,14 @@ public class CoachController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Gym UUID in path and request body do not match");
 		}
 		
-		com.iso.hypo.model.dto.CoachDto domainDto = modelMapper.map(request, com.iso.hypo.model.dto.CoachDto.class);
+		com.iso.hypo.domain.dto.CoachDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.CoachDto.class);
 		
 		try {
 			domainDto = coachService.patch(brandUuid, gymUuid, domainDto);
-		} catch (GymException e) {
+		} catch (CoachException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == GymException.COACH_NOT_FOUND) {
+			if (e.getCode() == CoachException.COACH_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
 			}
@@ -327,10 +327,10 @@ public class CoachController {
 			@PathVariable String uuid) {
 		try {
 			coachService.delete(brandUuid, gymUuid, uuid);
-		} catch (GymException e) {
+		} catch (CoachException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == GymException.COACH_NOT_FOUND) {
+			if (e.getCode() == CoachException.COACH_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
 			}
@@ -342,3 +342,4 @@ public class CoachController {
 		return ResponseEntity.ok(uuid);
 	}
 }
+

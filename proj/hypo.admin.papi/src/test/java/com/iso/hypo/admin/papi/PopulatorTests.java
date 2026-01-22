@@ -13,21 +13,21 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.iso.hypo.model.aggregate.Brand;
-import com.iso.hypo.model.aggregate.MembershipPlan;
-import com.iso.hypo.model.repository.BrandRepository;
-import com.iso.hypo.model.repository.MembershipPlanRepository;
-import com.iso.hypo.model.aggregate.Coach;
-import com.iso.hypo.model.aggregate.Course;
-import com.iso.hypo.model.aggregate.Gym;
-import com.iso.hypo.model.repository.CoachRepository;
-import com.iso.hypo.model.repository.CourseRepository;
-import com.iso.hypo.model.repository.GymRepository;
-import com.iso.hypo.model.BrandBuilder;
-import com.iso.hypo.model.CoachBuilder;
-import com.iso.hypo.model.CourseBuilder;
-import com.iso.hypo.model.GymBuilder;
-import com.iso.hypo.model.MembershipPlanBuilder;
+import com.iso.hypo.domain.aggregate.Brand;
+import com.iso.hypo.domain.aggregate.MembershipPlan;
+import com.iso.hypo.repositories.BrandRepository;
+import com.iso.hypo.repositories.MembershipPlanRepository;
+import com.iso.hypo.domain.aggregate.Coach;
+import com.iso.hypo.domain.aggregate.Course;
+import com.iso.hypo.domain.aggregate.Gym;
+import com.iso.hypo.repositories.CoachRepository;
+import com.iso.hypo.repositories.CourseRepository;
+import com.iso.hypo.repositories.GymRepository;
+import com.iso.hypo.domain.BrandBuilder;
+import com.iso.hypo.domain.CoachBuilder;
+import com.iso.hypo.domain.CourseBuilder;
+import com.iso.hypo.domain.GymBuilder;
+import com.iso.hypo.domain.MembershipPlanBuilder;
 
 import net.datafaker.Faker;
 
@@ -240,3 +240,4 @@ class PopulatorTests {
 
 	}
 }
+

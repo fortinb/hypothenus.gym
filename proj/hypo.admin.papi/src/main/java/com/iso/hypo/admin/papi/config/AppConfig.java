@@ -21,7 +21,7 @@ import com.iso.hypo.common.context.RequestContext;
 import jakarta.servlet.http.HttpServletRequest;
 
 @Configuration
-@EnableMongoRepositories(basePackages = { "com.iso.hypo.model.repository" })
+@EnableMongoRepositories(basePackages = { "com.iso.hypo.repositories" })
 public class AppConfig {
 
 	@Bean
@@ -53,3 +53,4 @@ public class AppConfig {
 	}
 
 }
+

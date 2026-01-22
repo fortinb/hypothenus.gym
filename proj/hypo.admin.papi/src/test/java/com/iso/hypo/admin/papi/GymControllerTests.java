@@ -35,8 +35,8 @@ import org.springframework.util.MultiValueMap;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.datafaker.Faker;
-import com.iso.hypo.model.aggregate.Brand;
-import com.iso.hypo.model.repository.BrandRepository;
+import com.iso.hypo.domain.aggregate.Brand;
+import com.iso.hypo.repositories.BrandRepository;
 import com.iso.hypo.admin.papi.dto.contact.ContactDto;
 import com.iso.hypo.admin.papi.dto.contact.PhoneNumberDto;
 import com.iso.hypo.admin.papi.dto.model.GymDto;
@@ -44,12 +44,12 @@ import com.iso.hypo.admin.papi.dto.patch.PatchGymDto;
 import com.iso.hypo.admin.papi.dto.post.PostGymDto;
 import com.iso.hypo.admin.papi.dto.put.PutGymDto;
 import com.iso.hypo.admin.papi.dto.search.GymSearchDto;
-import com.iso.hypo.model.exception.GymException;
-import com.iso.hypo.model.aggregate.Gym;
-import com.iso.hypo.model.repository.GymRepository;
+import com.iso.hypo.services.exception.GymException;
+import com.iso.hypo.domain.aggregate.Gym;
+import com.iso.hypo.repositories.GymRepository;
 import com.iso.hypo.tests.http.HttpUtils;
-import com.iso.hypo.model.BrandBuilder;
-import com.iso.hypo.model.GymBuilder;
+import com.iso.hypo.domain.BrandBuilder;
+import com.iso.hypo.domain.GymBuilder;
 import com.iso.hypo.tests.security.Roles;
 import com.iso.hypo.tests.security.Users;
 import com.iso.hypo.tests.utils.StringUtils;
@@ -588,3 +588,4 @@ class GymControllerTests {
 		}
 	}
 }
+

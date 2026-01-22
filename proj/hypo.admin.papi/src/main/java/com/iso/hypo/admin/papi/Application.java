@@ -10,7 +10,8 @@ import com.iso.hypo.admin.papi.config.CorsProperties;
 @SpringBootApplication()
 @ComponentScan({ 
 		"com.iso.hypo.admin", 
-		"com.iso.hypo.model", 
+		"com.iso.hypo.domain", 
+		"com.iso.hypo.services", 
 		"com.iso.hypo.common"
 })
 @EnableConfigurationProperties(CorsProperties.class)
