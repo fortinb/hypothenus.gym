@@ -14,15 +14,18 @@ public class DomainException extends Exception {
 	
 	private static final long serialVersionUID = 1L;
 	private String code;
+	private String trackingNumber;
 	
-    public DomainException(String code, String message) {
-    	super(message);
-    	this.code = code;
-    } 
+    public DomainException(String trackingNumber, String code, String message) {
+        super(message);
+        this.trackingNumber = trackingNumber;
+        this.code = code;
+    }
     
-    public DomainException(String code, Exception e) {
-		super(e);
-		this.code = code;
-	}
+    public DomainException(String trackingNumber, String code, Exception e) {
+        super(e);
+        this.trackingNumber = trackingNumber;
+        this.code = code;
+    }
 
 }

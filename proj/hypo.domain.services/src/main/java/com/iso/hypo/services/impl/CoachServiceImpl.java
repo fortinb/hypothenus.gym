@@ -48,11 +48,11 @@ public class CoachServiceImpl implements CoachService {
 			Coach coach = coachMapper.toEntity(coachDto);
 
 			if (!coach.getBrandUuid().equals(brandUuid)) {
-				throw new CoachException(CoachException.INVALID_BRAND, "Invalid brand");
+				throw new CoachException(requestContext != null ? requestContext.getTrackingNumber() : null, CoachException.INVALID_BRAND, "Invalid brand");
 			}
 
 			if (!coach.getGymUuid().equals(gymUuid)) {
-				throw new CoachException(CoachException.INVALID_GYM, "Invalid gym");
+				throw new CoachException(requestContext != null ? requestContext.getTrackingNumber() : null, CoachException.INVALID_GYM, "Invalid gym");
 			}
 
 			coach.setUuid(UUID.randomUUID().toString());
@@ -62,13 +62,16 @@ public class CoachServiceImpl implements CoachService {
 			Coach saved = coachRepository.save(coach);
 			return coachMapper.toDto(saved);
 
-		} catch (GymException e) {
-			throw new CoachException(CoachException.GYM_NOT_FOUND, "Gym not found");
-		} catch (CoachException e) {
-			throw e;
 		} catch (Exception e) {
-			logger.error("Unhandled error", e);
-			throw new CoachException(CoachException.CREATION_FAILED, e);
+			logger.error("Error - brandUuid={}, gymUuid={}, coachUuid={}, trackingNumber={}", brandUuid, gymUuid, coachDto != null ? coachDto.getUuid() : null, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			
+			if (e instanceof GymException) {
+				throw new CoachException(requestContext != null ? requestContext.getTrackingNumber() : null, CoachException.GYM_NOT_FOUND, "Gym not found");
+			}
+			if (e instanceof CoachException) {
+				throw (CoachException) e;
+			}
+			throw new CoachException(requestContext != null ? requestContext.getTrackingNumber() : null, CoachException.CREATION_FAILED, e);
 		}
 	}
 
@@ -77,11 +80,11 @@ public class CoachServiceImpl implements CoachService {
 		try {
 			Coach coach = coachMapper.toEntity(coachDto);
 			if (!coach.getBrandUuid().equals(brandUuid)) {
-				throw new CoachException(CoachException.INVALID_BRAND, "Invalid brand");
+				throw new CoachException(requestContext != null ? requestContext.getTrackingNumber() : null, CoachException.INVALID_BRAND, "Invalid brand");
 			}
 
 			if (!coach.getGymUuid().equals(gymUuid)) {
-				throw new CoachException(CoachException.INVALID_GYM, "Invalid gym");
+				throw new CoachException(requestContext != null ? requestContext.getTrackingNumber() : null, CoachException.INVALID_GYM, "Invalid gym");
 			}
 
 			Coach oldCoach = this.readByCoachUuid(brandUuid, gymUuid, coach.getUuid());
@@ -97,11 +100,13 @@ public class CoachServiceImpl implements CoachService {
 
 			Coach saved = coachRepository.save(oldCoach);
 			return coachMapper.toDto(saved);
-		} catch (CoachException e) {
-			throw e;
 		} catch (Exception e) {
-			logger.error("Unhandled error", e);
-			throw new CoachException(CoachException.UPDATE_FAILED, e);
+			logger.error("Error - brandUuid={}, gymUuid={}, coachUuid={}, trackingNumber={}", brandUuid, gymUuid, coachDto != null ? coachDto.getUuid() : null, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			
+			if (e instanceof CoachException) {
+				throw (CoachException) e;
+			}
+			throw new CoachException(requestContext != null ? requestContext.getTrackingNumber() : null, CoachException.UPDATE_FAILED, e);
 		}
 	}
 
@@ -110,7 +115,7 @@ public class CoachServiceImpl implements CoachService {
 		try {
 			Coach coach = coachMapper.toEntity(coachDto);
 			if (!coach.getGymUuid().equals(gymUuid)) {
-				throw new CoachException(CoachException.INVALID_BRAND, "Invalid gym");
+				throw new CoachException(requestContext != null ? requestContext.getTrackingNumber() : null, CoachException.INVALID_BRAND, "Invalid gym");
 			}
 
 			Coach oldCoach = this.readByCoachUuid(brandUuid, gymUuid, coach.getUuid());
@@ -126,11 +131,13 @@ public class CoachServiceImpl implements CoachService {
 
 			Coach saved = coachRepository.save(oldCoach);
 			return coachMapper.toDto(saved);
-		} catch (CoachException e) {
-			throw e;
 		} catch (Exception e) {
-			logger.error("Unhandled error", e);
-			throw new CoachException(CoachException.UPDATE_FAILED, e);
+			logger.error("Error - brandUuid={}, gymUuid={}, coachUuid={}, trackingNumber={}", brandUuid, gymUuid, coachDto != null ? coachDto.getUuid() : null, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			
+			if (e instanceof CoachException) {
+				throw (CoachException) e;
+			}
+			throw new CoachException(requestContext != null ? requestContext.getTrackingNumber() : null, CoachException.UPDATE_FAILED, e);
 		}
 	}
 
@@ -144,11 +151,13 @@ public class CoachServiceImpl implements CoachService {
 			entity.setDeletedBy(requestContext.getUsername());
 
 			coachRepository.save(entity);
-		} catch (CoachException e) {
-			throw e;
 		} catch (Exception e) {
-			logger.error("Unhandled error", e);
-			throw new CoachException(CoachException.DELETE_FAILED, e);
+			logger.error("Error - brandUuid={}, gymUuid={}, coachUuid={}, trackingNumber={}", brandUuid, gymUuid, coachUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			
+			if (e instanceof CoachException) {
+				throw (CoachException) e;
+			}
+			throw new CoachException(requestContext != null ? requestContext.getTrackingNumber() : null, CoachException.DELETE_FAILED, e);
 		}
 	}
 
@@ -157,15 +166,17 @@ public class CoachServiceImpl implements CoachService {
 		try {
 			Optional<Coach> entity = coachRepository.activate(brandUuid, gymUuid, coachUuid);
 			if (entity.isEmpty()) {
-				throw new CoachException(CoachException.COACH_NOT_FOUND, "Coach not found");
+				throw new CoachException(requestContext != null ? requestContext.getTrackingNumber() : null, CoachException.COACH_NOT_FOUND, "Coach not found");
 			}
 
 			return coachMapper.toDto(entity.get());
-		} catch (CoachException e) {
-			throw e;
 		} catch (Exception e) {
-			logger.error("Unhandled error", e);
-			throw new CoachException(CoachException.ACTIVATION_FAILED, e);
+			logger.error("Error - brandUuid={}, gymUuid={}, coachUuid={}, trackingNumber={}", brandUuid, gymUuid, coachUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			
+			if (e instanceof CoachException) {
+				throw (CoachException) e;
+			}
+			throw new CoachException(requestContext != null ? requestContext.getTrackingNumber() : null, CoachException.ACTIVATION_FAILED, e);
 		}
 	}
 
@@ -174,15 +185,17 @@ public class CoachServiceImpl implements CoachService {
 		try {
 			Optional<Coach> entity = coachRepository.deactivate(brandUuid, gymUuid, coachUuid);
 			if (entity.isEmpty()) {
-				throw new CoachException(CoachException.COACH_NOT_FOUND, "Coach not found");
+				throw new CoachException(requestContext != null ? requestContext.getTrackingNumber() : null, CoachException.COACH_NOT_FOUND, "Coach not found");
 			}
 	
 			return coachMapper.toDto(entity.get());
-		} catch (CoachException e) {
-			throw e;
 		} catch (Exception e) {
-			logger.error("Unhandled error", e);
-			throw new CoachException(CoachException.DEACTIVATION_FAILED, e);
+			logger.error("Error - brandUuid={}, gymUuid={}, coachUuid={}, trackingNumber={}", brandUuid, gymUuid, coachUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			
+			if (e instanceof CoachException) {
+				throw (CoachException) e;
+			}
+			throw new CoachException(requestContext != null ? requestContext.getTrackingNumber() : null, CoachException.DEACTIVATION_FAILED, e);
 		}
 	}
 
@@ -190,7 +203,7 @@ public class CoachServiceImpl implements CoachService {
 		Optional<Coach> entity = coachRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid,
 				coachUuid);
 		if (entity.isEmpty()) {
-			throw new CoachException(CoachException.COACH_NOT_FOUND, "Coach not found");
+			throw new CoachException(requestContext != null ? requestContext.getTrackingNumber() : null, CoachException.COACH_NOT_FOUND, "Coach not found");
 		}
 
 		return entity.get();

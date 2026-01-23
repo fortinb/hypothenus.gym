@@ -13,12 +13,11 @@ public class MembershipException extends DomainException {
 	
 	private static final long serialVersionUID = 1L;
 	
-    public MembershipException(String code, String message) {
-    	super(code, message);
+    public MembershipException(String trackingNumber, String code, String message) {
+    	super(trackingNumber, code, message);
     } 
 
-    public MembershipException(String code, Exception e) {
-    	super(code, e);
+    public MembershipException(String trackingNumber, String code, Exception e) {
+    	super(trackingNumber, code, e);
     } 
 }
-

@@ -35,8 +35,8 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 	private RequestContext requestContext;
 
 	public MembershipPlanServiceImpl(BrandQueryService brandQueryService,
-									 MembershipPlanRepository membershipPlanRepository, 
-									 MembershipPlanMapper membershipPlanMapper) {
+							 MembershipPlanRepository membershipPlanRepository, 
+							 MembershipPlanMapper membershipPlanMapper) {
 		this.brandQueryService = brandQueryService;
 		this.membershipPlanRepository = membershipPlanRepository;
 		this.membershipPlanMapper = membershipPlanMapper;
@@ -49,7 +49,7 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 
 			MembershipPlan membershipPlan = membershipPlanMapper.toEntity(membershipPlanDto);
 			if (!membershipPlan.getBrandUuid().equals(brandUuid)) {
-				throw new MembershipPlanException(MembershipPlanException.INVALID_BRAND, "Invalid brand");
+				throw new MembershipPlanException(requestContext != null ? requestContext.getTrackingNumber() : null, MembershipPlanException.INVALID_BRAND, "Invalid brand");
 			}
 
 			membershipPlan.setCreatedOn(Instant.now());
@@ -59,99 +59,141 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 			MembershipPlan saved = membershipPlanRepository.save(membershipPlan);
 			return membershipPlanMapper.toDto(saved);
 
-		} catch (BrandException e) {
-			throw new MembershipPlanException(MembershipPlanException.BRAND_NOT_FOUND, "Brand not found");
-		} catch (MembershipPlanException e) {
-			throw e;
 		} catch (Exception e) {
-			logger.error("Unhandled error", e);
-			throw new MembershipPlanException(MembershipPlanException.CREATION_FAILED, e);
+			logger.error("Error - brandUuid={}, trackingNumber={}", brandUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			if (e instanceof BrandException) {
+				throw new MembershipPlanException(requestContext != null ? requestContext.getTrackingNumber() : null, MembershipPlanException.BRAND_NOT_FOUND, "Brand not found");
+			}
+			if (e instanceof MembershipPlanException) {
+				throw (MembershipPlanException) e;
+			}
+			throw new MembershipPlanException(requestContext != null ? requestContext.getTrackingNumber() : null, MembershipPlanException.CREATION_FAILED, e);
 		}
 	}
 
 	@Override
 	public MembershipPlanDto update(String brandUuid, MembershipPlanDto membershipPlanDto) throws MembershipPlanException {
-		MembershipPlan membershipPlan = membershipPlanMapper.toEntity(membershipPlanDto);
-		if (!membershipPlan.getBrandUuid().equals(brandUuid)) {
-			throw new MembershipPlanException(MembershipPlanException.INVALID_BRAND, "Invalid brand");
+		try {
+			MembershipPlan membershipPlan = membershipPlanMapper.toEntity(membershipPlanDto);
+			if (!membershipPlan.getBrandUuid().equals(brandUuid)) {
+				throw new MembershipPlanException(requestContext != null ? requestContext.getTrackingNumber() : null, MembershipPlanException.INVALID_BRAND, "Invalid brand");
+			}
+
+			MembershipPlan oldMembershipPlan = this.readByMembershipPlanUuid(brandUuid, membershipPlan.getUuid());
+
+			ModelMapper mapper = new ModelMapper();
+			mapper.getConfiguration().setSkipNullEnabled(false);
+
+			mapper = membershipPlanMapper.initMembershipPlanMappings(mapper);
+			mapper.map(membershipPlan, oldMembershipPlan);
+
+			oldMembershipPlan.setModifiedOn(Instant.now());
+			oldMembershipPlan.setModifiedBy(requestContext.getUsername());
+
+			MembershipPlan saved = membershipPlanRepository.save(oldMembershipPlan);
+			return membershipPlanMapper.toDto(saved);
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, membershipPlanUuid={}, trackingNumber={}", brandUuid, membershipPlanDto != null ? membershipPlanDto.getUuid() : null, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			if (e instanceof MembershipPlanException) {
+				throw (MembershipPlanException) e;
+			}
+			throw new MembershipPlanException(requestContext != null ? requestContext.getTrackingNumber() : null, MembershipPlanException.UPDATE_FAILED, e);
 		}
-
-		MembershipPlan oldMembershipPlan = this.readByMembershipPlanUuid(brandUuid, membershipPlan.getUuid());
-
-		ModelMapper mapper = new ModelMapper();
-		mapper.getConfiguration().setSkipNullEnabled(false);
-
-		mapper = membershipPlanMapper.initMembershipPlanMappings(mapper);
-		mapper.map(membershipPlan, oldMembershipPlan);
-
-		oldMembershipPlan.setModifiedOn(Instant.now());
-		oldMembershipPlan.setModifiedBy(requestContext.getUsername());
-
-		MembershipPlan saved = membershipPlanRepository.save(oldMembershipPlan);
-		return membershipPlanMapper.toDto(saved);
 	}
 
 	@Override
 	public MembershipPlanDto patch(String brandUuid, MembershipPlanDto membershipPlanDto) throws MembershipPlanException {
-		MembershipPlan membershipPlan = membershipPlanMapper.toEntity(membershipPlanDto);
-		if (!membershipPlan.getBrandUuid().equals(brandUuid)) {
-			throw new MembershipPlanException(MembershipPlanException.INVALID_BRAND, "Invalid brand");
+		try {
+			MembershipPlan membershipPlan = membershipPlanMapper.toEntity(membershipPlanDto);
+			if (!membershipPlan.getBrandUuid().equals(brandUuid)) {
+				throw new MembershipPlanException(requestContext != null ? requestContext.getTrackingNumber() : null, MembershipPlanException.INVALID_BRAND, "Invalid brand");
+			}
+
+			MembershipPlan oldMembershipPlan = this.readByMembershipPlanUuid(brandUuid, membershipPlan.getUuid());
+
+			ModelMapper mapper = new ModelMapper();
+			mapper.getConfiguration().setSkipNullEnabled(true);
+
+			mapper = membershipPlanMapper.initMembershipPlanMappings(mapper);
+			mapper.map(membershipPlan, oldMembershipPlan);
+
+			oldMembershipPlan.setModifiedOn(Instant.now());
+			oldMembershipPlan.setModifiedBy(requestContext.getUsername());
+
+			MembershipPlan saved = membershipPlanRepository.save(oldMembershipPlan);
+			return membershipPlanMapper.toDto(saved);
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, membershipPlanUuid={}, trackingNumber={}", brandUuid, membershipPlanDto != null ? membershipPlanDto.getUuid() : null, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			if (e instanceof MembershipPlanException) {
+				throw (MembershipPlanException) e;
+			}
+			throw new MembershipPlanException(requestContext != null ? requestContext.getTrackingNumber() : null, MembershipPlanException.UPDATE_FAILED, e);
 		}
-
-		MembershipPlan oldMembershipPlan = this.readByMembershipPlanUuid(brandUuid, membershipPlan.getUuid());
-
-		ModelMapper mapper = new ModelMapper();
-		mapper.getConfiguration().setSkipNullEnabled(true);
-
-		mapper = membershipPlanMapper.initMembershipPlanMappings(mapper);
-		mapper.map(membershipPlan, oldMembershipPlan);
-
-		oldMembershipPlan.setModifiedOn(Instant.now());
-		oldMembershipPlan.setModifiedBy(requestContext.getUsername());
-
-		MembershipPlan saved = membershipPlanRepository.save(oldMembershipPlan);
-		return membershipPlanMapper.toDto(saved);
 	}
 
 	@Override
 	public void delete(String brandUuid, String membershipPlanUuid) throws MembershipPlanException {
-		MembershipPlan entity = this.readByMembershipPlanUuid(brandUuid, membershipPlanUuid);
-		entity.setDeleted(true);
+		try {
+			MembershipPlan entity = this.readByMembershipPlanUuid(brandUuid, membershipPlanUuid);
+			entity.setDeleted(true);
 
-		entity.setDeletedOn(Instant.now());
-		entity.setDeletedBy(requestContext.getUsername());
+			entity.setDeletedOn(Instant.now());
+			entity.setDeletedBy(requestContext.getUsername());
 
-		membershipPlanRepository.save(entity);
+			membershipPlanRepository.save(entity);
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, membershipPlanUuid={}, trackingNumber={}", brandUuid, membershipPlanUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			if (e instanceof MembershipPlanException) {
+				throw (MembershipPlanException) e;
+			}
+			throw new MembershipPlanException(requestContext != null ? requestContext.getTrackingNumber() : null, MembershipPlanException.DELETE_FAILED, e);
+		}
 	}
 
 	@Override
 	public MembershipPlanDto activate(String brandUuid, String membershipPlanUuid) throws MembershipPlanException {
-		Optional<MembershipPlan> entity = membershipPlanRepository.activate(brandUuid, membershipPlanUuid);
-		if (entity.isEmpty()) {
-			throw new MembershipPlanException(MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND,
-					"MembershipPlan not found");
-		}
+		try {
+			Optional<MembershipPlan> entity = membershipPlanRepository.activate(brandUuid, membershipPlanUuid);
+			if (entity.isEmpty()) {
+				throw new MembershipPlanException(requestContext != null ? requestContext.getTrackingNumber() : null, MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND,
+						"MembershipPlan not found");
+			}
 
-		return membershipPlanMapper.toDto(entity.get());
+			return membershipPlanMapper.toDto(entity.get());
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, membershipPlanUuid={}, trackingNumber={}", brandUuid, membershipPlanUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			if (e instanceof MembershipPlanException) {
+				throw (MembershipPlanException) e;
+			}
+			throw new MembershipPlanException(requestContext != null ? requestContext.getTrackingNumber() : null, MembershipPlanException.ACTIVATION_FAILED, e);
+		}
 	}
 
 	@Override
 	public MembershipPlanDto deactivate(String brandUuid, String membershipPlanUuid) throws MembershipPlanException {
-		Optional<MembershipPlan> entity = membershipPlanRepository.deactivate(brandUuid, membershipPlanUuid);
-		if (entity.isEmpty()) {
-			throw new MembershipPlanException(MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND,
-					"MembershipPlan not found");
-		}
+		try {
+			Optional<MembershipPlan> entity = membershipPlanRepository.deactivate(brandUuid, membershipPlanUuid);
+			if (entity.isEmpty()) {
+				throw new MembershipPlanException(requestContext != null ? requestContext.getTrackingNumber() : null, MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND,
+						"MembershipPlan not found");
+			}
 
-		return membershipPlanMapper.toDto(entity.get());
+			return membershipPlanMapper.toDto(entity.get());
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, membershipPlanUuid={}, trackingNumber={}", brandUuid, membershipPlanUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			if (e instanceof MembershipPlanException) {
+				throw (MembershipPlanException) e;
+			}
+			throw new MembershipPlanException(requestContext != null ? requestContext.getTrackingNumber() : null, MembershipPlanException.DEACTIVATION_FAILED, e);
+		}
 	}
 
 	private MembershipPlan readByMembershipPlanUuid(String brandUuid, String membershipPlanUuid)
 			throws MembershipPlanException {
 		Optional<MembershipPlan> entity = membershipPlanRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid,
-				membershipPlanUuid);
+					membershipPlanUuid);
 		if (entity.isEmpty()) {
-			throw new MembershipPlanException(MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND,
+			throw new MembershipPlanException(requestContext != null ? requestContext.getTrackingNumber() : null, MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND,
 					"MembershipPlan not found");
 		}
 

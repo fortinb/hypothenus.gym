@@ -15,12 +15,11 @@ public class GymException extends DomainException {
 	
 	private static final long serialVersionUID = 1L;
 	
-    public GymException(String code, String message) {
-    	super(code, message);
+    public GymException(String trackingNumber, String code, String message) {
+    	super(trackingNumber, code, message);
     } 
     
-    public GymException(String code, Exception e) {
-    	super(code, e);
+    public GymException(String trackingNumber, String code, Exception e) {
+    	super(trackingNumber, code, e);
     } 
 }
-

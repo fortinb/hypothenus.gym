@@ -12,12 +12,11 @@ public class BrandException extends DomainException {
 
 	private static final long serialVersionUID = 1L;
 	
-    public BrandException(String code, String message) {
-    	super(code, message);
+    public BrandException(String trackingNumber, String code, String message) {
+    	super(trackingNumber, code, message);
     } 
     
-    public BrandException(String code, Exception e) {
-    	super(code, e);
+    public BrandException(String trackingNumber, String code, Exception e) {
+    	super(trackingNumber, code, e);
     } 
 }
-
