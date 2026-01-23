@@ -49,6 +49,9 @@ public class CoachController {
 	@Autowired
 	private ModelMapper modelMapper;
 
+	@Autowired
+	private com.iso.hypo.common.context.RequestContext requestContext;
+
 	private CoachService coachService;
 	private CoachQueryService coachQueryService;
 
@@ -80,7 +83,7 @@ public class CoachController {
 			logger.error(e.getMessage(), e);
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), null));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), null));
 
 		}
 
@@ -110,11 +113,11 @@ public class CoachController {
 
 			if (e.getCode() == CoachException.COACH_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 		}
 
 		return ResponseEntity.ok(modelMapper.map(entity, CoachDto.class));
@@ -193,11 +196,11 @@ public class CoachController {
 
 			if (e.getCode() == CoachException.COACH_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 		}
 
 		return ResponseEntity.ok(modelMapper.map(domainDto, CoachDto.class));
@@ -227,11 +230,11 @@ public class CoachController {
 
 			if (e.getCode() == CoachException.COACH_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 		}
 
 		return ResponseEntity.ok(modelMapper.map(entity, CoachDto.class));
@@ -261,11 +264,11 @@ public class CoachController {
 
 			if (e.getCode() == CoachException.COACH_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 		}
 
 		return ResponseEntity.ok(modelMapper.map(entity, CoachDto.class));
@@ -305,11 +308,11 @@ public class CoachController {
 
 			if (e.getCode() == CoachException.COACH_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 		}
 
 		return ResponseEntity.ok(modelMapper.map(domainDto, CoachDto.class));
@@ -335,14 +338,13 @@ public class CoachController {
 
 			if (e.getCode() == CoachException.COACH_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 		}
 
 		return ResponseEntity.ok(uuid);
 	}
 }
-

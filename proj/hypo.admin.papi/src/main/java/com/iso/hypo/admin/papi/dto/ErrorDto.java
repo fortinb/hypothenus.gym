@@ -13,7 +13,10 @@ public class ErrorDto {
 	
 	private String data;
 	
-	public ErrorDto(String code, String description, String data) {
+	private String trackingNumber;
+	
+	public ErrorDto(String trackingNumber, String code, String description, String data) {
+		this.trackingNumber = trackingNumber;
 		this.code = code;
 		this.description = description;
 		this.data = data;

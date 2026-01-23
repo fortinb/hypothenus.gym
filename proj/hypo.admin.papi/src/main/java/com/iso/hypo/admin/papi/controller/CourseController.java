@@ -54,6 +54,9 @@ public class CourseController {
 	@Autowired
 	private ModelMapper modelMapper;
 
+	@Autowired
+	private com.iso.hypo.common.context.RequestContext requestContext;
+
 	private CourseService courseService;
 	private CourseQueryService courseQueryService;
 
@@ -85,7 +88,7 @@ public class CourseController {
 			logger.error(e.getMessage(), e);
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), null));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), null));
 		}
 
 		return ResponseEntity.ok(entities.map(item -> modelMapper.map(item, CourseDto.class)));
@@ -114,11 +117,11 @@ public class CourseController {
 
 			if (e.getCode() == CourseException.COURSE_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 		}
 
 		return ResponseEntity.ok(modelMapper.map(entity, CourseDto.class));
@@ -210,11 +213,11 @@ public class CourseController {
 
 			if (e.getCode() == CourseException.COURSE_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 		}
 
 		return ResponseEntity.ok(modelMapper.map(domainDto, CourseDto.class));
@@ -244,11 +247,11 @@ public class CourseController {
 
 			if (e.getCode() == CourseException.COURSE_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 		}
 
 		return ResponseEntity.ok(modelMapper.map(entity, CourseDto.class));
@@ -278,11 +281,11 @@ public class CourseController {
 
 			if (e.getCode() == CourseException.COURSE_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 		}
 
 		return ResponseEntity.ok(modelMapper.map(entity, CourseDto.class));
@@ -321,11 +324,11 @@ public class CourseController {
 
 			if (e.getCode() == CourseException.COURSE_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 		}
 
 		return ResponseEntity.ok(modelMapper.map(domainDto, CourseDto.class));
@@ -351,14 +354,13 @@ public class CourseController {
 
 			if (e.getCode() == CourseException.COURSE_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 		}
 
 		return ResponseEntity.ok(uuid);
 	}
 }
-

@@ -48,6 +48,9 @@ public class MembershipPlanController {
 	@Autowired
 	private ModelMapper modelMapper;
 
+	@Autowired
+	private com.iso.hypo.common.context.RequestContext requestContext;
+
 	private MembershipPlanService membershipPlanService;
 	private MembershipPlanQueryService membershipPlanQueryService;
 
@@ -77,7 +80,7 @@ public class MembershipPlanController {
 			logger.error(e.getMessage(), e);
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), null));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), null));
 		}
 
 		return ResponseEntity.ok(entities.map(item -> modelMapper.map(item, MembershipPlanDto.class)));
@@ -104,11 +107,11 @@ public class MembershipPlanController {
 
 			if (e.getCode() == MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 		}
 
 		return ResponseEntity.ok(modelMapper.map(entity, MembershipPlanDto.class));
@@ -173,11 +176,11 @@ public class MembershipPlanController {
 
 			if (e.getCode() == MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 		}
 
 		return ResponseEntity.ok(modelMapper.map(domainDto, MembershipPlanDto.class));
@@ -205,11 +208,11 @@ public class MembershipPlanController {
 
 			if (e.getCode() == MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 		}
 
 		return ResponseEntity.ok(modelMapper.map(entity, MembershipPlanDto.class));
@@ -237,11 +240,11 @@ public class MembershipPlanController {
 
 			if (e.getCode() == MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 		}
 
 		return ResponseEntity.ok(modelMapper.map(entity, MembershipPlanDto.class));
@@ -273,11 +276,11 @@ public class MembershipPlanController {
 
 			if (e.getCode() == MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 		}
 
 		return ResponseEntity.ok(modelMapper.map(domainDto, MembershipPlanDto.class));
@@ -302,14 +305,13 @@ public class MembershipPlanController {
 
 			if (e.getCode() == MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 		}
 
 		return ResponseEntity.ok(uuid);
 	}
 }
-

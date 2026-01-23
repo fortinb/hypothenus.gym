@@ -55,6 +55,9 @@ public class GymController {
 	@Autowired
 	private ModelMapper modelMapper;
 
+	@Autowired
+	private com.iso.hypo.common.context.RequestContext requestContext;
+
 	private GymService gymService;
 	private GymQueryService gymQueryService;
 
@@ -86,7 +89,7 @@ public class GymController {
 			logger.error(e.getMessage(), e);
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), criteria));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), criteria));
 		}
 
 		return ResponseEntity.ok(entities.map(item -> modelMapper.map(item, GymSearchDto.class)));
@@ -114,7 +117,7 @@ public class GymController {
 			logger.error(e.getMessage(), e);
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), null));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), null));
 
 		}
 
@@ -143,11 +146,11 @@ public class GymController {
 
 			if (e.getCode() == GymException.GYM_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 		}
 
 		return ResponseEntity.ok(modelMapper.map(entity, GymDto.class));
@@ -227,11 +230,11 @@ public class GymController {
 
 			if (e.getCode() == GymException.GYM_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 		}
 
 		return ResponseEntity.ok(modelMapper.map(domainDto, GymDto.class));
@@ -266,11 +269,11 @@ public class GymController {
 
 			if (e.getCode() == GymException.GYM_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 		}
 
 		return ResponseEntity.ok(modelMapper.map(domainDto, GymDto.class));
@@ -299,11 +302,11 @@ public class GymController {
 
 			if (e.getCode() == GymException.GYM_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 		}
 
 		return ResponseEntity.ok(modelMapper.map(entity, GymDto.class));
@@ -333,11 +336,11 @@ public class GymController {
 
 			if (e.getCode() == GymException.GYM_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 		}
 
 		return ResponseEntity.ok(modelMapper.map(entity, GymDto.class));
@@ -362,14 +365,13 @@ public class GymController {
 
 			if (e.getCode() == GymException.GYM_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 			}
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
+					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
 		}
 
 		return ResponseEntity.ok(uuid);
 	}
 }
-
