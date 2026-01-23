@@ -5,16 +5,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
-import org.modelmapper.PropertyMap;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.iso.hypo.common.context.RequestContext;
-import com.iso.hypo.services.exception.CourseException;
-import com.iso.hypo.domain.LocalizedString;
 import com.iso.hypo.domain.aggregate.Coach;
 import com.iso.hypo.domain.aggregate.Course;
 import com.iso.hypo.domain.aggregate.Gym;
@@ -22,8 +16,9 @@ import com.iso.hypo.domain.dto.CourseDto;
 import com.iso.hypo.repositories.CoachRepository;
 import com.iso.hypo.repositories.CourseRepository;
 import com.iso.hypo.repositories.GymRepository;
-import com.iso.hypo.services.mappers.GymMapper;
 import com.iso.hypo.services.CourseService;
+import com.iso.hypo.services.exception.CourseException;
+import com.iso.hypo.services.mappers.CourseMapper;
 
 @Service
 public class CourseServiceImpl implements CourseService {
@@ -34,16 +29,16 @@ public class CourseServiceImpl implements CourseService {
 
 	private CoachRepository coachRepository;
 
-	private GymMapper gymMapper;
+	private CourseMapper courseMapper;
 
 	@Autowired
 	private RequestContext requestContext;
 
-	public CourseServiceImpl(GymRepository gymRepository, CoachRepository coachRepository, CourseRepository courseRepository, GymMapper gymMapper) {
+	public CourseServiceImpl(GymRepository gymRepository, CoachRepository coachRepository, CourseRepository courseRepository, CourseMapper courseMapper) {
 		this.gymRepository = gymRepository;
 		this.coachRepository = coachRepository;
 		this.courseRepository = courseRepository;
-		this.gymMapper = gymMapper;
+		this.courseMapper = courseMapper;
 	}
 
 	@Override
@@ -53,7 +48,7 @@ public class CourseServiceImpl implements CourseService {
 			throw new CourseException(CourseException.GYM_NOT_FOUND, "Gym not found");
 		}
 		
-		Course course = gymMapper.toEntity(courseDto);
+		Course course = courseMapper.toEntity(courseDto);
 		if (!course.getBrandUuid().equals(brandUuid)) {
 			throw new CourseException(CourseException.INVALID_BRAND, "Invalid brand");
 		}
@@ -85,12 +80,12 @@ public class CourseServiceImpl implements CourseService {
 		course.setCreatedBy(requestContext.getUsername());
 
 		Course saved = courseRepository.save(course);
-		return gymMapper.toDto(saved);
+		return courseMapper.toDto(saved);
 	}
 
 	@Override
 	public CourseDto update(String brandUuid, String gymUuid, CourseDto courseDto) throws CourseException {
-		Course course = gymMapper.toEntity(courseDto);
+		Course course = courseMapper.toEntity(courseDto);
 		if (!course.getBrandUuid().equals(brandUuid)) {
 			throw new CourseException(CourseException.INVALID_BRAND, "Invalid brand");
 		}
@@ -104,7 +99,7 @@ public class CourseServiceImpl implements CourseService {
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(false).setCollectionsMergeEnabled(false);
 
-		mapper = initCourseMappings(mapper);
+		mapper = courseMapper.initCourseMappings(mapper);
 		mapper.map(course, oldCourse);
 
 		// Validate coaches
@@ -123,12 +118,12 @@ public class CourseServiceImpl implements CourseService {
 		oldCourse.setModifiedBy(requestContext.getUsername());
 
 		Course saved = courseRepository.save(oldCourse);
-		return gymMapper.toDto(saved);
+		return courseMapper.toDto(saved);
 	}
 
 	@Override
 	public CourseDto patch(String brandUuid, String gymUuid, CourseDto courseDto) throws CourseException {
-		Course course = gymMapper.toEntity(courseDto);
+		Course course = courseMapper.toEntity(courseDto);
 		if (!course.getBrandUuid().equals(brandUuid)) {
 			throw new CourseException(CourseException.INVALID_BRAND, "Invalid brand");
 		}
@@ -142,7 +137,7 @@ public class CourseServiceImpl implements CourseService {
 		ModelMapper mapper = new ModelMapper();
 		mapper.getConfiguration().setSkipNullEnabled(false).setCollectionsMergeEnabled(false);
 
-		mapper = initCourseMappings(mapper);
+		mapper = courseMapper.initCourseMappings(mapper);
 		mapper.map(course, oldCourse);
 
 		// Validate coaches
@@ -161,7 +156,7 @@ public class CourseServiceImpl implements CourseService {
 		oldCourse.setModifiedBy(requestContext.getUsername());
 
 		Course saved = courseRepository.save(oldCourse);
-		return gymMapper.toDto(saved);
+		return courseMapper.toDto(saved);
 	}
 
 	@Override
@@ -176,38 +171,13 @@ public class CourseServiceImpl implements CourseService {
 	}
 
 	@Override
-	public CourseDto findByCourseUuid(String brandUuid, String gymUuid, String courseUuid) throws CourseException {
-		Optional<Course> entity = courseRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid,
-				courseUuid);
-		if (entity.isEmpty()) {
-			throw new CourseException(CourseException.COURSE_NOT_FOUND, "Course not found");
-		}
-
-		return gymMapper.toDto(entity.get());
-	}
-
-	@Override
-	public Page<CourseDto> list(String brandUuid, String gymUuid, int page, int pageSize, boolean includeInactive)
-			throws CourseException {
-		if (includeInactive) {
-			return courseRepository
-					.findAllByBrandUuidAndGymUuidAndIsDeletedIsFalse(brandUuid, gymUuid,
-							PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"))
-					.map(c -> gymMapper.toDto(c));
-		}
-
-		return courseRepository.findAllByBrandUuidAndGymUuidAndIsDeletedIsFalseAndIsActiveIsTrue(brandUuid, gymUuid,
-				PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname")).map(c -> gymMapper.toDto(c));
-	}
-
-	@Override
 	public CourseDto activate(String brandUuid, String gymUuid, String courseUuid) throws CourseException {
 		Optional<Course> entity = courseRepository.activate(brandUuid, gymUuid, courseUuid);
 		if (entity.isEmpty()) {
 			throw new CourseException(CourseException.COURSE_NOT_FOUND, "Course not found");
 		}
 
-		return gymMapper.toDto(entity.get());
+		return courseMapper.toDto(entity.get());
 	}
 
 	@Override
@@ -217,7 +187,7 @@ public class CourseServiceImpl implements CourseService {
 			throw new CourseException(CourseException.COURSE_NOT_FOUND, "Course not found");
 		}
 
-		return gymMapper.toDto(entity.get());
+		return courseMapper.toDto(entity.get());
 	}
 
 	private Course readByCourseUuid(String brandUuid, String gymUuid, String courseUuid) throws CourseException {
@@ -230,34 +200,7 @@ public class CourseServiceImpl implements CourseService {
 		return entity.get();
 	}
 
-	private ModelMapper initCourseMappings(ModelMapper mapper) {
-		PropertyMap<Course, Course> coursePropertyMap = new PropertyMap<Course, Course>() {
-			protected void configure() {
-				skip().setId(null);
-				skip().setActive(false);
-				skip().setActivatedOn(null);
-				skip().setDeactivatedOn(null);
-			}
-		};
-
-		PropertyMap<LocalizedString, LocalizedString> localizedStringPropertyMap = new PropertyMap<LocalizedString, LocalizedString>() {
-			@Override
-			protected void configure() {
-			}
-		};
-
-		PropertyMap<Coach, Coach> coachPropertyMap = new PropertyMap<Coach, Coach>() {
-			@Override
-			protected void configure() {
-			}
-		};
-
-		mapper.addMappings(coursePropertyMap);
-		mapper.addMappings(localizedStringPropertyMap);
-		mapper.addMappings(coachPropertyMap);
-
-		return mapper;
-	}
+	
 }
 
 

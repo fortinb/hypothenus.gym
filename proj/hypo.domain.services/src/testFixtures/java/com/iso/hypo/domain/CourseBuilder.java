@@ -6,11 +6,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import net.datafaker.Faker;
-import com.iso.hypo.domain.LocalizedString;
 import com.iso.hypo.domain.aggregate.Coach;
 import com.iso.hypo.domain.aggregate.Course;
 import com.iso.hypo.domain.enumeration.LanguageEnum;
+
+import net.datafaker.Faker;
 
 public class CourseBuilder {
 	private static Faker faker = new Faker();

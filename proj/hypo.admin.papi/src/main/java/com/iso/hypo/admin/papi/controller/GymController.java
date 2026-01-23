@@ -34,6 +34,7 @@ import com.iso.hypo.admin.papi.dto.post.PostGymDto;
 import com.iso.hypo.admin.papi.dto.put.PutGymDto;
 import com.iso.hypo.admin.papi.dto.search.GymSearchDto;
 import com.iso.hypo.services.exception.GymException;
+import com.iso.hypo.services.GymQueryService;
 import com.iso.hypo.services.GymService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -55,9 +56,11 @@ public class GymController {
 	private ModelMapper modelMapper;
 
 	private GymService gymService;
+	private GymQueryService gymQueryService;
 
-	public GymController(GymService gymService) {
+	public GymController(GymService gymService, GymQueryService gymQueryService) {
 		this.gymService = gymService;
+		this.gymQueryService = gymQueryService;
 	}
 
 	@GetMapping("/brands/{brandUuid}/gyms/search")
@@ -78,7 +81,7 @@ public class GymController {
 
 		Page<com.iso.hypo.domain.dto.GymSearchDto> entities = null;
 		try {
-			entities = gymService.search(page, pageSize, criteria, includeInactive);
+			entities = gymQueryService.search(page, pageSize, criteria, includeInactive);
 		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
@@ -106,7 +109,7 @@ public class GymController {
 
 		Page<com.iso.hypo.domain.dto.GymDto> entities = null;
 		try {
-			entities = gymService.list(brandUuid, page, pageSize, includeInactive);
+			entities = gymQueryService.list(brandUuid, page, pageSize, includeInactive);
 		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
@@ -134,7 +137,7 @@ public class GymController {
 			@PathVariable String brandUuid) {
 		com.iso.hypo.domain.dto.GymDto entity = null;
 		try {
-			entity = gymService.findByCode(brandUuid, uuid);
+			entity = gymQueryService.find(brandUuid, uuid);
 		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 

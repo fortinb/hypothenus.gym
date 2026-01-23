@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.iso.hypo.services.exception.BrandException;
+import com.iso.hypo.services.BrandQueryService;
 import com.iso.hypo.services.BrandService;
 import com.iso.hypo.admin.papi.config.security.Roles;
 import com.iso.hypo.admin.papi.dto.ErrorDto;
@@ -55,9 +56,11 @@ public class BrandController {
 	private ModelMapper modelMapper;
 
 	private BrandService brandService;
+	private BrandQueryService brandQueryService;
 
-	public BrandController(BrandService brandService) {
+	public BrandController(BrandService brandService, BrandQueryService brandServiceQueryService) {
 		this.brandService = brandService;
+		this.brandQueryService = brandServiceQueryService;
 	}
 
 	@GetMapping("/brands/search")
@@ -77,7 +80,7 @@ public class BrandController {
 
 		Page<com.iso.hypo.domain.dto.BrandSearchDto> entities = null;
 		try {
-			entities = brandService.search(page, pageSize, criteria, includeInactive);
+			entities = brandQueryService.search(page, pageSize, criteria, includeInactive);
 		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
@@ -104,7 +107,7 @@ public class BrandController {
 
 		Page<com.iso.hypo.domain.dto.BrandDto> entities = null;
 		try {
-			entities = brandService.list(page, pageSize, includeInactive);
+			entities = brandQueryService.list(page, pageSize, includeInactive);
 		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
@@ -130,7 +133,7 @@ public class BrandController {
 	public ResponseEntity<Object> getBrand(@PathVariable String uuid) {
 		com.iso.hypo.domain.dto.BrandDto entity = null;
 		try {
-			entity = brandService.findByBrandUuid(uuid);
+			entity = brandQueryService.find(uuid);
 		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 

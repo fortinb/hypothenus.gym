@@ -28,6 +28,7 @@ import com.iso.hypo.admin.papi.dto.patch.PatchCoachDto;
 import com.iso.hypo.admin.papi.dto.post.PostCoachDto;
 import com.iso.hypo.admin.papi.dto.put.PutCoachDto;
 import com.iso.hypo.services.exception.CoachException;
+import com.iso.hypo.services.CoachQueryService;
 import com.iso.hypo.services.CoachService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,9 +50,11 @@ public class CoachController {
 	private ModelMapper modelMapper;
 
 	private CoachService coachService;
+	private CoachQueryService coachQueryService;
 
-	public CoachController(CoachService coachService) {
+	public CoachController(CoachService coachService, CoachQueryService coachQueryService) {
 		this.coachService = coachService;
+		this.coachQueryService = coachQueryService;
 	}
 
 	@GetMapping("/brands/{brandUuid}/gyms/{gymUuid}/coachs")
@@ -72,7 +75,7 @@ public class CoachController {
 
 		Page<com.iso.hypo.domain.dto.CoachDto> entities = null;
 		try {
-			entities = coachService.list(brandUuid, gymUuid, page, pageSize, includeInactive);
+			entities = coachQueryService.list(brandUuid, gymUuid, page, pageSize, includeInactive);
 		} catch (CoachException e) {
 			logger.error(e.getMessage(), e);
 
@@ -101,7 +104,7 @@ public class CoachController {
 			@PathVariable String uuid) {
 		com.iso.hypo.domain.dto.CoachDto entity = null;
 		try {
-			entity = coachService.findByCoachUuid(brandUuid, gymUuid, uuid);
+			entity = coachQueryService.find(brandUuid, gymUuid, uuid);
 		} catch (CoachException e) {
 			logger.error(e.getMessage(), e);
 

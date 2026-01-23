@@ -7,6 +7,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -31,7 +32,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-
+import static org.awaitility.Awaitility.await;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.datafaker.Faker;
@@ -103,7 +104,7 @@ class BrandControllerTests {
 		brand = BrandBuilder.build(codeBrand_1, faker.company().name());
 		brandRepository.save(brand);
 		
-		brandIsDeleted = BrandBuilder.build(faker.code().isbn10(), faker.company().name());
+		brandIsDeleted = BrandBuilder.build(faker.code().isbn10(), faker.code().isbn10());
 		brandIsDeleted.setDeleted(true);
 		brandIsDeleted = brandRepository.save(brandIsDeleted);
 
@@ -132,76 +133,49 @@ class BrandControllerTests {
 	void testSearchAutocompleteIsDeletedSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Act
 		String criteria = StringUtils.extractRandomWordPartial(brandIsDeleted.getName(), 10);
-		Page<BrandSearchDto> response = search(criteria);
-
-		Assertions.assertTrue(response.getNumberOfElements() == 0,
-				String.format("Brand search by name return results for isDeleted [%s]", criteria));
+		assertSearch(criteria,0,0);
 	}
 	
 	@Test
 	void testSearchAutocompleteCitySuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Act
 		String criteria = StringUtils.extractRandomWordPartial(brand.getAddress().getCity(), 3);
-		Page<BrandSearchDto> response = search(criteria);
-
-		// Assert
-		Assertions.assertTrue(response.getNumberOfElements() > 0,
-				String.format("Brand search by city return no results [%s]", criteria));
+		assertSearch(criteria,1,1000);
 	}
 
 	@Test
 	void testSearchAutocompleteStateSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Act
 		String criteria = StringUtils.extractRandomWordPartial(brand.getAddress().getState(), 2);
-		Page<BrandSearchDto> response = search(criteria);
-
-		// Assert
-		Assertions.assertTrue(response.getNumberOfElements() > 0,
-				String.format("Brand search by state return no results [%s]", criteria));
+		assertSearch(criteria,1,1000);
 	}
 
 	@Test
 	void testSearchAutocompleteStreetNameSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Act
 		String criteria = StringUtils.extractRandomWordPartial(brand.getAddress().getStreetName(), 3);
-		Page<BrandSearchDto> response = search(criteria);
-
-		// Assert
-		Assertions.assertTrue(response.getNumberOfElements() > 0,
-				String.format("Brand search by streetName return no results [%s]", criteria));
+		assertSearch(criteria,1,1000);
 	}
 
 	@Test
 	void testSearchAutocompleteZipCodeSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Act
 		String criteria = StringUtils.extractRandomWordPartial(brand.getAddress().getZipCode(), 3);
-		Page<BrandSearchDto> response = search(criteria);
-
-		// Assert
-		Assertions.assertTrue(response.getNumberOfElements() > 0,
-				String.format("Brand search by zipCode return no results [%s]", criteria));
+		assertSearch(criteria,1,1000);
 	}
 
 	@Test
 	void testSearchAutocompleteNameSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Act
 		String criteria = StringUtils.extractRandomWordPartial(brand.getName(), 3);
-		Page<BrandSearchDto> response = search(criteria);
-
-		// Assert
-		Assertions.assertTrue(response.getNumberOfElements() > 0,
-				String.format("Brand search by name return no results [%s]", criteria));
+		assertSearch(criteria,1,1000);
 	}
 
 	@Test
 	void testSearchAutocompleteEmailSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Act
 		String criteria = StringUtils.extractRandomWordPartial(brand.getEmail(), 3);
-		Page<BrandSearchDto> response = search(criteria);
-
-		// Assert
-		Assertions.assertTrue(response.getNumberOfElements() > 0,
-				String.format("Brand search by email return no results [%s]", criteria));
+		assertSearch(criteria,1,1000);
 	}
 
 	@Test
@@ -476,8 +450,9 @@ class BrandControllerTests {
 				String.format("Brand activation error: %s", response.getStatusCode()));
 	}
 
-	private Page<BrandSearchDto> search(String criteria)
-			throws JsonProcessingException, MalformedURLException {
+	private void assertSearch(String criteria, int minimumNumberOfElements, int maximumNumberOfElements) 
+			throws MalformedURLException, JsonProcessingException, Exception
+			{
 		// Arrange
 		HttpEntity<String> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, "");
 
@@ -487,14 +462,23 @@ class BrandControllerTests {
 		params.add(pageSize, "4");
 		
 		// Act
-		ResponseEntity<Page<BrandSearchDto>> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(searchURI), port, params), HttpMethod.GET, httpEntity,
-				new ParameterizedTypeReference<Page<BrandSearchDto>>() {
-				});
+		await()
+        .atMost(5, TimeUnit.SECONDS)
+        .pollInterval(200, TimeUnit.MILLISECONDS)
+        .untilAsserted(() -> {
+        	ResponseEntity<Page<BrandSearchDto>> response = testRestTemplate.exchange(
+    				HttpUtils.createURL(URI.create(searchURI), port, params), HttpMethod.GET, httpEntity,
+    				new ParameterizedTypeReference<Page<BrandSearchDto>>() {
+    				});
 
-		Assertions.assertEquals(response.getStatusCode(), HttpStatus.OK,
-				String.format("Search error: %s", response.getStatusCode()));
-		return response.getBody();
+    		Assertions.assertEquals(response.getStatusCode(), HttpStatus.OK,
+    				String.format("Search error: %s", response.getStatusCode()));
+    		
+    		Assertions.assertTrue(response.getBody().getNumberOfElements() >= minimumNumberOfElements && 
+								  response.getBody().getNumberOfElements() <= maximumNumberOfElements,
+					String.format("Brand search return invalid number of results [%s]: %d", 
+							criteria, response.getBody().getNumberOfElements()));
+		});
 	}
 
 	public static final void assertBrand(BrandDto expected, BrandDto result) {

@@ -4,18 +4,19 @@ import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
 import org.springframework.stereotype.Component;
 
-import com.iso.hypo.domain.aggregate.Gym;
+import com.iso.hypo.domain.aggregate.Coach;
 import com.iso.hypo.domain.contact.Contact;
+import com.iso.hypo.domain.contact.Person;
 import com.iso.hypo.domain.contact.PhoneNumber;
-import com.iso.hypo.domain.dto.GymDto;
+import com.iso.hypo.domain.dto.CoachDto;
 import com.iso.hypo.domain.location.Address;
 
 @Component
-public class GymMapper {
+public class CoachMapper {
 
     private final ModelMapper modelMapper;
 
-    public GymMapper(ModelMapper modelMapper) {
+    public CoachMapper(ModelMapper modelMapper) {
         this.modelMapper = modelMapper;
     }
 
@@ -24,34 +25,53 @@ public class GymMapper {
         return modelMapper.map(source, destinationType);
     }
 
-    public GymDto toDto(Gym entity) {
-        return map(entity, GymDto.class);
+    public CoachDto toDto(Coach entity) {
+        return map(entity, CoachDto.class);
     }
 
-    public Gym toEntity(GymDto dto) {
-        return map(dto, Gym.class);
+    public Coach toEntity(CoachDto dto) {
+        return map(dto, Coach.class);
     }
     
-	public ModelMapper initGymMappings(ModelMapper mapper) {
+    public ModelMapper initCoachMappings(ModelMapper mapper) {
+		PropertyMap<Coach, Coach> coachPropertyMap = new PropertyMap<Coach, Coach>()
+	    {
+	        protected void configure()
+	        {
+	            skip().setId(null);
+	            skip().setActive(false);
+	            skip().setActivatedOn(null);
+	            skip().setDeactivatedOn(null);
+	        }
+	    };
+		
+	    PropertyMap<Person, Person> personPropertyMap = new PropertyMap<Person, Person>() {
+			@Override
+			protected void configure() {
+
+			}
+		};
 		
 		PropertyMap<Address, Address> addressPropertyMap = new PropertyMap<Address, Address>() {
 			@Override
 			protected void configure() {
+				
 			}
 		};
-		
+				
 		PropertyMap<PhoneNumber, PhoneNumber> phoneNumberPropertyMap = new PropertyMap<PhoneNumber, PhoneNumber>() {
 			@Override
 			protected void configure() {
 			}
 		};
-			
+		
 		PropertyMap<Contact, Contact> contactPropertyMap = new PropertyMap<Contact, Contact>() {
 			@Override
 			protected void configure() {
 			}
 		};
-
+		mapper.addMappings(coachPropertyMap);
+		mapper.addMappings(personPropertyMap);
 		mapper.addMappings(addressPropertyMap);
 		mapper.addMappings(phoneNumberPropertyMap);
 		mapper.addMappings(contactPropertyMap);

@@ -1,5 +1,7 @@
 package com.iso.hypo.admin.papi;
 
+import static org.awaitility.Awaitility.await;
+
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.time.Instant;
@@ -7,6 +9,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -34,9 +37,6 @@ import org.springframework.util.MultiValueMap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.datafaker.Faker;
-import com.iso.hypo.domain.aggregate.Brand;
-import com.iso.hypo.repositories.BrandRepository;
 import com.iso.hypo.admin.papi.dto.contact.ContactDto;
 import com.iso.hypo.admin.papi.dto.contact.PhoneNumberDto;
 import com.iso.hypo.admin.papi.dto.model.GymDto;
@@ -44,15 +44,19 @@ import com.iso.hypo.admin.papi.dto.patch.PatchGymDto;
 import com.iso.hypo.admin.papi.dto.post.PostGymDto;
 import com.iso.hypo.admin.papi.dto.put.PutGymDto;
 import com.iso.hypo.admin.papi.dto.search.GymSearchDto;
-import com.iso.hypo.services.exception.GymException;
-import com.iso.hypo.domain.aggregate.Gym;
-import com.iso.hypo.repositories.GymRepository;
-import com.iso.hypo.tests.http.HttpUtils;
 import com.iso.hypo.domain.BrandBuilder;
 import com.iso.hypo.domain.GymBuilder;
+import com.iso.hypo.domain.aggregate.Brand;
+import com.iso.hypo.domain.aggregate.Gym;
+import com.iso.hypo.repositories.BrandRepository;
+import com.iso.hypo.repositories.GymRepository;
+import com.iso.hypo.services.exception.GymException;
+import com.iso.hypo.tests.http.HttpUtils;
 import com.iso.hypo.tests.security.Roles;
 import com.iso.hypo.tests.security.Users;
 import com.iso.hypo.tests.utils.StringUtils;
+
+import net.datafaker.Faker;
 
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(Lifecycle.PER_CLASS)
@@ -119,7 +123,7 @@ class GymControllerTests {
 		gym = GymBuilder.build(brand.getUuid(), gymCode_2, faker.address().cityName());
 		gymRepository.save(gym);
 		
-		gymIsDeleted = GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name());
+		gymIsDeleted = GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.code().isbn10());
 		gymIsDeleted.setDeleted(true);
 		gymIsDeleted = gymRepository.save(gymIsDeleted);
 
@@ -148,76 +152,49 @@ class GymControllerTests {
 	void testSearchAutocompleteIsDeletedSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Act
 		String criteria = StringUtils.extractRandomWordPartial(gymIsDeleted.getName(), 10);
-		Page<GymSearchDto> response = search(criteria);
-
-		Assertions.assertTrue(response.getNumberOfElements() == 0,
-				String.format("Gym search by name return results for isDeleted [%s]", criteria));
+		assertSearch(criteria,0,0);
 	}
 	
 	@Test
 	void testSearchAutocompleteCitySuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Act
 		String criteria = StringUtils.extractRandomWordPartial(gym.getAddress().getCity(), 3);
-		Page<GymSearchDto> response = search(criteria);
-
-		// Assert
-		Assertions.assertTrue(response.getNumberOfElements() > 0,
-				String.format("Gym search by city return no results [%s]", criteria));
+		assertSearch(criteria,1,1000);
 	}
 
 	@Test
 	void testSearchAutocompleteStateSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Act
 		String criteria = StringUtils.extractRandomWordPartial(gym.getAddress().getState(), 2);
-		Page<GymSearchDto> response = search(criteria);
-
-		// Assert
-		Assertions.assertTrue(response.getNumberOfElements() > 0,
-				String.format("Gym search by state return no results [%s]", criteria));
+		assertSearch(criteria,1,1000);
 	}
 
 	@Test
 	void testSearchAutocompleteStreetNameSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Act
 		String criteria = StringUtils.extractRandomWordPartial(gym.getAddress().getStreetName(), 3);
-		Page<GymSearchDto> response = search(criteria);
-
-		// Assert
-		Assertions.assertTrue(response.getNumberOfElements() > 0,
-				String.format("Gym search by streetName return no results [%s]", criteria));
+		assertSearch(criteria,1,1000);
 	}
 
 	@Test
 	void testSearchAutocompleteZipCodeSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Act
 		String criteria = StringUtils.extractRandomWordPartial(gym.getAddress().getZipCode(), 3);
-		Page<GymSearchDto> response = search(criteria);
-
-		// Assert
-		Assertions.assertTrue(response.getNumberOfElements() > 0,
-				String.format("Gym search by zipCode return no results [%s]", criteria));
+		assertSearch(criteria,1,1000);
 	}
 
 	@Test
 	void testSearchAutocompleteNameSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Act
 		String criteria = StringUtils.extractRandomWordPartial(gym.getName(), 3);
-		Page<GymSearchDto> response = search(criteria);
-
-		// Assert
-		Assertions.assertTrue(response.getNumberOfElements() > 0,
-				String.format("Gym search by name return no results [%s]", criteria));
+		assertSearch(criteria,1,1000);
 	}
 
 	@Test
 	void testSearchAutocompleteEmailSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Act
 		String criteria = StringUtils.extractRandomWordPartial(gym.getEmail(), 3);
-		Page<GymSearchDto> response = search(criteria);
-
-		// Assert
-		Assertions.assertTrue(response.getNumberOfElements() > 0,
-				String.format("Gym search by email return no results [%s]", criteria));
+		assertSearch(criteria,1,1000);
 	}
 
 	@Test
@@ -492,7 +469,7 @@ class GymControllerTests {
 				String.format("Gym activation error: %s", response.getStatusCode()));
 	}
 
-	private Page<GymSearchDto> search(String criteria)
+	private void assertSearch(String criteria, int minimumNumberOfElements, int maximumNumberOfElements) 
 			throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		HttpEntity<String> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, "");
@@ -503,14 +480,23 @@ class GymControllerTests {
 		params.add(pageSize, "4");
 		
 		// Act
-		ResponseEntity<Page<GymSearchDto>> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(searchURI, brand.getUuid()) ), port, params), HttpMethod.GET, httpEntity,
-				new ParameterizedTypeReference<Page<GymSearchDto>>() {
-				});
+		await()
+        .atMost(5, TimeUnit.SECONDS)
+        .pollInterval(200, TimeUnit.MILLISECONDS)
+        .untilAsserted(() -> {
+    		ResponseEntity<Page<GymSearchDto>> response = testRestTemplate.exchange(
+    				HttpUtils.createURL(URI.create(String.format(searchURI, brand.getUuid()) ), port, params), HttpMethod.GET, httpEntity,
+    				new ParameterizedTypeReference<Page<GymSearchDto>>() {
+    				});
 
-		Assertions.assertEquals(response.getStatusCode(), HttpStatus.OK,
-				String.format("Search error: %s", response.getStatusCode()));
-		return response.getBody();
+    		Assertions.assertEquals(response.getStatusCode(), HttpStatus.OK,
+    				String.format("Search error: %s", response.getStatusCode()));
+    		
+    		Assertions.assertTrue(response.getBody().getNumberOfElements() >= minimumNumberOfElements && 
+								  response.getBody().getNumberOfElements() <= maximumNumberOfElements,
+					String.format("Brand search return invalid number of results [%s]: %d", 
+							criteria, response.getBody().getNumberOfElements()));
+		});
 	}
 
 	public static final void assertGym(GymDto expected, GymDto result) {

@@ -1,27 +1,19 @@
 package com.iso.hypo.services;
 
-import org.springframework.data.domain.Page;
-
 import com.iso.hypo.domain.dto.MembershipDto;
-import com.iso.hypo.services.exception.MemberException;
+import com.iso.hypo.services.exception.MembershipException;
 
 public interface MembershipService {
 
-    MembershipDto create(String brandUuid, MembershipDto membershipDto) throws MemberException;
+    MembershipDto create(String brandUuid, MembershipDto membershipDto) throws MembershipException;
 
-    MembershipDto update(String brandUuid, MembershipDto membershipDto) throws MemberException;
+    MembershipDto update(String brandUuid, MembershipDto membershipDto) throws MembershipException;
 
-    MembershipDto patch(String brandUuid, MembershipDto membershipDto) throws MemberException;
+    MembershipDto patch(String brandUuid, MembershipDto membershipDto) throws MembershipException;
 
-    void delete(String brandUuid, String membershipUuid) throws MemberException;
+    void delete(String brandUuid, String membershipUuid) throws MembershipException;
 
-    MembershipDto findByMembershipUuid(String brandUuid, String membershipUuid) throws MemberException;
+    MembershipDto activate(String brandUuid, String membershipUuid) throws MembershipException;
 
-    Page<MembershipDto> list(String brandUuid, int page, int pageSize, boolean includeInactive) throws MemberException;
-
-    MembershipDto activate(String brandUuid, String membershipUuid) throws MemberException;
-
-    MembershipDto deactivate(String brandUuid, String membershipUuid) throws MemberException;
+    MembershipDto deactivate(String brandUuid, String membershipUuid) throws MembershipException;
 }
-
-

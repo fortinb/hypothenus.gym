@@ -27,7 +27,8 @@ import com.iso.hypo.admin.papi.dto.model.MembershipDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchMembershipDto;
 import com.iso.hypo.admin.papi.dto.post.PostMembershipDto;
 import com.iso.hypo.admin.papi.dto.put.PutMembershipDto;
-import com.iso.hypo.services.exception.MemberException;
+import com.iso.hypo.services.exception.MembershipException;
+import com.iso.hypo.services.MembershipQueryService;
 import com.iso.hypo.services.MembershipService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,9 +49,11 @@ public class MembershipController {
 	private ModelMapper modelMapper;
 
 	private MembershipService membershipService;
+	private MembershipQueryService membershipQueryService;
 
-	public MembershipController(MembershipService membershipService) {
+	public MembershipController(MembershipService membershipService, MembershipQueryService membershipQueryService) {
 		this.membershipService = membershipService;
+		this.membershipQueryService = membershipQueryService;
 	}
 
 	@GetMapping("/brands/{brandUuid}/memberships")
@@ -69,8 +72,8 @@ public class MembershipController {
 
 		Page<com.iso.hypo.domain.dto.MembershipDto> entities = null;
 		try {
-			entities = membershipService.list(brandUuid, page, pageSize, includeInactive);
-		} catch (MemberException e) {
+			entities = membershipQueryService.list(brandUuid, page, pageSize, includeInactive);
+		} catch (MembershipException e) {
 			logger.error(e.getMessage(), e);
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -95,11 +98,11 @@ public class MembershipController {
 			@PathVariable String uuid) {
 		com.iso.hypo.domain.dto.MembershipDto entity = null;
 		try {
-			entity = membershipService.findByMembershipUuid(brandUuid, uuid);
-		} catch (MemberException e) {
+			entity = membershipQueryService.find(brandUuid, uuid);
+		} catch (MembershipException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == MemberException.MEMBERSHIP_NOT_FOUND) {
+			if (e.getCode() == MembershipException.MEMBERSHIP_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
 			}
@@ -131,7 +134,7 @@ public class MembershipController {
 
 		try {
 			domainDto = membershipService.create(brandUuid, domainDto);
-		} catch (MemberException e) {
+		} catch (MembershipException e) {
 			logger.error(e.getMessage(), e);
 
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -166,10 +169,10 @@ public class MembershipController {
 
 		try {
 			domainDto = membershipService.update(brandUuid, domainDto);
-		} catch (MemberException e) {
+		} catch (MembershipException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == MemberException.MEMBERSHIP_NOT_FOUND) {
+			if (e.getCode() == MembershipException.MEMBERSHIP_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
 			}
@@ -199,10 +202,10 @@ public class MembershipController {
 
 		try {
 			entity = membershipService.activate(brandUuid, uuid);
-		} catch (MemberException e) {
+		} catch (MembershipException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == MemberException.MEMBERSHIP_NOT_FOUND) {
+			if (e.getCode() == MembershipException.MEMBERSHIP_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
 			}
@@ -232,10 +235,10 @@ public class MembershipController {
 
 		try {
 			entity = membershipService.deactivate(brandUuid, uuid);
-		} catch (MemberException e) {
+		} catch (MembershipException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == MemberException.MEMBERSHIP_NOT_FOUND) {
+			if (e.getCode() == MembershipException.MEMBERSHIP_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
 			}
@@ -270,10 +273,10 @@ public class MembershipController {
 
 		try {
 			domainDto = membershipService.patch(brandUuid, domainDto);
-		} catch (MemberException e) {
+		} catch (MembershipException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == MemberException.MEMBERSHIP_NOT_FOUND) {
+			if (e.getCode() == MembershipException.MEMBERSHIP_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
 			}
@@ -299,10 +302,10 @@ public class MembershipController {
 			@PathVariable String uuid) {
 		try {
 			membershipService.delete(brandUuid, uuid);
-		} catch (MemberException e) {
+		} catch (MembershipException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == MemberException.MEMBERSHIP_NOT_FOUND) {
+			if (e.getCode() == MembershipException.MEMBERSHIP_NOT_FOUND) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new ErrorDto(e.getCode(), e.getMessage(), uuid));
 			}

@@ -33,6 +33,7 @@ import com.iso.hypo.admin.papi.dto.patch.PatchCourseDto;
 import com.iso.hypo.admin.papi.dto.post.PostCourseDto;
 import com.iso.hypo.admin.papi.dto.put.PutCourseDto;
 import com.iso.hypo.services.exception.CourseException;
+import com.iso.hypo.services.CourseQueryService;
 import com.iso.hypo.services.CourseService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -54,9 +55,11 @@ public class CourseController {
 	private ModelMapper modelMapper;
 
 	private CourseService courseService;
+	private CourseQueryService courseQueryService;
 
-	public CourseController(CourseService courseService) {
+	public CourseController(CourseService courseService, CourseQueryService courseQueryService) {
 		this.courseService = courseService;
+		this.courseQueryService = courseQueryService;
 	}
 
 	@GetMapping("/brands/{brandUuid}/gyms/{gymUuid}/courses")
@@ -77,7 +80,7 @@ public class CourseController {
 
 		Page<com.iso.hypo.domain.dto.CourseDto> entities = null;
 		try {
-			entities = courseService.list(brandUuid, gymUuid, page, pageSize, includeInactive);
+			entities = courseQueryService.list(brandUuid, gymUuid, page, pageSize, includeInactive);
 		} catch (CourseException e) {
 			logger.error(e.getMessage(), e);
 
@@ -105,7 +108,7 @@ public class CourseController {
 			@PathVariable String uuid) {
 		com.iso.hypo.domain.dto.CourseDto entity = null;
 		try {
-			entity = courseService.findByCourseUuid(brandUuid, gymUuid, uuid);
+			entity = courseQueryService.find(brandUuid, gymUuid, uuid);
 		} catch (CourseException e) {
 			logger.error(e.getMessage(), e);
 

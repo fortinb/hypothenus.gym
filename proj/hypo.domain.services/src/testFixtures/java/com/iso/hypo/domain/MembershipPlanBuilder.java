@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import net.datafaker.Faker;
-import com.iso.hypo.domain.LocalizedString;
 import com.iso.hypo.domain.aggregate.MembershipPlan;
 import com.iso.hypo.domain.enumeration.BillingFrequencyEnum;
 import com.iso.hypo.domain.enumeration.LanguageEnum;
@@ -14,6 +12,8 @@ import com.iso.hypo.domain.enumeration.MembershipPlanPeriodEnum;
 import com.iso.hypo.domain.pricing.Cost;
 import com.iso.hypo.domain.pricing.Currency;
 import com.iso.hypo.domain.pricing.OneTimeFee;
+
+import net.datafaker.Faker;
 
 public class MembershipPlanBuilder {
 	private static Faker faker = new Faker();

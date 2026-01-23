@@ -28,6 +28,7 @@ import com.iso.hypo.admin.papi.dto.patch.PatchMembershipPlanDto;
 import com.iso.hypo.admin.papi.dto.post.PostMembershipPlanDto;
 import com.iso.hypo.admin.papi.dto.put.PutMembershipPlanDto;
 import com.iso.hypo.services.exception.MembershipPlanException;
+import com.iso.hypo.services.MembershipPlanQueryService;
 import com.iso.hypo.services.MembershipPlanService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,9 +49,11 @@ public class MembershipPlanController {
 	private ModelMapper modelMapper;
 
 	private MembershipPlanService membershipPlanService;
+	private MembershipPlanQueryService membershipPlanQueryService;
 
-	public MembershipPlanController(MembershipPlanService membershipPlanService) {
+	public MembershipPlanController(MembershipPlanService membershipPlanService, MembershipPlanQueryService membershipPlanQueryService) {
 		this.membershipPlanService = membershipPlanService;
+		this.membershipPlanQueryService = membershipPlanQueryService;
 	}
 
 	@GetMapping("/brands/{brandUuid}/membership/plans")
@@ -69,7 +72,7 @@ public class MembershipPlanController {
 
 		Page<com.iso.hypo.domain.dto.MembershipPlanDto> entities = null;
 		try {
-			entities = membershipPlanService.list(brandUuid, page, pageSize, includeInactive);
+			entities = membershipPlanQueryService.list(brandUuid, page, pageSize, includeInactive);
 		} catch (MembershipPlanException e) {
 			logger.error(e.getMessage(), e);
 
@@ -95,7 +98,7 @@ public class MembershipPlanController {
 			@PathVariable String uuid) {
 		com.iso.hypo.domain.dto.MembershipPlanDto entity = null;
 		try {
-			entity = membershipPlanService.findByMembershipPlanUuid(brandUuid, uuid);
+			entity = membershipPlanQueryService.find(brandUuid, uuid);
 		} catch (MembershipPlanException e) {
 			logger.error(e.getMessage(), e);
 
