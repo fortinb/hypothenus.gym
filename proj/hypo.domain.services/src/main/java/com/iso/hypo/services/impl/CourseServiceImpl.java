@@ -5,37 +5,41 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.iso.hypo.common.context.RequestContext;
 import com.iso.hypo.domain.aggregate.Coach;
 import com.iso.hypo.domain.aggregate.Course;
-import com.iso.hypo.domain.aggregate.Gym;
 import com.iso.hypo.domain.dto.CourseDto;
 import com.iso.hypo.repositories.CoachRepository;
 import com.iso.hypo.repositories.CourseRepository;
-import com.iso.hypo.repositories.GymRepository;
 import com.iso.hypo.services.CourseService;
+import com.iso.hypo.services.GymQueryService;
 import com.iso.hypo.services.exception.CourseException;
+import com.iso.hypo.services.exception.GymException;
 import com.iso.hypo.services.mappers.CourseMapper;
 
 @Service
 public class CourseServiceImpl implements CourseService {
 
-	private GymRepository gymRepository;
-	
-	private CourseRepository courseRepository;
+	private GymQueryService gymQueryService;
 
 	private CoachRepository coachRepository;
+
+	private CourseRepository courseRepository;
 
 	private CourseMapper courseMapper;
 
 	@Autowired
+	private Logger logger;
+	
+	@Autowired
 	private RequestContext requestContext;
 
-	public CourseServiceImpl(GymRepository gymRepository, CoachRepository coachRepository, CourseRepository courseRepository, CourseMapper courseMapper) {
-		this.gymRepository = gymRepository;
+	public CourseServiceImpl(GymQueryService gymQueryService, CoachRepository coachRepository, CourseRepository courseRepository, CourseMapper courseMapper) {
+		this.gymQueryService = gymQueryService;
 		this.coachRepository = coachRepository;
 		this.courseRepository = courseRepository;
 		this.courseMapper = courseMapper;
@@ -43,44 +47,50 @@ public class CourseServiceImpl implements CourseService {
 
 	@Override
 	public CourseDto create(String brandUuid, String gymUuid, CourseDto courseDto) throws CourseException {
-		Optional<Gym> existingGym = gymRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid);
-		if (!existingGym.isPresent()) {
-			throw new CourseException(CourseException.GYM_NOT_FOUND, "Gym not found");
-		}
-		
-		Course course = courseMapper.toEntity(courseDto);
-		if (!course.getBrandUuid().equals(brandUuid)) {
-			throw new CourseException(CourseException.INVALID_BRAND, "Invalid brand");
-		}
+		try {
+			gymQueryService.assertExists(brandUuid, gymUuid);
 
-		if (!course.getGymUuid().equals(gymUuid)) {
-			throw new CourseException(CourseException.INVALID_GYM, "Invalid gym");
-		}
-
-		Optional<Course> existingCourse = courseRepository.findByBrandUuidAndGymUuidAndCodeAndIsDeletedIsFalse(brandUuid,
-				gymUuid, course.getCode());
-		if (existingCourse.isPresent()) {
-			throw new CourseException(CourseException.COURSE_CODE_ALREADY_EXIST, "Duplicate course code");
-		}
-
-		// Validate coaches
-		if (course.getCoachs() != null) {
-			for (Coach coach : course.getCoachs()) {
-				Optional<Coach> existingCoach = coachRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid,
-						gymUuid, coach.getUuid());
-				if (existingCoach.isEmpty()) {
-					throw new CourseException(CourseException.COACH_NOT_FOUND, "Coach not found: " + coach.getUuid());
-				}
-				coach.setId(existingCoach.get().getId());
+			Course course = courseMapper.toEntity(courseDto);
+			if (!course.getBrandUuid().equals(brandUuid)) {
+				throw new CourseException(CourseException.INVALID_BRAND, "Invalid brand");
 			}
+
+			if (!course.getGymUuid().equals(gymUuid)) {
+				throw new CourseException(CourseException.INVALID_GYM, "Invalid gym");
+			}
+
+			Optional<Course> existingCourse = courseRepository
+					.findByBrandUuidAndGymUuidAndCodeAndIsDeletedIsFalse(brandUuid, gymUuid, course.getCode());
+			if (existingCourse.isPresent()) {
+				throw new CourseException(CourseException.COURSE_CODE_ALREADY_EXIST, "Duplicate course code");
+			}
+
+			// Validate coaches
+			if (course.getCoachs() != null) {
+				for (Coach coach : course.getCoachs()) {
+					Optional<Coach> existingCoach = coachRepository
+							.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid, coach.getUuid());
+					if (existingCoach.isEmpty()) {
+						throw new CourseException(CourseException.COACH_NOT_FOUND, "Coach not found: " + coach.getUuid());
+					}
+					coach.setId(existingCoach.get().getId());
+				}
+			}
+
+			course.setUuid(UUID.randomUUID().toString());
+			course.setCreatedOn(Instant.now());
+			course.setCreatedBy(requestContext.getUsername());
+
+			Course saved = courseRepository.save(course);
+			return courseMapper.toDto(saved);
+		} catch (GymException e) {
+			throw new CourseException(CourseException.GYM_NOT_FOUND, "Gym not found");
+		} catch (CourseException e) {
+			throw e;
+		} catch (Exception e) {
+			logger.error("Unhandled error", e);
+			throw new CourseException(CourseException.CREATION_FAILED, e);
 		}
-
-		course.setUuid(UUID.randomUUID().toString());
-		course.setCreatedOn(Instant.now());
-		course.setCreatedBy(requestContext.getUsername());
-
-		Course saved = courseRepository.save(course);
-		return courseMapper.toDto(saved);
 	}
 
 	@Override
@@ -103,10 +113,9 @@ public class CourseServiceImpl implements CourseService {
 		mapper.map(course, oldCourse);
 
 		// Validate coaches
-		if (course.getCoachs() != null) {
+		if (oldCourse.getCoachs() != null) {
 			for (Coach coach : oldCourse.getCoachs()) {
-				Optional<Coach> existingCoach = coachRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid,
-						gymUuid, coach.getUuid());
+				Optional<Coach> existingCoach = coachRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid, coach.getUuid());
 				if (existingCoach.isEmpty()) {
 					throw new CourseException(CourseException.COACH_NOT_FOUND, "Coach not found: " + coach.getUuid());
 				}
@@ -141,10 +150,9 @@ public class CourseServiceImpl implements CourseService {
 		mapper.map(course, oldCourse);
 
 		// Validate coaches
-		if (course.getCoachs() != null) {
+		if (oldCourse.getCoachs() != null) {
 			for (Coach coach : oldCourse.getCoachs()) {
-				Optional<Coach> existingCoach = coachRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid,
-						gymUuid, coach.getUuid());
+				Optional<Coach> existingCoach = coachRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid, coach.getUuid());
 				if (existingCoach.isEmpty()) {
 					throw new CourseException(CourseException.COACH_NOT_FOUND, "Coach not found: " + coach.getUuid());
 				}
@@ -191,16 +199,12 @@ public class CourseServiceImpl implements CourseService {
 	}
 
 	private Course readByCourseUuid(String brandUuid, String gymUuid, String courseUuid) throws CourseException {
-		Optional<Course> entity = courseRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid,
-				courseUuid);
+		Optional<Course> entity = courseRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid,
+				gymUuid, courseUuid);
 		if (entity.isEmpty()) {
 			throw new CourseException(CourseException.COURSE_NOT_FOUND, "Course not found");
 		}
 
 		return entity.get();
 	}
-
-	
 }
-
-

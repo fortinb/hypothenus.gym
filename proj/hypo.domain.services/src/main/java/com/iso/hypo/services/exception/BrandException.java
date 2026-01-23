@@ -15,6 +15,9 @@ public class BrandException extends DomainException {
     public BrandException(String code, String message) {
     	super(code, message);
     } 
-
+    
+    public BrandException(String code, Exception e) {
+    	super(code, e);
+    } 
 }
 

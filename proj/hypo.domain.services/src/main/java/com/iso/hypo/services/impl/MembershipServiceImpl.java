@@ -4,54 +4,64 @@ import java.time.Instant;
 import java.util.Optional;
 
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.iso.hypo.common.context.RequestContext;
-import com.iso.hypo.domain.aggregate.Brand;
 import com.iso.hypo.domain.aggregate.Membership;
 import com.iso.hypo.domain.dto.MembershipDto;
-import com.iso.hypo.repositories.BrandRepository;
 import com.iso.hypo.repositories.MembershipRepository;
+import com.iso.hypo.services.BrandQueryService;
 import com.iso.hypo.services.MembershipService;
+import com.iso.hypo.services.exception.BrandException;
 import com.iso.hypo.services.exception.MembershipException;
 import com.iso.hypo.services.mappers.MembershipMapper;
 
 @Service
 public class MembershipServiceImpl implements MembershipService {
 
-	private BrandRepository brandRepository;
+	private BrandQueryService brandQueryService;;
 	
 	private MembershipRepository membershipRepository;
 
 	private MembershipMapper membershipMapper;
 
 	@Autowired
+	private Logger logger;
+	
+	@Autowired
 	private RequestContext requestContext;
 	
-	public MembershipServiceImpl(BrandRepository brandRepository, MembershipRepository membershipRepository, MembershipMapper membershipMapper) {
-		this.brandRepository = brandRepository;
+	public MembershipServiceImpl(BrandQueryService brandQueryService, MembershipRepository membershipRepository, MembershipMapper membershipMapper) {
+		this.brandQueryService = brandQueryService;
 		this.membershipRepository = membershipRepository;
 		this.membershipMapper = membershipMapper;
 	}
 
 	@Override
 	public MembershipDto create(String brandUuid, MembershipDto membershipDto) throws MembershipException {
-		Optional<Brand> existingBrand = brandRepository.findByUuidAndIsDeletedIsFalse(membershipDto.getBrandUuid());
-		if (!existingBrand.isPresent()) {
+		try {
+			brandQueryService.assertExists(brandUuid);
+			
+			Membership membership = membershipMapper.toEntity(membershipDto);
+			if (!membership.getBrandUuid().equals(brandUuid)) {
+				throw new MembershipException(MembershipException.INVALID_BRAND, "Invalid brand");
+			}
+			
+			membership.setCreatedOn(Instant.now());
+			membership.setCreatedBy(requestContext.getUsername());
+			
+			Membership saved = membershipRepository.save(membership);
+			return membershipMapper.toDto(saved);
+		} catch (BrandException e) {
 			throw new MembershipException(MembershipException.BRAND_NOT_FOUND, "Brand not found");
+		} catch (MembershipException e) {
+			throw e;
+		} catch (Exception e) {
+			logger.error("Unhandled error", e);
+			throw new MembershipException(MembershipException.CREATION_FAILED, e);
 		}
-		
-		Membership membership = membershipMapper.toEntity(membershipDto);
-		if (!membership.getBrandUuid().equals(brandUuid)) {
-			throw new MembershipException(MembershipException.INVALID_BRAND, "Invalid brand");
-		}
-		
-		membership.setCreatedOn(Instant.now());
-		membership.setCreatedBy(requestContext.getUsername());
-		
-		Membership saved = membershipRepository.save(membership);
-		return membershipMapper.toDto(saved);
 	}
 
 	@Override

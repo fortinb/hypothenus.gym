@@ -19,7 +19,7 @@ public class CoachException extends DomainException {
     } 
     
     public CoachException(String code, Exception e) {
-    	super(code, e.getMessage());
+    	super(code, e);
     } 
 }
 

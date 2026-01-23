@@ -19,6 +19,9 @@ public class CourseException extends DomainException {
     public CourseException(String code, String message) {
     	super(code, message);
     } 
-
+    
+    public CourseException(String code, Exception e) {
+    	super(code, e);
+    } 
 }
 

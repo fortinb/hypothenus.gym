@@ -6,56 +6,66 @@ import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.iso.hypo.common.context.RequestContext;
-import com.iso.hypo.domain.aggregate.Brand;
 import com.iso.hypo.domain.aggregate.Gym;
 import com.iso.hypo.domain.dto.GymDto;
-import com.iso.hypo.repositories.BrandRepository;
 import com.iso.hypo.repositories.GymRepository;
+import com.iso.hypo.services.BrandQueryService;
 import com.iso.hypo.services.GymService;
+import com.iso.hypo.services.exception.BrandException;
 import com.iso.hypo.services.exception.GymException;
 import com.iso.hypo.services.mappers.GymMapper;
 
 @Service
 public class GymServiceImpl implements GymService {
 
-	private BrandRepository brandRepository;
+	private BrandQueryService brandQueryService;
 	
 	private GymRepository gymRepository;
 
 	private GymMapper gymMapper;
+	
+	@Autowired
+	private Logger logger;
 
 	@Autowired
 	private RequestContext requestContext;
 
-	public GymServiceImpl(BrandRepository brandRepository, GymRepository gymRepository, GymMapper gymMapper) {
-		this.brandRepository = brandRepository;
+	public GymServiceImpl(BrandQueryService brandQueryService, GymRepository gymRepository, GymMapper gymMapper) {
+		this.brandQueryService = brandQueryService;
 		this.gymRepository = gymRepository;
 		this.gymMapper = gymMapper;
 	}
 
 	@Override
 	public GymDto create(GymDto gymDto) throws GymException {
-		Optional<Brand> existingBrand = brandRepository.findByUuidAndIsDeletedIsFalse(gymDto.getBrandUuid());
-		if (!existingBrand.isPresent()) {
-			throw new GymException(GymException.BRAND_NOT_FOUND, "Brand not found");
-		}
+		try {
+			brandQueryService.assertExists(gymDto.getBrandUuid());
 		
-		Gym gym = gymMapper.toEntity(gymDto);
-		Optional<Gym> existingGym = gymRepository.findByBrandUuidAndCode(gym.getBrandUuid(), gym.getCode());
-		if (existingGym.isPresent()) {
-			throw new GymException(GymException.GYM_CODE_ALREADY_EXIST, "Duplicate gym code");
+			Gym gym = gymMapper.toEntity(gymDto);
+			Optional<Gym> existingGym = gymRepository.findByBrandUuidAndCode(gym.getBrandUuid(), gym.getCode());
+			if (existingGym.isPresent()) {
+				throw new GymException(GymException.GYM_CODE_ALREADY_EXIST, "Duplicate gym code");
+			}
+	
+			gym.setCreatedOn(Instant.now());
+			gym.setCreatedBy(requestContext.getUsername());
+			gym.setUuid(UUID.randomUUID().toString());
+			
+			Gym saved = gymRepository.save(gym);
+			return gymMapper.toDto(saved);
+		} catch (BrandException e) {
+			throw new GymException(GymException.GYM_NOT_FOUND, "Gym not found");
+		} catch (GymException e) {
+			throw e;
+		} catch (Exception e) {
+			logger.error("Unhandled error", e);
+			throw new GymException(GymException.CREATION_FAILED, e);
 		}
-
-		gym.setCreatedOn(Instant.now());
-		gym.setCreatedBy(requestContext.getUsername());
-		gym.setUuid(UUID.randomUUID().toString());
-		
-		Gym saved = gymRepository.save(gym);
-		return gymMapper.toDto(saved);
 	}
 
 	@Override

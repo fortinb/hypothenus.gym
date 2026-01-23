@@ -18,6 +18,9 @@ public class GymException extends DomainException {
     public GymException(String code, String message) {
     	super(code, message);
     } 
-
+    
+    public GymException(String code, Exception e) {
+    	super(code, e);
+    } 
 }
 

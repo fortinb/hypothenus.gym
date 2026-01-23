@@ -19,5 +19,10 @@ public class DomainException extends Exception {
     	super(message);
     	this.code = code;
     } 
+    
+    public DomainException(String code, Exception e) {
+		super(e);
+		this.code = code;
+	}
 
 }

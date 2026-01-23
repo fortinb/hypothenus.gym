@@ -17,5 +17,8 @@ public class MembershipException extends DomainException {
     	super(code, message);
     } 
 
+    public MembershipException(String code, Exception e) {
+    	super(code, e);
+    } 
 }
 
