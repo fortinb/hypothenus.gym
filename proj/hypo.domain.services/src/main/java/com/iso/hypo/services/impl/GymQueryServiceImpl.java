@@ -1,9 +1,10 @@
 package com.iso.hypo.services.impl;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -26,15 +27,14 @@ public class GymQueryServiceImpl implements GymQueryService {
 
 	private GymMapper gymMapper;
 
-	@Autowired
-	private Logger logger;
+	private static final Logger logger = LoggerFactory.getLogger(GymQueryServiceImpl.class);
 
-	@Autowired
-	private RequestContext requestContext;
+	private final RequestContext requestContext;
 
-	public GymQueryServiceImpl(BrandRepository brandRepository, GymRepository gymRepository, GymMapper gymMapper) {
+	public GymQueryServiceImpl(BrandRepository brandRepository, GymRepository gymRepository, GymMapper gymMapper, RequestContext requestContext) {
 		this.gymRepository = gymRepository;
 		this.gymMapper = gymMapper;
+		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
 	@Override
@@ -42,14 +42,14 @@ public class GymQueryServiceImpl implements GymQueryService {
 		try {
 			Optional<Gym> entity = gymRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid);
 			if (entity.isEmpty()) {
-				throw new GymException(requestContext != null ? requestContext.getTrackingNumber() : null, GymException.GYM_NOT_FOUND, "Gym not found");
+				throw new GymException(requestContext.getTrackingNumber(), GymException.GYM_NOT_FOUND, "Gym not found");
 			}
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, trackingNumber={}", brandUuid, gymUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}, gymUuid={}", brandUuid, gymUuid, e);
 			if (e instanceof GymException) {
 				throw (GymException) e;
 			}
-			throw new GymException(requestContext != null ? requestContext.getTrackingNumber() : null, GymException.FIND_FAILED, e);
+			throw new GymException(requestContext.getTrackingNumber(), GymException.FIND_FAILED, e);
 		}
 	}
 	
@@ -58,16 +58,16 @@ public class GymQueryServiceImpl implements GymQueryService {
 		try {
 			Optional<Gym> entity = gymRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid);
 			if (entity.isEmpty()) {
-				throw new GymException(requestContext != null ? requestContext.getTrackingNumber() : null, GymException.GYM_NOT_FOUND, "Gym not found");
+				throw new GymException(requestContext.getTrackingNumber(), GymException.GYM_NOT_FOUND, "Gym not found");
 			}
 
 			return gymMapper.toDto(entity.get());
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, trackingNumber={}", brandUuid, gymUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}, gymUuid={}", brandUuid, gymUuid, e);
 			if (e instanceof GymException) {
 				throw (GymException) e;
 			}
-			throw new GymException(requestContext != null ? requestContext.getTrackingNumber() : null, GymException.FIND_FAILED, e);
+			throw new GymException(requestContext.getTrackingNumber(), GymException.FIND_FAILED, e);
 		}
 	}
 
@@ -76,10 +76,10 @@ public class GymQueryServiceImpl implements GymQueryService {
 			throws GymException {
 		try {
 			return gymRepository.searchAutocomplete(criteria, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"),
-					includeInactive);
+						includeInactive);
 		} catch (Exception e) {
-			logger.error("Error - criteria={}, trackingNumber={}", criteria, requestContext != null ? requestContext.getTrackingNumber() : null, e);
-			throw new GymException(requestContext != null ? requestContext.getTrackingNumber() : null, GymException.FIND_FAILED, e);
+			logger.error("Error - criteria={}", criteria, e);
+			throw new GymException(requestContext.getTrackingNumber(), GymException.FIND_FAILED, e);
 		}
 	}
 
@@ -91,12 +91,11 @@ public class GymQueryServiceImpl implements GymQueryService {
 					.map(g -> gymMapper.toDto(g));
 			}
 
-			return gymRepository
-					.findAllByBrandUuidAndIsDeletedIsFalseAndIsActiveIsTrue(brandUuid, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"))
+			return gymRepository.findAllByBrandUuidAndIsDeletedIsFalseAndIsActiveIsTrue(brandUuid, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"))
 					.map(g -> gymMapper.toDto(g));
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, trackingNumber={}", brandUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
-			throw new GymException(requestContext != null ? requestContext.getTrackingNumber() : null, GymException.FIND_FAILED, e);
+			logger.error("Error - brandUuid={}", brandUuid, e);
+			throw new GymException(requestContext.getTrackingNumber(), GymException.FIND_FAILED, e);
 		}
 	}
 }

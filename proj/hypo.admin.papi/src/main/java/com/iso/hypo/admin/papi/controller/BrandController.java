@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -36,6 +37,7 @@ import com.iso.hypo.admin.papi.dto.patch.PatchBrandDto;
 import com.iso.hypo.admin.papi.dto.post.PostBrandDto;
 import com.iso.hypo.admin.papi.dto.put.PutBrandDto;
 import com.iso.hypo.admin.papi.dto.search.BrandSearchDto;
+import com.iso.hypo.admin.papi.controller.util.ControllerErrorHandler;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -49,8 +51,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 @Validated
 public class BrandController {
 
-	@Autowired
-	private Logger logger;
+	private static final Logger logger = LoggerFactory.getLogger(BrandController.class);
 
 	@Autowired
 	private ModelMapper modelMapper;
@@ -71,7 +72,13 @@ public class BrandController {
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
 					@Content(schema = @Schema(implementation = Page.class), mediaType = "application/json") }),
-			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
+			@ApiResponse(responseCode = "400", description = "Bad request. The request is invalid or missing required data.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "403", description = "Forbidden. The client does not have permission to access this resource.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "404", description = "Not found. The requested resource does not exist.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "500", description = "Unexpected server error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasRole('" + Roles.Admin + "')")
 	@ResponseStatus(value = HttpStatus.OK)
@@ -87,8 +94,7 @@ public class BrandController {
 		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), criteria));
+			return ControllerErrorHandler.buildErrorResponse(e, requestContext, criteria);
 		}
 		
 		return ResponseEntity.ok(entities.map(item -> modelMapper.map(item, BrandSearchDto.class)));
@@ -100,7 +106,13 @@ public class BrandController {
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
 					@Content(schema = @Schema(implementation = Page.class), mediaType = "application/json") }),
-			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
+			@ApiResponse(responseCode = "400", description = "Bad request. The request is invalid or missing required data.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "403", description = "Forbidden. The client does not have permission to access this resource.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "404", description = "Not found. The requested resource does not exist.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "500", description = "Unexpected server error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> listBrand(
@@ -114,8 +126,7 @@ public class BrandController {
 		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), null));
+			return ControllerErrorHandler.buildErrorResponse(e, requestContext, null);
 
 		}
 
@@ -127,9 +138,13 @@ public class BrandController {
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
 					@Content(schema = @Schema(implementation = BrandDto.class), mediaType = "application/json") }),
-			@ApiResponse(responseCode = "404", description = "Not found.", content = {
+			@ApiResponse(responseCode = "400", description = "Bad request. The request is invalid or missing required data.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
-			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
+			@ApiResponse(responseCode = "403", description = "Forbidden. The client does not have permission to access this resource.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "404", description = "Not found. The requested resource does not exist.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "500", description = "Unexpected server error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "','" + Roles.Member + "')")
 	@ResponseStatus(value = HttpStatus.OK)
@@ -140,13 +155,12 @@ public class BrandController {
 		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
+			// use centralized handler which maps 400/404 to proper statuses
 			if (e.getCode() == BrandException.BRAND_NOT_FOUND) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
+				return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 			}
 
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
+			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
 		return ResponseEntity.ok(modelMapper.map(entity, BrandDto.class));
@@ -157,7 +171,13 @@ public class BrandController {
 	@ApiResponses({
 			@ApiResponse(responseCode = "201", content = {
 					@Content(schema = @Schema(implementation = BrandDto.class), mediaType = "application/json") }),
-			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
+			@ApiResponse(responseCode = "400", description = "Bad request. The request is invalid or missing required data.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "403", description = "Forbidden. The client does not have permission to access this resource.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "404", description = "Not found. The requested resource does not exist.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "500", description = "Unexpected server error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasRole('" + Roles.Admin + "')")
 	@ResponseStatus(value = HttpStatus.CREATED)
@@ -184,7 +204,7 @@ public class BrandController {
 				return ResponseEntity.status(HttpStatus.OK).body(errorResponse);
 			}
 
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+			return ControllerErrorHandler.buildErrorResponse(e, requestContext, null);
 		}
 
 		// map returned domain DTO to controller DTO for response
@@ -198,9 +218,13 @@ public class BrandController {
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
 					@Content(schema = @Schema(implementation = BrandDto.class), mediaType = "application/json") }),
-			@ApiResponse(responseCode = "404", description = "Not found.", content = {
+			@ApiResponse(responseCode = "400", description = "Bad request. The request is invalid or missing required data.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
-			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
+			@ApiResponse(responseCode = "403", description = "Forbidden. The client does not have permission to access this resource.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "404", description = "Not found. The requested resource does not exist.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "500", description = "Unexpected server error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
@@ -212,13 +236,7 @@ public class BrandController {
 		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == BrandException.BRAND_NOT_FOUND) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
-			}
-
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
+			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
 		return ResponseEntity.ok(modelMapper.map(domainDto, BrandDto.class));
@@ -230,9 +248,13 @@ public class BrandController {
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
 					@Content(schema = @Schema(implementation = BrandDto.class), mediaType = "application/json") }),
-			@ApiResponse(responseCode = "404", description = "Not found.", content = {
+			@ApiResponse(responseCode = "400", description = "Bad request. The request is invalid or missing required data.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
-			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
+			@ApiResponse(responseCode = "403", description = "Forbidden. The client does not have permission to access this resource.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "404", description = "Not found. The requested resource does not exist.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "500", description = "Unexpected server error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> patchBrand(@PathVariable String uuid, @RequestBody PatchBrandDto request) {
@@ -243,13 +265,7 @@ public class BrandController {
 		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == BrandException.BRAND_NOT_FOUND) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
-			}
-
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
+			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
 		return ResponseEntity.ok(modelMapper.map(domainDto, BrandDto.class));
@@ -261,9 +277,13 @@ public class BrandController {
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
 					@Content(schema = @Schema(implementation = BrandDto.class), mediaType = "application/json") }),
-			@ApiResponse(responseCode = "404", description = "Not found.", content = {
+			@ApiResponse(responseCode = "400", description = "Bad request. The request is invalid or missing required data.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
-			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
+			@ApiResponse(responseCode = "403", description = "Forbidden. The client does not have permission to access this resource.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "404", description = "Not found. The requested resource does not exist.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "500", description = "Unexpected server error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
@@ -276,13 +296,7 @@ public class BrandController {
 		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == BrandException.BRAND_NOT_FOUND) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
-			}
-
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
+			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
 		return ResponseEntity.ok(modelMapper.map(entity, BrandDto.class));
@@ -293,9 +307,13 @@ public class BrandController {
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
 					@Content(schema = @Schema(implementation = BrandDto.class), mediaType = "application/json") }),
-			@ApiResponse(responseCode = "404", description = "Not found.", content = {
+			@ApiResponse(responseCode = "400", description = "Bad request. The request is invalid or missing required data.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
-			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
+			@ApiResponse(responseCode = "403", description = "Forbidden. The client does not have permission to access this resource.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "404", description = "Not found. The requested resource does not exist.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "500", description = "Unexpected server error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
@@ -309,13 +327,7 @@ public class BrandController {
 		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == BrandException.BRAND_NOT_FOUND) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
-			}
-
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
+			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
 		return ResponseEntity.ok(modelMapper.map(entity, BrandDto.class));
@@ -324,9 +336,13 @@ public class BrandController {
 	@DeleteMapping("/brands/{uuid}")
 	@Operation(summary = "Delete a brand")
 	@ApiResponses({ @ApiResponse(responseCode = "202"),
-			@ApiResponse(responseCode = "404", description = "Not found.", content = {
+			@ApiResponse(responseCode = "400", description = "Bad request. The request is invalid or missing required data.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
-			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
+			@ApiResponse(responseCode = "403", description = "Forbidden. The client does not have permission to access this resource.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "404", description = "Not found. The requested resource does not exist.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "500", description = "Unexpected server error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasRole('" + Roles.Admin + "')")
 	@ResponseStatus(value = HttpStatus.ACCEPTED)
@@ -336,13 +352,7 @@ public class BrandController {
 		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == BrandException.BRAND_NOT_FOUND) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
-			}
-
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
+			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
 		return ResponseEntity.ok(uuid);

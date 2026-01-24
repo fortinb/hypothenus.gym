@@ -5,11 +5,11 @@ import com.iso.hypo.services.exception.CourseException;
 
 public interface CourseService {
 
-    CourseDto create(String brandUuid, String gymUuid, CourseDto courseDto) throws CourseException;
+    CourseDto create(CourseDto courseDto) throws CourseException;
 
-    CourseDto update(String brandUuid, String gymUuid, CourseDto courseDto) throws CourseException;
+    CourseDto update(CourseDto courseDto) throws CourseException;
 
-    CourseDto patch(String brandUuid, String gymUuid, CourseDto courseDto) throws CourseException;
+    CourseDto patch(CourseDto courseDto) throws CourseException;
 
     void delete(String brandUuid, String gymUuid, String courseUuid) throws CourseException;
 

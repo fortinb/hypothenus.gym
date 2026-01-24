@@ -1,9 +1,10 @@
 package com.iso.hypo.services.impl;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -24,15 +25,14 @@ public class CourseQueryServiceImpl implements CourseQueryService {
 
 	private CourseMapper courseMapper;
 
-	@Autowired
-	private Logger logger;
+	private static final Logger logger = LoggerFactory.getLogger(CourseQueryServiceImpl.class);
 
-	@Autowired
-	private RequestContext requestContext;
+	private final RequestContext requestContext;
 
-	public CourseQueryServiceImpl(CourseRepository courseRepository, CourseMapper courseMapper) {
+	public CourseQueryServiceImpl(CourseRepository courseRepository, CourseMapper courseMapper, RequestContext requestContext) {
 		this.courseRepository = courseRepository;
 		this.courseMapper = courseMapper;
+		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
 	@Override
@@ -41,15 +41,15 @@ public class CourseQueryServiceImpl implements CourseQueryService {
 			Optional<Course> entity = courseRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid,
 					courseUuid);
 			if (entity.isEmpty()) {
-				throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.COURSE_NOT_FOUND, "Course not found");
+				throw new CourseException(requestContext.getTrackingNumber(), CourseException.COURSE_NOT_FOUND, "Course not found");
 			}
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, courseUuid={}, trackingNumber={}", brandUuid, gymUuid, courseUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}, gymUuid={}, courseUuid={}", brandUuid, gymUuid, courseUuid, e);
 			
 			if (e instanceof CourseException) {
 				throw (CourseException) e;
 			}
-			throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.FIND_FAILED, e);
+			throw new CourseException(requestContext.getTrackingNumber(), CourseException.FIND_FAILED, e);
 		}
 	}
 	
@@ -59,17 +59,17 @@ public class CourseQueryServiceImpl implements CourseQueryService {
 			Optional<Course> entity = courseRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid,
 					courseUuid);
 			if (entity.isEmpty()) {
-				throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.COURSE_NOT_FOUND, "Course not found");
+				throw new CourseException(requestContext.getTrackingNumber(), CourseException.COURSE_NOT_FOUND, "Course not found");
 			}
 
 			return courseMapper.toDto(entity.get());
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, courseUuid={}, trackingNumber={}", brandUuid, gymUuid, courseUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}, gymUuid={}, courseUuid={}", brandUuid, gymUuid, courseUuid, e);
 			
 			if (e instanceof CourseException) {
 				throw (CourseException) e;
 			}
-			throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.FIND_FAILED, e);
+			throw new CourseException(requestContext.getTrackingNumber(), CourseException.FIND_FAILED, e);
 		}
 	}
 
@@ -86,8 +86,8 @@ public class CourseQueryServiceImpl implements CourseQueryService {
 			return courseRepository.findAllByBrandUuidAndGymUuidAndIsDeletedIsFalseAndIsActiveIsTrue(brandUuid, gymUuid,
 					PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname")).map(c -> courseMapper.toDto(c));
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, trackingNumber={}", brandUuid, gymUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
-			throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.FIND_FAILED, e);
+			logger.error("Error - brandUuid={}, gymUuid={}", brandUuid, gymUuid, e);
+			throw new CourseException(requestContext.getTrackingNumber(), CourseException.FIND_FAILED, e);
 		}
 	}
 }

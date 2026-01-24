@@ -1,9 +1,10 @@
 package com.iso.hypo.services.impl;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -24,15 +25,14 @@ public class MembershipQueryServiceImpl implements MembershipQueryService {
 
 	private MembershipMapper membershipMapper;
 
-	@Autowired
-	private RequestContext requestContext;
+	private final RequestContext requestContext;
 
-	@Autowired
-	private Logger logger;
+	private static final Logger logger = LoggerFactory.getLogger(MembershipQueryServiceImpl.class);
 
-	public MembershipQueryServiceImpl(MembershipRepository membershipRepository, MembershipMapper membershipMapper) {
+	public MembershipQueryServiceImpl(MembershipRepository membershipRepository, MembershipMapper membershipMapper, RequestContext requestContext) {
 		this.membershipRepository = membershipRepository;
 		this.membershipMapper = membershipMapper;
+		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
 	@Override
@@ -41,17 +41,16 @@ public class MembershipQueryServiceImpl implements MembershipQueryService {
 			Optional<Membership> entity = membershipRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid,
 					membershipUuid);
 			if (entity.isEmpty()) {
-				throw new MembershipException(requestContext != null ? requestContext.getTrackingNumber() : null, MembershipException.MEMBERSHIP_NOT_FOUND, "Membership not found");
+				throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.MEMBERSHIP_NOT_FOUND, "Membership not found");
 			}
 		} catch (Exception e) {
 			// Single generic logger call for all exception types
-			logger.error("Error - brandUuid={}, membershipUuid={}, trackingNumber={}", brandUuid, membershipUuid,
-				requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}, membershipUuid={}", brandUuid, membershipUuid, e);
 
 			if (e instanceof MembershipException) {
 				throw (MembershipException) e;
 			}
-			throw new MembershipException(requestContext != null ? requestContext.getTrackingNumber() : null, MembershipException.FIND_FAILED, e);
+			throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.FIND_FAILED, e);
 		}
 	}
 
@@ -61,19 +60,18 @@ public class MembershipQueryServiceImpl implements MembershipQueryService {
 			Optional<Membership> entity = membershipRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid,
 					membershipUuid);
 			if (entity.isEmpty()) {
-				throw new MembershipException(requestContext != null ? requestContext.getTrackingNumber() : null, MembershipException.MEMBERSHIP_NOT_FOUND, "Membership not found");
+				throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.MEMBERSHIP_NOT_FOUND, "Membership not found");
 			}
 
 			return membershipMapper.toDto(entity.get());
 		} catch (Exception e) {
 			// Single generic logger call for all exception types
-			logger.error("Error - brandUuid={}, membershipUuid={}, trackingNumber={}", brandUuid, membershipUuid,
-				requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}, membershipUuid={}", brandUuid, membershipUuid, e);
 			
 			if (e instanceof MembershipException) {
 				throw (MembershipException) e;
 			}
-			throw new MembershipException(requestContext != null ? requestContext.getTrackingNumber() : null, MembershipException.FIND_FAILED, e);
+			throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.FIND_FAILED, e);
 		}
 	}
 
@@ -95,12 +93,11 @@ public class MembershipQueryServiceImpl implements MembershipQueryService {
 
 		} catch (Exception e) {
 			// Single generic logger call for all exception types
-			logger.error("Error - brandUuid={}, trackingNumber={}", brandUuid,
-				requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}", brandUuid, e);
 			if (e instanceof MembershipException) {
 				throw (MembershipException) e;
 			}
-			throw new MembershipException(requestContext != null ? requestContext.getTrackingNumber() : null, MembershipException.FIND_FAILED, e);
+			throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.FIND_FAILED, e);
 		}
 	}
 }

@@ -1,14 +1,16 @@
 package com.iso.hypo.services.impl;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
 import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 import com.iso.hypo.common.context.RequestContext;
 import com.iso.hypo.domain.aggregate.Brand;
@@ -25,24 +27,24 @@ public class BrandServiceImpl implements BrandService {
 
 	private BrandMapper brandMapper;
 
-	@Autowired
-	private RequestContext requestContext;
+	private final RequestContext requestContext;
 
-	@Autowired
-	private Logger logger;
+	private static final Logger logger = LoggerFactory.getLogger(BrandServiceImpl.class);
 
-	public BrandServiceImpl(BrandRepository brandRepository, BrandMapper brandMapper) {
+	public BrandServiceImpl(BrandRepository brandRepository, BrandMapper brandMapper, RequestContext requestContext) {
 		this.brandRepository = brandRepository;
 		this.brandMapper = brandMapper;
+		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
 	@Override
 	public BrandDto create(BrandDto brandDto) throws BrandException {
 		try {
+			Assert.notNull(brandDto, "brandDto must not be null");
 			Brand brand = brandMapper.toEntity(brandDto);
 			Optional<Brand> existingBrand = brandRepository.findByCode(brand.getCode());
 			if (existingBrand.isPresent()) {
-				throw new BrandException(requestContext != null ? requestContext.getTrackingNumber() : null, BrandException.BRAND_CODE_ALREADY_EXIST, "Duplicate brand code");
+				throw new BrandException(requestContext.getTrackingNumber(), BrandException.BRAND_CODE_ALREADY_EXIST, "Duplicate brand code");
 			}
 
 			brand.setCreatedOn(Instant.now());
@@ -52,17 +54,18 @@ public class BrandServiceImpl implements BrandService {
 			Brand saved = brandRepository.save(brand);
 			return brandMapper.toDto(saved);
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, trackingNumber={}", brandDto != null ? brandDto.getUuid() : null, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}", brandDto != null ? brandDto.getUuid() : null, e);
 			if (e instanceof BrandException) {
 				throw (BrandException) e;
 			}
-			throw new BrandException(requestContext != null ? requestContext.getTrackingNumber() : null, BrandException.CREATION_FAILED, e);
+			throw new BrandException(requestContext.getTrackingNumber(), BrandException.CREATION_FAILED, e);
 		}
 	}
 
 	@Override
 	public BrandDto update(BrandDto brandDto) throws BrandException {
 		try {
+			Assert.notNull(brandDto, "brandDto must not be null");
 			Brand brand = brandMapper.toEntity(brandDto);
 			Brand oldBrand = this.readByBrandUuid(brand.getUuid());
 
@@ -89,17 +92,18 @@ public class BrandServiceImpl implements BrandService {
 			Brand saved = brandRepository.save(oldBrand);
 			return brandMapper.toDto(saved);
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, trackingNumber={}", brandDto != null ? brandDto.getUuid() : null, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}", brandDto != null ? brandDto.getUuid() : null, e);
 			if (e instanceof BrandException) {
 				throw (BrandException) e;
 			}
-			throw new BrandException(requestContext != null ? requestContext.getTrackingNumber() : null, BrandException.UPDATE_FAILED, e);
+			throw new BrandException(requestContext.getTrackingNumber(), BrandException.UPDATE_FAILED, e);
 		}
 	}
 
 	@Override
 	public BrandDto patch(BrandDto brandDto) throws BrandException {
 		try {
+			Assert.notNull(brandDto, "brandDto must not be null");
 			Brand brand = brandMapper.toEntity(brandDto);
 			Brand oldBrand = this.readByBrandUuid(brand.getUuid());
 
@@ -125,11 +129,11 @@ public class BrandServiceImpl implements BrandService {
 			Brand saved = brandRepository.save(oldBrand);
 			return brandMapper.toDto(saved);
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, trackingNumber={}", brandDto != null ? brandDto.getUuid() : null, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}", brandDto != null ? brandDto.getUuid() : null, e);
 			if (e instanceof BrandException) {
 				throw (BrandException) e;
 			}
-			throw new BrandException(requestContext != null ? requestContext.getTrackingNumber() : null, BrandException.UPDATE_FAILED, e);
+			throw new BrandException(requestContext.getTrackingNumber(), BrandException.UPDATE_FAILED, e);
 		}
 	}
 
@@ -144,11 +148,11 @@ public class BrandServiceImpl implements BrandService {
 
 			brandRepository.save(entity);
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, trackingNumber={}", brandUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}", brandUuid, e);
 			if (e instanceof BrandException) {
 				throw (BrandException) e;
 			}
-			throw new BrandException(requestContext != null ? requestContext.getTrackingNumber() : null, BrandException.DELETE_FAILED, e);
+			throw new BrandException(requestContext.getTrackingNumber(), BrandException.DELETE_FAILED, e);
 		}
 	}
 
@@ -157,16 +161,16 @@ public class BrandServiceImpl implements BrandService {
 		try {
 			Optional<Brand> entity = brandRepository.activate(brandUuid);
 			if (entity.isEmpty()) {
-				throw new BrandException(requestContext != null ? requestContext.getTrackingNumber() : null, BrandException.BRAND_NOT_FOUND, "Brand not found");
+				throw new BrandException(requestContext.getTrackingNumber(), BrandException.BRAND_NOT_FOUND, "Brand not found");
 			}
 
 			return brandMapper.toDto(entity.get());
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, trackingNumber={}", brandUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}", brandUuid, e);
 			if (e instanceof BrandException) {
 				throw (BrandException) e;
 			}
-			throw new BrandException(requestContext != null ? requestContext.getTrackingNumber() : null, BrandException.ACTIVATION_FAILED, e);
+			throw new BrandException(requestContext.getTrackingNumber(), BrandException.ACTIVATION_FAILED, e);
 		}
 	}
 
@@ -175,23 +179,23 @@ public class BrandServiceImpl implements BrandService {
 		try {
 			Optional<Brand> entity = brandRepository.deactivate(brandUuid);
 			if (entity.isEmpty()) {
-				throw new BrandException(requestContext != null ? requestContext.getTrackingNumber() : null, BrandException.BRAND_NOT_FOUND, "Brand not found");
+				throw new BrandException(requestContext.getTrackingNumber(), BrandException.BRAND_NOT_FOUND, "Brand not found");
 			}
 
 			return brandMapper.toDto(entity.get());
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, trackingNumber={}", brandUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}", brandUuid, e);
 			if (e instanceof BrandException) {
 				throw (BrandException) e;
 			}
-			throw new BrandException(requestContext != null ? requestContext.getTrackingNumber() : null, BrandException.DEACTIVATION_FAILED, e);
+			throw new BrandException(requestContext.getTrackingNumber(), BrandException.DEACTIVATION_FAILED, e);
 		}
 	}
 	
 	private Brand readByBrandUuid(String brandUuid) throws BrandException {
 		Optional<Brand> entity = brandRepository.findByUuidAndIsDeletedIsFalse(brandUuid);
 		if (entity.isEmpty()) {
-			throw new BrandException(requestContext != null ? requestContext.getTrackingNumber() : null, BrandException.BRAND_NOT_FOUND, "Brand not found");
+			throw new BrandException(requestContext.getTrackingNumber(), BrandException.BRAND_NOT_FOUND, "Brand not found");
 		}
 
 		return entity.get();

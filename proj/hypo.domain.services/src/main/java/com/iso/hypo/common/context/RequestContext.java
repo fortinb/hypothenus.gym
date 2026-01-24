@@ -16,6 +16,10 @@ public class RequestContext {
 	
 	private String gymUuid;
 
+	public RequestContext() {
+		// default constructor for non-web contexts (e.g., unit tests)
+	}
+
 	public RequestContext(final HttpServletRequest request) {
 		super();
 		

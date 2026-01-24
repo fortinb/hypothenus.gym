@@ -1,9 +1,10 @@
 package com.iso.hypo.services.impl;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -24,15 +25,14 @@ public class MembershipPlanQueryServiceImpl implements MembershipPlanQueryServic
 
 	private MembershipPlanMapper membershipPlanMapper;
 	
-	@Autowired
-	private RequestContext requestContext;
+	private final RequestContext requestContext;
 	
-	@Autowired
-	private Logger logger;
+	private static final Logger logger = LoggerFactory.getLogger(MembershipPlanQueryServiceImpl.class);
 	
-	public MembershipPlanQueryServiceImpl(MembershipPlanRepository membershipPlanRepository, MembershipPlanMapper membershipPlanMapper) {
+	public MembershipPlanQueryServiceImpl(MembershipPlanRepository membershipPlanRepository, MembershipPlanMapper membershipPlanMapper, RequestContext requestContext) {
 		this.membershipPlanRepository = membershipPlanRepository;
 		this.membershipPlanMapper = membershipPlanMapper;
+		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
 	@Override
@@ -40,14 +40,14 @@ public class MembershipPlanQueryServiceImpl implements MembershipPlanQueryServic
 		try {
 			Optional<MembershipPlan> entity = membershipPlanRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, membershipPlanUuid);
 			if (entity.isEmpty()) {
-				throw new MembershipPlanException(requestContext != null ? requestContext.getTrackingNumber() : null, MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND, "MembershipPlan not found");
+				throw new MembershipPlanException(requestContext.getTrackingNumber(), MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND, "MembershipPlan not found");
 			}
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, membershipPlanUuid={}, trackingNumber={}", brandUuid, membershipPlanUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}, membershipPlanUuid={}", brandUuid, membershipPlanUuid, e);
 			if (e instanceof MembershipPlanException) {
 				throw (MembershipPlanException) e;
 			}
-			throw new MembershipPlanException(requestContext != null ? requestContext.getTrackingNumber() : null, MembershipPlanException.FIND_FAILED, e);
+			throw new MembershipPlanException(requestContext.getTrackingNumber(), MembershipPlanException.FIND_FAILED, e);
 		}
 	}
 
@@ -56,16 +56,16 @@ public class MembershipPlanQueryServiceImpl implements MembershipPlanQueryServic
 		try {
 			Optional<MembershipPlan> entity = membershipPlanRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, membershipPlanUuid);
 			if (entity.isEmpty()) {
-				throw new MembershipPlanException(requestContext != null ? requestContext.getTrackingNumber() : null, MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND, "MembershipPlan not found");
+				throw new MembershipPlanException(requestContext.getTrackingNumber(), MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND, "MembershipPlan not found");
 			}
  
 			return membershipPlanMapper.toDto(entity.get());
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, membershipPlanUuid={}, trackingNumber={}", brandUuid, membershipPlanUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}, membershipPlanUuid={}", brandUuid, membershipPlanUuid, e);
 			if (e instanceof MembershipPlanException) {
 				throw (MembershipPlanException) e;
 			}
-			throw new MembershipPlanException(requestContext != null ? requestContext.getTrackingNumber() : null, MembershipPlanException.FIND_FAILED, e);
+			throw new MembershipPlanException(requestContext.getTrackingNumber(), MembershipPlanException.FIND_FAILED, e);
 		}
 	}
 
@@ -81,8 +81,8 @@ public class MembershipPlanQueryServiceImpl implements MembershipPlanQueryServic
 
 			return pageEntities.map(e -> membershipPlanMapper.toDto(e));
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, trackingNumber={}", brandUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
-			throw new MembershipPlanException(requestContext != null ? requestContext.getTrackingNumber() : null, MembershipPlanException.FIND_FAILED, e);
+			logger.error("Error - brandUuid={}", brandUuid, e);
+			throw new MembershipPlanException(requestContext.getTrackingNumber(), MembershipPlanException.FIND_FAILED, e);
 		}
- 	}
+   	}
 }

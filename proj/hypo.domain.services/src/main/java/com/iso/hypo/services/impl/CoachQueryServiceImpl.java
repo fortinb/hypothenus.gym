@@ -1,9 +1,10 @@
 package com.iso.hypo.services.impl;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -24,15 +25,14 @@ public class CoachQueryServiceImpl implements CoachQueryService {
 
 	private CoachMapper coachMapper;
 
-	@Autowired
-	private Logger logger;
+	private static final Logger logger = LoggerFactory.getLogger(CoachQueryServiceImpl.class);
 
-	@Autowired
-	private RequestContext requestContext;
+	private final RequestContext requestContext;
 
-	public CoachQueryServiceImpl(CoachRepository coachRepository, CoachMapper coachMapper) {
+	public CoachQueryServiceImpl(CoachRepository coachRepository, CoachMapper coachMapper, RequestContext requestContext) {
 		this.coachRepository = coachRepository;
 		this.coachMapper = coachMapper;
+		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
 	@Override
@@ -41,15 +41,15 @@ public class CoachQueryServiceImpl implements CoachQueryService {
 			Optional<Coach> entity = coachRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid,
 						gymUuid, coachUuid);
 			if (entity.isEmpty()) {
-				throw new CoachException(requestContext != null ? requestContext.getTrackingNumber() : null, CoachException.COACH_NOT_FOUND, "Coach not found");
+				throw new CoachException(requestContext.getTrackingNumber(), CoachException.COACH_NOT_FOUND, "Coach not found");
 			}
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, coachUuid={}, trackingNumber={}", brandUuid, gymUuid, coachUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}, gymUuid={}, coachUuid={}", brandUuid, gymUuid, coachUuid, e);
 			
 			if (e instanceof CoachException) {
 				throw (CoachException) e;
 			}
-			throw new CoachException(requestContext != null ? requestContext.getTrackingNumber() : null, CoachException.FIND_FAILED, e);
+			throw new CoachException(requestContext.getTrackingNumber(), CoachException.FIND_FAILED, e);
 		}
 	}
 
@@ -57,19 +57,19 @@ public class CoachQueryServiceImpl implements CoachQueryService {
 	public CoachDto find(String brandUuid, String gymUuid, String coachUuid) throws CoachException {
 		try {
 			Optional<Coach> entity = coachRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid,
-					gymUuid, coachUuid);
+						gymUuid, coachUuid);
 			if (entity.isEmpty()) {
-				throw new CoachException(requestContext != null ? requestContext.getTrackingNumber() : null, CoachException.COACH_NOT_FOUND, "Coach not found");
+				throw new CoachException(requestContext.getTrackingNumber(), CoachException.COACH_NOT_FOUND, "Coach not found");
 			}
 
 			return coachMapper.toDto(entity.get());
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, coachUuid={}, trackingNumber={}", brandUuid, gymUuid, coachUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}, gymUuid={}, coachUuid={}", brandUuid, gymUuid, coachUuid, e);
 			
 			if (e instanceof CoachException) {
 				throw (CoachException) e;
 			}
-			throw new CoachException(requestContext != null ? requestContext.getTrackingNumber() : null, CoachException.FIND_FAILED, e);
+			throw new CoachException(requestContext.getTrackingNumber(), CoachException.FIND_FAILED, e);
 		}
 	}
 
@@ -79,18 +79,18 @@ public class CoachQueryServiceImpl implements CoachQueryService {
 			if (includeInactive) {
 				return coachRepository
 						.findAllByBrandUuidAndGymUuidAndIsDeletedIsFalse(brandUuid, gymUuid,
-								PageRequest.of(page, pageSize, Sort.Direction.ASC, "person.lastname"))
+							PageRequest.of(page, pageSize, Sort.Direction.ASC, "person.lastname"))
 						.map(c -> coachMapper.toDto(c));
 			}
 
 			return coachRepository
 					.findAllByBrandUuidAndGymUuidAndIsDeletedIsFalseAndIsActiveIsTrue(brandUuid, gymUuid,
-							PageRequest.of(page, pageSize, Sort.Direction.ASC, "person.lastname"))
+						PageRequest.of(page, pageSize, Sort.Direction.ASC, "person.lastname"))
 					.map(c -> coachMapper.toDto(c));
 
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, trackingNumber={}", brandUuid, gymUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
-			throw new CoachException(requestContext != null ? requestContext.getTrackingNumber() : null, CoachException.FIND_FAILED, e);
+			logger.error("Error - brandUuid={}, gymUuid={}", brandUuid, gymUuid, e);
+			throw new CoachException(requestContext.getTrackingNumber(), CoachException.FIND_FAILED, e);
 		}
 	}
 }

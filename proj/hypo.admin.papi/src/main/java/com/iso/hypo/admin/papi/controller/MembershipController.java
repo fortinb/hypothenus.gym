@@ -2,6 +2,7 @@ package com.iso.hypo.admin.papi.controller;
 
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -30,6 +31,7 @@ import com.iso.hypo.admin.papi.dto.put.PutMembershipDto;
 import com.iso.hypo.services.exception.MembershipException;
 import com.iso.hypo.services.MembershipQueryService;
 import com.iso.hypo.services.MembershipService;
+import com.iso.hypo.admin.papi.controller.util.ControllerErrorHandler;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -42,8 +44,7 @@ import io.swagger.v3.oas.annotations.media.*;
 @Validated
 public class MembershipController {
 
-	@Autowired
-	private Logger logger;
+	private static final Logger logger = LoggerFactory.getLogger(MembershipController.class);
 
 	@Autowired
 	private ModelMapper modelMapper;
@@ -64,7 +65,13 @@ public class MembershipController {
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
 					@Content(schema = @Schema(implementation = Page.class), mediaType = "application/json") }),
-			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
+			@ApiResponse(responseCode = "400", description = "Bad request. The request is invalid or missing required data.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "403", description = "Forbidden. The client does not have permission to access this resource.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "404", description = "Not found. The requested resource does not exist.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "500", description = "Unexpected server error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
@@ -79,8 +86,7 @@ public class MembershipController {
 		} catch (MembershipException e) {
 			logger.error(e.getMessage(), e);
 
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), null));
+			return ControllerErrorHandler.buildErrorResponse(e, requestContext, null);
 		}
 
 		return ResponseEntity.ok(entities.map(item -> modelMapper.map(item, MembershipDto.class)));
@@ -105,13 +111,7 @@ public class MembershipController {
 		} catch (MembershipException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == MembershipException.MEMBERSHIP_NOT_FOUND) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
-			}
-
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
+			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
 		return ResponseEntity.ok(modelMapper.map(entity, MembershipDto.class));
@@ -136,11 +136,11 @@ public class MembershipController {
 		com.iso.hypo.domain.dto.MembershipDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.MembershipDto.class);
 
 		try {
-			domainDto = membershipService.create(brandUuid, domainDto);
+			domainDto = membershipService.create(domainDto);
 		} catch (MembershipException e) {
 			logger.error(e.getMessage(), e);
 
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+			return ControllerErrorHandler.buildErrorResponse(e, requestContext, null);
 		}
 
 		return ResponseEntity.created(
@@ -171,17 +171,11 @@ public class MembershipController {
 		com.iso.hypo.domain.dto.MembershipDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.MembershipDto.class);
 
 		try {
-			domainDto = membershipService.update(brandUuid, domainDto);
+			domainDto = membershipService.update(domainDto);
 		} catch (MembershipException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == MembershipException.MEMBERSHIP_NOT_FOUND) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
-			}
-
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
+			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
 		return ResponseEntity.ok(modelMapper.map(domainDto, MembershipDto.class));
@@ -208,13 +202,7 @@ public class MembershipController {
 		} catch (MembershipException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == MembershipException.MEMBERSHIP_NOT_FOUND) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
-			}
-
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
+			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
 		return ResponseEntity.ok(modelMapper.map(entity, MembershipDto.class));
@@ -241,13 +229,7 @@ public class MembershipController {
 		} catch (MembershipException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == MembershipException.MEMBERSHIP_NOT_FOUND) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
-			}
-
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
+			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
 		return ResponseEntity.ok(modelMapper.map(entity, MembershipDto.class));
@@ -275,17 +257,11 @@ public class MembershipController {
 		com.iso.hypo.domain.dto.MembershipDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.MembershipDto.class);
 
 		try {
-			domainDto = membershipService.patch(brandUuid, domainDto);
+			domainDto = membershipService.patch(domainDto);
 		} catch (MembershipException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == MembershipException.MEMBERSHIP_NOT_FOUND) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
-			}
-
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
+			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
 		return ResponseEntity.ok(modelMapper.map(domainDto, MembershipDto.class));
@@ -308,13 +284,7 @@ public class MembershipController {
 		} catch (MembershipException e) {
 			logger.error(e.getMessage(), e);
 
-			if (e.getCode() == MembershipException.MEMBERSHIP_NOT_FOUND) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
-			}
-
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ErrorDto(requestContext != null ? requestContext.getTrackingNumber() : null, e.getCode(), e.getMessage(), uuid));
+			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
 		return ResponseEntity.ok(uuid);

@@ -3,12 +3,15 @@ package com.iso.hypo.services.impl;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Objects;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 import com.iso.hypo.common.context.RequestContext;
 import com.iso.hypo.domain.aggregate.Gym;
@@ -29,27 +32,29 @@ public class GymServiceImpl implements GymService {
 
 	private GymMapper gymMapper;
 	
-	@Autowired
-	private Logger logger;
+	private static final Logger logger = LoggerFactory.getLogger(GymServiceImpl.class);
 
-	@Autowired
-	private RequestContext requestContext;
+	private final RequestContext requestContext;
 
-	public GymServiceImpl(BrandQueryService brandQueryService, GymRepository gymRepository, GymMapper gymMapper) {
+	public GymServiceImpl(BrandQueryService brandQueryService, GymRepository gymRepository, GymMapper gymMapper, RequestContext requestContext) {
 		this.brandQueryService = brandQueryService;
 		this.gymRepository = gymRepository;
 		this.gymMapper = gymMapper;
+		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
 	@Override
 	public GymDto create(GymDto gymDto) throws GymException {
 		try {
-			brandQueryService.assertExists(gymDto.getBrandUuid());
-		
+			Assert.notNull(gymDto, "gymDto must not be null");
+			
 			Gym gym = gymMapper.toEntity(gymDto);
+			
+			brandQueryService.assertExists(gym.getBrandUuid());
+
 			Optional<Gym> existingGym = gymRepository.findByBrandUuidAndCode(gym.getBrandUuid(), gym.getCode());
 			if (existingGym.isPresent()) {
-				throw new GymException(requestContext != null ? requestContext.getTrackingNumber() : null, GymException.GYM_CODE_ALREADY_EXIST, "Duplicate gym code");
+				throw new GymException(requestContext.getTrackingNumber(), GymException.GYM_CODE_ALREADY_EXIST, "Duplicate gym code");
 			}
 	
 			gym.setCreatedOn(Instant.now());
@@ -59,23 +64,25 @@ public class GymServiceImpl implements GymService {
 			Gym saved = gymRepository.save(gym);
 			return gymMapper.toDto(saved);
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, trackingNumber={}", gymDto != null ? gymDto.getBrandUuid() : null, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}", gymDto != null ? gymDto.getBrandUuid() : null, e);
 			
 			if (e instanceof BrandException) {
-				throw new GymException(requestContext != null ? requestContext.getTrackingNumber() : null, GymException.GYM_NOT_FOUND, "Gym not found");
+				throw new GymException(requestContext.getTrackingNumber(), GymException.GYM_NOT_FOUND, "Gym not found");
 			}
 			if (e instanceof GymException) {
 				throw (GymException) e;
 			}
-			throw new GymException(requestContext != null ? requestContext.getTrackingNumber() : null, GymException.CREATION_FAILED, e);
+			throw new GymException(requestContext.getTrackingNumber(), GymException.CREATION_FAILED, e);
 		}
 	}
 
 	@Override
-	public GymDto update(String brandUuid, GymDto gymDto) throws GymException {
+	public GymDto update(GymDto gymDto) throws GymException {
 		try {
+			Assert.notNull(gymDto, "gymDto must not be null");
 			Gym gym = gymMapper.toEntity(gymDto);
-			Gym oldGym = this.readByGymUuid(brandUuid, gym.getUuid());
+			
+			Gym oldGym = this.readByGymUuid(gym.getBrandUuid(),gym.getUuid());
 
 			ModelMapper mapper = new ModelMapper();
 			mapper.getConfiguration()
@@ -100,20 +107,22 @@ public class GymServiceImpl implements GymService {
 			Gym saved = gymRepository.save(oldGym);
 			return gymMapper.toDto(saved);
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, trackingNumber={}", brandUuid, gymDto != null ? gymDto.getUuid() : null, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}, gymUuid={}", gymDto.getBrandUuid(), gymDto.getUuid(), e);
 			
 			if (e instanceof GymException) {
 				throw (GymException) e;
 			}
-			throw new GymException(requestContext != null ? requestContext.getTrackingNumber() : null, GymException.UPDATE_FAILED, e);
+			throw new GymException(requestContext.getTrackingNumber(), GymException.UPDATE_FAILED, e);
 		}
 	}
 
 	@Override
-	public GymDto patch(String brandUuid, GymDto gymDto) throws GymException {
+	public GymDto patch(GymDto gymDto) throws GymException {
 		try {
+			Assert.notNull(gymDto, "gymDto must not be null");
 			Gym gym = gymMapper.toEntity(gymDto);
-			Gym oldGym = this.readByGymUuid(brandUuid, gym.getUuid());
+			
+			Gym oldGym = this.readByGymUuid(gym.getBrandUuid(), gym.getUuid());
 
 			ModelMapper mapper = new ModelMapper();
 			mapper.getConfiguration().setSkipNullEnabled(true);
@@ -136,12 +145,12 @@ public class GymServiceImpl implements GymService {
 			Gym saved = gymRepository.save(oldGym);
 			return gymMapper.toDto(saved);
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, trackingNumber={}", brandUuid, gymDto != null ? gymDto.getUuid() : null, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}, gymUuid={}", gymDto.getBrandUuid(), gymDto.getUuid(), e);
 			
 			if (e instanceof GymException) {
 				throw (GymException) e;
 			}
-			throw new GymException(requestContext != null ? requestContext.getTrackingNumber() : null, GymException.UPDATE_FAILED, e);
+			throw new GymException(requestContext.getTrackingNumber(), GymException.UPDATE_FAILED, e);
 		}
 	}
 
@@ -156,12 +165,12 @@ public class GymServiceImpl implements GymService {
 
 			gymRepository.save(entity);
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, trackingNumber={}", brandUuid, gymUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}, gymUuid={}", brandUuid, gymUuid, e);
 			
 			if (e instanceof GymException) {
 				throw (GymException) e;
 			}
-			throw new GymException(requestContext != null ? requestContext.getTrackingNumber() : null, GymException.DELETE_FAILED, e);
+			throw new GymException(requestContext.getTrackingNumber(), GymException.DELETE_FAILED, e);
 		}
 	}
 
@@ -170,17 +179,17 @@ public class GymServiceImpl implements GymService {
 		try {
 			Optional<Gym> entity = gymRepository.activate(brandUuid, gymUuid);
 			if (entity.isEmpty()) {
-				throw new GymException(requestContext != null ? requestContext.getTrackingNumber() : null, GymException.GYM_NOT_FOUND, "Gym not found");
+				throw new GymException(requestContext.getTrackingNumber(), GymException.GYM_NOT_FOUND, "Gym not found");
 			}
 
 			return gymMapper.toDto(entity.get());
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, trackingNumber={}", brandUuid, gymUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}, gymUuid={}", brandUuid, gymUuid, e);
 			
 			if (e instanceof GymException) {
 				throw (GymException) e;
 			}
-			throw new GymException(requestContext != null ? requestContext.getTrackingNumber() : null, GymException.ACTIVATION_FAILED, e);
+			throw new GymException(requestContext.getTrackingNumber(), GymException.ACTIVATION_FAILED, e);
 		}
 	}
 
@@ -189,24 +198,24 @@ public class GymServiceImpl implements GymService {
 		try {
 			Optional<Gym> entity = gymRepository.deactivate(brandUuid, gymUuid);
 			if (entity.isEmpty()) {
-				throw new GymException(requestContext != null ? requestContext.getTrackingNumber() : null, GymException.GYM_NOT_FOUND, "Gym not found");
+				throw new GymException(requestContext.getTrackingNumber(), GymException.GYM_NOT_FOUND, "Gym not found");
 			}
 
 			return gymMapper.toDto(entity.get());
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, trackingNumber={}", brandUuid, gymUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}, gymUuid={}", brandUuid, gymUuid, e);
 			
 			if (e instanceof GymException) {
 				throw (GymException) e;
 			}
-			throw new GymException(requestContext != null ? requestContext.getTrackingNumber() : null, GymException.DEACTIVATION_FAILED, e);
+			throw new GymException(requestContext.getTrackingNumber(), GymException.DEACTIVATION_FAILED, e);
 		}
 	}
 	
 	private Gym readByGymUuid(String brandUuid, String gymUuid) throws GymException {
 		Optional<Gym> entity = gymRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid);
 		if (entity.isEmpty()) {
-			throw new GymException(requestContext != null ? requestContext.getTrackingNumber() : null, GymException.GYM_NOT_FOUND, "Gym not found");
+			throw new GymException(requestContext.getTrackingNumber(), GymException.GYM_NOT_FOUND, "Gym not found");
 		}
 
 		return entity.get();

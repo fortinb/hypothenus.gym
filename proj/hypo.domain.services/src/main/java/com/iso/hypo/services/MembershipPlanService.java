@@ -5,11 +5,11 @@ import com.iso.hypo.services.exception.MembershipPlanException;
 
 public interface MembershipPlanService {
 
-    MembershipPlanDto create(String brandUuid, MembershipPlanDto membershipPlanDto) throws MembershipPlanException;
+    MembershipPlanDto create(MembershipPlanDto membershipPlanDto) throws MembershipPlanException;
 
-    MembershipPlanDto update(String brandUuid, MembershipPlanDto membershipPlanDto) throws MembershipPlanException;
+    MembershipPlanDto update(MembershipPlanDto membershipPlanDto) throws MembershipPlanException;
 
-    MembershipPlanDto patch(String brandUuid, MembershipPlanDto membershipPlanDto) throws MembershipPlanException;
+    MembershipPlanDto patch(MembershipPlanDto membershipPlanDto) throws MembershipPlanException;
 
     void delete(String brandUuid, String membershipPlanUuid) throws MembershipPlanException;
 

@@ -5,11 +5,11 @@ import com.iso.hypo.services.exception.CoachException;
 
 public interface CoachService {
 
-    CoachDto create(String brandUuid, String gymUuid, CoachDto coachDto) throws CoachException;
+    CoachDto create(CoachDto coachDto) throws CoachException;
 
-    CoachDto update(String brandUuid, String gymUuid, CoachDto coachDto) throws CoachException;
+    CoachDto update(CoachDto coachDto) throws CoachException;
 
-    CoachDto patch(String brandUuid, String gymUuid, CoachDto coachDto) throws CoachException;
+    CoachDto patch(CoachDto coachDto) throws CoachException;
 
     void delete(String brandUuid, String gymUuid, String coachUuid) throws CoachException;
 

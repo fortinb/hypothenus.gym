@@ -1,13 +1,15 @@
 package com.iso.hypo.services.impl;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 import com.iso.hypo.common.context.RequestContext;
 import com.iso.hypo.domain.aggregate.Coach;
@@ -32,46 +34,39 @@ public class CourseServiceImpl implements CourseService {
 
 	private CourseMapper courseMapper;
 
-	@Autowired
-	private Logger logger;
+	private static final Logger logger = LoggerFactory.getLogger(CourseServiceImpl.class);
 	
-	@Autowired
-	private RequestContext requestContext;
+	private final RequestContext requestContext;
 
-	public CourseServiceImpl(GymQueryService gymQueryService, CoachRepository coachRepository, CourseRepository courseRepository, CourseMapper courseMapper) {
+	public CourseServiceImpl(GymQueryService gymQueryService, CoachRepository coachRepository, CourseRepository courseRepository, CourseMapper courseMapper, RequestContext requestContext) {
 		this.gymQueryService = gymQueryService;
 		this.coachRepository = coachRepository;
 		this.courseRepository = courseRepository;
 		this.courseMapper = courseMapper;
+		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
 	@Override
-	public CourseDto create(String brandUuid, String gymUuid, CourseDto courseDto) throws CourseException {
+	public CourseDto create(CourseDto courseDto) throws CourseException {
 		try {
-			gymQueryService.assertExists(brandUuid, gymUuid);
-
+			Assert.notNull(courseDto, "courseDto must not be null");
 			Course course = courseMapper.toEntity(courseDto);
-			if (!course.getBrandUuid().equals(brandUuid)) {
-				throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.INVALID_BRAND, "Invalid brand");
-			}
-
-			if (!course.getGymUuid().equals(gymUuid)) {
-				throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.INVALID_GYM, "Invalid gym");
-			}
+			
+			gymQueryService.assertExists(course.getBrandUuid(), course.getGymUuid());
 
 			Optional<Course> existingCourse = courseRepository
-					.findByBrandUuidAndGymUuidAndCodeAndIsDeletedIsFalse(brandUuid, gymUuid, course.getCode());
+					.findByBrandUuidAndGymUuidAndCodeAndIsDeletedIsFalse(course.getBrandUuid(), course.getGymUuid(), course.getCode());
 			if (existingCourse.isPresent()) {
-				throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.COURSE_CODE_ALREADY_EXIST, "Duplicate course code");
+				throw new CourseException(requestContext.getTrackingNumber(), CourseException.COURSE_CODE_ALREADY_EXIST, "Duplicate course code");
 			}
 
 			// Validate coaches
 			if (course.getCoachs() != null) {
 				for (Coach coach : course.getCoachs()) {
 					Optional<Coach> existingCoach = coachRepository
-							.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid, coach.getUuid());
+							.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(course.getBrandUuid(), course.getGymUuid(), coach.getUuid());
 					if (existingCoach.isEmpty()) {
-						throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.COACH_NOT_FOUND, "Coach not found: " + coach.getUuid());
+						throw new CourseException(requestContext.getTrackingNumber(), CourseException.COACH_NOT_FOUND, "Coach not found: " + coach.getUuid());
 					}
 					coach.setId(existingCoach.get().getId());
 				}
@@ -84,77 +79,25 @@ public class CourseServiceImpl implements CourseService {
 			Course saved = courseRepository.save(course);
 			return courseMapper.toDto(saved);
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, courseUuid={}, trackingNumber={}", brandUuid, gymUuid, courseDto != null ? courseDto.getUuid() : null, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}, gymUuid={}, courseUuid={}", courseDto.getBrandUuid(), courseDto.getGymUuid(), courseDto.getUuid(), e);
 			
 			if (e instanceof GymException) {
-				throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.GYM_NOT_FOUND, "Gym not found");
+				throw new CourseException(requestContext.getTrackingNumber(), CourseException.GYM_NOT_FOUND, "Gym not found");
 			}
 			if (e instanceof CourseException) {
 				throw (CourseException) e;
 			}
-			throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.CREATION_FAILED, e);
+			throw new CourseException(requestContext.getTrackingNumber(), CourseException.CREATION_FAILED, e);
 		}
 	}
 
 	@Override
-	public CourseDto update(String brandUuid, String gymUuid, CourseDto courseDto) throws CourseException {
+	public CourseDto update(CourseDto courseDto) throws CourseException {
 		try {
+			Assert.notNull(courseDto, "courseDto must not be null");
 			Course course = courseMapper.toEntity(courseDto);
-			if (!course.getBrandUuid().equals(brandUuid)) {
-				throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.INVALID_BRAND, "Invalid brand");
-			}
-
-			if (!course.getGymUuid().equals(gymUuid)) {
-				throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.INVALID_GYM, "Invalid gym");
-			}
-
-			Course oldCourse = this.readByCourseUuid(brandUuid, gymUuid, course.getUuid());
-
-			ModelMapper mapper = new ModelMapper();
-			mapper.getConfiguration().setSkipNullEnabled(false).setCollectionsMergeEnabled(false);
-
-			mapper = courseMapper.initCourseMappings(mapper);
-			mapper.map(course, oldCourse);
-
-			// Validate coaches
-			if (oldCourse.getCoachs() != null) {
-				for (Coach coach : oldCourse.getCoachs()) {
-					Optional<Coach> existingCoach = coachRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid, coach.getUuid());
-					if (existingCoach.isEmpty()) {
-						throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.COACH_NOT_FOUND, "Coach not found: " + coach.getUuid());
-					}
-					coach.setId(existingCoach.get().getId());
-				}
-			}
-
-			oldCourse.setModifiedOn(Instant.now());
-			oldCourse.setModifiedBy(requestContext.getUsername());
-
-			Course saved = courseRepository.save(oldCourse);
-			return courseMapper.toDto(saved);
-		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, courseUuid={}, trackingNumber={}", brandUuid, gymUuid, courseDto != null ? courseDto.getUuid() : null, requestContext != null ? requestContext.getTrackingNumber() : null, e);
 			
-			if (e instanceof CourseException) {
-				throw (CourseException) e;
-			}
-			throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.UPDATE_FAILED, e);
-		}
-	}
-
-	@Override
-	public CourseDto patch(String brandUuid, String gymUuid, CourseDto courseDto) throws CourseException {
-		try {
-			Course course = courseMapper.toEntity(courseDto);
-			if (!course.getBrandUuid().equals(brandUuid)) {
-				throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.INVALID_BRAND, "Invalid brand");
-			}
-
-			if (!course.getGymUuid().equals(gymUuid)) {
-				throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.INVALID_GYM, "Invalid gym");
-			}
-
-			Course oldCourse = this.readByCourseUuid(brandUuid, gymUuid, course.getUuid());
+			Course oldCourse = this.readByCourseUuid(course.getBrandUuid(), course.getGymUuid(), course.getUuid());
 
 			ModelMapper mapper = new ModelMapper();
 			mapper.getConfiguration().setSkipNullEnabled(false).setCollectionsMergeEnabled(false);
@@ -165,9 +108,9 @@ public class CourseServiceImpl implements CourseService {
 			// Validate coaches
 			if (oldCourse.getCoachs() != null) {
 				for (Coach coach : oldCourse.getCoachs()) {
-					Optional<Coach> existingCoach = coachRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid, coach.getUuid());
+					Optional<Coach> existingCoach = coachRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(course.getBrandUuid(), course.getGymUuid(), coach.getUuid());
 					if (existingCoach.isEmpty()) {
-						throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.COACH_NOT_FOUND, "Coach not found: " + coach.getUuid());
+						throw new CourseException(requestContext.getTrackingNumber(), CourseException.COACH_NOT_FOUND, "Coach not found: " + coach.getUuid());
 					}
 					coach.setId(existingCoach.get().getId());
 				}
@@ -179,11 +122,50 @@ public class CourseServiceImpl implements CourseService {
 			Course saved = courseRepository.save(oldCourse);
 			return courseMapper.toDto(saved);
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, courseUuid={}, trackingNumber={}", brandUuid, gymUuid, courseDto != null ? courseDto.getUuid() : null, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}, gymUuid={}, courseUuid={}", courseDto.getBrandUuid(), courseDto.getGymUuid(), courseDto.getUuid(), e);
 			if (e instanceof CourseException) {
 				throw (CourseException) e;
 			}
-			throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.UPDATE_FAILED, e);
+			throw new CourseException(requestContext.getTrackingNumber(), CourseException.UPDATE_FAILED, e);
+		}
+	}
+
+	@Override
+	public CourseDto patch(CourseDto courseDto) throws CourseException {
+		try {
+			Assert.notNull(courseDto, "courseDto must not be null");
+			Course course = courseMapper.toEntity(courseDto);
+
+			Course oldCourse = this.readByCourseUuid(course.getBrandUuid(), course.getGymUuid(), course.getUuid());
+
+			ModelMapper mapper = new ModelMapper();
+			mapper.getConfiguration().setSkipNullEnabled(false).setCollectionsMergeEnabled(false);
+
+			mapper = courseMapper.initCourseMappings(mapper);
+			mapper.map(course, oldCourse);
+
+			// Validate coaches
+			if (oldCourse.getCoachs() != null) {
+				for (Coach coach : oldCourse.getCoachs()) {
+					Optional<Coach> existingCoach = coachRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(course.getBrandUuid(), course.getGymUuid(), coach.getUuid());
+					if (existingCoach.isEmpty()) {
+						throw new CourseException(requestContext.getTrackingNumber(), CourseException.COACH_NOT_FOUND, "Coach not found: " + coach.getUuid());
+					}
+					coach.setId(existingCoach.get().getId());
+				}
+			}
+
+			oldCourse.setModifiedOn(Instant.now());
+			oldCourse.setModifiedBy(requestContext.getUsername());
+
+			Course saved = courseRepository.save(oldCourse);
+			return courseMapper.toDto(saved);
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, gymUuid={}, courseUuid={}", courseDto.getBrandUuid(), courseDto.getGymUuid(), courseDto.getUuid(), e);
+			if (e instanceof CourseException) {
+				throw (CourseException) e;
+			}
+			throw new CourseException(requestContext.getTrackingNumber(), CourseException.UPDATE_FAILED, e);
 		}
 	}
 
@@ -198,11 +180,11 @@ public class CourseServiceImpl implements CourseService {
 	
 			courseRepository.save(entity);
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, courseUuid={}, trackingNumber={}", brandUuid, gymUuid, courseUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}, gymUuid={}, courseUuid={}", brandUuid, gymUuid, courseUuid, e);
 			if (e instanceof CourseException) {
 				throw (CourseException) e;
 			}
-			throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.DELETE_FAILED, e);
+			throw new CourseException(requestContext.getTrackingNumber(), CourseException.DELETE_FAILED, e);
 		}
 	}
 
@@ -211,16 +193,16 @@ public class CourseServiceImpl implements CourseService {
 		try {
 			Optional<Course> entity = courseRepository.activate(brandUuid, gymUuid, courseUuid);
 			if (entity.isEmpty()) {
-				throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.COURSE_NOT_FOUND, "Course not found");
+				throw new CourseException(requestContext.getTrackingNumber(), CourseException.COURSE_NOT_FOUND, "Course not found");
 			}
 
 			return courseMapper.toDto(entity.get());
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, courseUuid={}, trackingNumber={}", brandUuid, gymUuid, courseUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}, gymUuid={}, courseUuid={}", brandUuid, gymUuid, courseUuid, e);
 			if (e instanceof CourseException) {
 				throw (CourseException) e;
 			}
-			throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.ACTIVATION_FAILED, e);
+			throw new CourseException(requestContext.getTrackingNumber(), CourseException.ACTIVATION_FAILED, e);
 		}
 	}
 
@@ -229,24 +211,24 @@ public class CourseServiceImpl implements CourseService {
 		try {
 			Optional<Course> entity = courseRepository.deactivate(brandUuid, gymUuid, courseUuid);
 			if (entity.isEmpty()) {
-				throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.COURSE_NOT_FOUND, "Course not found");
+				throw new CourseException(requestContext.getTrackingNumber(), CourseException.COURSE_NOT_FOUND, "Course not found");
 			}
 
 			return courseMapper.toDto(entity.get());
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, courseUuid={}, trackingNumber={}", brandUuid, gymUuid, courseUuid, requestContext != null ? requestContext.getTrackingNumber() : null, e);
+			logger.error("Error - brandUuid={}, gymUuid={}, courseUuid={}", brandUuid, gymUuid, courseUuid, e);
 			if (e instanceof CourseException) {
 				throw (CourseException) e;
 			}
-			throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.DEACTIVATION_FAILED, e);
+			throw new CourseException(requestContext.getTrackingNumber(), CourseException.DEACTIVATION_FAILED, e);
 		}
 	}
 
 	private Course readByCourseUuid(String brandUuid, String gymUuid, String courseUuid) throws CourseException {
-		Optional<Course> entity = courseRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid,
-					gymUuid, courseUuid);
+        Optional<Course> entity = courseRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid,
+                    gymUuid, courseUuid);
 		if (entity.isEmpty()) {
-			throw new CourseException(requestContext != null ? requestContext.getTrackingNumber() : null, CourseException.COURSE_NOT_FOUND, "Course not found");
+			throw new CourseException(requestContext.getTrackingNumber(), CourseException.COURSE_NOT_FOUND, "Course not found");
 		}
 
 		return entity.get();
