@@ -14,7 +14,6 @@ import com.iso.hypo.common.context.RequestContext;
 import com.iso.hypo.domain.aggregate.Gym;
 import com.iso.hypo.domain.dto.GymDto;
 import com.iso.hypo.domain.dto.GymSearchDto;
-import com.iso.hypo.repositories.BrandRepository;
 import com.iso.hypo.repositories.GymRepository;
 import com.iso.hypo.services.GymQueryService;
 import com.iso.hypo.services.exception.GymException;
@@ -23,17 +22,17 @@ import com.iso.hypo.services.mappers.GymMapper;
 @Service
 public class GymQueryServiceImpl implements GymQueryService {
 
-	private GymRepository gymRepository;
+	private final GymRepository gymRepository;
 
-	private GymMapper gymMapper;
+	private final GymMapper gymMapper;
 
 	private static final Logger logger = LoggerFactory.getLogger(GymQueryServiceImpl.class);
 
 	private final RequestContext requestContext;
 
-	public GymQueryServiceImpl(BrandRepository brandRepository, GymRepository gymRepository, GymMapper gymMapper, RequestContext requestContext) {
-		this.gymRepository = gymRepository;
+	public GymQueryServiceImpl(GymMapper gymMapper, GymRepository gymRepository, RequestContext requestContext) {
 		this.gymMapper = gymMapper;
+		this.gymRepository = gymRepository;
 		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
@@ -92,7 +91,7 @@ public class GymQueryServiceImpl implements GymQueryService {
 			}
 
 			return gymRepository.findAllByBrandUuidAndIsDeletedIsFalseAndIsActiveIsTrue(brandUuid, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"))
-					.map(g -> gymMapper.toDto(g));
+						.map(g -> gymMapper.toDto(g));
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}", brandUuid, e);
 			throw new GymException(requestContext.getTrackingNumber(), GymException.FIND_FAILED, e);

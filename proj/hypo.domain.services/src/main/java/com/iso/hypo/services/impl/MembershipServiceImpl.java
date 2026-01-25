@@ -23,21 +23,21 @@ import com.iso.hypo.services.mappers.MembershipMapper;
 @Service
 public class MembershipServiceImpl implements MembershipService {
 
-	private BrandQueryService brandQueryService;;
+	private final BrandQueryService brandQueryService;;
 	
-	private MembershipRepository membershipRepository;
+	private final MembershipRepository membershipRepository;
 
-	private MembershipMapper membershipMapper;
+	private final MembershipMapper membershipMapper;
 
 	// replace field-injected logger with static logger
 	private static final Logger logger = LoggerFactory.getLogger(MembershipServiceImpl.class);
 
 	private final RequestContext requestContext;
 	
-	public MembershipServiceImpl(BrandQueryService brandQueryService, MembershipRepository membershipRepository, MembershipMapper membershipMapper, RequestContext requestContext) {
-		this.brandQueryService = brandQueryService;
-		this.membershipRepository = membershipRepository;
+	public MembershipServiceImpl(MembershipMapper membershipMapper, MembershipRepository membershipRepository, BrandQueryService brandQueryService, RequestContext requestContext) {
 		this.membershipMapper = membershipMapper;
+		this.membershipRepository = membershipRepository;
+		this.brandQueryService = brandQueryService;
 		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 

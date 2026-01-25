@@ -1,9 +1,11 @@
 package com.iso.hypo.admin.papi.controller;
 
+import java.util.Objects;
+
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.iso.hypo.common.context.RequestContext;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,18 +49,17 @@ public class CoachController {
 
 	private static final Logger logger = LoggerFactory.getLogger(CoachController.class);
 
-	@Autowired
-	private ModelMapper modelMapper;
+	private final ModelMapper modelMapper;
+	private final RequestContext requestContext;
 
-	@Autowired
-	private com.iso.hypo.common.context.RequestContext requestContext;
+	private final CoachService coachService;
+	private final CoachQueryService coachQueryService;
 
-	private CoachService coachService;
-	private CoachQueryService coachQueryService;
-
-	public CoachController(CoachService coachService, CoachQueryService coachQueryService) {
+	public CoachController(ModelMapper modelMapper, CoachService coachService, CoachQueryService coachQueryService, RequestContext requestContext) {
+		this.modelMapper = modelMapper;
 		this.coachService = coachService;
 		this.coachQueryService = coachQueryService;
+		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
 	@GetMapping("/brands/{brandUuid}/gyms/{gymUuid}/coachs")
@@ -83,9 +84,9 @@ public class CoachController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue="false") boolean includeInactive) {
 
-		Page<com.iso.hypo.domain.dto.CoachDto> entities = null;
+		Page<com.iso.hypo.domain.dto.CoachDto> domainDtos = null;
 		try {
-			entities = coachQueryService.list(brandUuid, gymUuid, page, pageSize, includeInactive);
+			domainDtos = coachQueryService.list(brandUuid, gymUuid, page, pageSize, includeInactive);
 		} catch (CoachException e) {
 			logger.error(e.getMessage(), e);
 
@@ -93,7 +94,7 @@ public class CoachController {
 
 		}
 
-		return ResponseEntity.ok(entities.map(item -> modelMapper.map(item, CoachDto.class)));
+		return ResponseEntity.ok(domainDtos.map(item -> modelMapper.map(item, CoachDto.class)));
 	}
 
 	@GetMapping("/brands/{brandUuid}/gyms/{gymUuid}/coachs/{uuid}")
@@ -115,16 +116,16 @@ public class CoachController {
 			@PathVariable String brandUuid,
 			@PathVariable String gymUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.domain.dto.CoachDto entity = null;
+		com.iso.hypo.domain.dto.CoachDto domainDto = null;
 		try {
-			entity = coachQueryService.find(brandUuid, gymUuid, uuid);
+			domainDto = coachQueryService.find(brandUuid, gymUuid, uuid);
 		} catch (CoachException e) {
 			logger.error(e.getMessage(), e);
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, CoachDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, CoachDto.class));
 	}
 
 	@PostMapping("/brands/{brandUuid}/gyms/{gymUuid}/coachs")
@@ -201,6 +202,10 @@ public class CoachController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Gym UUID in path and request body do not match");
 		}
 		
+		if (!request.getUuid().equals(uuid)) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Coach UUID in path and request body do not match");
+		}
+		
 		com.iso.hypo.domain.dto.CoachDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.CoachDto.class);
 		
 		try {
@@ -233,17 +238,17 @@ public class CoachController {
 			@PathVariable String brandUuid,
 			@PathVariable String gymUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.domain.dto.CoachDto entity;
+		com.iso.hypo.domain.dto.CoachDto domainDto;
 		
 		try {
-			entity = coachService.activate(brandUuid, gymUuid, uuid);
+			domainDto = coachService.activate(brandUuid, gymUuid, uuid);
 		} catch (CoachException e) {
 			logger.error(e.getMessage(), e);
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, CoachDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, CoachDto.class));
 	}
 	
 	@PostMapping("/brands/{brandUuid}/gyms/{gymUuid}/coachs/{uuid}/deactivate")
@@ -265,17 +270,17 @@ public class CoachController {
 			@PathVariable String brandUuid,
 			@PathVariable String gymUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.domain.dto.CoachDto entity;
+		com.iso.hypo.domain.dto.CoachDto domainDto;
 		
 		try {
-			entity = coachService.deactivate(brandUuid, gymUuid, uuid);
+			domainDto = coachService.deactivate(brandUuid, gymUuid, uuid);
 		} catch (CoachException e) {
 			logger.error(e.getMessage(), e);
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, CoachDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, CoachDto.class));
 	}
 	
 	@PatchMapping("/brands/{brandUuid}/gyms/{gymUuid}/coachs/{uuid}")
@@ -305,6 +310,10 @@ public class CoachController {
 		
 		if (!request.getGymUuid().equals(gymUuid)) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Gym UUID in path and request body do not match");
+		}
+		
+		if (!request.getUuid().equals(uuid)) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Coach UUID in path and request body do not match");
 		}
 		
 		com.iso.hypo.domain.dto.CoachDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.CoachDto.class);

@@ -21,17 +21,17 @@ import com.iso.hypo.services.mappers.MembershipPlanMapper;
 @Service
 public class MembershipPlanQueryServiceImpl implements MembershipPlanQueryService {
 
-	private MembershipPlanRepository membershipPlanRepository;
+	private final MembershipPlanRepository membershipPlanRepository;
 
-	private MembershipPlanMapper membershipPlanMapper;
+	private final MembershipPlanMapper membershipPlanMapper;
 	
 	private final RequestContext requestContext;
 	
 	private static final Logger logger = LoggerFactory.getLogger(MembershipPlanQueryServiceImpl.class);
 	
-	public MembershipPlanQueryServiceImpl(MembershipPlanRepository membershipPlanRepository, MembershipPlanMapper membershipPlanMapper, RequestContext requestContext) {
-		this.membershipPlanRepository = membershipPlanRepository;
+	public MembershipPlanQueryServiceImpl(MembershipPlanMapper membershipPlanMapper, MembershipPlanRepository membershipPlanRepository, RequestContext requestContext) {
 		this.membershipPlanMapper = membershipPlanMapper;
+		this.membershipPlanRepository = membershipPlanRepository;
 		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
@@ -84,5 +84,5 @@ public class MembershipPlanQueryServiceImpl implements MembershipPlanQueryServic
 			logger.error("Error - brandUuid={}", brandUuid, e);
 			throw new MembershipPlanException(requestContext.getTrackingNumber(), MembershipPlanException.FIND_FAILED, e);
 		}
-   	}
+    	}
 }

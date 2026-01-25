@@ -24,20 +24,20 @@ import com.iso.hypo.services.mappers.CoachMapper;
 @Service
 public class CoachServiceImpl implements CoachService {
 
-	private GymQueryService gymQueryService;
+	private final GymQueryService gymQueryService;
 
-	private CoachRepository coachRepository;
+	private final CoachRepository coachRepository;
 
-	private CoachMapper coachMapper;
+	private final CoachMapper coachMapper;
 
 	private static final Logger logger = LoggerFactory.getLogger(CoachServiceImpl.class);
 
 	private final RequestContext requestContext;
 
-	public CoachServiceImpl(GymQueryService gymQueryService, CoachRepository coachRepository, CoachMapper coachMapper, RequestContext requestContext) {
-		this.gymQueryService = gymQueryService;
-		this.coachRepository = coachRepository;
+	public CoachServiceImpl(CoachMapper coachMapper, CoachRepository coachRepository, GymQueryService gymQueryService, RequestContext requestContext) {
 		this.coachMapper = coachMapper;
+		this.coachRepository = coachRepository;
+		this.gymQueryService = gymQueryService;
 		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
@@ -187,7 +187,7 @@ public class CoachServiceImpl implements CoachService {
 
 	private Coach readByCoachUuid(String brandUuid, String gymUuid, String coachUuid) throws CoachException {
 		Optional<Coach> entity = coachRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid,
-					coachUuid);
+						coachUuid);
 		if (entity.isEmpty()) {
 			throw new CoachException(requestContext.getTrackingNumber(), CoachException.COACH_NOT_FOUND, "Coach not found");
 		}

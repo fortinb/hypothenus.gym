@@ -21,17 +21,17 @@ import com.iso.hypo.services.mappers.CoachMapper;
 @Service
 public class CoachQueryServiceImpl implements CoachQueryService {
 
-	private CoachRepository coachRepository;
+	private final CoachRepository coachRepository;
 
-	private CoachMapper coachMapper;
+	private final CoachMapper coachMapper;
 
 	private static final Logger logger = LoggerFactory.getLogger(CoachQueryServiceImpl.class);
 
 	private final RequestContext requestContext;
 
-	public CoachQueryServiceImpl(CoachRepository coachRepository, CoachMapper coachMapper, RequestContext requestContext) {
-		this.coachRepository = coachRepository;
+	public CoachQueryServiceImpl(CoachMapper coachMapper, CoachRepository coachRepository, RequestContext requestContext) {
 		this.coachMapper = coachMapper;
+		this.coachRepository = coachRepository;
 		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 

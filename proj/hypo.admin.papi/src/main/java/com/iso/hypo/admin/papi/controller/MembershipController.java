@@ -1,9 +1,11 @@
 package com.iso.hypo.admin.papi.controller;
 
+import java.util.Objects;
+
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.iso.hypo.common.context.RequestContext;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,18 +48,17 @@ public class MembershipController {
 
 	private static final Logger logger = LoggerFactory.getLogger(MembershipController.class);
 
-	@Autowired
-	private ModelMapper modelMapper;
+	private final ModelMapper modelMapper;
+	private final RequestContext requestContext;
 
-	@Autowired
-	private com.iso.hypo.common.context.RequestContext requestContext;
+	private final MembershipService membershipService;
+	private final MembershipQueryService membershipQueryService;
 
-	private MembershipService membershipService;
-	private MembershipQueryService membershipQueryService;
-
-	public MembershipController(MembershipService membershipService, MembershipQueryService membershipQueryService) {
+	public MembershipController(ModelMapper modelMapper, MembershipService membershipService, MembershipQueryService membershipQueryService, RequestContext requestContext) {
+		this.modelMapper = modelMapper;
 		this.membershipService = membershipService;
 		this.membershipQueryService = membershipQueryService;
+		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
 	@GetMapping("/brands/{brandUuid}/memberships")
@@ -75,21 +76,22 @@ public class MembershipController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> listMemberships(@PathVariable String brandUuid,
+	public ResponseEntity<Object> listMemberships(
+			@PathVariable String brandUuid,
 			@Parameter(description = "page number") @RequestParam int page,
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.domain.dto.MembershipDto> entities = null;
+		Page<com.iso.hypo.domain.dto.MembershipDto> domainDtos = null;
 		try {
-			entities = membershipQueryService.list(brandUuid, page, pageSize, includeInactive);
+			domainDtos = membershipQueryService.list(brandUuid, page, pageSize, includeInactive);
 		} catch (MembershipException e) {
 			logger.error(e.getMessage(), e);
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, null);
 		}
 
-		return ResponseEntity.ok(entities.map(item -> modelMapper.map(item, MembershipDto.class)));
+		return ResponseEntity.ok(domainDtos.map(item -> modelMapper.map(item, MembershipDto.class)));
 	}
 
 	@GetMapping("/brands/{brandUuid}/memberships/{uuid}")
@@ -105,16 +107,16 @@ public class MembershipController {
 	public ResponseEntity<Object> getMembership(
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.domain.dto.MembershipDto entity = null;
+		com.iso.hypo.domain.dto.MembershipDto domainDto = null;
 		try {
-			entity = membershipQueryService.find(brandUuid, uuid);
+			domainDto = membershipQueryService.find(brandUuid, uuid);
 		} catch (MembershipException e) {
 			logger.error(e.getMessage(), e);
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, MembershipDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, MembershipDto.class));
 	}
 
 	@PostMapping("/brands/{brandUuid}/memberships")
@@ -158,7 +160,8 @@ public class MembershipController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> updateMembership(@PathVariable String brandUuid,
+	public ResponseEntity<Object> updateMembership(
+			@PathVariable String brandUuid,
 			@PathVariable String uuid,
 			@Parameter(description = "activate or deactivate Membership") 
 			@RequestParam(required = false, defaultValue = "true") boolean isActive,
@@ -166,6 +169,10 @@ public class MembershipController {
 		
 		if (!request.getBrandUuid().equals(brandUuid)) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Brand UUID in path and request body do not match");
+		}
+		
+		if (!request.getUuid().equals(uuid)) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Membership UUID in path and request body do not match");
 		}
 		
 		com.iso.hypo.domain.dto.MembershipDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.MembershipDto.class);
@@ -195,17 +202,17 @@ public class MembershipController {
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
 		
-		com.iso.hypo.domain.dto.MembershipDto entity;
+		com.iso.hypo.domain.dto.MembershipDto domainDto;
 
 		try {
-			entity = membershipService.activate(brandUuid, uuid);
+			domainDto = membershipService.activate(brandUuid, uuid);
 		} catch (MembershipException e) {
 			logger.error(e.getMessage(), e);
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, MembershipDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, MembershipDto.class));
 	}
 
 	@PostMapping("/brands/{brandUuid}/memberships/{uuid}/deactivate")
@@ -222,17 +229,17 @@ public class MembershipController {
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
 		
-		com.iso.hypo.domain.dto.MembershipDto entity;
+		com.iso.hypo.domain.dto.MembershipDto domainDto;
 
 		try {
-			entity = membershipService.deactivate(brandUuid, uuid);
+			domainDto = membershipService.deactivate(brandUuid, uuid);
 		} catch (MembershipException e) {
 			logger.error(e.getMessage(), e);
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, MembershipDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, MembershipDto.class));
 	}
 
 	@PatchMapping("/brands/{brandUuid}/memberships/{uuid}")
@@ -252,6 +259,10 @@ public class MembershipController {
 		
 		if (!request.getBrandUuid().equals(brandUuid)) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Brand UUID in path and request body do not match");
+		}
+		
+		if (!request.getUuid().equals(uuid)) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Membership UUID in path and request body do not match");
 		}
 		
 		com.iso.hypo.domain.dto.MembershipDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.MembershipDto.class);

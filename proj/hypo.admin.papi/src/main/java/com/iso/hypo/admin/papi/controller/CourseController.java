@@ -2,11 +2,12 @@ package com.iso.hypo.admin.papi.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.iso.hypo.common.context.RequestContext;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,18 +53,17 @@ public class CourseController {
 
 	private static final Logger logger = LoggerFactory.getLogger(CourseController.class);
 
-	@Autowired
-	private ModelMapper modelMapper;
+	private final ModelMapper modelMapper;
+	private final RequestContext requestContext;
 
-	@Autowired
-	private com.iso.hypo.common.context.RequestContext requestContext;
+	private final CourseService courseService;
+	private final CourseQueryService courseQueryService;
 
-	private CourseService courseService;
-	private CourseQueryService courseQueryService;
-
-	public CourseController(CourseService courseService, CourseQueryService courseQueryService) {
+	public CourseController(ModelMapper modelMapper, CourseService courseService, CourseQueryService courseQueryService, RequestContext requestContext) {
+		this.modelMapper = modelMapper;
 		this.courseService = courseService;
 		this.courseQueryService = courseQueryService;
+		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
 	@GetMapping("/brands/{brandUuid}/gyms/{gymUuid}/courses")
@@ -88,16 +88,16 @@ public class CourseController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.domain.dto.CourseDto> entities = null;
+		Page<com.iso.hypo.domain.dto.CourseDto> domainDtos = null;
 		try {
-			entities = courseQueryService.list(brandUuid, gymUuid, page, pageSize, includeInactive);
+			domainDtos = courseQueryService.list(brandUuid, gymUuid, page, pageSize, includeInactive);
 		} catch (CourseException e) {
 			logger.error(e.getMessage(), e);
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, null);
 		}
 
-		return ResponseEntity.ok(entities.map(item -> modelMapper.map(item, CourseDto.class)));
+		return ResponseEntity.ok(domainDtos.map(item -> modelMapper.map(item, CourseDto.class)));
 	}
 
 	@GetMapping("/brands/{brandUuid}/gyms/{gymUuid}/courses/{uuid}")
@@ -119,16 +119,16 @@ public class CourseController {
 			@PathVariable String brandUuid,
 			@PathVariable String gymUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.domain.dto.CourseDto entity = null;
+		com.iso.hypo.domain.dto.CourseDto domainDto = null;
 		try {
-			entity = courseQueryService.find(brandUuid, gymUuid, uuid);
+			domainDto = courseQueryService.find(brandUuid, gymUuid, uuid);
 		} catch (CourseException e) {
 			logger.error(e.getMessage(), e);
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, CourseDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, CourseDto.class));
 	}
 
 	@PostMapping("/brands/{brandUuid}/gyms/{gymUuid}/courses")
@@ -218,6 +218,10 @@ public class CourseController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Gym UUID in path and request body do not match");
 		}
 		
+		if (!request.getUuid().equals(uuid)) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Course UUID in path and request body do not match");
+		}
+		
 		com.iso.hypo.domain.dto.CourseDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.CourseDto.class);
 
 		try {
@@ -250,17 +254,17 @@ public class CourseController {
 			@PathVariable String brandUuid,
 			@PathVariable String gymUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.domain.dto.CourseDto entity;
+		com.iso.hypo.domain.dto.CourseDto domainDto;
 
 		try {
-			entity = courseService.activate(brandUuid, gymUuid, uuid);
+			domainDto = courseService.activate(brandUuid, gymUuid, uuid);
 		} catch (CourseException e) {
 			logger.error(e.getMessage(), e);
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, CourseDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, CourseDto.class));
 	}
 
 	@PostMapping("/brands/{brandUuid}/gyms/{gymUuid}/courses/{uuid}/deactivate")
@@ -282,17 +286,17 @@ public class CourseController {
 			@PathVariable String brandUuid,
 			@PathVariable String gymUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.domain.dto.CourseDto entity;
+		com.iso.hypo.domain.dto.CourseDto domainDto;
 
 		try {
-			entity = courseService.deactivate(brandUuid, gymUuid, uuid);
+			domainDto = courseService.deactivate(brandUuid, gymUuid, uuid);
 		} catch (CourseException e) {
 			logger.error(e.getMessage(), e);
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, CourseDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, CourseDto.class));
 	}
 
 	@PatchMapping("/brands/{brandUuid}/gyms/{gymUuid}/courses/{uuid}")
@@ -313,7 +317,8 @@ public class CourseController {
 	public ResponseEntity<Object> patchCourse(
 			@PathVariable String brandUuid,
 			@PathVariable String gymUuid,
-			@PathVariable String uuid, @RequestBody PatchCourseDto request) {
+			@PathVariable String uuid, 
+			@RequestBody PatchCourseDto request) {
 		
 		if (!request.getBrandUuid().equals(brandUuid)) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Brand UUID in path and request body do not match");
@@ -321,6 +326,10 @@ public class CourseController {
 		
 		if (!request.getGymUuid().equals(gymUuid)) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Gym UUID in path and request body do not match");
+		}
+		
+		if (!request.getUuid().equals(uuid)) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Course UUID in path and request body do not match");
 		}
 		
 		com.iso.hypo.domain.dto.CourseDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.CourseDto.class);

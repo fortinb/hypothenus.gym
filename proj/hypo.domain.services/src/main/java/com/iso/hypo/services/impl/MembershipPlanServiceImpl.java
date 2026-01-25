@@ -24,23 +24,20 @@ import com.iso.hypo.services.mappers.MembershipPlanMapper;
 @Service
 public class MembershipPlanServiceImpl implements MembershipPlanService {
 
-	private BrandQueryService brandQueryService;;
+	private final BrandQueryService brandQueryService;;
 
-	private MembershipPlanRepository membershipPlanRepository;
+	private final MembershipPlanRepository membershipPlanRepository;
 
-	private MembershipPlanMapper membershipPlanMapper;
+	private final MembershipPlanMapper membershipPlanMapper;
 
 	private static final Logger logger = LoggerFactory.getLogger(MembershipPlanServiceImpl.class);
 
 	private final RequestContext requestContext;
 
-	public MembershipPlanServiceImpl(BrandQueryService brandQueryService,
-							 MembershipPlanRepository membershipPlanRepository, 
-							 MembershipPlanMapper membershipPlanMapper,
-							 RequestContext requestContext) {
-		this.brandQueryService = brandQueryService;
-		this.membershipPlanRepository = membershipPlanRepository;
+	public MembershipPlanServiceImpl(MembershipPlanMapper membershipPlanMapper, MembershipPlanRepository membershipPlanRepository, BrandQueryService brandQueryService, RequestContext requestContext) {
 		this.membershipPlanMapper = membershipPlanMapper;
+		this.membershipPlanRepository = membershipPlanRepository;
+		this.brandQueryService = brandQueryService;
 		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
@@ -184,13 +181,11 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 		}
 	}
 
-	private MembershipPlan readByMembershipPlanUuid(String brandUuid, String membershipPlanUuid)
-			throws MembershipPlanException {
-		Optional<MembershipPlan> entity = membershipPlanRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid,
-					membershipPlanUuid);
+	private MembershipPlan readByMembershipPlanUuid(String brandUuid, String membershipPlanUuid) throws MembershipPlanException {
+		Optional<MembershipPlan> entity = membershipPlanRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid,	membershipPlanUuid);
 		if (entity.isEmpty()) {
 			throw new MembershipPlanException(requestContext.getTrackingNumber(), MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND,
-					"MembershipPlan not found");
+						"MembershipPlan not found");
 		}
 
 		return entity.get();

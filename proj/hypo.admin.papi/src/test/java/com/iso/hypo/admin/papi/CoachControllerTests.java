@@ -12,6 +12,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -35,20 +36,25 @@ import org.springframework.util.MultiValueMap;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import net.datafaker.Faker;
 import com.iso.hypo.domain.aggregate.Brand;
 import com.iso.hypo.repositories.BrandRepository;
 import com.iso.hypo.admin.papi.dto.contact.ContactDto;
 import com.iso.hypo.admin.papi.dto.contact.PhoneNumberDto;
+import com.iso.hypo.admin.papi.dto.model.BrandDto;
 import com.iso.hypo.admin.papi.dto.model.CoachDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchCoachDto;
 import com.iso.hypo.admin.papi.dto.post.PostCoachDto;
+import com.iso.hypo.admin.papi.dto.put.PutBrandDto;
 import com.iso.hypo.admin.papi.dto.put.PutCoachDto;
 import com.iso.hypo.domain.aggregate.Coach;
 import com.iso.hypo.domain.aggregate.Gym;
 import com.iso.hypo.repositories.CoachRepository;
 import com.iso.hypo.repositories.GymRepository;
 import com.iso.hypo.tests.http.HttpUtils;
+import com.iso.hypo.tests.security.Roles;
+import com.iso.hypo.tests.security.Users;
 import com.iso.hypo.domain.BrandBuilder;
 import com.iso.hypo.domain.CoachBuilder;
 import com.iso.hypo.domain.GymBuilder;
@@ -94,7 +100,7 @@ class CoachControllerTests {
 	
 	private Faker faker = new Faker();
 
-	private TestRestTemplate restTemplate = new TestRestTemplate();
+	private TestRestTemplate testRestTemplate = new TestRestTemplate();
 
 	private Coach coach;
 	private Coach coachIsDeleted;
@@ -106,7 +112,7 @@ class CoachControllerTests {
 
 	@BeforeAll
 	void arrange() {
-		restTemplate.getRestTemplate().setRequestFactory(new HttpComponentsClientHttpRequestFactory());
+		testRestTemplate.getRestTemplate().setRequestFactory(new HttpComponentsClientHttpRequestFactory());
 		
 		coachRepository.deleteAll();
 
@@ -167,16 +173,14 @@ class CoachControllerTests {
 		params.add(includeInactive, "false");
 
 		// Act
-		ResponseEntity<String> response = restTemplate.exchange(HttpUtils.createURL(URI.create(String.format(listURI, brand_2.getUuid(), gym_2.getUuid())), port, params),
-				HttpMethod.GET, httpEntity, new ParameterizedTypeReference<String>() {
-				});
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(listURI, brand_2.getUuid(), gym_2.getUuid())), port, params),
+				HttpMethod.GET, httpEntity, JsonNode.class);
 
 		// Assert
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 
-		Page<CoachDto> page = objectMapper.readValue(response.getBody(), new TypeReference<Page<CoachDto>>() {
-		});
+		Page<CoachDto> page = objectMapper.convertValue(response.getBody(), new TypeReference<Page<CoachDto>>() {});
 
 		// Assert
 		Assertions.assertEquals(0, page.getPageable().getPageNumber(),
@@ -202,15 +206,14 @@ class CoachControllerTests {
 		params.add(includeInactive, "true");
 		
 		// Act
-		ResponseEntity<String> response = restTemplate.exchange(HttpUtils.createURL(URI.create(String.format(listURI, brand_2.getUuid(), gym_2.getUuid())), port, params),
-				HttpMethod.GET, httpEntity, new ParameterizedTypeReference<String>() {
-				});
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(listURI, brand_2.getUuid(), gym_2.getUuid())), port, params),
+				HttpMethod.GET, httpEntity, JsonNode.class);
 
 		// Assert
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 
-		Page<CoachDto> page = objectMapper.readValue(response.getBody(), new TypeReference<Page<CoachDto>>() {
+		Page<CoachDto> page = objectMapper.convertValue(response.getBody(), new TypeReference<Page<CoachDto>>() {
 		});
 
 		// Assert
@@ -235,14 +238,13 @@ class CoachControllerTests {
 		params.add(pageSize, "2");
 
 		// Act
-		ResponseEntity<String> response = restTemplate.exchange(HttpUtils.createURL(URI.create(String.format(listURI, brand_2.getUuid(), gym_2.getUuid())), port, params),
-				HttpMethod.GET, httpEntity, new ParameterizedTypeReference<String>() {
-				});
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(listURI, brand_2.getUuid(), gym_2.getUuid())), port, params),
+				HttpMethod.GET, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 
-		Page<CoachDto> page = objectMapper.readValue(response.getBody(), new TypeReference<Page<CoachDto>>() {
+		Page<CoachDto> page = objectMapper.convertValue(response.getBody(), new TypeReference<Page<CoachDto>>() {
 		});
 
 		// Assert
@@ -264,13 +266,14 @@ class CoachControllerTests {
 		HttpEntity<PostCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, postCoach);
 
 		// Act
-		ResponseEntity<CoachDto> response = restTemplate.exchange(HttpUtils.createURL(URI.create(String.format(postURI, brand_1.getUuid(), gym_1.getUuid())), port, null),
-				HttpMethod.POST, httpEntity, CoachDto.class);
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(postURI, brand_1.getUuid(), gym_1.getUuid())), port, null),
+				HttpMethod.POST, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
 				String.format("Post error: %s", response.getStatusCode()));
 
-		assertCoach(modelMapper.map(postCoach, CoachDto.class), response.getBody());
+		CoachDto created = objectMapper.convertValue(response.getBody(), CoachDto.class);
+		assertCoach(modelMapper.map(postCoach, CoachDto.class), created);
 	}
 
 	@ParameterizedTest
@@ -281,22 +284,36 @@ class CoachControllerTests {
 
 		HttpEntity<PostCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, postCoach);
 
-		ResponseEntity<CoachDto> responsePost = restTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postURI, brand_1.getUuid(), gym_1.getUuid())), port, null), HttpMethod.POST, httpEntity, CoachDto.class);
+		ResponseEntity<JsonNode> responsePost = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(postURI, brand_1.getUuid(), gym_1.getUuid())), port, null), HttpMethod.POST, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.CREATED, responsePost.getStatusCode(),
 				String.format("Post error: %s", responsePost.getStatusCode()));
 
 		// Act
 		httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<CoachDto> response = restTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(getURI, brand_1.getUuid(), gym_1.getUuid(), responsePost.getBody().getUuid())), port, null),
-				HttpMethod.GET, httpEntity, CoachDto.class);
+		CoachDto created = objectMapper.convertValue(responsePost.getBody(), CoachDto.class);
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(getURI, brand_1.getUuid(), gym_1.getUuid(), created.getUuid())), port, null),
+				HttpMethod.GET, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
 
-		assertCoach(modelMapper.map(postCoach, CoachDto.class), response.getBody());
+		CoachDto fetched = objectMapper.convertValue(response.getBody(), CoachDto.class);
+		assertCoach(modelMapper.map(postCoach, CoachDto.class), fetched);
+	}
+	
+	@Test
+	void testGetFailureNotFound() throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		HttpEntity<Object> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(getURI, brand_1.getUuid(), gym_1.getUuid(), faker.code().isbn10())), port, null),
+				HttpMethod.GET, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
+				String.format("Get error: %s", response.getStatusCode()));
 	}
 
 	@ParameterizedTest
@@ -320,14 +337,15 @@ class CoachControllerTests {
 
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, putCoach);
-		ResponseEntity<CoachDto> response = restTemplate.exchange(
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(putURI, brand_1.getUuid(), gym_1.getUuid(), putCoach.getUuid())), port, null),
-				HttpMethod.PUT, httpEntity, CoachDto.class);
+				HttpMethod.PUT, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Put error: %s", response.getStatusCode()));
 
-		assertCoach(modelMapper.map(updatedCoach, CoachDto.class), response.getBody());
+		CoachDto updated = objectMapper.convertValue(response.getBody(), CoachDto.class);
+		assertCoach(modelMapper.map(updatedCoach, CoachDto.class), updated);
 	}
 	
 	@ParameterizedTest
@@ -337,25 +355,37 @@ class CoachControllerTests {
 		Coach coachToUpdate = CoachBuilder.build(brand_1.getUuid(), gym_1.getUuid());
 		coachToUpdate = coachRepository.save(coachToUpdate);
 		
-		Coach updatedCoach = CoachBuilder.build(brand_1.getUuid(), gym_1.getUuid());
-		
-		PutCoachDto putCoach = modelMapper.map(updatedCoach, PutCoachDto.class);
-		putCoach.setUuid(coachToUpdate.getUuid());
+		PutCoachDto putCoach = modelMapper.map(coachToUpdate, PutCoachDto.class);
 		putCoach.getPerson().setEmail(null);
+		
+		coachToUpdate.getPerson().setEmail(null);
 				
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, putCoach);
-		ResponseEntity<CoachDto> response = restTemplate.exchange(
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(putURI, brand_1.getUuid(), gym_1.getUuid(), putCoach.getUuid())), port, null),
-				HttpMethod.PUT, httpEntity, CoachDto.class);
+				HttpMethod.PUT, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Put null error: %s", response.getStatusCode()));
 		
-		updatedCoach.setUuid(coachToUpdate.getUuid());
-		updatedCoach.getPerson().setEmail(null);
+		CoachDto updated = objectMapper.convertValue(response.getBody(), CoachDto.class);
+		assertCoach(modelMapper.map(coachToUpdate, CoachDto.class), updated);
+	}
+	
+	@Test
+	void testPutFailureNotFound() throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		Coach coachToUpdate = CoachBuilder.build(brand_1.getUuid(), gym_1.getUuid());
+		PutCoachDto putCoach = modelMapper.map(coachToUpdate, PutCoachDto.class);
 		
- 		assertCoach(modelMapper.map(updatedCoach, CoachDto.class), response.getBody());
+		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putCoach);
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(putURI, brand_1.getUuid(), gym_1.getUuid(), putCoach.getUuid())), port, null),
+				HttpMethod.PUT, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
+				String.format("Get error: %s", response.getStatusCode()));
 	}
 	
 	@ParameterizedTest
@@ -373,14 +403,15 @@ class CoachControllerTests {
 		
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<CoachDto> response = restTemplate.exchange(
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(postActivateURI, brand_1.getUuid(), gym_1.getUuid(), coachToActivate.getUuid())), port, null),
-				HttpMethod.POST, httpEntity, CoachDto.class);
+				HttpMethod.POST, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Coach activation error: %s", response.getStatusCode()));
 
- 		assertCoach(modelMapper.map(coachToActivate, CoachDto.class), response.getBody());
+		CoachDto activated = objectMapper.convertValue(response.getBody(), CoachDto.class);
+		assertCoach(modelMapper.map(coachToActivate, CoachDto.class), activated);
 	}
 	
 	@ParameterizedTest
@@ -390,9 +421,9 @@ class CoachControllerTests {
 		
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<CoachDto> response = restTemplate.exchange(
+		ResponseEntity<Object> response = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(postActivateURI, brand_1.getUuid(), gym_1.getUuid(), faker.code().isbn10())), port, null),
-				HttpMethod.POST, httpEntity, CoachDto.class);
+				HttpMethod.POST, httpEntity, Object.class);
 
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
 				String.format("Coach activation error: %s", response.getStatusCode()));
@@ -412,14 +443,15 @@ class CoachControllerTests {
 		
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<CoachDto> response = restTemplate.exchange(
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(postDeactivateURI, brand_1.getUuid(), gym_1.getUuid(), coachToDeactivate.getUuid())), port, null),
-				HttpMethod.POST, httpEntity, CoachDto.class);
+				HttpMethod.POST, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Coach deactivation error: %s", response.getStatusCode()));
 
- 		assertCoach(modelMapper.map(coachToDeactivate, CoachDto.class), response.getBody());
+		CoachDto deactivated = objectMapper.convertValue(response.getBody(), CoachDto.class);
+		assertCoach(modelMapper.map(coachToDeactivate, CoachDto.class), deactivated);
 	}
 	
 	@ParameterizedTest
@@ -429,9 +461,9 @@ class CoachControllerTests {
 		
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<CoachDto> response = restTemplate.exchange(
+		ResponseEntity<Object> response = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(postDeactivateURI, brand_1.getUuid(), gym_1.getUuid(), faker.code().ean13())), port, null),
-				HttpMethod.POST, httpEntity, CoachDto.class);
+				HttpMethod.POST, httpEntity, Object.class);
 
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
 				String.format("Coach activation error: %s", response.getStatusCode()));
@@ -454,16 +486,17 @@ class CoachControllerTests {
 		
 		// Act
 		HttpEntity<PatchCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchCoachDto);
-		ResponseEntity<CoachDto> response = restTemplate.exchange(
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(patchURI, brand_1.getUuid(), gym_1.getUuid(), patchCoachDto.getUuid())), port, null),
-				HttpMethod.PATCH, httpEntity, CoachDto.class);
+				HttpMethod.PATCH, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
 
 		coachToPatch.getPerson().setLastname(patchCoachDto.getPerson().getLastname());
 		
- 		assertCoach(modelMapper.map(coachToPatch, CoachDto.class), response.getBody());
+		CoachDto patched = objectMapper.convertValue(response.getBody(), CoachDto.class);
+		assertCoach(modelMapper.map(coachToPatch, CoachDto.class), patched);
 	}
 
 	public static final void assertCoach(CoachDto expected, CoachDto result) {
@@ -569,4 +602,3 @@ class CoachControllerTests {
 		}
 	}
 }
-

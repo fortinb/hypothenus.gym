@@ -21,17 +21,17 @@ import com.iso.hypo.services.mappers.CourseMapper;
 @Service
 public class CourseQueryServiceImpl implements CourseQueryService {
 
-	private CourseRepository courseRepository;
+	private final CourseRepository courseRepository;
 
-	private CourseMapper courseMapper;
+	private final CourseMapper courseMapper;
 
 	private static final Logger logger = LoggerFactory.getLogger(CourseQueryServiceImpl.class);
 
 	private final RequestContext requestContext;
 
-	public CourseQueryServiceImpl(CourseRepository courseRepository, CourseMapper courseMapper, RequestContext requestContext) {
-		this.courseRepository = courseRepository;
+	public CourseQueryServiceImpl(CourseMapper courseMapper, CourseRepository courseRepository, RequestContext requestContext) {
 		this.courseMapper = courseMapper;
+		this.courseRepository = courseRepository;
 		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
@@ -39,7 +39,7 @@ public class CourseQueryServiceImpl implements CourseQueryService {
 	public void assertExists(String brandUuid, String gymUuid, String courseUuid) throws CourseException {
 		try {
 			Optional<Course> entity = courseRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid,
-					courseUuid);
+						courseUuid);
 			if (entity.isEmpty()) {
 				throw new CourseException(requestContext.getTrackingNumber(), CourseException.COURSE_NOT_FOUND, "Course not found");
 			}
@@ -57,7 +57,7 @@ public class CourseQueryServiceImpl implements CourseQueryService {
 	public CourseDto find(String brandUuid, String gymUuid, String courseUuid) throws CourseException {
 		try {
 			Optional<Course> entity = courseRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid,
-					courseUuid);
+						courseUuid);
 			if (entity.isEmpty()) {
 				throw new CourseException(requestContext.getTrackingNumber(), CourseException.COURSE_NOT_FOUND, "Course not found");
 			}

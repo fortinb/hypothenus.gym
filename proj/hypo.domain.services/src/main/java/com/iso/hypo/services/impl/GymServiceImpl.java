@@ -1,15 +1,14 @@
 package com.iso.hypo.services.impl;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.Objects;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -26,22 +25,22 @@ import com.iso.hypo.services.mappers.GymMapper;
 @Service
 public class GymServiceImpl implements GymService {
 
-	private BrandQueryService brandQueryService;
+	private final BrandQueryService brandQueryService;
 	
-	private GymRepository gymRepository;
+	private final GymRepository gymRepository;
 
-	private GymMapper gymMapper;
+	private final GymMapper gymMapper;
 	
 	private static final Logger logger = LoggerFactory.getLogger(GymServiceImpl.class);
 
 	private final RequestContext requestContext;
 
-	public GymServiceImpl(BrandQueryService brandQueryService, GymRepository gymRepository, GymMapper gymMapper, RequestContext requestContext) {
-		this.brandQueryService = brandQueryService;
-		this.gymRepository = gymRepository;
-		this.gymMapper = gymMapper;
-		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
-	}
+	public GymServiceImpl(GymMapper gymMapper, BrandQueryService brandQueryService, GymRepository gymRepository, RequestContext requestContext) {
+        this.gymMapper = gymMapper;
+        this.brandQueryService = brandQueryService;
+        this.gymRepository = gymRepository;
+        this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
+    }
 
 	@Override
 	public GymDto create(GymDto gymDto) throws GymException {

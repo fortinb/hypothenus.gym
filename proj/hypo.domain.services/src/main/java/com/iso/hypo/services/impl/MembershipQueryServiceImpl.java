@@ -21,17 +21,17 @@ import com.iso.hypo.services.mappers.MembershipMapper;
 @Service
 public class MembershipQueryServiceImpl implements MembershipQueryService {
 
-	private MembershipRepository membershipRepository;
+	private final MembershipRepository membershipRepository;
 
-	private MembershipMapper membershipMapper;
+	private final MembershipMapper membershipMapper;
 
 	private final RequestContext requestContext;
 
 	private static final Logger logger = LoggerFactory.getLogger(MembershipQueryServiceImpl.class);
 
-	public MembershipQueryServiceImpl(MembershipRepository membershipRepository, MembershipMapper membershipMapper, RequestContext requestContext) {
-		this.membershipRepository = membershipRepository;
+	public MembershipQueryServiceImpl(MembershipMapper membershipMapper, MembershipRepository membershipRepository, RequestContext requestContext) {
 		this.membershipMapper = membershipMapper;
+		this.membershipRepository = membershipRepository;
 		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
@@ -39,12 +39,11 @@ public class MembershipQueryServiceImpl implements MembershipQueryService {
 	public void assertExists(String brandUuid, String membershipUuid) throws MembershipException {
 		try {
 			Optional<Membership> entity = membershipRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid,
-					membershipUuid);
+						membershipUuid);
 			if (entity.isEmpty()) {
 				throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.MEMBERSHIP_NOT_FOUND, "Membership not found");
 			}
 		} catch (Exception e) {
-			// Single generic logger call for all exception types
 			logger.error("Error - brandUuid={}, membershipUuid={}", brandUuid, membershipUuid, e);
 
 			if (e instanceof MembershipException) {
@@ -58,7 +57,7 @@ public class MembershipQueryServiceImpl implements MembershipQueryService {
 	public MembershipDto find(String brandUuid, String membershipUuid) throws MembershipException {
 		try {
 			Optional<Membership> entity = membershipRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid,
-					membershipUuid);
+						membershipUuid);
 			if (entity.isEmpty()) {
 				throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.MEMBERSHIP_NOT_FOUND, "Membership not found");
 			}

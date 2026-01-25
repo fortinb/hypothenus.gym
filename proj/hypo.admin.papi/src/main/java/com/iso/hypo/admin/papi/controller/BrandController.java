@@ -2,11 +2,12 @@ package com.iso.hypo.admin.papi.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.iso.hypo.common.context.RequestContext;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -53,18 +54,17 @@ public class BrandController {
 
 	private static final Logger logger = LoggerFactory.getLogger(BrandController.class);
 
-	@Autowired
-	private ModelMapper modelMapper;
+	private final ModelMapper modelMapper;
+	private final RequestContext requestContext;
 
-	@Autowired
-	private com.iso.hypo.common.context.RequestContext requestContext;
+	private final BrandService brandService;
+	private final BrandQueryService brandQueryService;
 
-	private BrandService brandService;
-	private BrandQueryService brandQueryService;
-
-	public BrandController(BrandService brandService, BrandQueryService brandServiceQueryService) {
+	public BrandController(ModelMapper modelMapper, BrandService brandService, BrandQueryService brandQueryService, RequestContext requestContext) {
+		this.modelMapper = modelMapper;
 		this.brandService = brandService;
-		this.brandQueryService = brandServiceQueryService;
+		this.brandQueryService = brandQueryService;
+		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
 	@GetMapping("/brands/search")
@@ -88,16 +88,16 @@ public class BrandController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.domain.dto.BrandSearchDto> entities = null;
+		Page<com.iso.hypo.domain.dto.BrandSearchDto> domainDtos = null;
 		try {
-			entities = brandQueryService.search(page, pageSize, criteria, includeInactive);
+			domainDtos = brandQueryService.search(page, pageSize, criteria, includeInactive);
 		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, criteria);
 		}
 		
-		return ResponseEntity.ok(entities.map(item -> modelMapper.map(item, BrandSearchDto.class)));
+		return ResponseEntity.ok(domainDtos.map(item -> modelMapper.map(item, BrandSearchDto.class)));
 	}
 
 	@GetMapping("/brands")
@@ -120,9 +120,9 @@ public class BrandController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.domain.dto.BrandDto> entities = null;
+		Page<com.iso.hypo.domain.dto.BrandDto> domainDtos = null;
 		try {
-			entities = brandQueryService.list(page, pageSize, includeInactive);
+			domainDtos = brandQueryService.list(page, pageSize, includeInactive);
 		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
 
@@ -130,7 +130,7 @@ public class BrandController {
 
 		}
 
-		return ResponseEntity.ok(entities.map(item -> modelMapper.map(item, BrandDto.class)));
+		return ResponseEntity.ok(domainDtos.map(item -> modelMapper.map(item, BrandDto.class)));
 	}
 
 	@GetMapping("/brands/{uuid}")
@@ -148,17 +148,13 @@ public class BrandController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "','" + Roles.Member + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> getBrand(@PathVariable String uuid) {
+	public ResponseEntity<Object> getBrand(
+			@PathVariable String uuid) {
 		com.iso.hypo.domain.dto.BrandDto entity = null;
 		try {
 			entity = brandQueryService.find(uuid);
 		} catch (BrandException e) {
 			logger.error(e.getMessage(), e);
-
-			// use centralized handler which maps 400/404 to proper statuses
-			if (e.getCode() == BrandException.BRAND_NOT_FOUND) {
-				return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
-			}
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
@@ -181,8 +177,8 @@ public class BrandController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasRole('" + Roles.Admin + "')")
 	@ResponseStatus(value = HttpStatus.CREATED)
-	public ResponseEntity<Object> createBrand(@RequestBody PostBrandDto request) {
-		// map controller POST DTO to domain DTO
+	public ResponseEntity<Object> createBrand(
+			@RequestBody PostBrandDto request) {
 		com.iso.hypo.domain.dto.BrandDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.BrandDto.class);
 
 		try {
@@ -207,7 +203,6 @@ public class BrandController {
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, null);
 		}
 
-		// map returned domain DTO to controller DTO for response
 		return ResponseEntity.created(
 				ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(domainDto.getUuid()).toUri())
 				.body(modelMapper.map(domainDto, BrandDto.class));
@@ -228,7 +223,9 @@ public class BrandController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> updateBrand(@PathVariable String uuid, @RequestBody PutBrandDto request) {
+	public ResponseEntity<Object> updateBrand(
+			@PathVariable String uuid, 
+			@RequestBody PutBrandDto request) {
 		com.iso.hypo.domain.dto.BrandDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.BrandDto.class);
 		
 		try {
@@ -257,7 +254,9 @@ public class BrandController {
 			@ApiResponse(responseCode = "500", description = "Unexpected server error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> patchBrand(@PathVariable String uuid, @RequestBody PatchBrandDto request) {
+	public ResponseEntity<Object> patchBrand(
+			@PathVariable String uuid, 
+			@RequestBody PatchBrandDto request) {
 		com.iso.hypo.domain.dto.BrandDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.BrandDto.class);
 		
 		try {
@@ -346,7 +345,8 @@ public class BrandController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasRole('" + Roles.Admin + "')")
 	@ResponseStatus(value = HttpStatus.ACCEPTED)
-	public ResponseEntity<Object> deleteBrand(@PathVariable String uuid) {
+	public ResponseEntity<Object> deleteBrand(
+			@PathVariable String uuid) {
 		try {
 			brandService.delete(uuid);
 		} catch (BrandException e) {

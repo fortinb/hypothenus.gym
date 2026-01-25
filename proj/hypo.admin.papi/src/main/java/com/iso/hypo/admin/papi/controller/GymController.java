@@ -2,11 +2,12 @@ package com.iso.hypo.admin.papi.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.iso.hypo.common.context.RequestContext;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -53,18 +54,17 @@ public class GymController {
 
 	private static final Logger logger = LoggerFactory.getLogger(GymController.class);
 
-	@Autowired
-	private ModelMapper modelMapper;
+	private final ModelMapper modelMapper;
+	private final RequestContext requestContext;
 
-	@Autowired
-	private com.iso.hypo.common.context.RequestContext requestContext;
+	private final GymService gymService;
+	private final GymQueryService gymQueryService;
 
-	private GymService gymService;
-	private GymQueryService gymQueryService;
-
-	public GymController(GymService gymService, GymQueryService gymQueryService) {
+	public GymController(ModelMapper modelMapper, GymService gymService, GymQueryService gymQueryService, RequestContext requestContext) {
+		this.modelMapper = modelMapper;
 		this.gymService = gymService;
 		this.gymQueryService = gymQueryService;
+		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
 	@GetMapping("/brands/{brandUuid}/gyms/search")
@@ -83,22 +83,22 @@ public class GymController {
 	@PreAuthorize("hasRole('" + Roles.Admin + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> searchGym(
+			@PathVariable String brandUuid,
 			@Parameter(description = "search criteria") @RequestParam String criteria,
 			@Parameter(description = "page number") @RequestParam int page,
 			@Parameter(description = "page size") @RequestParam int pageSize,
-			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive,
-			@PathVariable String brandUuid) {
+			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.domain.dto.GymSearchDto> entities = null;
+		Page<com.iso.hypo.domain.dto.GymSearchDto> domainDtos = null;
 		try {
-			entities = gymQueryService.search(page, pageSize, criteria, includeInactive);
+			domainDtos = gymQueryService.search(page, pageSize, criteria, includeInactive);
 		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, criteria);
 		}
 
-		return ResponseEntity.ok(entities.map(item -> modelMapper.map(item, GymSearchDto.class)));
+		return ResponseEntity.ok(domainDtos.map(item -> modelMapper.map(item, GymSearchDto.class)));
 	}
 
 	@GetMapping("/brands/{brandUuid}/gyms")
@@ -117,14 +117,14 @@ public class GymController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> listGym(
+			@PathVariable String brandUuid,
 			@Parameter(description = "page number") @RequestParam int page,
 			@Parameter(description = "page size") @RequestParam int pageSize,
-			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive,
-			@PathVariable String brandUuid) {
+			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.domain.dto.GymDto> entities = null;
+		Page<com.iso.hypo.domain.dto.GymDto> domainDtos = null;
 		try {
-			entities = gymQueryService.list(brandUuid, page, pageSize, includeInactive);
+			domainDtos = gymQueryService.list(brandUuid, page, pageSize, includeInactive);
 		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
@@ -132,7 +132,7 @@ public class GymController {
 
 		}
 
-		return ResponseEntity.ok(entities.map(item -> modelMapper.map(item, GymDto.class)));
+		return ResponseEntity.ok(domainDtos.map(item -> modelMapper.map(item, GymDto.class)));
 	}
 
 	@GetMapping("/brands/{brandUuid}/gyms/{uuid}")
@@ -149,18 +149,18 @@ public class GymController {
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "','" + Roles.Member + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> getGym(
-			@PathVariable String uuid,
-			@PathVariable String brandUuid) {
-		com.iso.hypo.domain.dto.GymDto entity = null;
+			@PathVariable String brandUuid,
+			@PathVariable String uuid) {
+		com.iso.hypo.domain.dto.GymDto domainDto = null;
 		try {
-			entity = gymQueryService.find(brandUuid, uuid);
+			domainDto = gymQueryService.find(brandUuid, uuid);
 		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, GymDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, GymDto.class));
 	}
 
 	@PostMapping("/brands/{brandUuid}/gyms")
@@ -230,6 +230,10 @@ public class GymController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Brand UUID in path and request body do not match");
 		}
 		
+		if (!request.getUuid().equals(uuid)) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Gym UUID in path and request body do not match");
+		}
+		
 		com.iso.hypo.domain.dto.GymDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.GymDto.class);
 
 		try {
@@ -257,12 +261,16 @@ public class GymController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> patchGym(
+			@PathVariable String brandUuid,
 			@PathVariable String uuid,
-			@PathVariable String brandUuid, 
 			@RequestBody PatchGymDto request) {
 		
 		if (!request.getBrandUuid().equals(brandUuid)) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Brand UUID in path and request body do not match");
+		}
+		
+		if (!request.getUuid().equals(uuid)) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Gym UUID in path and request body do not match");
 		}
 		
 		com.iso.hypo.domain.dto.GymDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.GymDto.class);
@@ -292,19 +300,19 @@ public class GymController {
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> activateGym(
-			@PathVariable String uuid,
-			@PathVariable String brandUuid) {
-		com.iso.hypo.domain.dto.GymDto entity;
+			@PathVariable String brandUuid,
+			@PathVariable String uuid) {
+		com.iso.hypo.domain.dto.GymDto domainDto;
 
 		try {
-			entity = gymService.activate(brandUuid, uuid);
+			domainDto = gymService.activate(brandUuid, uuid);
 		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, GymDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, GymDto.class));
 	}
 
 	@PostMapping("/brands/{brandUuid}/gyms/{uuid}/deactivate")
@@ -321,20 +329,20 @@ public class GymController {
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> deactivateGym(
-			@PathVariable String uuid,
-			@PathVariable String brandUuid) {
+			@PathVariable String brandUuid,
+			@PathVariable String uuid) {
 
-		com.iso.hypo.domain.dto.GymDto entity;
+		com.iso.hypo.domain.dto.GymDto domainDto;
 
 		try {
-			entity = gymService.deactivate(brandUuid, uuid);
+			domainDto = gymService.deactivate(brandUuid, uuid);
 		} catch (GymException e) {
 			logger.error(e.getMessage(), e);
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
-		return ResponseEntity.ok(modelMapper.map(entity, GymDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, GymDto.class));
 	}
 
 	@DeleteMapping("/brands/{brandUuid}/gyms/{uuid}")

@@ -15,6 +15,9 @@ public class ErrorDto {
 	
 	private String trackingNumber;
 	
+	public ErrorDto() {
+	}
+	
 	public ErrorDto(String trackingNumber, String code, String description, String data) {
 		this.trackingNumber = trackingNumber;
 		this.code = code;

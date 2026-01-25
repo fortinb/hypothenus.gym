@@ -26,23 +26,23 @@ import com.iso.hypo.services.mappers.CourseMapper;
 @Service
 public class CourseServiceImpl implements CourseService {
 
-	private GymQueryService gymQueryService;
+	private final GymQueryService gymQueryService;
 
-	private CoachRepository coachRepository;
+	private final CoachRepository coachRepository;
 
-	private CourseRepository courseRepository;
+	private final CourseRepository courseRepository;
 
-	private CourseMapper courseMapper;
+	private final CourseMapper courseMapper;
 
 	private static final Logger logger = LoggerFactory.getLogger(CourseServiceImpl.class);
 	
 	private final RequestContext requestContext;
 
-	public CourseServiceImpl(GymQueryService gymQueryService, CoachRepository coachRepository, CourseRepository courseRepository, CourseMapper courseMapper, RequestContext requestContext) {
-		this.gymQueryService = gymQueryService;
+	public CourseServiceImpl(CourseMapper courseMapper, CoachRepository coachRepository, CourseRepository courseRepository, GymQueryService gymQueryService, RequestContext requestContext) {
+		this.courseMapper = courseMapper;
 		this.coachRepository = coachRepository;
 		this.courseRepository = courseRepository;
-		this.courseMapper = courseMapper;
+		this.gymQueryService = gymQueryService;
 		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
@@ -174,10 +174,10 @@ public class CourseServiceImpl implements CourseService {
 		try {
 			Course entity = this.readByCourseUuid(brandUuid, gymUuid, courseUuid);
 			entity.setDeleted(true);
-	
+
 			entity.setDeletedOn(Instant.now());
 			entity.setDeletedBy(requestContext.getUsername());
-	
+
 			courseRepository.save(entity);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, gymUuid={}, courseUuid={}", brandUuid, gymUuid, courseUuid, e);

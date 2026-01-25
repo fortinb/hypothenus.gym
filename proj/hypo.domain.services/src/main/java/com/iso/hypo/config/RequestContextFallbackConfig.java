@@ -11,7 +11,7 @@ public class RequestContextFallbackConfig {
 
     @Bean
     @ConditionalOnMissingBean(RequestContext.class)
-    public RequestContext requestContext() {
+    RequestContext requestContext() {
         // Return an empty RequestContext for non-web contexts (unit tests)
         return new RequestContext();
     }

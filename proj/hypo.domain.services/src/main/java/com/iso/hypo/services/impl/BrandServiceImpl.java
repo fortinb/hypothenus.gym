@@ -23,19 +23,19 @@ import com.iso.hypo.services.mappers.BrandMapper;
 @Service
 public class BrandServiceImpl implements BrandService {
 
-	private BrandRepository brandRepository;
+	private final BrandRepository brandRepository;
 
-	private BrandMapper brandMapper;
+	private final BrandMapper brandMapper;
 
 	private final RequestContext requestContext;
 
 	private static final Logger logger = LoggerFactory.getLogger(BrandServiceImpl.class);
 
-	public BrandServiceImpl(BrandRepository brandRepository, BrandMapper brandMapper, RequestContext requestContext) {
-		this.brandRepository = brandRepository;
-		this.brandMapper = brandMapper;
-		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
-	}
+	public BrandServiceImpl(BrandMapper brandMapper, BrandRepository brandRepository, RequestContext requestContext) {
+        this.brandMapper = brandMapper;
+        this.brandRepository = brandRepository;
+        this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
+    }
 
 	@Override
 	public BrandDto create(BrandDto brandDto) throws BrandException {

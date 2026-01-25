@@ -34,8 +34,11 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import static org.awaitility.Awaitility.await;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import net.datafaker.Faker;
+import com.iso.hypo.admin.papi.dto.ErrorDto;
 import com.iso.hypo.domain.aggregate.Brand;
 import com.iso.hypo.services.exception.BrandException;
 import com.iso.hypo.repositories.BrandRepository;
@@ -188,19 +191,20 @@ class BrandControllerTests {
 		params.add(pageSize, "4");
 
 		// Act
-		ResponseEntity<Page<BrandDto>> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(listURI), port, params),
-				HttpMethod.GET, httpEntity, new ParameterizedTypeReference<Page<BrandDto>>() {
-				});
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(listURI), port, params),
+				HttpMethod.GET, httpEntity, JsonNode.class);
 
 		// Assert
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 
+		Page<BrandDto> page = objectMapper.convertValue(response.getBody(), new TypeReference<Page<BrandDto>>() {});
+
 		// Assert
-		Assertions.assertEquals(0, response.getBody().getPageable().getPageNumber(),
-				String.format("Brand list first page number invalid: %d", response.getBody().getPageable().getPageNumber()));
-		Assertions.assertEquals(4, response.getBody().getNumberOfElements(),
-				String.format("Brand list first page number of elements invalid: %d", response.getBody().getNumberOfElements()));
+		Assertions.assertEquals(0, page.getPageable().getPageNumber(),
+				String.format("Brand list first page number invalid: %d", page.getPageable().getPageNumber()));
+		Assertions.assertEquals(4, page.getNumberOfElements(),
+				String.format("Brand list first page number of elements invalid: %d", page.getNumberOfElements()));
 	}
 
 	@Test
@@ -213,19 +217,20 @@ class BrandControllerTests {
 		params.add(pageSize, "4");
 
 		// Act
-		ResponseEntity<Page<BrandDto>> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(listURI), port, params),
-				HttpMethod.GET, httpEntity, new ParameterizedTypeReference<Page<BrandDto>>() {
-				});
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(listURI), port, params),
+				HttpMethod.GET, httpEntity, JsonNode.class);
 
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
+		
+		Page<BrandDto> page = objectMapper.convertValue(response.getBody(), new TypeReference<Page<BrandDto>>() {});
 
 		// Assert
-		Assertions.assertEquals(1, response.getBody().getPageable().getPageNumber(),
-				String.format("Brand list second page number invalid: %d", response.getBody().getPageable().getPageNumber()));
-		Assertions.assertEquals(4, response.getBody().getNumberOfElements(),
-				String.format("Brand list second page number of elements invalid: %d", response.getBody().getNumberOfElements()));
+		Assertions.assertEquals(1, page.getPageable().getPageNumber(),
+				String.format("Brand list second page number invalid: %d", page.getPageable().getPageNumber()));
+		Assertions.assertEquals(4, page.getNumberOfElements(),
+				String.format("Brand list second page number of elements invalid: %d", page.getNumberOfElements()));
 	}
 
 	@Test
@@ -235,13 +240,15 @@ class BrandControllerTests {
 		HttpEntity<PostBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postBrand);
 
 		// Act
-		ResponseEntity<BrandDto> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postURI), port, null),
-				HttpMethod.POST, httpEntity, BrandDto.class);
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postURI), port, null),
+				HttpMethod.POST, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
 				String.format("Post error: %s", response.getStatusCode()));
 
-		assertBrand(modelMapper.map(postBrand, BrandDto.class), response.getBody());
+		BrandDto created = objectMapper.convertValue(response.getBody(), BrandDto.class);
+
+		assertBrand(modelMapper.map(postBrand, BrandDto.class), created);
 	}
 	
 	@Test
@@ -250,24 +257,26 @@ class BrandControllerTests {
 		PostBrandDto postBrand = modelMapper.map(BrandBuilder.build(faker.code().isbn10(),faker.company().name()), PostBrandDto.class);
 		HttpEntity<PostBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postBrand);
 
-		ResponseEntity<BrandDto> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postURI), port, null),
-				HttpMethod.POST, httpEntity, BrandDto.class);
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postURI), port, null),
+				HttpMethod.POST, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
 				String.format("Post error: %s", response.getStatusCode()));
 
 		// Act
 		response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postURI), port, null),
-				HttpMethod.POST, httpEntity, BrandDto.class);
+				HttpMethod.POST, httpEntity, JsonNode.class);
 		
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Post error: %s", response.getStatusCode()));
 		
-		Assertions.assertEquals(1, response.getBody().getMessages().size(),
-				String.format("Duplicate error ,missing message: %s", response.getBody().getMessages().size()));
+		BrandDto dupBody = objectMapper.convertValue(response.getBody(), BrandDto.class);
+
+		Assertions.assertEquals(1, dupBody.getMessages().size(),
+				String.format("Duplicate error ,missing message: %s", dupBody.getMessages().size()));
 		
-		Assertions.assertEquals(BrandException.BRAND_CODE_ALREADY_EXIST, response.getBody().getMessages().getFirst().getCode(),
-				String.format("Duplicate error, missing message: %s", response.getBody().getMessages().getFirst().getCode()));
+		Assertions.assertEquals(BrandException.BRAND_CODE_ALREADY_EXIST, dupBody.getMessages().getFirst().getCode(),
+				String.format("Duplicate error, missing message: %s", dupBody.getMessages().getFirst().getCode()));
 	}
 
 	@ParameterizedTest
@@ -277,22 +286,43 @@ class BrandControllerTests {
 		PostBrandDto postBrand = modelMapper.map(BrandBuilder.build(faker.code().isbn10(),faker.company().name()), PostBrandDto.class);
 		HttpEntity<PostBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postBrand);
 
-		ResponseEntity<BrandDto> responsePost = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(postURI), port, null), HttpMethod.POST, httpEntity, BrandDto.class);
+		ResponseEntity<JsonNode> responsePost = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(postURI), port, null), HttpMethod.POST, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.CREATED, responsePost.getStatusCode(),
 				String.format("Post error: %s", responsePost.getStatusCode()));
+		
+		BrandDto created = objectMapper.convertValue(responsePost.getBody(), BrandDto.class);
 
 		// Act
 		httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<BrandDto> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(getURI, responsePost.getBody().getUuid())), port, null),
-				HttpMethod.GET, httpEntity, BrandDto.class);
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(getURI, created.getUuid())), port, null),
+				HttpMethod.GET, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
+		
+		BrandDto fetched = objectMapper.convertValue(response.getBody(), BrandDto.class);
 
-		assertBrand(modelMapper.map(postBrand, BrandDto.class), response.getBody());
+		assertBrand(modelMapper.map(postBrand, BrandDto.class), fetched);
+	}
+	
+	@Test
+	void testGetFailureNotFound() throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		HttpEntity<Object> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
+ 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(getURI, faker.code().isbn10())), port, null),
+				HttpMethod.GET, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
+				String.format("Get error: %s", response.getStatusCode()));
+		
+		if (response.getBody() != null && !response.getBody().isEmpty()) {
+			ErrorDto err = objectMapper.convertValue(response.getBody(), ErrorDto.class);
+			Assertions.assertEquals(BrandException.BRAND_NOT_FOUND, err.getCode());
+		}
 	}
 
 	@Test
@@ -307,14 +337,16 @@ class BrandControllerTests {
 
 		// Act
 		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putBrand);
-		ResponseEntity<BrandDto> response = testRestTemplate.exchange(
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(putURI, updatedBrand.getUuid())), port, null),
-				HttpMethod.PUT, httpEntity, BrandDto.class);
+				HttpMethod.PUT, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Put error: %s", response.getStatusCode()));
+		
+		BrandDto updated = objectMapper.convertValue(response.getBody(), BrandDto.class);
 
-		assertBrand(modelMapper.map(putBrand, BrandDto.class), response.getBody());
+		assertBrand(modelMapper.map(putBrand, BrandDto.class), updated);
 	}
 	
 	@Test
@@ -333,14 +365,36 @@ class BrandControllerTests {
 		
 		// Act
 		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putBrand);
-		ResponseEntity<BrandDto> response = testRestTemplate.exchange(
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(putURI, updatedBrand.getUuid())), port, null),
-				HttpMethod.PUT, httpEntity, BrandDto.class);
+				HttpMethod.PUT, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Put null error: %s", response.getStatusCode()));
+		
+		BrandDto updated = objectMapper.convertValue(response.getBody(), BrandDto.class);
 
- 		assertBrand(modelMapper.map(putBrand, BrandDto.class), response.getBody());
+	 	assertBrand(modelMapper.map(putBrand, BrandDto.class), updated);
+	}
+	
+	@Test
+	void testPutFailureNotFound() throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		Brand updatedBrand = BrandBuilder.build(faker.code().isbn10(),faker.company().name());
+		PutBrandDto putBrand = modelMapper.map(updatedBrand, PutBrandDto.class);
+		
+		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putBrand);
+ 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(getURI, updatedBrand.getUuid())), port, null),
+				HttpMethod.PUT, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
+				String.format("Get error: %s", response.getStatusCode()));
+		
+		if (response.getBody() != null && !response.getBody().isEmpty()) {
+			ErrorDto err = objectMapper.convertValue(response.getBody(), ErrorDto.class);
+			Assertions.assertEquals(BrandException.BRAND_NOT_FOUND, err.getCode());
+		}
 	}
 
 	@Test
@@ -356,17 +410,18 @@ class BrandControllerTests {
 		
 		// Act
 		HttpEntity<PatchBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, patchBrand);
-		ResponseEntity<BrandDto> response = testRestTemplate.exchange(
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(patchURI, brandToPatch.getUuid())), port, null),
-				HttpMethod.PATCH, httpEntity, BrandDto.class);
+				HttpMethod.PATCH, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
-
+		
 		patchBrand.setEmail(brandToPatch.getEmail());
 		patchBrand.getAddress().setStreetName(brandToPatch.getAddress().getStreetName());
 		
- 		assertBrand(modelMapper.map(patchBrand, BrandDto.class), response.getBody());
+	 	BrandDto patched = objectMapper.convertValue(response.getBody(), BrandDto.class);
+	 	assertBrand(modelMapper.map(patchBrand, BrandDto.class), patched);
 	}
 	
 	@ParameterizedTest
@@ -385,15 +440,17 @@ class BrandControllerTests {
 
 		// Act
 		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<BrandDto> response = testRestTemplate.exchange(
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(postActivateURI, brandToActivate.getUuid())),
 						port, null),
-				HttpMethod.POST, httpEntity, BrandDto.class);
+				HttpMethod.POST, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Brand activation error: %s", response.getStatusCode()));
+		
+		BrandDto activated = objectMapper.convertValue(response.getBody(), BrandDto.class);
 
-		assertBrand(modelMapper.map(brandToActivate, BrandDto.class), response.getBody());
+		assertBrand(modelMapper.map(brandToActivate, BrandDto.class), activated);
 	}
 
 	@ParameterizedTest
@@ -403,12 +460,17 @@ class BrandControllerTests {
 
 		// Act
 		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<Object> response = testRestTemplate.exchange(HttpUtils
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils
 				.createURL(URI.create(String.format(postActivateURI, faker.code().isbn10())), port, null),
-				HttpMethod.POST, httpEntity, Object.class);
-																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																											
+				HttpMethod.POST, httpEntity, JsonNode.class);
+																																																	
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
 				String.format("Brand activation error: %s", response.getStatusCode()));
+		
+		if (response.getBody() != null && response.getBody().size() > 0) {
+			ErrorDto err = objectMapper.convertValue(response.getBody(), ErrorDto.class);
+			Assertions.assertEquals(BrandException.BRAND_NOT_FOUND, err.getCode());
+		}
 	}
 
 	@ParameterizedTest
@@ -425,14 +487,16 @@ class BrandControllerTests {
 
 		// Act
 		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<BrandDto> response = testRestTemplate.exchange(HttpUtils.createURL(
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(
 				URI.create(String.format(postDeactivateURI, brandToDeactivate.getUuid())), port, null),
-				HttpMethod.POST, httpEntity, BrandDto.class);
+				HttpMethod.POST, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Brand deactivation error: %s", response.getStatusCode()));
+		
+		BrandDto deactivated = objectMapper.convertValue(response.getBody(), BrandDto.class);
 
-		assertBrand(modelMapper.map(brandToDeactivate, BrandDto.class), response.getBody());
+		assertBrand(modelMapper.map(brandToDeactivate, BrandDto.class), deactivated);
 	}
 
 	@ParameterizedTest
@@ -442,44 +506,50 @@ class BrandControllerTests {
 
 		// Act
 		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<Object> response = testRestTemplate.exchange(HttpUtils
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils
 				.createURL(URI.create(String.format(postDeactivateURI, faker.code().ean13())), port, null),
-				HttpMethod.POST, httpEntity, Object.class);
+				HttpMethod.POST, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
 				String.format("Brand activation error: %s", response.getStatusCode()));
+		
+		if (response.getBody() != null && response.getBody().size() > 0) {
+			ErrorDto err = objectMapper.convertValue(response.getBody(), ErrorDto.class);
+			Assertions.assertEquals(BrandException.BRAND_NOT_FOUND, err.getCode());
+		}
 	}
 
 	private void assertSearch(String criteria, int minimumNumberOfElements, int maximumNumberOfElements) 
-			throws MalformedURLException, JsonProcessingException, Exception
+				throws MalformedURLException, JsonProcessingException, Exception
 			{
-		// Arrange
-		HttpEntity<String> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, "");
+			// Arrange
+			HttpEntity<String> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, "");
 
-		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
-		params.add(searchCriteria, criteria);
-		params.add(pageNumber, "0");
-		params.add(pageSize, "4");
-		
-		// Act
-		await()
-        .atMost(5, TimeUnit.SECONDS)
-        .pollInterval(200, TimeUnit.MILLISECONDS)
-        .untilAsserted(() -> {
-        	ResponseEntity<Page<BrandSearchDto>> response = testRestTemplate.exchange(
-    				HttpUtils.createURL(URI.create(searchURI), port, params), HttpMethod.GET, httpEntity,
-    				new ParameterizedTypeReference<Page<BrandSearchDto>>() {
-    				});
+			MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
+			params.add(searchCriteria, criteria);
+			params.add(pageNumber, "0");
+			params.add(pageSize, "4");
+			
+			// Act
+			await()
+	        .atMost(5, TimeUnit.SECONDS)
+	        .pollInterval(200, TimeUnit.MILLISECONDS)
+	        .untilAsserted(() -> {
+				ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+						HttpUtils.createURL(URI.create(searchURI), port, params), HttpMethod.GET, httpEntity,
+						JsonNode.class);
 
-    		Assertions.assertEquals(response.getStatusCode(), HttpStatus.OK,
-    				String.format("Search error: %s", response.getStatusCode()));
-    		
-    		Assertions.assertTrue(response.getBody().getNumberOfElements() >= minimumNumberOfElements && 
-								  response.getBody().getNumberOfElements() <= maximumNumberOfElements,
+				Assertions.assertEquals(response.getStatusCode(), HttpStatus.OK,
+						String.format("Search error: %s", response.getStatusCode()));
+				
+				Page<BrandSearchDto> page = objectMapper.convertValue(response.getBody(), new TypeReference<Page<BrandSearchDto>>() {});
+				
+				Assertions.assertTrue(page.getNumberOfElements() >= minimumNumberOfElements && 
+										page.getNumberOfElements() <= maximumNumberOfElements,
 					String.format("Brand search return invalid number of results [%s]: %d", 
-							criteria, response.getBody().getNumberOfElements()));
-		});
-	}
+							criteria, page.getNumberOfElements()));
+			});
+		}
 
 	public static final void assertBrand(BrandDto expected, BrandDto result) {
 		Assertions.assertEquals(expected.getCode(), result.getCode());
@@ -551,4 +621,3 @@ class BrandControllerTests {
 		}
 	}
 }
-
