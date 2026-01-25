@@ -25,7 +25,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -36,16 +35,15 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.iso.hypo.admin.papi.dto.ErrorDto;
 import com.iso.hypo.admin.papi.dto.contact.ContactDto;
 import com.iso.hypo.admin.papi.dto.contact.PhoneNumberDto;
-import com.iso.hypo.admin.papi.dto.model.BrandDto;
 import com.iso.hypo.admin.papi.dto.model.GymDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchGymDto;
 import com.iso.hypo.admin.papi.dto.post.PostGymDto;
-import com.iso.hypo.admin.papi.dto.put.PutBrandDto;
 import com.iso.hypo.admin.papi.dto.put.PutGymDto;
 import com.iso.hypo.admin.papi.dto.search.GymSearchDto;
 import com.iso.hypo.domain.BrandBuilder;
@@ -59,6 +57,7 @@ import com.iso.hypo.tests.http.HttpUtils;
 import com.iso.hypo.tests.security.Roles;
 import com.iso.hypo.tests.security.Users;
 import com.iso.hypo.tests.utils.StringUtils;
+import com.iso.hypo.tests.utils.TestResponseUtils;
 
 import net.datafaker.Faker;
 
@@ -219,7 +218,7 @@ class GymControllerTests {
 				String.format("List error: %s", response.getStatusCode()));
 
 		// Assert
-		Page<GymDto> page = objectMapper.convertValue(response.getBody(), new TypeReference<Page<GymDto>>() {});
+		Page<GymDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<GymDto>>() {}, objectMapper);
 		Assertions.assertEquals(0, page.getPageable().getPageNumber(),
 				String.format("Gym list first page number invalid: %d", page.getPageable().getPageNumber()));
 		Assertions.assertEquals(4, page.getNumberOfElements(),
@@ -243,7 +242,7 @@ class GymControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 
-		Page<GymDto> page = objectMapper.convertValue(response.getBody(), new TypeReference<Page<GymDto>>() {});
+		Page<GymDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<GymDto>>() {}, objectMapper);
 
 		// Assert
 		Assertions.assertEquals(1, page.getPageable().getPageNumber(),
@@ -255,8 +254,8 @@ class GymControllerTests {
 	@Test
 	void testPostSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostGymDto postGym = modelMapper.map(GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name()), PostGymDto.class);
-		HttpEntity<PostGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postGym);
+		PostGymDto postDto = modelMapper.map(GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name()), PostGymDto.class);
+		HttpEntity<PostGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
 
 		// Act
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(postURI, brand.getUuid())), port, null),
@@ -265,15 +264,15 @@ class GymControllerTests {
 		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
 				String.format("Post error: %s", response.getStatusCode()));
 
-		GymDto created = objectMapper.convertValue(response.getBody(), GymDto.class);
-		assertGym(modelMapper.map(postGym, GymDto.class), created);
+		GymDto createdDto = TestResponseUtils.toDto(response, GymDto.class, objectMapper);
+		assertGym(modelMapper.map(postDto, GymDto.class), createdDto);
 	}
 	
 	@Test
 	void testPostDuplicateFailure() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostGymDto postGym = modelMapper.map(GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name()), PostGymDto.class);
-		HttpEntity<PostGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postGym);
+		PostGymDto postDto = modelMapper.map(GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name()), PostGymDto.class);
+		HttpEntity<PostGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
 
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(postURI, brand.getUuid())), port, null),
 				HttpMethod.POST, httpEntity, JsonNode.class);
@@ -288,21 +287,21 @@ class GymControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Post error: %s", response.getStatusCode()));
 		
-		GymDto dupBody = objectMapper.convertValue(response.getBody(), GymDto.class);
+		GymDto dupDto = TestResponseUtils.toDto(response, GymDto.class, objectMapper);
 
-		Assertions.assertEquals(1, dupBody.getMessages().size(),
-				String.format("Duplicate error ,missing message: %s", dupBody.getMessages().size()));
+		Assertions.assertEquals(1, dupDto.getMessages().size(),
+				String.format("Duplicate error ,missing message: %s", dupDto.getMessages().size()));
 		
-		Assertions.assertEquals(GymException.GYM_CODE_ALREADY_EXIST, dupBody.getMessages().getFirst().getCode(),
-				String.format("Duplicate error, missing message: %s", dupBody.getMessages().getFirst().getCode()));
+		Assertions.assertEquals(GymException.GYM_CODE_ALREADY_EXIST, dupDto.getMessages().getFirst().getCode(),
+				String.format("Duplicate error, missing message: %s", dupDto.getMessages().getFirst().getCode()));
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis", "Member, Guillaume Fortin", })
 	void testGetSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostGymDto postGym = modelMapper.map(GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name()), PostGymDto.class);
-		HttpEntity<PostGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postGym);
+		PostGymDto postDto = modelMapper.map(GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name()), PostGymDto.class);
+		HttpEntity<PostGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
 
 		ResponseEntity<JsonNode> responsePost = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(postURI, brand.getUuid())), port, null), HttpMethod.POST, httpEntity, JsonNode.class);
@@ -312,16 +311,16 @@ class GymControllerTests {
 
 		// Act
 		httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		GymDto created = objectMapper.convertValue(responsePost.getBody(), GymDto.class);
+		GymDto createdDto = TestResponseUtils.toDto(responsePost, GymDto.class, objectMapper);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(getURI, created.getBrandUuid(), created.getUuid())), port, null),
+				HttpUtils.createURL(URI.create(String.format(getURI, createdDto.getBrandUuid(), createdDto.getUuid())), port, null),
 				HttpMethod.GET, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
 
-		GymDto fetched = objectMapper.convertValue(response.getBody(), GymDto.class);
-		assertGym(modelMapper.map(postGym, GymDto.class), fetched);
+		GymDto fetchedDto = TestResponseUtils.toDto(response, GymDto.class, objectMapper);
+		assertGym(modelMapper.map(postDto, GymDto.class), fetchedDto);
 	}
 	
 	@Test
@@ -343,11 +342,11 @@ class GymControllerTests {
 		updatedGym.setActive(true);
 		updatedGym = gymRepository.save(updatedGym);
 
-		PutGymDto putGym = modelMapper.map(updatedGym, PutGymDto.class);
-		putGym.getContacts().remove(1);
+		PutGymDto putDto = modelMapper.map(updatedGym, PutGymDto.class);
+		putDto.getContacts().remove(1);
 
 		// Act
-		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putGym);
+		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putDto);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(putURI, updatedGym.getBrandUuid(), updatedGym.getUuid())), port, null),
 				HttpMethod.PUT, httpEntity, JsonNode.class);
@@ -355,8 +354,8 @@ class GymControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Put error: %s", response.getStatusCode()));
 
-		GymDto updated = objectMapper.convertValue(response.getBody(), GymDto.class);
-		assertGym(modelMapper.map(putGym, GymDto.class), updated);
+		GymDto updatedDto = TestResponseUtils.toDto(response, GymDto.class, objectMapper);
+		assertGym(modelMapper.map(putDto, GymDto.class), updatedDto);
 	}
 	
 	@Test
@@ -366,15 +365,15 @@ class GymControllerTests {
 		updatedGym.setActive(true);
 		updatedGym = gymRepository.save(updatedGym);
 		
-		PutGymDto putGym = modelMapper.map(updatedGym, PutGymDto.class);
+		PutGymDto putDto = modelMapper.map(updatedGym, PutGymDto.class);
 		
-		putGym.setEmail(null);
-		putGym.setAddress(null);
-		putGym.setPhoneNumbers(null);
-		putGym.setContacts(null);
+		putDto.setEmail(null);
+		putDto.setAddress(null);
+		putDto.setPhoneNumbers(null);
+		putDto.setContacts(null);
 		
 		// Act
-		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putGym);
+		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putDto);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(putURI, updatedGym.getBrandUuid(), updatedGym.getUuid())), port, null),
 				HttpMethod.PUT, httpEntity, JsonNode.class);
@@ -382,37 +381,38 @@ class GymControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Put null error: %s", response.getStatusCode()));
 
-	 	GymDto updated = objectMapper.convertValue(response.getBody(), GymDto.class);
-	 	assertGym(modelMapper.map(putGym, GymDto.class), updated);
+	 	GymDto updated = TestResponseUtils.toDto(response, GymDto.class, objectMapper);
+	 	assertGym(modelMapper.map(putDto, GymDto.class), updated);
 	}
 	
 	@Test
 	void testPutFailureNotFound() throws MalformedURLException, JsonProcessingException, Exception {
 		Gym updatedGym = GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name());
-		PutGymDto putGym = modelMapper.map(updatedGym, PutGymDto.class);
-		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putGym);
+		PutGymDto putDto = modelMapper.map(updatedGym, PutGymDto.class);
+		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putDto);
 		// Arrange
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, brand.getUuid(), putGym.getUuid())), port, null),
+				HttpUtils.createURL(URI.create(String.format(putURI, brand.getUuid(), putDto.getUuid())), port, null),
 				HttpMethod.GET, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
 	}
 
-	@Test
-	void testPatchSuccess() throws JsonProcessingException, MalformedURLException {
+	@ParameterizedTest
+	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	void testPatchSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		Gym gymToPatch = GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name());
 		gymToPatch.setActive(true);
 		gymToPatch = gymRepository.save(gymToPatch);
 		
-		PatchGymDto patchGym = modelMapper.map(gymToPatch, PatchGymDto.class);
-		patchGym.getAddress().setStreetName(faker.address().streetName());
-		patchGym.setEmail(faker.internet().emailAddress());
+		PatchGymDto patchDto = modelMapper.map(gymToPatch, PatchGymDto.class);
+		patchDto.getAddress().setStreetName(faker.address().streetName());
+		patchDto.setEmail(faker.internet().emailAddress());
 		
 		// Act
-		HttpEntity<PatchGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, patchGym);
+		HttpEntity<PatchGymDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchDto);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(patchURI, gymToPatch.getBrandUuid(), gymToPatch.getUuid())), port, null),
 				HttpMethod.PATCH, httpEntity, JsonNode.class);
@@ -420,10 +420,28 @@ class GymControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
 
-		GymDto patched = objectMapper.convertValue(response.getBody(), GymDto.class);
-	 	assertGym(modelMapper.map(patchGym, GymDto.class), patched);
+		GymDto patchedDto = TestResponseUtils.toDto(response, GymDto.class, objectMapper);
+	  	assertGym(modelMapper.map(patchDto, GymDto.class), patchedDto);
 	}
 	
+	@ParameterizedTest
+	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	void testPatchFailureNotFound(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		Gym patchTarget = GymBuilder.build(brand.getUuid(), faker.code().isbn10(), faker.company().name());
+		PatchGymDto patchDto = modelMapper.map(patchTarget, PatchGymDto.class);
+		
+		HttpEntity<PatchGymDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchDto);
+		
+		// Act
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(patchURI, patchTarget.getBrandUuid(), patchTarget.getUuid())), port, null),
+				HttpMethod.PATCH, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
+				String.format("Patch error: %s", response.getStatusCode()));
+	}
+
 	@ParameterizedTest
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testActivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
@@ -448,23 +466,28 @@ class GymControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Gym activation error: %s", response.getStatusCode()));
 
-		GymDto activated = objectMapper.convertValue(response.getBody(), GymDto.class);
+		GymDto activated = TestResponseUtils.toDto(response, GymDto.class, objectMapper);
 		assertGym(modelMapper.map(gymToActivate, GymDto.class), activated);
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
-	void testActivateFailure(String role, String user) throws JsonProcessingException, MalformedURLException {
+	void testActivateFailureNotFound(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 
 		// Act
 		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<Object> response = testRestTemplate.exchange(HttpUtils
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils
 				.createURL(URI.create(String.format(postActivateURI, brand.getUuid(), faker.code().isbn10())), port, null),
-				HttpMethod.POST, httpEntity, Object.class);
-																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																											
+				HttpMethod.POST, httpEntity, JsonNode.class);
+											
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
 				String.format("Gym activation error: %s", response.getStatusCode()));
+
+		if (response.getBody() != null && response.getBody().size() > 0) {
+			ErrorDto err = TestResponseUtils.toError(response, objectMapper);
+			Assertions.assertEquals(GymException.GYM_NOT_FOUND, err.getCode());
+		}
 	}
 
 	@ParameterizedTest
@@ -488,7 +511,7 @@ class GymControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Gym deactivation error: %s", response.getStatusCode()));
 
-		GymDto deactivated = objectMapper.convertValue(response.getBody(), GymDto.class);
+		GymDto deactivated = TestResponseUtils.toDto(response, GymDto.class, objectMapper);
 		assertGym(modelMapper.map(gymToDeactivate, GymDto.class), deactivated);
 	}
 
@@ -499,12 +522,17 @@ class GymControllerTests {
 
 		// Act
 		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<Object> response = testRestTemplate.exchange(HttpUtils
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils
 				.createURL(URI.create(String.format(postDeactivateURI, brand.getUuid(), faker.code().ean13())), port, null),
-				HttpMethod.POST, httpEntity, Object.class);
+				HttpMethod.POST, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
 				String.format("Gym activation error: %s", response.getStatusCode()));
+
+		if (response.getBody() != null && response.getBody().size() > 0) {
+			ErrorDto err = TestResponseUtils.toError(response, objectMapper);
+			Assertions.assertEquals(GymException.GYM_NOT_FOUND, err.getCode());
+		}
 	}
 
 	private void assertSearch(String criteria, int minimumNumberOfElements, int maximumNumberOfElements) 
@@ -529,7 +557,7 @@ class GymControllerTests {
     		Assertions.assertEquals(response.getStatusCode(), HttpStatus.OK,
     				String.format("Search error: %s", response.getStatusCode()));
     		
-    		Page<GymSearchDto> page = objectMapper.convertValue(response.getBody(), new TypeReference<Page<GymSearchDto>>() {});
+    		Page<GymSearchDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<GymSearchDto>>() {}, objectMapper);
 				Assertions.assertTrue(page.getNumberOfElements() >= minimumNumberOfElements &&
 						page.getNumberOfElements() <= maximumNumberOfElements,
 						String.format("Brand search return invalid number of results [%s]: %d",

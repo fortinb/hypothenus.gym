@@ -1,5 +1,7 @@
 package com.iso.hypo.admin.papi;
 
+import static org.awaitility.Awaitility.await;
+
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.time.Instant;
@@ -23,7 +25,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -32,16 +33,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import static org.awaitility.Awaitility.await;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
-import net.datafaker.Faker;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iso.hypo.admin.papi.dto.ErrorDto;
-import com.iso.hypo.domain.aggregate.Brand;
-import com.iso.hypo.services.exception.BrandException;
-import com.iso.hypo.repositories.BrandRepository;
 import com.iso.hypo.admin.papi.dto.contact.ContactDto;
 import com.iso.hypo.admin.papi.dto.contact.PhoneNumberDto;
 import com.iso.hypo.admin.papi.dto.model.BrandDto;
@@ -50,10 +47,16 @@ import com.iso.hypo.admin.papi.dto.post.PostBrandDto;
 import com.iso.hypo.admin.papi.dto.put.PutBrandDto;
 import com.iso.hypo.admin.papi.dto.search.BrandSearchDto;
 import com.iso.hypo.domain.BrandBuilder;
+import com.iso.hypo.domain.aggregate.Brand;
+import com.iso.hypo.repositories.BrandRepository;
+import com.iso.hypo.services.exception.BrandException;
 import com.iso.hypo.tests.http.HttpUtils;
 import com.iso.hypo.tests.security.Roles;
 import com.iso.hypo.tests.security.Users;
 import com.iso.hypo.tests.utils.StringUtils;
+import com.iso.hypo.tests.utils.TestResponseUtils;
+
+import net.datafaker.Faker;
 
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(Lifecycle.PER_CLASS)
@@ -198,7 +201,7 @@ class BrandControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 
-		Page<BrandDto> page = objectMapper.convertValue(response.getBody(), new TypeReference<Page<BrandDto>>() {});
+		Page<BrandDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<BrandDto>>() {}, objectMapper);
 
 		// Assert
 		Assertions.assertEquals(0, page.getPageable().getPageNumber(),
@@ -224,7 +227,7 @@ class BrandControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 		
-		Page<BrandDto> page = objectMapper.convertValue(response.getBody(), new TypeReference<Page<BrandDto>>() {});
+		Page<BrandDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<BrandDto>>() {}, objectMapper);
 
 		// Assert
 		Assertions.assertEquals(1, page.getPageable().getPageNumber(),
@@ -236,8 +239,8 @@ class BrandControllerTests {
 	@Test
 	void testPostSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostBrandDto postBrand = modelMapper.map(BrandBuilder.build(faker.code().isbn10(),faker.company().name()), PostBrandDto.class);
-		HttpEntity<PostBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postBrand);
+		PostBrandDto postDto = modelMapper.map(BrandBuilder.build(faker.code().isbn10(),faker.company().name()), PostBrandDto.class);
+		HttpEntity<PostBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
 
 		// Act
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postURI), port, null),
@@ -246,16 +249,16 @@ class BrandControllerTests {
 		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
 				String.format("Post error: %s", response.getStatusCode()));
 
-		BrandDto created = objectMapper.convertValue(response.getBody(), BrandDto.class);
+		BrandDto createdDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
 
-		assertBrand(modelMapper.map(postBrand, BrandDto.class), created);
+		assertBrand(modelMapper.map(postDto, BrandDto.class), createdDto);
 	}
 	
 	@Test
 	void testPostDuplicateFailure() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostBrandDto postBrand = modelMapper.map(BrandBuilder.build(faker.code().isbn10(),faker.company().name()), PostBrandDto.class);
-		HttpEntity<PostBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postBrand);
+		PostBrandDto postDto = modelMapper.map(BrandBuilder.build(faker.code().isbn10(),faker.company().name()), PostBrandDto.class);
+		HttpEntity<PostBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
 
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postURI), port, null),
 				HttpMethod.POST, httpEntity, JsonNode.class);
@@ -270,21 +273,21 @@ class BrandControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Post error: %s", response.getStatusCode()));
 		
-		BrandDto dupBody = objectMapper.convertValue(response.getBody(), BrandDto.class);
+		BrandDto dupDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
 
-		Assertions.assertEquals(1, dupBody.getMessages().size(),
-				String.format("Duplicate error ,missing message: %s", dupBody.getMessages().size()));
+		Assertions.assertEquals(1, dupDto.getMessages().size(),
+				String.format("Duplicate error ,missing message: %s", dupDto.getMessages().size()));
 		
-		Assertions.assertEquals(BrandException.BRAND_CODE_ALREADY_EXIST, dupBody.getMessages().getFirst().getCode(),
-				String.format("Duplicate error, missing message: %s", dupBody.getMessages().getFirst().getCode()));
+		Assertions.assertEquals(BrandException.BRAND_CODE_ALREADY_EXIST, dupDto.getMessages().getFirst().getCode(),
+				String.format("Duplicate error, missing message: %s", dupDto.getMessages().getFirst().getCode()));
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis", "Member, Guillaume Fortin", })
 	void testGetSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostBrandDto postBrand = modelMapper.map(BrandBuilder.build(faker.code().isbn10(),faker.company().name()), PostBrandDto.class);
-		HttpEntity<PostBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postBrand);
+		PostBrandDto postDto = modelMapper.map(BrandBuilder.build(faker.code().isbn10(),faker.company().name()), PostBrandDto.class);
+		HttpEntity<PostBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
 
 		ResponseEntity<JsonNode> responsePost = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(postURI), port, null), HttpMethod.POST, httpEntity, JsonNode.class);
@@ -292,20 +295,20 @@ class BrandControllerTests {
 		Assertions.assertEquals(HttpStatus.CREATED, responsePost.getStatusCode(),
 				String.format("Post error: %s", responsePost.getStatusCode()));
 		
-		BrandDto created = objectMapper.convertValue(responsePost.getBody(), BrandDto.class);
+		BrandDto createdDto = TestResponseUtils.toDto(responsePost, BrandDto.class, objectMapper);
 
 		// Act
 		httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(getURI, created.getUuid())), port, null),
+				HttpUtils.createURL(URI.create(String.format(getURI, createdDto.getUuid())), port, null),
 				HttpMethod.GET, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
 		
-		BrandDto fetched = objectMapper.convertValue(response.getBody(), BrandDto.class);
+		BrandDto fetchedDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
 
-		assertBrand(modelMapper.map(postBrand, BrandDto.class), fetched);
+		assertBrand(modelMapper.map(postDto, BrandDto.class), fetchedDto);
 	}
 	
 	@Test
@@ -320,7 +323,7 @@ class BrandControllerTests {
 				String.format("Get error: %s", response.getStatusCode()));
 		
 		if (response.getBody() != null && !response.getBody().isEmpty()) {
-			ErrorDto err = objectMapper.convertValue(response.getBody(), ErrorDto.class);
+			ErrorDto err = TestResponseUtils.toError(response, objectMapper);
 			Assertions.assertEquals(BrandException.BRAND_NOT_FOUND, err.getCode());
 		}
 	}
@@ -332,11 +335,11 @@ class BrandControllerTests {
 		updatedBrand.setActive(true);
 		updatedBrand = brandRepository.save(updatedBrand);
 
-		PutBrandDto putBrand = modelMapper.map(updatedBrand, PutBrandDto.class);
-		putBrand.getContacts().remove(1);
+		PutBrandDto putDto = modelMapper.map(updatedBrand, PutBrandDto.class);
+		putDto.getContacts().remove(1);
 
 		// Act
-		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putBrand);
+		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putDto);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(putURI, updatedBrand.getUuid())), port, null),
 				HttpMethod.PUT, httpEntity, JsonNode.class);
@@ -344,9 +347,9 @@ class BrandControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Put error: %s", response.getStatusCode()));
 		
-		BrandDto updated = objectMapper.convertValue(response.getBody(), BrandDto.class);
+		BrandDto updatedDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
 
-		assertBrand(modelMapper.map(putBrand, BrandDto.class), updated);
+		assertBrand(modelMapper.map(putDto, BrandDto.class), updatedDto);
 	}
 	
 	@Test
@@ -356,15 +359,15 @@ class BrandControllerTests {
 		updatedBrand.setActive(true);
 		updatedBrand = brandRepository.save(updatedBrand);
 		
-		PutBrandDto putBrand = modelMapper.map(updatedBrand, PutBrandDto.class);
+		PutBrandDto putDto = modelMapper.map(updatedBrand, PutBrandDto.class);
 		
-		putBrand.setEmail(null);
-		putBrand.setAddress(null);
-		putBrand.setPhoneNumbers(null);
-		putBrand.setContacts(null);
+		putDto.setEmail(null);
+		putDto.setAddress(null);
+		putDto.setPhoneNumbers(null);
+		putDto.setContacts(null);
 		
 		// Act
-		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putBrand);
+		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putDto);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(putURI, updatedBrand.getUuid())), port, null),
 				HttpMethod.PUT, httpEntity, JsonNode.class);
@@ -372,44 +375,45 @@ class BrandControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Put null error: %s", response.getStatusCode()));
 		
-		BrandDto updated = objectMapper.convertValue(response.getBody(), BrandDto.class);
+		BrandDto updatedDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
 
-	 	assertBrand(modelMapper.map(putBrand, BrandDto.class), updated);
+	 	assertBrand(modelMapper.map(putDto, BrandDto.class), updatedDto);
 	}
 	
 	@Test
 	void testPutFailureNotFound() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		Brand updatedBrand = BrandBuilder.build(faker.code().isbn10(),faker.company().name());
-		PutBrandDto putBrand = modelMapper.map(updatedBrand, PutBrandDto.class);
+		PutBrandDto putDto = modelMapper.map(updatedBrand, PutBrandDto.class);
 		
-		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putBrand);
+		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putDto);
  		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(getURI, updatedBrand.getUuid())), port, null),
+				HttpUtils.createURL(URI.create(String.format(putURI, updatedBrand.getUuid())), port, null),
 				HttpMethod.PUT, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
 		
 		if (response.getBody() != null && !response.getBody().isEmpty()) {
-			ErrorDto err = objectMapper.convertValue(response.getBody(), ErrorDto.class);
+			ErrorDto err = TestResponseUtils.toError(response, objectMapper);
 			Assertions.assertEquals(BrandException.BRAND_NOT_FOUND, err.getCode());
 		}
 	}
 
-	@Test
-	void testPatchSuccess() throws JsonProcessingException, MalformedURLException {
+	@ParameterizedTest
+	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	void testPatchSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		Brand brandToPatch = BrandBuilder.build(faker.code().isbn10(),faker.company().name());
 		brandToPatch.setActive(true);
 		brandToPatch = brandRepository.save(brandToPatch);
 		
-		PatchBrandDto patchBrand = modelMapper.map(brandToPatch, PatchBrandDto.class);
-		patchBrand.getAddress().setStreetName(null);
-		patchBrand.setEmail(null);
+		PatchBrandDto patchDto = modelMapper.map(brandToPatch, PatchBrandDto.class);
+		patchDto.getAddress().setStreetName(null);
+		patchDto.setEmail(null);
 		
 		// Act
-		HttpEntity<PatchBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, patchBrand);
+		HttpEntity<PatchBrandDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchDto);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(patchURI, brandToPatch.getUuid())), port, null),
 				HttpMethod.PATCH, httpEntity, JsonNode.class);
@@ -417,13 +421,36 @@ class BrandControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
 		
-		patchBrand.setEmail(brandToPatch.getEmail());
-		patchBrand.getAddress().setStreetName(brandToPatch.getAddress().getStreetName());
+		patchDto.setEmail(brandToPatch.getEmail());
+		patchDto.getAddress().setStreetName(brandToPatch.getAddress().getStreetName());
 		
-	 	BrandDto patched = objectMapper.convertValue(response.getBody(), BrandDto.class);
-	 	assertBrand(modelMapper.map(patchBrand, BrandDto.class), patched);
+	 	BrandDto patchedDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
+	 	assertBrand(modelMapper.map(patchDto, BrandDto.class), patchedDto);
 	}
 	
+	@ParameterizedTest
+	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	void testPatchFailureNotFound(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		Brand patchTarget = BrandBuilder.build(faker.code().isbn10(),faker.company().name());
+		PatchBrandDto patchDto = modelMapper.map(patchTarget, PatchBrandDto.class);
+		
+		HttpEntity<PatchBrandDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchDto);
+		
+		// Act
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(patchURI, patchTarget.getUuid())), port, null),
+				HttpMethod.PATCH, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
+				String.format("Patch error: %s", response.getStatusCode()));
+		
+		if (response.getBody() != null && !response.getBody().isEmpty()) {
+			ErrorDto err = TestResponseUtils.toError(response, objectMapper);
+			Assertions.assertEquals(BrandException.BRAND_NOT_FOUND, err.getCode());
+		}
+	}
+
 	@ParameterizedTest
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testActivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
@@ -448,27 +475,27 @@ class BrandControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Brand activation error: %s", response.getStatusCode()));
 		
-		BrandDto activated = objectMapper.convertValue(response.getBody(), BrandDto.class);
+		BrandDto activatedDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
 
-		assertBrand(modelMapper.map(brandToActivate, BrandDto.class), activated);
+		assertBrand(modelMapper.map(brandToActivate, BrandDto.class), activatedDto);
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
-	void testActivateFailure(String role, String user) throws JsonProcessingException, MalformedURLException {
+	void testActivateFailureNotFound(String role, String user) throws JsonProcessingException, MalformedURLException, Exception {
 		// Arrange
-
-		// Act
 		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
+		
+		// Act
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils
 				.createURL(URI.create(String.format(postActivateURI, faker.code().isbn10())), port, null),
 				HttpMethod.POST, httpEntity, JsonNode.class);
-																																																	
+							
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
 				String.format("Brand activation error: %s", response.getStatusCode()));
 		
 		if (response.getBody() != null && response.getBody().size() > 0) {
-			ErrorDto err = objectMapper.convertValue(response.getBody(), ErrorDto.class);
+			ErrorDto err = TestResponseUtils.toError(response, objectMapper);
 			Assertions.assertEquals(BrandException.BRAND_NOT_FOUND, err.getCode());
 		}
 	}
@@ -494,27 +521,27 @@ class BrandControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Brand deactivation error: %s", response.getStatusCode()));
 		
-		BrandDto deactivated = objectMapper.convertValue(response.getBody(), BrandDto.class);
+		BrandDto deactivatedDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
 
-		assertBrand(modelMapper.map(brandToDeactivate, BrandDto.class), deactivated);
+		assertBrand(modelMapper.map(brandToDeactivate, BrandDto.class), deactivatedDto);
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
-	void testDeactivateFailure(String role, String user) throws JsonProcessingException, MalformedURLException {
+	void testDeactivateFailureNotFound(String role, String user) throws JsonProcessingException, MalformedURLException, Exception {
 		// Arrange
-
-		// Act
 		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
+		
+		// Act
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils
 				.createURL(URI.create(String.format(postDeactivateURI, faker.code().ean13())), port, null),
 				HttpMethod.POST, httpEntity, JsonNode.class);
-
+		
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
 				String.format("Brand activation error: %s", response.getStatusCode()));
 		
 		if (response.getBody() != null && response.getBody().size() > 0) {
-			ErrorDto err = objectMapper.convertValue(response.getBody(), ErrorDto.class);
+			ErrorDto err = TestResponseUtils.toError(response, objectMapper);
 			Assertions.assertEquals(BrandException.BRAND_NOT_FOUND, err.getCode());
 		}
 	}
@@ -542,7 +569,7 @@ class BrandControllerTests {
 				Assertions.assertEquals(response.getStatusCode(), HttpStatus.OK,
 						String.format("Search error: %s", response.getStatusCode()));
 				
-				Page<BrandSearchDto> page = objectMapper.convertValue(response.getBody(), new TypeReference<Page<BrandSearchDto>>() {});
+				Page<BrandSearchDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<BrandSearchDto>>() {}, objectMapper);
 				
 				Assertions.assertTrue(page.getNumberOfElements() >= minimumNumberOfElements && 
 										page.getNumberOfElements() <= maximumNumberOfElements,

@@ -152,11 +152,11 @@ public class CourseController {
 			@RequestBody PostCourseDto request) {
 		
 		if (!request.getBrandUuid().equals(brandUuid)) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Brand UUID in path and request body do not match");
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
 		if (!request.getGymUuid().equals(gymUuid)) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Gym UUID in path and request body do not match");
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
 		com.iso.hypo.domain.dto.CourseDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.CourseDto.class);
@@ -211,15 +211,15 @@ public class CourseController {
 			@RequestBody PutCourseDto request) {
 		
 		if (!request.getBrandUuid().equals(brandUuid)) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Brand UUID in path and request body do not match");
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
 		if (!request.getGymUuid().equals(gymUuid)) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Gym UUID in path and request body do not match");
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
 		if (!request.getUuid().equals(uuid)) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Course UUID in path and request body do not match");
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
 		com.iso.hypo.domain.dto.CourseDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.CourseDto.class);
@@ -321,15 +321,15 @@ public class CourseController {
 			@RequestBody PatchCourseDto request) {
 		
 		if (!request.getBrandUuid().equals(brandUuid)) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Brand UUID in path and request body do not match");
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
 		if (!request.getGymUuid().equals(gymUuid)) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Gym UUID in path and request body do not match");
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
 		if (!request.getUuid().equals(uuid)) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Course UUID in path and request body do not match");
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
 		com.iso.hypo.domain.dto.CourseDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.CourseDto.class);

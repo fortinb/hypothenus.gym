@@ -132,7 +132,7 @@ public class MembershipPlanController {
 			@RequestBody PostMembershipPlanDto request) {
 		
 		if (!request.getBrandUuid().equals(brandUuid)) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Brand UUID in path and request body do not match");
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
 		com.iso.hypo.domain.dto.MembershipPlanDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.MembershipPlanDto.class);
@@ -255,11 +255,11 @@ public class MembershipPlanController {
 			@RequestBody PatchMembershipPlanDto request) {
 		
 		if (!request.getBrandUuid().equals(brandUuid)) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Brand UUID in path and request body do not match");
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
 		if (!request.getUuid().equals(uuid)) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("MembershipPlan UUID in path and request body do not match");
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
 		com.iso.hypo.domain.dto.MembershipPlanDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.MembershipPlanDto.class);

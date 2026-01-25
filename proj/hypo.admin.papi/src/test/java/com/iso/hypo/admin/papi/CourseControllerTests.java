@@ -23,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -35,17 +34,14 @@ import org.springframework.util.MultiValueMap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.iso.hypo.admin.papi.dto.ErrorDto;
 import com.iso.hypo.admin.papi.dto.LocalizedStringDto;
-import com.iso.hypo.admin.papi.dto.model.BrandDto;
 import com.iso.hypo.admin.papi.dto.model.CourseDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchCourseDto;
 import com.iso.hypo.admin.papi.dto.post.PostCourseDto;
-import com.iso.hypo.admin.papi.dto.put.PutBrandDto;
-import com.iso.hypo.admin.papi.dto.put.PutCoachDto;
 import com.iso.hypo.admin.papi.dto.put.PutCourseDto;
-import com.iso.hypo.admin.papi.dto.ErrorDto;
 import com.iso.hypo.domain.BrandBuilder;
 import com.iso.hypo.domain.CoachBuilder;
 import com.iso.hypo.domain.CourseBuilder;
@@ -54,14 +50,15 @@ import com.iso.hypo.domain.aggregate.Brand;
 import com.iso.hypo.domain.aggregate.Coach;
 import com.iso.hypo.domain.aggregate.Course;
 import com.iso.hypo.domain.aggregate.Gym;
-import com.iso.hypo.services.exception.CourseException;
 import com.iso.hypo.repositories.BrandRepository;
 import com.iso.hypo.repositories.CoachRepository;
 import com.iso.hypo.repositories.CourseRepository;
 import com.iso.hypo.repositories.GymRepository;
+import com.iso.hypo.services.exception.CourseException;
 import com.iso.hypo.tests.http.HttpUtils;
 import com.iso.hypo.tests.security.Roles;
 import com.iso.hypo.tests.security.Users;
+import com.iso.hypo.tests.utils.TestResponseUtils;
 
 import net.datafaker.Faker;
 
@@ -196,7 +193,7 @@ class CourseControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 
-		Page<CourseDto> page = objectMapper.convertValue(response.getBody(), new TypeReference<Page<CourseDto>>() {});
+		Page<CourseDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<CourseDto>>() {}, objectMapper);
 
 		// Assert
 		Assertions.assertEquals(0, page.getPageable().getPageNumber(),
@@ -231,7 +228,7 @@ class CourseControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 
-		Page<CourseDto> page = objectMapper.convertValue(response.getBody(), new TypeReference<Page<CourseDto>>() {});
+		Page<CourseDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<CourseDto>>() {}, objectMapper);
 
 		// Assert
 		Assertions.assertEquals(0, page.getPageable().getPageNumber(),
@@ -263,7 +260,7 @@ class CourseControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 
-		Page<CourseDto> page = objectMapper.convertValue(response.getBody(), new TypeReference<Page<CourseDto>>() {});
+		Page<CourseDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<CourseDto>>() {}, objectMapper);
 
 		// Assert
 		Assertions.assertEquals(1, page.getPageable().getPageNumber(),
@@ -279,9 +276,9 @@ class CourseControllerTests {
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testPostSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostCourseDto postCourse = modelMapper.map(CourseBuilder.build(brand_1.getUuid(), gym_1.getUuid(), coachs), PostCourseDto.class);
+		PostCourseDto postDto = modelMapper.map(CourseBuilder.build(brand_1.getUuid(), gym_1.getUuid(), coachs), PostCourseDto.class);
 
-		HttpEntity<PostCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, postCourse);
+		HttpEntity<PostCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, postDto);
 
 		// Act
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
@@ -291,15 +288,15 @@ class CourseControllerTests {
 		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
 				String.format("Post error: %s", response.getStatusCode()));
 
-		CourseDto created = objectMapper.convertValue(response.getBody(), CourseDto.class);
-		assertCourse(modelMapper.map(postCourse, CourseDto.class), created);
+		CourseDto createdDto = TestResponseUtils.toDto(response, CourseDto.class, objectMapper);
+		assertCourse(modelMapper.map(postDto, CourseDto.class), createdDto);
 	}
 
 	@Test
 	void testPostDuplicateFailure() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostCourseDto postCourse = modelMapper.map(CourseBuilder.build(brand_1.getUuid(), gym_1.getUuid(),  null), PostCourseDto.class);
-		HttpEntity<PostCourseDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postCourse);
+		PostCourseDto postDto = modelMapper.map(CourseBuilder.build(brand_1.getUuid(), gym_1.getUuid(),  null), PostCourseDto.class);
+		HttpEntity<PostCourseDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
 
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(postURI, brand_1.getUuid(), gym_1.getUuid())), port, null), HttpMethod.POST,
@@ -316,21 +313,21 @@ class CourseControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Post error: %s", response.getStatusCode()));
 		
-		CourseDto dupBody = objectMapper.convertValue(response.getBody(), CourseDto.class);
-		Assertions.assertEquals(1, dupBody.getMessages().size(),
-				String.format("Duplicate error ,missing message: %s", dupBody.getMessages().size()));
+		CourseDto dupDto = TestResponseUtils.toDto(response, CourseDto.class, objectMapper);
+		Assertions.assertEquals(1, dupDto.getMessages().size(),
+				String.format("Duplicate error ,missing message: %s", dupDto.getMessages().size()));
 		
-		Assertions.assertEquals(CourseException.COURSE_CODE_ALREADY_EXIST, dupBody.getMessages().getFirst().getCode(),
-				String.format("Duplicate error, missing message: %s", dupBody.getMessages().getFirst().getCode()));
+		Assertions.assertEquals(CourseException.COURSE_CODE_ALREADY_EXIST, dupDto.getMessages().getFirst().getCode(),
+				String.format("Duplicate error, missing message: %s", dupDto.getMessages().getFirst().getCode()));
 	}
 	
 	@ParameterizedTest
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testGetSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostCourseDto postCourse = modelMapper.map(CourseBuilder.build(brand_1.getUuid(), gym_1.getUuid(), coachs), PostCourseDto.class);
+		PostCourseDto postDto = modelMapper.map(CourseBuilder.build(brand_1.getUuid(), gym_1.getUuid(), coachs), PostCourseDto.class);
 
-		HttpEntity<PostCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, postCourse);
+		HttpEntity<PostCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, postDto);
 
 		ResponseEntity<JsonNode> responsePost = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(postURI, brand_1.getUuid(), gym_1.getUuid())), port, null), HttpMethod.POST,
@@ -341,16 +338,16 @@ class CourseControllerTests {
 
 		// Act
 		httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		CourseDto created = objectMapper.convertValue(responsePost.getBody(), CourseDto.class);
+		CourseDto createdDto = TestResponseUtils.toDto(responsePost, CourseDto.class, objectMapper);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils
-				.createURL(URI.create(String.format(getURI, brand_1.getUuid(), gym_1.getUuid(), created.getUuid())), port, null),
+				.createURL(URI.create(String.format(getURI, brand_1.getUuid(), gym_1.getUuid(), createdDto.getUuid())), port, null),
 				HttpMethod.GET, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
 
-		CourseDto fetched = objectMapper.convertValue(response.getBody(), CourseDto.class);
-		assertCourse(modelMapper.map(postCourse, CourseDto.class), fetched);
+		CourseDto fetchedDto = TestResponseUtils.toDto(response, CourseDto.class, objectMapper);
+		assertCourse(modelMapper.map(postDto, CourseDto.class), fetchedDto);
 	}
 	
 	@Test
@@ -381,20 +378,20 @@ class CourseControllerTests {
 		updatedCourse.setActivatedOn(null);
 		updatedCourse.setDeactivatedOn(null);
 
-		PutCourseDto putCourse = modelMapper.map(updatedCourse, PutCourseDto.class);
-		putCourse.setUuid(courseToUpdate.getUuid());
+		PutCourseDto putDto = modelMapper.map(updatedCourse, PutCourseDto.class);
+		putDto.setUuid(courseToUpdate.getUuid());
 
 		// Act
-		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, putCourse);
+		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, brand_1.getUuid(), gym_1.getUuid(), putCourse.getUuid())), port, null),
+				HttpUtils.createURL(URI.create(String.format(putURI, brand_1.getUuid(), gym_1.getUuid(), putDto.getUuid())), port, null),
 				HttpMethod.PUT, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Put error: %s", response.getStatusCode()));
 
-		CourseDto updated = objectMapper.convertValue(response.getBody(), CourseDto.class);
-		assertCourse(modelMapper.map(updatedCourse, CourseDto.class), updated);
+		CourseDto updatedDto = TestResponseUtils.toDto(response, CourseDto.class, objectMapper);
+		assertCourse(modelMapper.map(updatedCourse, CourseDto.class), updatedDto);
 	}
 
 	@ParameterizedTest
@@ -411,16 +408,16 @@ class CourseControllerTests {
 
 		PutCourseDto courseToUpdateDto = modelMapper.map(courseToUpdate, PutCourseDto.class);
 		
-		PutCourseDto putCourse = modelMapper.map(updatedCourse, PutCourseDto.class);
-		putCourse.setUuid(courseToUpdate.getUuid());
-		putCourse.setCode(courseToUpdateDto.getCode());
-		putCourse.setName(courseToUpdateDto.getName());
-		putCourse.setDescription(null);
+		PutCourseDto putDto = modelMapper.map(updatedCourse, PutCourseDto.class);
+		putDto.setUuid(courseToUpdate.getUuid());
+		putDto.setCode(courseToUpdateDto.getCode());
+		putDto.setName(courseToUpdateDto.getName());
+		putDto.setDescription(null);
 
 		// Act
-		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, putCourse);
+		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, brand_1.getUuid(), gym_1.getUuid(), putCourse.getUuid())), port, null),
+				HttpUtils.createURL(URI.create(String.format(putURI, brand_1.getUuid(), gym_1.getUuid(), putDto.getUuid())), port, null),
 				HttpMethod.PUT, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -428,8 +425,8 @@ class CourseControllerTests {
 
 		courseToUpdate.setDescription(null);
 
-		CourseDto updated = objectMapper.convertValue(response.getBody(), CourseDto.class);
-		assertCourse(modelMapper.map(courseToUpdate, CourseDto.class), updated);
+		CourseDto updatedDto = TestResponseUtils.toDto(response, CourseDto.class, objectMapper);
+		assertCourse(modelMapper.map(courseToUpdate, CourseDto.class), updatedDto);
 	}
 	
 	@Test
@@ -449,7 +446,7 @@ class CourseControllerTests {
 
 		// If there's a body, try to map to ErrorDto and validate the error code
 		if (response.getBody() != null && response.getBody().size() > 0) {
-			ErrorDto error = objectMapper.convertValue(response.getBody(), ErrorDto.class);
+			ErrorDto error = TestResponseUtils.toError(response, objectMapper);
 			Assertions.assertEquals(CourseException.COURSE_NOT_FOUND, error.getCode(),
 					String.format("Unexpected error code: %s", error.getCode()));
 		}
@@ -479,23 +476,28 @@ class CourseControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Course activation error: %s", response.getStatusCode()));
 
-		CourseDto activated = objectMapper.convertValue(response.getBody(), CourseDto.class);
+		CourseDto activated = TestResponseUtils.toDto(response, CourseDto.class, objectMapper);
 		assertCourse(modelMapper.map(courseToActivate, CourseDto.class), activated);
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
-	void testActivateFailure(String role, String user) throws JsonProcessingException, MalformedURLException {
+	void testActivateFailureNotFound(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 
 		// Act
 		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<Object> response = testRestTemplate.exchange(HttpUtils
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils
 				.createURL(URI.create(String.format(postActivateURI, brand_1.getUuid(), gym_1.getUuid(), faker.code().isbn10())), port, null),
-				HttpMethod.POST, httpEntity, Object.class);
-																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																											
+				HttpMethod.POST, httpEntity, JsonNode.class);
+																		
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
 				String.format("Course activation error: %s", response.getStatusCode()));
+
+		if (response.getBody() != null && response.getBody().size() > 0) {
+			ErrorDto err = TestResponseUtils.toError(response, objectMapper);
+			Assertions.assertEquals(CourseException.COURSE_NOT_FOUND, err.getCode());
+		}
 	}
 
 	@ParameterizedTest
@@ -519,23 +521,28 @@ class CourseControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Course deactivation error: %s", response.getStatusCode()));
 
-		CourseDto deactivated = objectMapper.convertValue(response.getBody(), CourseDto.class);
+		CourseDto deactivated = TestResponseUtils.toDto(response, CourseDto.class, objectMapper);
 		assertCourse(modelMapper.map(courseToDeactivate, CourseDto.class), deactivated);
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
-	void testDeactivateFailure(String role, String user) throws JsonProcessingException, MalformedURLException {
+	void testDeactivateFailureNotFound(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 
 		// Act
 		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<Object> response = testRestTemplate.exchange(HttpUtils
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils
 				.createURL(URI.create(String.format(postDeactivateURI, brand_1.getUuid(), gym_1.getUuid(), faker.code().ean13())), port, null),
-				HttpMethod.POST, httpEntity, Object.class);
+				HttpMethod.POST, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
 				String.format("Course activation error: %s", response.getStatusCode()));
+
+		if (response.getBody() != null && response.getBody().size() > 0) {
+			ErrorDto err = TestResponseUtils.toError(response, objectMapper);
+			Assertions.assertEquals(CourseException.COURSE_NOT_FOUND, err.getCode());
+		}
 	}
 
 	@ParameterizedTest
@@ -559,8 +566,32 @@ class CourseControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
 
-		CourseDto patched = objectMapper.convertValue(response.getBody(), CourseDto.class);
-		assertCourse(modelMapper.map(patchCourse, CourseDto.class), patched);
+		CourseDto patchedDto = TestResponseUtils.toDto(response, CourseDto.class, objectMapper);
+		assertCourse(modelMapper.map(patchCourse, CourseDto.class), patchedDto);
+	}
+
+	
+	@ParameterizedTest
+	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	void testPatchFailureNotFound(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		Course patchTarget = CourseBuilder.build(brand_1.getUuid(), gym_1.getUuid(), null);
+		PatchCourseDto patchDto = modelMapper.map(patchTarget, PatchCourseDto.class);
+		
+		HttpEntity<PatchCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchDto);
+		
+		// Act
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(patchURI, brand_1.getUuid(), gym_1.getUuid(), patchDto.getUuid())), port, null),
+				HttpMethod.PATCH, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
+				String.format("Patch error: %s", response.getStatusCode()));
+
+		if (response.getBody() != null && response.getBody().size() > 0) {
+			ErrorDto error = TestResponseUtils.toError(response, objectMapper);
+			Assertions.assertEquals(CourseException.COURSE_NOT_FOUND, error.getCode());
+		}
 	}
 
 
