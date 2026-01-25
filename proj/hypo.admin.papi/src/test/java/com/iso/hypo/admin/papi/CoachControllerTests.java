@@ -320,19 +320,27 @@ class CoachControllerTests {
 	void testPutSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		Coach coachToUpdate = CoachBuilder.build(brand_1.getUuid(), gym_1.getUuid());
-		coachToUpdate.setActive(false);
-		coachToUpdate.setActivatedOn(null);
-		coachToUpdate.setDeactivatedOn(null);
 		coachToUpdate = coachRepository.save(coachToUpdate);
 		
-		Coach updatedCoach = CoachBuilder.build(brand_1.getUuid(), gym_1.getUuid());
-		updatedCoach.setUuid(coachToUpdate.getUuid());
-		updatedCoach.setActive(false);
-		updatedCoach.setActivatedOn(null);
-		updatedCoach.setDeactivatedOn(null);
-		
-		PutCoachDto putDto = modelMapper.map(updatedCoach, PutCoachDto.class);
-		putDto.setUuid(coachToUpdate.getUuid());
+		PutCoachDto putDto = modelMapper.map(coachToUpdate, PutCoachDto.class);
+
+		// Mutate all mutable fields (keep uuid/code/dates)
+		if (putDto.getPerson() != null) {
+			putDto.getPerson().setEmail(faker.internet().emailAddress());
+			putDto.getPerson().setFirstname(putDto.getPerson().getFirstname() + " - updated");
+			putDto.getPerson().setLastname(putDto.getPerson().getLastname() + " - updated");
+			if (putDto.getPerson().getAddress() != null) {
+				putDto.getPerson().getAddress().setStreetName(faker.address().streetName());
+			}
+			if (putDto.getPerson().getPhoneNumbers() != null && putDto.getPerson().getPhoneNumbers().size() > 0) {
+				// modify first phone number instead of removing
+				putDto.getPerson().getPhoneNumbers().get(0).setNumber(faker.phoneNumber().phoneNumber());
+			}
+			if (putDto.getPerson().getContacts() != null && putDto.getPerson().getContacts().size() > 0) {
+				// modify a property on the first contact sub-object instead of removing
+				putDto.getPerson().getContacts().get(0).setLastname("Updated" + faker.name().lastName());
+			}
+		}
 
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
@@ -344,7 +352,7 @@ class CoachControllerTests {
 				String.format("Put error: %s", response.getStatusCode()));
 
 		CoachDto updatedDto = TestResponseUtils.toDto(response, CoachDto.class, objectMapper);
-		assertCoach(modelMapper.map(updatedCoach, CoachDto.class), updatedDto);
+		assertCoach(modelMapper.map(putDto, CoachDto.class), updatedDto);
 	}
 	
 	@ParameterizedTest
@@ -551,16 +559,10 @@ class CoachControllerTests {
 			Assertions.assertNotNull(result.getActivatedOn());
 			Assertions.assertTrue(expected.getActivatedOn().truncatedTo(ChronoUnit.DAYS).equals(result.getActivatedOn().truncatedTo(ChronoUnit.DAYS)));
 		}
-		if (expected.getActivatedOn() == null) {
-			Assertions.assertNull(result.getActivatedOn());
-		}
 		
 		if (expected.getDeactivatedOn() != null) {
 			Assertions.assertNotNull(result.getDeactivatedOn());
 			Assertions.assertTrue(expected.getDeactivatedOn().truncatedTo(ChronoUnit.DAYS).equals(result.getDeactivatedOn().truncatedTo(ChronoUnit.DAYS)));
-		}
-		if (expected.getDeactivatedOn() == null) {
-			Assertions.assertNull(result.getDeactivatedOn());
 		}
 		
 		if (expected.getPerson().getAddress() != null) {

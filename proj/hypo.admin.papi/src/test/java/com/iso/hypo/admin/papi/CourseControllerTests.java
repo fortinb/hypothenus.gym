@@ -367,19 +367,23 @@ class CourseControllerTests {
 	void testPutSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		Course courseToUpdate = CourseBuilder.build(brand_1.getUuid(), gym_1.getUuid(), coachs);
-		courseToUpdate.setActive(false);
-		courseToUpdate.setActivatedOn(null);
-		courseToUpdate.setDeactivatedOn(null);
 		courseToUpdate = courseRepository.save(courseToUpdate);
 
-		Course updatedCourse = CourseBuilder.build(brand_1.getUuid(), gym_1.getUuid(), coachs);
-		updatedCourse.setUuid(courseToUpdate.getUuid());
-		updatedCourse.setActive(false);
-		updatedCourse.setActivatedOn(null);
-		updatedCourse.setDeactivatedOn(null);
-
-		PutCourseDto putDto = modelMapper.map(updatedCourse, PutCourseDto.class);
+			PutCourseDto putDto = modelMapper.map(courseToUpdate, PutCourseDto.class);
 		putDto.setUuid(courseToUpdate.getUuid());
+
+		if (putDto.getName() != null && !putDto.getName().isEmpty()) {
+			putDto.getName().get(0).setText(putDto.getName().get(0).getText() + " - updated");
+		}
+
+		if (putDto.getDescription() != null && !putDto.getDescription().isEmpty()) {
+			putDto.getDescription().get(0).setText(putDto.getDescription().get(0).getText() + " - updated");
+		}
+
+		// Modify coaches collection: remove one if present
+		if (putDto.getCoachs() != null && putDto.getCoachs().size() > 0) {
+			putDto.getCoachs().remove(0);
+		}
 
 		// Act
 		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
@@ -391,7 +395,7 @@ class CourseControllerTests {
 				String.format("Put error: %s", response.getStatusCode()));
 
 		CourseDto updatedDto = TestResponseUtils.toDto(response, CourseDto.class, objectMapper);
-		assertCourse(modelMapper.map(updatedCourse, CourseDto.class), updatedDto);
+		assertCourse(modelMapper.map(putDto, CourseDto.class), updatedDto);
 	}
 
 	@ParameterizedTest

@@ -77,7 +77,7 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 			MembershipPlan oldMembershipPlan = this.readByMembershipPlanUuid(membershipPlan.getBrandUuid(), membershipPlan.getUuid());
 
 			ModelMapper mapper = new ModelMapper();
-			mapper.getConfiguration().setSkipNullEnabled(false);
+			mapper.getConfiguration().setSkipNullEnabled(false).setCollectionsMergeEnabled(false);
 
 			mapper = membershipPlanMapper.initMembershipPlanMappings(mapper);
 			mapper.map(membershipPlan, oldMembershipPlan);

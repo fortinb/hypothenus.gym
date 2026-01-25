@@ -336,7 +336,27 @@ class BrandControllerTests {
 		updatedBrand = brandRepository.save(updatedBrand);
 
 		PutBrandDto putDto = modelMapper.map(updatedBrand, PutBrandDto.class);
-		putDto.getContacts().remove(1);
+
+		putDto.setEmail(faker.internet().emailAddress());
+
+		if (putDto.getName() != null && !putDto.getName().isEmpty()) {
+			putDto.setName(putDto.getName() + " - updated");
+		}
+
+		if (putDto.getAddress() != null) {
+			putDto.getAddress().setStreetName(faker.address().streetName());
+		}
+
+		if (putDto.getPhoneNumbers() != null && putDto.getPhoneNumbers().size() > 0) {
+			putDto.getPhoneNumbers().remove(0);
+		}
+
+		if (putDto.getContacts() != null && putDto.getContacts().size() > 1) {
+			putDto.getContacts().remove(1);
+			putDto.getContacts().get(0).setLastname("Updated" + faker.name().lastName());
+		} else if (putDto.getContacts() != null && putDto.getContacts().size() == 1) {
+			putDto.getContacts().get(0).setLastname("Updated" + faker.name().lastName());
+		}
 
 		// Act
 		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putDto);

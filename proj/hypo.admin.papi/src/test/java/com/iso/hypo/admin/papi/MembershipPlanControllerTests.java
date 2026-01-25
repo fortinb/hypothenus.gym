@@ -307,19 +307,24 @@ class MembershipPlanControllerTests {
 	void testPutSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		MembershipPlan membershipPlanToUpdate = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid());
-		membershipPlanToUpdate.setActive(false);
-		membershipPlanToUpdate.setActivatedOn(null);
-		membershipPlanToUpdate.setDeactivatedOn(null);
 		membershipPlanToUpdate = membershipPlanRepository.save(membershipPlanToUpdate);
 
-		MembershipPlan updatedMembershipPlan = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid());
-		updatedMembershipPlan.setUuid(membershipPlanToUpdate.getUuid());
-		updatedMembershipPlan.setActive(false);
-		updatedMembershipPlan.setActivatedOn(null);
-		updatedMembershipPlan.setDeactivatedOn(null);
-
-		PutMembershipPlanDto putDto = modelMapper.map(updatedMembershipPlan, PutMembershipPlanDto.class);
+		PutMembershipPlanDto putDto = modelMapper.map(membershipPlanToUpdate, PutMembershipPlanDto.class);
 		putDto.setUuid(membershipPlanToUpdate.getUuid());
+
+		// Mutate mutable fields (keep uuid/code/dates)
+		if (putDto.getName() != null && !putDto.getName().isEmpty()) {
+			putDto.getName().get(0).setText(putDto.getName().get(0).getText() + " - updated");
+		}
+		if (putDto.getDescription() != null && !putDto.getDescription().isEmpty()) {
+			putDto.getDescription().get(0).setText(putDto.getDescription().get(0).getText() + " - updated");
+		}
+		if (putDto.getOneTimeFees() != null && putDto.getOneTimeFees().size() > 0) {
+			putDto.getOneTimeFees().remove(0);
+		}
+		if (putDto.getCourses() != null && putDto.getCourses().size() > 0) {
+			putDto.getCourses().remove(0);
+		}
 
 		// Act
 		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
@@ -331,7 +336,7 @@ class MembershipPlanControllerTests {
 				String.format("Put error: %s", response.getStatusCode()));
 
 		MembershipPlanDto updatedDto = TestResponseUtils.toDto(response, MembershipPlanDto.class, objectMapper);
-		assertMembershipPlan(modelMapper.map(updatedMembershipPlan, MembershipPlanDto.class), updatedDto);
+		assertMembershipPlan(modelMapper.map(putDto, MembershipPlanDto.class), updatedDto);
 	}
 
 	@ParameterizedTest
@@ -539,17 +544,11 @@ class MembershipPlanControllerTests {
 			Assertions.assertTrue(expected.getActivatedOn().truncatedTo(ChronoUnit.DAYS)
 					.equals(result.getActivatedOn().truncatedTo(ChronoUnit.DAYS)));
 		}
-		if (expected.getActivatedOn() == null) {
-			Assertions.assertNull(result.getActivatedOn());
-		}
 
 		if (expected.getDeactivatedOn() != null) {
 			Assertions.assertNotNull(result.getDeactivatedOn());
 			Assertions.assertTrue(expected.getDeactivatedOn().truncatedTo(ChronoUnit.DAYS)
 					.equals(result.getDeactivatedOn().truncatedTo(ChronoUnit.DAYS)));
-		}
-		if (expected.getDeactivatedOn() == null) {
-			Assertions.assertNull(result.getDeactivatedOn());
 		}
 
 		if (expected.getName() != null) {

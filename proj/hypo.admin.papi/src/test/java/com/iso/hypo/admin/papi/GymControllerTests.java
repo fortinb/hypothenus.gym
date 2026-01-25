@@ -343,7 +343,21 @@ class GymControllerTests {
 		updatedGym = gymRepository.save(updatedGym);
 
 		PutGymDto putDto = modelMapper.map(updatedGym, PutGymDto.class);
-		putDto.getContacts().remove(1);
+		// mutate mutable fields
+		putDto.setEmail(faker.internet().emailAddress());
+		putDto.setName(putDto.getName() + " - updated");
+		if (putDto.getAddress() != null) {
+			putDto.getAddress().setStreetName(faker.address().streetName());
+		}
+		if (putDto.getPhoneNumbers() != null && putDto.getPhoneNumbers().size() > 0) {
+			putDto.getPhoneNumbers().remove(0);
+		}
+		if (putDto.getContacts() != null && putDto.getContacts().size() > 1) {
+			putDto.getContacts().remove(1);
+			putDto.getContacts().get(0).setLastname("Updated" + faker.name().lastName());
+		} else if (putDto.getContacts() != null && putDto.getContacts().size() == 1) {
+			putDto.getContacts().get(0).setLastname("Updated" + faker.name().lastName());
+		}
 
 		// Act
 		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putDto);
