@@ -61,7 +61,7 @@ public class GymServiceImpl implements GymService {
 				message.setSeverity(MessageSeverityEnum.warning);
 				existingGym.get().getMessages().add(message);
 				
-				throw new GymException(requestContext.getTrackingNumber(), BrandException.BRAND_CODE_ALREADY_EXIST, "Duplicate gym code", gymMapper.toDto(existingGym.get()));
+				throw new GymException(requestContext.getTrackingNumber(), GymException.GYM_CODE_ALREADY_EXIST, "Duplicate gym code", gymMapper.toDto(existingGym.get()));
 			}
 	
 			gym.setCreatedOn(Instant.now());
