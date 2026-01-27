@@ -13,8 +13,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import com.iso.hypo.common.context.RequestContext;
+import com.iso.hypo.domain.Message;
 import com.iso.hypo.domain.aggregate.Gym;
 import com.iso.hypo.domain.dto.GymDto;
+import com.iso.hypo.domain.enumeration.MessageSeverityEnum;
 import com.iso.hypo.repositories.GymRepository;
 import com.iso.hypo.services.BrandQueryService;
 import com.iso.hypo.services.GymService;
@@ -53,7 +55,13 @@ public class GymServiceImpl implements GymService {
 
 			Optional<Gym> existingGym = gymRepository.findByBrandUuidAndCode(gym.getBrandUuid(), gym.getCode());
 			if (existingGym.isPresent()) {
-				throw new GymException(requestContext.getTrackingNumber(), GymException.GYM_CODE_ALREADY_EXIST, "Duplicate gym code");
+				Message message = new Message();
+				message.setCode(GymException.GYM_CODE_ALREADY_EXIST);
+				message.setDescription("Duplicate gym code");
+				message.setSeverity(MessageSeverityEnum.warning);
+				existingGym.get().getMessages().add(message);
+				
+				throw new GymException(requestContext.getTrackingNumber(), BrandException.BRAND_CODE_ALREADY_EXIST, "Duplicate gym code", gymMapper.toDto(existingGym.get()));
 			}
 	
 			gym.setCreatedOn(Instant.now());

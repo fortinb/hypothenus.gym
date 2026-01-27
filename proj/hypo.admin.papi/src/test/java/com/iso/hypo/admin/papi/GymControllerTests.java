@@ -295,6 +295,21 @@ class GymControllerTests {
 		Assertions.assertEquals(GymException.GYM_CODE_ALREADY_EXIST, dupDto.getMessages().getFirst().getCode(),
 				String.format("Duplicate error, missing message: %s", dupDto.getMessages().getFirst().getCode()));
 	}
+	
+	@ParameterizedTest
+	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	void testPostFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		PostGymDto postDto = modelMapper.map(GymBuilder.build(brand.getUuid(), faker.code().isbn10(), faker.company().name()), PostGymDto.class);
+		HttpEntity<PostGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
+
+		// Act
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(postURI, faker.code().isbn10())), port, null),
+				HttpMethod.POST, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
+				String.format("Post error: %s", response.getStatusCode()));
+	}
 
 	@ParameterizedTest
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis", "Member, Guillaume Fortin", })
@@ -335,8 +350,9 @@ class GymControllerTests {
 				String.format("Get error: %s", response.getStatusCode()));
 	}
 
-	@Test
-	void testPutSuccess() throws JsonProcessingException, MalformedURLException {
+	@ParameterizedTest
+	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	void testPutSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		Gym updatedGym = GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name());
 		updatedGym.setActive(true);
@@ -360,7 +376,7 @@ class GymControllerTests {
 		}
 
 		// Act
-		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putDto);
+		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(putURI, updatedGym.getBrandUuid(), updatedGym.getUuid())), port, null),
 				HttpMethod.PUT, httpEntity, JsonNode.class);
@@ -372,8 +388,9 @@ class GymControllerTests {
 		assertGym(modelMapper.map(putDto, GymDto.class), updatedDto);
 	}
 	
-	@Test
-	void testPutNullSuccess() throws JsonProcessingException, MalformedURLException {
+	@ParameterizedTest
+	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	void testPutNullSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		Gym updatedGym = GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name());
 		updatedGym.setActive(true);
@@ -387,7 +404,7 @@ class GymControllerTests {
 		putDto.setContacts(null);
 		
 		// Act
-		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putDto);
+		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(putURI, updatedGym.getBrandUuid(), updatedGym.getUuid())), port, null),
 				HttpMethod.PUT, httpEntity, JsonNode.class);
@@ -401,16 +418,47 @@ class GymControllerTests {
 	
 	@Test
 	void testPutFailureNotFound() throws MalformedURLException, JsonProcessingException, Exception {
-		Gym updatedGym = GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name());
-		PutGymDto putDto = modelMapper.map(updatedGym, PutGymDto.class);
+		PutGymDto putDto = modelMapper.map(GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name()), PutGymDto.class);
 		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putDto);
+
 		// Arrange
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(putURI, brand.getUuid(), putDto.getUuid())), port, null),
-				HttpMethod.GET, httpEntity, JsonNode.class);
+				HttpMethod.PUT, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
+	}
+	
+	@ParameterizedTest
+	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	void testPutFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		PutGymDto putDto = modelMapper.map(GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name()), PutGymDto.class);
+		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
+
+		// Act
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(putURI, faker.code().isbn10(), putDto.getUuid())), port, null),
+				HttpMethod.PUT, httpEntity, JsonNode.class);
+		
+		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
+				String.format("Post error: %s", response.getStatusCode()));
+	}
+	
+	@ParameterizedTest
+	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	void testPutFailureForbiddenGymMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		PutGymDto putDto = modelMapper.map(GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name()), PutGymDto.class);
+		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
+
+		// Act
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(putURI, brand.getUuid(), faker.code().isbn10())), port, null),
+				HttpMethod.PUT, httpEntity, JsonNode.class);
+		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
+				String.format("Post error: %s", response.getStatusCode()));
 	}
 
 	@ParameterizedTest
@@ -454,6 +502,37 @@ class GymControllerTests {
 
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
 				String.format("Patch error: %s", response.getStatusCode()));
+	}
+	
+	@ParameterizedTest
+	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	void testPatchFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		PutGymDto patchDto = modelMapper.map(GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name()), PutGymDto.class);
+		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchDto);
+
+		// Act
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(putURI, faker.code().isbn10(), patchDto.getUuid())), port, null),
+				HttpMethod.PATCH, httpEntity, JsonNode.class);
+		
+		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
+				String.format("Post error: %s", response.getStatusCode()));
+	}
+	
+	@ParameterizedTest
+	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	void testPatchFailureForbiddenGymMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		PutGymDto putDto = modelMapper.map(GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name()), PutGymDto.class);
+		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
+
+		// Act
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(putURI, brand.getUuid(), faker.code().isbn10())), port, null),
+				HttpMethod.PATCH, httpEntity, JsonNode.class);
+		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
+				String.format("Post error: %s", response.getStatusCode()));
 	}
 
 	@ParameterizedTest

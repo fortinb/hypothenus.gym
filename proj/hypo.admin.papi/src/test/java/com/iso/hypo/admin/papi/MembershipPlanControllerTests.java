@@ -47,11 +47,11 @@ import com.iso.hypo.domain.aggregate.Brand;
 import com.iso.hypo.domain.aggregate.MembershipPlan;
 import com.iso.hypo.repositories.BrandRepository;
 import com.iso.hypo.repositories.MembershipPlanRepository;
+import com.iso.hypo.services.exception.MembershipPlanException;
 import com.iso.hypo.tests.http.HttpUtils;
 import com.iso.hypo.tests.security.Roles;
 import com.iso.hypo.tests.security.Users;
 import com.iso.hypo.tests.utils.TestResponseUtils;
-import com.iso.hypo.services.exception.MembershipPlanException;
 
 import net.datafaker.Faker;
 
@@ -259,6 +259,21 @@ class MembershipPlanControllerTests {
 		MembershipPlanDto createdDto = TestResponseUtils.toDto(response, MembershipPlanDto.class, objectMapper);
 		assertMembershipPlan(modelMapper.map(postDto, MembershipPlanDto.class), createdDto);
 	}
+	
+	@ParameterizedTest
+	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	void testPostFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		PostMembershipPlanDto postDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid()), PostMembershipPlanDto.class);
+		HttpEntity<PostMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, postDto);
+
+		// Act
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(postURI, faker.code().isbn10())), port, null),
+				HttpMethod.POST, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
+				String.format("Post error: %s", response.getStatusCode()));
+	}
 
 	@ParameterizedTest
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
@@ -371,17 +386,46 @@ class MembershipPlanControllerTests {
 	
 	@Test
 	void testPutFailureNotFound() throws MalformedURLException, JsonProcessingException, Exception {
-		MembershipPlan membershipPlanToUpdate = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid());
-		PutMembershipPlanDto membershipPlanToUpdateDto = modelMapper.map(membershipPlanToUpdate, PutMembershipPlanDto.class);
+		PutMembershipPlanDto putDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid()), PutMembershipPlanDto.class);
+		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putDto);
 		
-		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, membershipPlanToUpdateDto);
 		// Act
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, brand_FitnessBoxing.getUuid(), membershipPlanToUpdateDto.getUuid())), port, null),
+				HttpUtils.createURL(URI.create(String.format(putURI, brand_FitnessBoxing.getUuid(), putDto.getUuid())), port, null),
 				HttpMethod.PUT, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
+	}
+	
+	@ParameterizedTest
+	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	void testPutFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		PutMembershipPlanDto putDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid()), PutMembershipPlanDto.class);
+		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
+
+		// Act
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(putURI, faker.code().isbn10(), putDto.getUuid())), port, null),
+				HttpMethod.PUT, httpEntity, JsonNode.class);
+		
+		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
+				String.format("Post error: %s", response.getStatusCode()));
+	}
+	
+	@ParameterizedTest
+	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	void testPutFailureForbiddenMembershipPlanMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		PutMembershipPlanDto putDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid()), PutMembershipPlanDto.class);
+		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
+		// Act
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(putURI, brand_FitnessBoxing.getUuid(), faker.code().isbn10())), port, null),
+				HttpMethod.PUT, httpEntity, JsonNode.class);
+		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
+				String.format("Post error: %s", response.getStatusCode()));
 	}
 
 	@ParameterizedTest
@@ -519,6 +563,37 @@ class MembershipPlanControllerTests {
 
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
 				String.format("Patch error: %s", response.getStatusCode()));
+	}
+	
+	@ParameterizedTest
+	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	void testPatchFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		PutMembershipPlanDto putDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid()), PutMembershipPlanDto.class);
+		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
+
+		// Act
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(putURI, faker.code().isbn10(), putDto.getUuid())), port, null),
+				HttpMethod.PATCH, httpEntity, JsonNode.class);
+		
+		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
+				String.format("Post error: %s", response.getStatusCode()));
+	}
+	
+	@ParameterizedTest
+	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	void testPatchFailureForbiddenMembershipPlanMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		PutMembershipPlanDto putDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid()), PutMembershipPlanDto.class);
+		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
+		// Act
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(putURI, brand_FitnessBoxing.getUuid(), faker.code().isbn10())), port, null),
+				HttpMethod.PATCH, httpEntity, JsonNode.class);
+		
+		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
+				String.format("Post error: %s", response.getStatusCode()));
 	}
 
 	public static final void assertMembershipPlan(MembershipPlanDto expected, MembershipPlanDto result) {
