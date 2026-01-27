@@ -13,8 +13,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import com.iso.hypo.common.context.RequestContext;
+import com.iso.hypo.domain.Message;
 import com.iso.hypo.domain.aggregate.Brand;
 import com.iso.hypo.domain.dto.BrandDto;
+import com.iso.hypo.domain.enumeration.MessageSeverityEnum;
 import com.iso.hypo.repositories.BrandRepository;
 import com.iso.hypo.services.BrandService;
 import com.iso.hypo.services.exception.BrandException;
@@ -41,10 +43,17 @@ public class BrandServiceImpl implements BrandService {
 	public BrandDto create(BrandDto brandDto) throws BrandException {
 		try {
 			Assert.notNull(brandDto, "brandDto must not be null");
+			
 			Brand brand = brandMapper.toEntity(brandDto);
 			Optional<Brand> existingBrand = brandRepository.findByCode(brand.getCode());
 			if (existingBrand.isPresent()) {
-				throw new BrandException(requestContext.getTrackingNumber(), BrandException.BRAND_CODE_ALREADY_EXIST, "Duplicate brand code");
+				Message message = new Message();
+				message.setCode(BrandException.BRAND_CODE_ALREADY_EXIST);
+				message.setDescription("Duplicate brand code");
+				message.setSeverity(MessageSeverityEnum.warning);
+				existingBrand.get().getMessages().add(message);
+				
+				throw new BrandException(requestContext.getTrackingNumber(), BrandException.BRAND_CODE_ALREADY_EXIST, "Duplicate brand code", brandMapper.toDto(existingBrand.get()));
 			}
 
 			brand.setCreatedOn(Instant.now());

@@ -328,8 +328,9 @@ class BrandControllerTests {
 		}
 	}
 
-	@Test
-	void testPutSuccess() throws JsonProcessingException, MalformedURLException {
+	@ParameterizedTest
+	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	void testPutSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		Brand updatedBrand = BrandBuilder.build(faker.code().isbn10(),faker.company().name());
 		updatedBrand.setActive(true);
@@ -359,7 +360,7 @@ class BrandControllerTests {
 		}
 
 		// Act
-		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putDto);
+		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(putURI, updatedBrand.getUuid())), port, null),
 				HttpMethod.PUT, httpEntity, JsonNode.class);
@@ -448,14 +449,13 @@ class BrandControllerTests {
 	 	assertBrand(modelMapper.map(patchDto, BrandDto.class), patchedDto);
 	}
 	
-	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
-	void testPatchFailureNotFound(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
+	@Test
+	void testPatchFailureNotFound() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		Brand patchTarget = BrandBuilder.build(faker.code().isbn10(),faker.company().name());
 		PatchBrandDto patchDto = modelMapper.map(patchTarget, PatchBrandDto.class);
 		
-		HttpEntity<PatchBrandDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchDto);
+		HttpEntity<PatchBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, patchDto);
 		
 		// Act
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
@@ -471,9 +471,8 @@ class BrandControllerTests {
 		}
 	}
 
-	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
-	void testActivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
+	@Test
+	void testActivateSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		Brand brandToActivate = BrandBuilder.build(faker.code().isbn10(),faker.company().name());
 		brandToActivate.setActive(false);
@@ -486,7 +485,7 @@ class BrandControllerTests {
 		brandToActivate.setDeactivatedOn(null);
 
 		// Act
-		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
+		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
 				HttpUtils.createURL(URI.create(String.format(postActivateURI, brandToActivate.getUuid())),
 						port, null),
@@ -500,11 +499,10 @@ class BrandControllerTests {
 		assertBrand(modelMapper.map(brandToActivate, BrandDto.class), activatedDto);
 	}
 
-	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
-	void testActivateFailureNotFound(String role, String user) throws JsonProcessingException, MalformedURLException, Exception {
+	@Test
+	void testActivateFailureNotFound() throws JsonProcessingException, MalformedURLException, Exception {
 		// Arrange
-		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
+		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
 		
 		// Act
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils
@@ -520,9 +518,8 @@ class BrandControllerTests {
 		}
 	}
 
-	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
-	void testDeactivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
+	@Test
+	void testDeactivateSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		Brand brandToDeactivate = BrandBuilder.build(faker.code().isbn10(),faker.company().name());
 		brandToDeactivate.setActive(true);
@@ -533,7 +530,7 @@ class BrandControllerTests {
 		brandToDeactivate.setDeactivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
 
 		// Act
-		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
+		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(
 				URI.create(String.format(postDeactivateURI, brandToDeactivate.getUuid())), port, null),
 				HttpMethod.POST, httpEntity, JsonNode.class);
@@ -546,11 +543,10 @@ class BrandControllerTests {
 		assertBrand(modelMapper.map(brandToDeactivate, BrandDto.class), deactivatedDto);
 	}
 
-	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
-	void testDeactivateFailureNotFound(String role, String user) throws JsonProcessingException, MalformedURLException, Exception {
+	@Test
+	void testDeactivateFailureNotFound() throws JsonProcessingException, MalformedURLException, Exception {
 		// Arrange
-		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
+		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
 		
 		// Act
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils
