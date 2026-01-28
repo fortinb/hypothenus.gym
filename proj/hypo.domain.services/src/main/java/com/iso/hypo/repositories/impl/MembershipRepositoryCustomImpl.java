@@ -12,6 +12,7 @@ import org.springframework.data.mongodb.core.query.Update;
 
 import com.iso.hypo.domain.aggregate.Membership;
 import com.iso.hypo.repositories.MembershipRepositoryCustom;
+import com.mongodb.client.result.UpdateResult;
 
 public class MembershipRepositoryCustomImpl implements MembershipRepositoryCustom {
 	private final MongoTemplate mongoTemplate;
@@ -48,6 +49,35 @@ public class MembershipRepositoryCustomImpl implements MembershipRepositoryCusto
 
 		Membership membership = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Membership.class);
 		return membership == null ? Optional.empty() : Optional.of(membership);
+	}
+
+	@Override
+	public void delete(String brandUuid, String membershipUuid, String deletedBy) {
+		Query query = new Query(
+				 Criteria.where("brandUuid").is(brandUuid).and("uuid").is(membershipUuid));
+		
+		Update update = new Update()
+					.set("isDeleted", true)
+					.set("deletedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
+					.set("deletedBy", deletedBy);
+
+		mongoTemplate.updateFirst(query, update, Membership.class);
+		
+	}
+
+	@Override
+	public long deleteAllByBrandUuid(String brandUuid, String deletedBy) {
+		Query query = new Query(
+				 Criteria.where("brandUuid").is(brandUuid));
+		
+		Update update = new Update()
+					.set("isDeleted", true)
+					.set("deletedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
+					.set("deletedBy", deletedBy);
+
+		UpdateResult result = mongoTemplate.updateMulti(query, update, Membership.class);
+		
+		return result.getMatchedCount();
 	}
 }
 

@@ -12,10 +12,12 @@ public interface GymService {
     GymDto patch(GymDto gymDto) throws GymException;
 
     void delete(String brandUuid, String gymUuid) throws GymException;
-
+    
     GymDto activate(String brandUuid, String gymUuid) throws GymException;
 
     GymDto deactivate(String brandUuid, String gymUuid) throws GymException;
+    
+    void deleteAllByBrandUuid(String brandUuid) throws GymException;
 }
 
 

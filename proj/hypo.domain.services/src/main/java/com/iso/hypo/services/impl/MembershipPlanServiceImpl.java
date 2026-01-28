@@ -9,6 +9,7 @@ import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import com.iso.hypo.common.context.RequestContext;
@@ -42,6 +43,7 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 	}
 
 	@Override
+	@Transactional
 	public MembershipPlanDto create(MembershipPlanDto membershipPlanDto)	throws MembershipPlanException {
 		try {
 			Assert.notNull(membershipPlanDto, "membershipPlanDto must not be null");
@@ -69,6 +71,7 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 	}
 
 	@Override
+	@Transactional
 	public MembershipPlanDto update(MembershipPlanDto membershipPlanDto) throws MembershipPlanException {
 		try {
 			Assert.notNull(membershipPlanDto, "membershipPlanDto must not be null");
@@ -97,6 +100,7 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 	}
 
 	@Override
+	@Transactional
 	public MembershipPlanDto patch(MembershipPlanDto membershipPlanDto) throws MembershipPlanException {
 		try {
 			Assert.notNull(membershipPlanDto, "membershipPlanDto must not be null");
@@ -123,27 +127,9 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 			throw new MembershipPlanException(requestContext.getTrackingNumber(), MembershipPlanException.UPDATE_FAILED, e);
 		}
 	}
-
+	
 	@Override
-	public void delete(String brandUuid, String membershipPlanUuid) throws MembershipPlanException {
-		try {
-			MembershipPlan entity = this.readByMembershipPlanUuid(brandUuid, membershipPlanUuid);
-			entity.setDeleted(true);
-
-			entity.setDeletedOn(Instant.now());
-			entity.setDeletedBy(requestContext.getUsername());
-
-			membershipPlanRepository.save(entity);
-		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, membershipPlanUuid={}", brandUuid, membershipPlanUuid, e);
-			if (e instanceof MembershipPlanException) {
-				throw (MembershipPlanException) e;
-			}
-			throw new MembershipPlanException(requestContext.getTrackingNumber(), MembershipPlanException.DELETE_FAILED, e);
-		}
-	}
-
-	@Override
+	@Transactional
 	public MembershipPlanDto activate(String brandUuid, String membershipPlanUuid) throws MembershipPlanException {
 		try {
 			Optional<MembershipPlan> entity = membershipPlanRepository.activate(brandUuid, membershipPlanUuid);
@@ -163,6 +149,7 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 	}
 
 	@Override
+	@Transactional
 	public MembershipPlanDto deactivate(String brandUuid, String membershipPlanUuid) throws MembershipPlanException {
 		try {
 			Optional<MembershipPlan> entity = membershipPlanRepository.deactivate(brandUuid, membershipPlanUuid);
@@ -181,6 +168,35 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 		}
 	}
 
+	@Override
+	@Transactional
+	public void delete(String brandUuid, String membershipPlanUuid) throws MembershipPlanException {
+		try {
+			MembershipPlan entity = this.readByMembershipPlanUuid(brandUuid, membershipPlanUuid);
+			membershipPlanRepository.delete(entity.getBrandUuid(), entity.getUuid(), requestContext.getUsername());
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, membershipPlanUuid={}", brandUuid, membershipPlanUuid, e);
+			
+			if (e instanceof MembershipPlanException) {
+				throw (MembershipPlanException) e;
+			}
+			throw new MembershipPlanException(requestContext.getTrackingNumber(), MembershipPlanException.DELETE_FAILED, e);
+		}
+	}
+
+	@Override
+	public void deleteAllByBrandUuid(String brandUuid) throws MembershipPlanException {
+		try {
+			long deletedCount = membershipPlanRepository.deleteAllByBrandUuid(brandUuid, requestContext.getUsername());
+			
+			logger.info("MembershipPlan deleted for brand - brandUuid={} deletedCount={} ", brandUuid, deletedCount);
+		} catch (Exception e) {
+			logger.error("Error - brandId={}", brandUuid, e);
+			
+			throw new MembershipPlanException(requestContext.getTrackingNumber(), MembershipPlanException.DELETE_FAILED, e);
+		}
+	}
+	
 	private MembershipPlan readByMembershipPlanUuid(String brandUuid, String membershipPlanUuid) throws MembershipPlanException {
 		Optional<MembershipPlan> entity = membershipPlanRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid,	membershipPlanUuid);
 		if (entity.isEmpty()) {
@@ -190,4 +206,5 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 
 		return entity.get();
 	}
+
 }

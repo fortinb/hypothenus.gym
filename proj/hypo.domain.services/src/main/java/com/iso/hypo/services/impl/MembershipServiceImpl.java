@@ -8,6 +8,7 @@ import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import com.iso.hypo.common.context.RequestContext;
@@ -42,6 +43,7 @@ public class MembershipServiceImpl implements MembershipService {
 	}
 
 	@Override
+	@Transactional
 	public MembershipDto create(MembershipDto membershipDto) throws MembershipException {
 		try {
 			Assert.notNull(membershipDto, "membershipDto must not be null");
@@ -68,6 +70,7 @@ public class MembershipServiceImpl implements MembershipService {
 	}
 
 	@Override
+	@Transactional
 	public MembershipDto update(MembershipDto membershipDto) throws MembershipException {
 		try {
 			Assert.notNull(membershipDto, "membershipDto must not be null");
@@ -97,6 +100,7 @@ public class MembershipServiceImpl implements MembershipService {
 	}
 
 	@Override
+	@Transactional
 	public MembershipDto patch(MembershipDto membershipDto) throws MembershipException {
 		try {
 			Assert.notNull(membershipDto, "membershipDto must not be null");
@@ -126,26 +130,7 @@ public class MembershipServiceImpl implements MembershipService {
 	}
 
 	@Override
-	public void delete(String brandUuid, String membershipUuid) throws MembershipException {
-		try {
-			Membership entity = this.readByMembershipUuid(brandUuid,  membershipUuid);
-			entity.setDeleted(true);
-
-			entity.setDeletedOn(Instant.now());
-			entity.setDeletedBy(requestContext.getUsername());
-			
-			membershipRepository.save(entity);
-		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, membershipUuid={}", brandUuid, membershipUuid, e);
-			
-			if (e instanceof MembershipException) {
-				throw (MembershipException) e;
-			}
-			throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.DELETE_FAILED, e);
-		}
-	}
-
-	@Override
+	@Transactional
 	public MembershipDto activate(String brandUuid, String membershipUuid) throws MembershipException {
 		try {
 			Optional<Membership> entity = membershipRepository.activate(brandUuid, membershipUuid);
@@ -165,6 +150,7 @@ public class MembershipServiceImpl implements MembershipService {
 	}
 
 	@Override
+	@Transactional
 	public MembershipDto deactivate(String brandUuid, String membershipUuid) throws MembershipException {
 		try {
 			Optional<Membership> entity = membershipRepository.deactivate(brandUuid, membershipUuid);
@@ -182,7 +168,36 @@ public class MembershipServiceImpl implements MembershipService {
 			throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.DEACTIVATION_FAILED, e);
 		}
 	}
-
+	
+	@Override
+	@Transactional
+	public void delete(String brandUuid, String membershipUuid) throws MembershipException {
+		try {
+			Membership entity = this.readByMembershipUuid(brandUuid, membershipUuid);
+			membershipRepository.delete(entity.getBrandUuid(), entity.getUuid(), requestContext.getUsername());
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, membershipUuid={}", brandUuid, membershipUuid, e);
+			
+			if (e instanceof MembershipException) {
+				throw (MembershipException) e;
+			}
+			throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.DELETE_FAILED, e);
+		}
+	}
+	
+	@Override
+	public void deleteAllByBrandUuid(String brandUuid) throws MembershipException {
+		try {
+			long deletedCount = membershipRepository.deleteAllByBrandUuid(brandUuid, requestContext.getUsername());
+			
+			logger.info("MembershipPlan deleted for brand - brandUuid={} deletedCount={} ", brandUuid, deletedCount);
+		} catch (Exception e) {
+			logger.error("Error - brandId={}", brandUuid, e);
+			
+			throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.DELETE_FAILED, e);
+		}
+	}
+	
 	private Membership readByMembershipUuid(String brandUuid, String membershipUuid) throws MembershipException {
 		Optional<Membership> entity = membershipRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, membershipUuid);
 		if (entity.isEmpty()) {

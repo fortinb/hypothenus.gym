@@ -19,6 +19,6 @@ public interface CourseRepository extends PagingAndSortingRepository<Course, Str
 	
 	Page<Course> findAllByBrandUuidAndGymUuidAndIsDeletedIsFalseAndIsActiveIsTrue(String brandUuid, String gymUuid, Pageable pageable);
 	
-	
+	Page<Course> findAllByBrandUuidAndIsDeletedIsFalse(String brandUuid, Pageable pageable);
 }
 

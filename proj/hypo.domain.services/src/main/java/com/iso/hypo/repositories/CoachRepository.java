@@ -17,6 +17,6 @@ public interface CoachRepository extends PagingAndSortingRepository<Coach, Strin
 	
 	Page<Coach> findAllByBrandUuidAndGymUuidAndIsDeletedIsFalseAndIsActiveIsTrue(String brandUuid,String gymUuid, Pageable pageable);
 	
-	
+	Page<Coach> findAllByBrandUuidAndIsDeletedIsFalse(String brandUuid, Pageable pageable);
 }
 

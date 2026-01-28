@@ -9,6 +9,7 @@ import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import com.iso.hypo.common.context.RequestContext;
@@ -19,6 +20,7 @@ import com.iso.hypo.repositories.CoachRepository;
 import com.iso.hypo.repositories.CourseRepository;
 import com.iso.hypo.services.CourseService;
 import com.iso.hypo.services.GymQueryService;
+import com.iso.hypo.services.exception.CoachException;
 import com.iso.hypo.services.exception.CourseException;
 import com.iso.hypo.services.exception.GymException;
 import com.iso.hypo.services.mappers.CourseMapper;
@@ -47,6 +49,7 @@ public class CourseServiceImpl implements CourseService {
 	}
 
 	@Override
+	@Transactional
 	public CourseDto create(CourseDto courseDto) throws CourseException {
 		try {
 			Assert.notNull(courseDto, "courseDto must not be null");
@@ -92,6 +95,7 @@ public class CourseServiceImpl implements CourseService {
 	}
 
 	@Override
+	@Transactional
 	public CourseDto update(CourseDto courseDto) throws CourseException {
 		try {
 			Assert.notNull(courseDto, "courseDto must not be null");
@@ -131,6 +135,7 @@ public class CourseServiceImpl implements CourseService {
 	}
 
 	@Override
+	@Transactional
 	public CourseDto patch(CourseDto courseDto) throws CourseException {
 		try {
 			Assert.notNull(courseDto, "courseDto must not be null");
@@ -170,25 +175,7 @@ public class CourseServiceImpl implements CourseService {
 	}
 
 	@Override
-	public void delete(String brandUuid, String gymUuid, String courseUuid) throws CourseException {
-		try {
-			Course entity = this.readByCourseUuid(brandUuid, gymUuid, courseUuid);
-			entity.setDeleted(true);
-
-			entity.setDeletedOn(Instant.now());
-			entity.setDeletedBy(requestContext.getUsername());
-
-			courseRepository.save(entity);
-		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, courseUuid={}", brandUuid, gymUuid, courseUuid, e);
-			if (e instanceof CourseException) {
-				throw (CourseException) e;
-			}
-			throw new CourseException(requestContext.getTrackingNumber(), CourseException.DELETE_FAILED, e);
-		}
-	}
-
-	@Override
+	@Transactional
 	public CourseDto activate(String brandUuid, String gymUuid, String courseUuid) throws CourseException {
 		try {
 			Optional<Course> entity = courseRepository.activate(brandUuid, gymUuid, courseUuid);
@@ -207,6 +194,7 @@ public class CourseServiceImpl implements CourseService {
 	}
 
 	@Override
+	@Transactional
 	public CourseDto deactivate(String brandUuid, String gymUuid, String courseUuid) throws CourseException {
 		try {
 			Optional<Course> entity = courseRepository.deactivate(brandUuid, gymUuid, courseUuid);
@@ -223,7 +211,56 @@ public class CourseServiceImpl implements CourseService {
 			throw new CourseException(requestContext.getTrackingNumber(), CourseException.DEACTIVATION_FAILED, e);
 		}
 	}
+	
+	@Override
+	@Transactional
+	public void delete(String brandUuid, String gymUuid, String courseUuid) throws CourseException {
+		try {
+			Course entity = this.readByCourseUuid(brandUuid, gymUuid, courseUuid);
+			courseRepository.delete(entity.getBrandUuid(), entity.getGymUuid(), entity.getUuid(), requestContext.getUsername());
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, gymUuid={}, coachUuid={}", brandUuid, gymUuid, courseUuid, e);
+			
+			if (e instanceof CourseException) {
+				throw (CourseException) e;
+			}
+			throw new CourseException(requestContext.getTrackingNumber(), CoachException.DELETE_FAILED, e);
+		}
+	}
 
+	@Override
+	@Transactional
+	public void deleteAllByBrandUuid(String brandUuid) throws CourseException {
+		try {
+			long deletedCount = courseRepository.deleteAllByBrandUuid(brandUuid, requestContext.getUsername());
+			
+			logger.info("Coach deleted for brand - brandUuid={} deletedCount={} ", brandUuid, deletedCount);
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}", brandUuid, e);
+			
+			if (e instanceof CourseException) {
+				throw (CourseException) e;
+			}
+			throw new CourseException(requestContext.getTrackingNumber(), CoachException.DELETE_FAILED, e);
+		}
+	}
+
+	@Override
+	public void deleteAllByGymUuid(String brandUuid, String gymUuid) throws CourseException {
+		try {
+			long deletedCount = courseRepository.deleteAllByGymUuid(brandUuid, gymUuid, requestContext.getUsername());
+			
+			logger.info("Course deleted for gym - brandUuid={} gymUuid={} deletedCount={} ", brandUuid, gymUuid, deletedCount);
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, gymUuid={}", brandUuid, gymUuid, e);
+			
+			if (e instanceof CourseException) {
+				throw (CourseException) e;
+			}
+			throw new CourseException(requestContext.getTrackingNumber(), CoachException.DELETE_FAILED, e);
+		}
+	}
+	
 	private Course readByCourseUuid(String brandUuid, String gymUuid, String courseUuid) throws CourseException {
         Optional<Course> entity = courseRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid,
                     gymUuid, courseUuid);

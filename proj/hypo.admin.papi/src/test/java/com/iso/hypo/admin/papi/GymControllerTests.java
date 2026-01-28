@@ -26,6 +26,8 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -44,15 +46,22 @@ import com.iso.hypo.admin.papi.dto.contact.PhoneNumberDto;
 import com.iso.hypo.admin.papi.dto.model.GymDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchGymDto;
 import com.iso.hypo.admin.papi.dto.post.PostGymDto;
+import com.iso.hypo.admin.papi.dto.put.PutBrandDto;
 import com.iso.hypo.admin.papi.dto.put.PutGymDto;
 import com.iso.hypo.admin.papi.dto.search.GymSearchDto;
 import com.iso.hypo.domain.BrandBuilder;
 import com.iso.hypo.domain.GymBuilder;
 import com.iso.hypo.domain.aggregate.Brand;
+import com.iso.hypo.domain.aggregate.Coach;
+import com.iso.hypo.domain.aggregate.Course;
 import com.iso.hypo.domain.aggregate.Gym;
 import com.iso.hypo.repositories.BrandRepository;
+import com.iso.hypo.repositories.CoachRepository;
+import com.iso.hypo.repositories.CourseRepository;
 import com.iso.hypo.repositories.GymRepository;
+import com.iso.hypo.repositories.MembershipPlanRepository;
 import com.iso.hypo.services.exception.GymException;
+import com.iso.hypo.tests.data.Populator;
 import com.iso.hypo.tests.http.HttpUtils;
 import com.iso.hypo.tests.security.Roles;
 import com.iso.hypo.tests.security.Users;
@@ -71,6 +80,7 @@ class GymControllerTests {
 	public static final String getURI = "/v1/brands/%s/gyms/%s";
 	public static final String putURI = "/v1/brands/%s/gyms/%s";
 	public static final String patchURI = "/v1/brands/%s/gyms/%s";
+	public static final String deleteURI = "/v1/brands/%s/gyms/%s";
 	public static final String postActivateURI = "/v1/brands/%s/gyms/%s/activate";
 	public static final String postDeactivateURI = "/v1/brands/%s/gyms/%s/deactivate";
 	public static final String searchCriteria = "criteria";
@@ -87,9 +97,14 @@ class GymControllerTests {
 
 	@Autowired
 	BrandRepository brandRepository;
-	
 	@Autowired
 	GymRepository gymRepository;
+	@Autowired
+	CoachRepository coachRepository;
+	@Autowired
+	CourseRepository courseRepository;
+	@Autowired
+	MembershipPlanRepository membershipPlanRepository;
 
 	@Autowired
 	ObjectMapper objectMapper;
@@ -626,6 +641,39 @@ class GymControllerTests {
 			ErrorDto err = TestResponseUtils.toError(response, objectMapper);
 			Assertions.assertEquals(GymException.GYM_NOT_FOUND, err.getCode());
 		}
+	}
+	
+	@Test
+	void testDeleteSuccess() throws JsonProcessingException, MalformedURLException {
+		// Arrange
+		Populator populator = new Populator(brandRepository, gymRepository, coachRepository, courseRepository, membershipPlanRepository);
+		Brand brand = populator.populateFullBrand("todelete", "Brand to delete");
+		Gym gymToDelete = gymRepository.findByBrandUuidAndCode(brand.getUuid(), "boucherville").get();
+		
+		// Act
+		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(
+				URI.create(String.format(deleteURI, brand.getUuid(), gymToDelete.getUuid())), port, null),
+				HttpMethod.DELETE, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
+				String.format("Brand delete error: %s", response.getStatusCode()));
+		
+		httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
+		response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(getURI, brand.getUuid(), gymToDelete.getUuid())), port, null),
+				HttpMethod.GET, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
+				String.format("Get error: %s", response.getStatusCode()));
+		
+		Page<Coach> pageCoach = coachRepository.findAllByBrandUuidAndGymUuidAndIsDeletedIsFalse(brand.getUuid(),gymToDelete.getUuid(),  PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
+		Assertions.assertEquals(0, pageCoach.getTotalElements(),
+				String.format("Deleted brand coachs not deleted: %d", pageCoach.getTotalElements()));
+		
+		Page<Course> pageCourse = courseRepository.findAllByBrandUuidAndGymUuidAndIsDeletedIsFalse(brand.getUuid(), gymToDelete.getUuid(), PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
+		Assertions.assertEquals(0, pageCourse.getTotalElements(),
+				String.format("Deleted brand courses not deleted: %d", pageCourse.getTotalElements()));
 	}
 
 	private void assertSearch(String criteria, int minimumNumberOfElements, int maximumNumberOfElements) 

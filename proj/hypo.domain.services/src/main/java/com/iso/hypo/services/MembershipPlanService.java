@@ -16,4 +16,6 @@ public interface MembershipPlanService {
     MembershipPlanDto activate(String brandUuid, String membershipPlanUuid) throws MembershipPlanException;
 
     MembershipPlanDto deactivate(String brandUuid, String membershipPlanUuid) throws MembershipPlanException;
+    
+    void deleteAllByBrandUuid(String brandUuid) throws MembershipPlanException;
 }

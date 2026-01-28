@@ -9,6 +9,7 @@ import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import com.iso.hypo.common.context.RequestContext;
@@ -42,6 +43,7 @@ public class CoachServiceImpl implements CoachService {
 	}
 
 	@Override
+	@Transactional
 	public CoachDto create(CoachDto coachDto) throws CoachException {
 		try {
 			Assert.notNull(coachDto, "coachDto must not be null");
@@ -70,6 +72,7 @@ public class CoachServiceImpl implements CoachService {
 	}
 
 	@Override
+	@Transactional
 	public CoachDto update(CoachDto coachDto) throws CoachException {
 		try {
 			Assert.notNull(coachDto, "coachDto must not be null");
@@ -99,6 +102,7 @@ public class CoachServiceImpl implements CoachService {
 	}
 
 	@Override
+	@Transactional
 	public CoachDto patch(CoachDto coachDto) throws CoachException {
 		try {
 			Assert.notNull(coachDto, "coachDto must not be null");
@@ -128,26 +132,7 @@ public class CoachServiceImpl implements CoachService {
 	}
 
 	@Override
-	public void delete(String brandUuid, String gymUuid, String coachUuid) throws CoachException {
-		try {
-			Coach entity = this.readByCoachUuid(brandUuid, gymUuid, coachUuid);
-			entity.setDeleted(true);
-
-			entity.setDeletedOn(Instant.now());
-			entity.setDeletedBy(requestContext.getUsername());
-
-			coachRepository.save(entity);
-		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, coachUuid={}", brandUuid, gymUuid, coachUuid, e);
-			
-			if (e instanceof CoachException) {
-				throw (CoachException) e;
-			}
-			throw new CoachException(requestContext.getTrackingNumber(), CoachException.DELETE_FAILED, e);
-		}
-	}
-
-	@Override
+	@Transactional
 	public CoachDto activate(String brandUuid, String gymUuid, String coachUuid) throws CoachException {
 		try {
 			Optional<Coach> entity = coachRepository.activate(brandUuid, gymUuid, coachUuid);
@@ -167,6 +152,7 @@ public class CoachServiceImpl implements CoachService {
 	}
 
 	@Override
+	@Transactional
 	public CoachDto deactivate(String brandUuid, String gymUuid, String coachUuid) throws CoachException {
 		try {
 			Optional<Coach> entity = coachRepository.deactivate(brandUuid, gymUuid, coachUuid);
@@ -184,7 +170,56 @@ public class CoachServiceImpl implements CoachService {
 			throw new CoachException(requestContext.getTrackingNumber(), CoachException.DEACTIVATION_FAILED, e);
 		}
 	}
+	
+	@Override
+	@Transactional
+	public void delete(String brandUuid, String gymUuid, String coachUuid) throws CoachException {
+		try {
+			Coach entity = this.readByCoachUuid(brandUuid, gymUuid, coachUuid);
+			coachRepository.delete(entity.getBrandUuid(), entity.getGymUuid(), entity.getUuid(), requestContext.getUsername());
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, gymUuid={}, coachUuid={}", brandUuid, gymUuid, coachUuid, e);
+			
+			if (e instanceof CoachException) {
+				throw (CoachException) e;
+			}
+			throw new CoachException(requestContext.getTrackingNumber(), CoachException.DELETE_FAILED, e);
+		}
+	}
 
+	@Override
+	@Transactional
+	public void deleteAllByBrandUuid(String brandUuid) throws CoachException {
+		try {
+			long deletedCount = coachRepository.deleteAllByBrandUuid(brandUuid, requestContext.getUsername());
+			
+			logger.info("Coach deleted for brand - brandUuid={} deletedCount={} ", brandUuid, deletedCount);
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}", brandUuid, e);
+			
+			if (e instanceof CoachException) {
+				throw (CoachException) e;
+			}
+			throw new CoachException(requestContext.getTrackingNumber(), CoachException.DELETE_FAILED, e);
+		}
+	}
+
+	@Override
+	public void deleteAllByGymUuid(String brandUuid, String gymUuid) throws CoachException {
+		try {
+			long deletedCount = coachRepository.deleteAllByGymUuid(brandUuid, gymUuid, requestContext.getUsername());
+			
+			logger.info("Coach deleted for gym - brandUuid={} gymUuid={} deletedCount={} ", brandUuid, gymUuid, deletedCount);
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, gymUuid={}", brandUuid, gymUuid, e);
+			
+			if (e instanceof CoachException) {
+				throw (CoachException) e;
+			}
+			throw new CoachException(requestContext.getTrackingNumber(), CoachException.DELETE_FAILED, e);
+		}
+	}
+	
 	private Coach readByCoachUuid(String brandUuid, String gymUuid, String coachUuid) throws CoachException {
 		Optional<Coach> entity = coachRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid,
 						coachUuid);

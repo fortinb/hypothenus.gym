@@ -40,6 +40,7 @@ import com.iso.hypo.repositories.GymRepositoryCustom;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Sorts;
+import com.mongodb.client.result.UpdateResult;
 
 public class GymRepositoryCustomImpl implements GymRepositoryCustom {
 	private final MongoTemplate mongoTemplate;
@@ -171,8 +172,35 @@ public class GymRepositoryCustomImpl implements GymRepositoryCustom {
 		Gym gym = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Gym.class);
 		return gym == null ? Optional.empty() : Optional.of(gym);
 	}
-	
 
+	@Override
+	public void delete(String brandUuid, String gymUuid, String deletedBy) {
+		Query query = new Query(
+				 Criteria.where("brandUuid").is(brandUuid).and("uuid").is(gymUuid));
+		
+		Update update = new Update()
+					.set("isDeleted", true)
+					.set("deletedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
+					.set("deletedBy", deletedBy);
+
+		mongoTemplate.updateFirst(query, update, Gym.class);
+		
+	}
+
+	@Override
+	public long deleteAllByBrandUuid(String brandUuid, String deletedBy) {
+		Query query = new Query(
+				 Criteria.where("brandUuid").is(brandUuid));
+		
+		Update update = new Update()
+					.set("isDeleted", true)
+					.set("deletedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
+					.set("deletedBy", deletedBy);
+
+		UpdateResult result = mongoTemplate.updateMulti(query, update, Gym.class);
+		
+		return result.getMatchedCount();
+	}
 }
 
 

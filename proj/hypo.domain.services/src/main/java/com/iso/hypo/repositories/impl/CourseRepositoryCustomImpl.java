@@ -12,6 +12,7 @@ import org.springframework.data.mongodb.core.query.Update;
 
 import com.iso.hypo.domain.aggregate.Course;
 import com.iso.hypo.repositories.CourseRepositoryCustom;
+import com.mongodb.client.result.UpdateResult;
 
 public class CourseRepositoryCustomImpl implements CourseRepositoryCustom {
 	private final MongoTemplate mongoTemplate;
@@ -50,6 +51,49 @@ public class CourseRepositoryCustomImpl implements CourseRepositoryCustom {
 
 		Course course = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Course.class);
 		return course == null ? Optional.empty() : Optional.of(course);
+	}
+	
+	@Override
+	public void delete(String brandUuid, String gymUuid, String courseUuid, String deletedBy) {
+		Query query = new Query(
+				 Criteria.where("brandUuid").is(brandUuid).and("gymUuid").is(gymUuid).and("uuid").is(courseUuid));
+		
+		Update update = new Update()
+					.set("isDeleted", true)
+					.set("deletedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
+					.set("deletedBy", deletedBy);
+
+		mongoTemplate.updateFirst(query, update, Course.class);
+	}
+
+	@Override
+	public long deleteAllByGymUuid(String brandUuid, String gymUuid, String deletedBy) {
+		Query query = new Query(
+				 Criteria.where("brandUuid").is(brandUuid).and("gymUuid").is(gymUuid));
+		
+		Update update = new Update()
+					.set("isDeleted", true)
+					.set("deletedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
+					.set("deletedBy", deletedBy);
+
+		UpdateResult result = mongoTemplate.updateMulti(query, update, Course.class);
+		
+		return result.getMatchedCount();
+	}
+
+	@Override
+	public long deleteAllByBrandUuid(String brandUuid, String deletedBy) {
+		Query query = new Query(
+				 Criteria.where("brandUuid").is(brandUuid));
+		
+		Update update = new Update()
+					.set("isDeleted", true)
+					.set("deletedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
+					.set("deletedBy", deletedBy);
+
+		UpdateResult result = mongoTemplate.updateMulti(query, update, Course.class);
+		
+		return result.getMatchedCount();
 	}
 }
 

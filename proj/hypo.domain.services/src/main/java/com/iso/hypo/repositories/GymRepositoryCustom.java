@@ -15,5 +15,9 @@ public interface GymRepositoryCustom {
 	Optional<Gym> activate(String brandUuid, String gymUuid);
 	
 	Optional<Gym> deactivate(String brandUuid, String gymUuid);
+	
+	void delete(String brandUuid, String gymUuid, String deletedBy);
+	
+	long deleteAllByBrandUuid(String brandUuid, String deletedBy);
 }
 

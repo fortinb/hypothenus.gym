@@ -9,7 +9,9 @@ import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import com.iso.hypo.common.context.RequestContext;
@@ -17,9 +19,11 @@ import com.iso.hypo.domain.Message;
 import com.iso.hypo.domain.aggregate.Gym;
 import com.iso.hypo.domain.dto.GymDto;
 import com.iso.hypo.domain.enumeration.MessageSeverityEnum;
+import com.iso.hypo.events.event.OperationEnum;
 import com.iso.hypo.repositories.GymRepository;
 import com.iso.hypo.services.BrandQueryService;
 import com.iso.hypo.services.GymService;
+import com.iso.hypo.services.event.GymEvent;
 import com.iso.hypo.services.exception.BrandException;
 import com.iso.hypo.services.exception.GymException;
 import com.iso.hypo.services.mappers.GymMapper;
@@ -33,18 +37,26 @@ public class GymServiceImpl implements GymService {
 
 	private final GymMapper gymMapper;
 	
+	private final ApplicationEventPublisher eventPublisher;
+	
 	private static final Logger logger = LoggerFactory.getLogger(GymServiceImpl.class);
 
 	private final RequestContext requestContext;
 
-	public GymServiceImpl(GymMapper gymMapper, BrandQueryService brandQueryService, GymRepository gymRepository, RequestContext requestContext) {
+	public GymServiceImpl(GymMapper gymMapper, 
+						  BrandQueryService brandQueryService, 
+						  GymRepository gymRepository, 
+						  ApplicationEventPublisher eventPublisher, 
+						  RequestContext requestContext) {
         this.gymMapper = gymMapper;
         this.brandQueryService = brandQueryService;
         this.gymRepository = gymRepository;
+        this.eventPublisher = eventPublisher;
         this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
     }
 
 	@Override
+	@Transactional
 	public GymDto create(GymDto gymDto) throws GymException {
 		try {
 			Assert.notNull(gymDto, "gymDto must not be null");
@@ -84,6 +96,7 @@ public class GymServiceImpl implements GymService {
 	}
 
 	@Override
+	@Transactional
 	public GymDto update(GymDto gymDto) throws GymException {
 		try {
 			Assert.notNull(gymDto, "gymDto must not be null");
@@ -124,6 +137,7 @@ public class GymServiceImpl implements GymService {
 	}
 
 	@Override
+	@Transactional
 	public GymDto patch(GymDto gymDto) throws GymException {
 		try {
 			Assert.notNull(gymDto, "gymDto must not be null");
@@ -162,26 +176,7 @@ public class GymServiceImpl implements GymService {
 	}
 
 	@Override
-	public void delete(String brandUuid, String gymUuid) throws GymException {
-		try {
-			Gym entity = this.readByGymUuid(brandUuid, gymUuid);
-			entity.setDeleted(true);
-
-			entity.setDeletedOn(Instant.now());
-			entity.setDeletedBy(requestContext.getUsername());
-
-			gymRepository.save(entity);
-		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}", brandUuid, gymUuid, e);
-			
-			if (e instanceof GymException) {
-				throw (GymException) e;
-			}
-			throw new GymException(requestContext.getTrackingNumber(), GymException.DELETE_FAILED, e);
-		}
-	}
-
-	@Override
+	@Transactional
 	public GymDto activate(String brandUuid, String gymUuid) throws GymException {
 		try {
 			Optional<Gym> entity = gymRepository.activate(brandUuid, gymUuid);
@@ -201,6 +196,7 @@ public class GymServiceImpl implements GymService {
 	}
 
 	@Override
+	@Transactional
 	public GymDto deactivate(String brandUuid, String gymUuid) throws GymException {
 		try {
 			Optional<Gym> entity = gymRepository.deactivate(brandUuid, gymUuid);
@@ -216,6 +212,38 @@ public class GymServiceImpl implements GymService {
 				throw (GymException) e;
 			}
 			throw new GymException(requestContext.getTrackingNumber(), GymException.DEACTIVATION_FAILED, e);
+		}
+	}
+	
+	@Override
+	@Transactional
+	public void delete(String brandUuid, String gymUuid) throws GymException {
+		try {
+			Gym entity = this.readByGymUuid(brandUuid, gymUuid);
+			
+			gymRepository.delete(entity.getBrandUuid(), entity.getUuid(), requestContext.getUsername());
+			
+			eventPublisher.publishEvent(new GymEvent(this, entity, OperationEnum.delete));
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, gymUuid={}", brandUuid, gymUuid, e);
+			
+			if (e instanceof GymException) {
+				throw (GymException) e;
+			}
+			throw new GymException(requestContext.getTrackingNumber(), GymException.DELETE_FAILED, e);
+		}
+	}
+	
+	@Override
+	public void deleteAllByBrandUuid(String brandUuid) throws GymException {
+		try {
+			long deletedCount = gymRepository.deleteAllByBrandUuid(brandUuid, requestContext.getUsername());
+			
+			logger.info("Gym deleted for brand - brandUuid={} deletedCount={} ", brandUuid, deletedCount);
+		} catch (Exception e) {
+			logger.error("Error - brandId={}", brandUuid, e);
+			
+			throw new GymException(requestContext.getTrackingNumber(), GymException.DELETE_FAILED, e);
 		}
 	}
 	

@@ -16,6 +16,10 @@ public interface CourseService {
     CourseDto activate(String brandUuid, String gymUuid, String courseUuid) throws CourseException;
 
     CourseDto deactivate(String brandUuid, String gymUuid, String courseUuid) throws CourseException;
+    
+    void deleteAllByBrandUuid(String brandUuid) throws CourseException;
+    
+    void deleteAllByGymUuid(String brandUuid, String gymUuid) throws CourseException;
 }
 
 

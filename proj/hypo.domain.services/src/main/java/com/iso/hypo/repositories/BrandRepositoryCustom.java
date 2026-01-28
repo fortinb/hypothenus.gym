@@ -15,5 +15,7 @@ public interface BrandRepositoryCustom {
 	Optional<Brand> activate(String brandUuid);
 	
 	Optional<Brand> deactivate(String brandUuid);
+	
+	long delete(String brandUuid, String deletedBy);
 }
 

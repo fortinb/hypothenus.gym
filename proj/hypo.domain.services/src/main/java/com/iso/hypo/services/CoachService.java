@@ -16,6 +16,10 @@ public interface CoachService {
     CoachDto activate(String brandUuid, String gymUuid, String coachUuid) throws CoachException;
 
     CoachDto deactivate(String brandUuid, String gymUuid, String coachUuid) throws CoachException;
+    
+    void deleteAllByBrandUuid(String brandUuid) throws CoachException;
+    
+    void deleteAllByGymUuid(String brandUuid, String gymUuid) throws CoachException;
 }
 
 

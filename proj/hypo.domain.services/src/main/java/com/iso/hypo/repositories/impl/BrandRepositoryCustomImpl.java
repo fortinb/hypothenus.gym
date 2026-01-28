@@ -1,9 +1,9 @@
 package com.iso.hypo.repositories.impl;
 
 import static com.mongodb.client.model.Aggregates.limit;
-import static com.mongodb.client.model.Aggregates.sort;
-import static com.mongodb.client.model.Aggregates.skip;
 import static com.mongodb.client.model.Aggregates.project;
+import static com.mongodb.client.model.Aggregates.skip;
+import static com.mongodb.client.model.Aggregates.sort;
 import static com.mongodb.client.model.Projections.excludeId;
 import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
@@ -34,12 +34,13 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-import com.iso.hypo.domain.dto.BrandSearchDto;
 import com.iso.hypo.domain.aggregate.Brand;
+import com.iso.hypo.domain.dto.BrandSearchDto;
 import com.iso.hypo.repositories.BrandRepositoryCustom;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Sorts;
+import com.mongodb.client.result.UpdateResult;
 
 public class BrandRepositoryCustomImpl implements BrandRepositoryCustom {
 	private final MongoTemplate mongoTemplate;
@@ -171,8 +172,21 @@ public class BrandRepositoryCustomImpl implements BrandRepositoryCustom {
 		Brand gym = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Brand.class);
 		return gym == null ? Optional.empty() : Optional.of(gym);
 	}
-	
 
+	@Override
+	public long delete(String brandUuid, String deletedBy) {
+		Query query = new Query(
+				 Criteria.where("uuid").is(brandUuid));
+		
+		Update update = new Update()
+					.set("isDeleted", true)
+					.set("deletedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
+					.set("deletedBy", deletedBy);
+
+		UpdateResult result = mongoTemplate.updateFirst(query, update, Brand.class);
+		
+		return result.getMatchedCount();
+	}
 }
 
 

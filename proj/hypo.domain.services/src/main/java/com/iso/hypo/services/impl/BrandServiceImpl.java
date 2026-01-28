@@ -9,7 +9,9 @@ import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import com.iso.hypo.common.context.RequestContext;
@@ -17,8 +19,10 @@ import com.iso.hypo.domain.Message;
 import com.iso.hypo.domain.aggregate.Brand;
 import com.iso.hypo.domain.dto.BrandDto;
 import com.iso.hypo.domain.enumeration.MessageSeverityEnum;
+import com.iso.hypo.events.event.OperationEnum;
 import com.iso.hypo.repositories.BrandRepository;
 import com.iso.hypo.services.BrandService;
+import com.iso.hypo.services.event.BrandEvent;
 import com.iso.hypo.services.exception.BrandException;
 import com.iso.hypo.services.mappers.BrandMapper;
 
@@ -30,16 +34,23 @@ public class BrandServiceImpl implements BrandService {
 	private final BrandMapper brandMapper;
 
 	private final RequestContext requestContext;
-
+	
+	private final ApplicationEventPublisher eventPublisher;
+	
 	private static final Logger logger = LoggerFactory.getLogger(BrandServiceImpl.class);
 
-	public BrandServiceImpl(BrandMapper brandMapper, BrandRepository brandRepository, RequestContext requestContext) {
+	public BrandServiceImpl(BrandMapper brandMapper, 
+							BrandRepository brandRepository, 
+							ApplicationEventPublisher eventPublisher, 
+							RequestContext requestContext) {
         this.brandMapper = brandMapper;
         this.brandRepository = brandRepository;
+        this.eventPublisher = eventPublisher;
         this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
     }
 
 	@Override
+	@Transactional
 	public BrandDto create(BrandDto brandDto) throws BrandException {
 		try {
 			Assert.notNull(brandDto, "brandDto must not be null");
@@ -72,6 +83,7 @@ public class BrandServiceImpl implements BrandService {
 	}
 
 	@Override
+	@Transactional
 	public BrandDto update(BrandDto brandDto) throws BrandException {
 		try {
 			Assert.notNull(brandDto, "brandDto must not be null");
@@ -110,6 +122,7 @@ public class BrandServiceImpl implements BrandService {
 	}
 
 	@Override
+	@Transactional
 	public BrandDto patch(BrandDto brandDto) throws BrandException {
 		try {
 			Assert.notNull(brandDto, "brandDto must not be null");
@@ -147,25 +160,7 @@ public class BrandServiceImpl implements BrandService {
 	}
 
 	@Override
-	public void delete(String brandUuid) throws BrandException {
-		try {
-			Brand entity = this.readByBrandUuid(brandUuid);
-			entity.setDeleted(true);
-
-			entity.setDeletedOn(Instant.now());
-			entity.setDeletedBy(requestContext.getUsername());
-
-			brandRepository.save(entity);
-		} catch (Exception e) {
-			logger.error("Error - brandUuid={}", brandUuid, e);
-			if (e instanceof BrandException) {
-				throw (BrandException) e;
-			}
-			throw new BrandException(requestContext.getTrackingNumber(), BrandException.DELETE_FAILED, e);
-		}
-	}
-
-	@Override
+	@Transactional
 	public BrandDto activate(String brandUuid) throws BrandException {
 		try {
 			Optional<Brand> entity = brandRepository.activate(brandUuid);
@@ -184,6 +179,7 @@ public class BrandServiceImpl implements BrandService {
 	}
 
 	@Override
+	@Transactional
 	public BrandDto deactivate(String brandUuid) throws BrandException {
 		try {
 			Optional<Brand> entity = brandRepository.deactivate(brandUuid);
@@ -198,6 +194,26 @@ public class BrandServiceImpl implements BrandService {
 				throw (BrandException) e;
 			}
 			throw new BrandException(requestContext.getTrackingNumber(), BrandException.DEACTIVATION_FAILED, e);
+		}
+	}
+	
+	@Override
+	@Transactional
+	public void delete(String brandUuid) throws BrandException {
+		try {
+			Brand entity = this.readByBrandUuid(brandUuid);
+
+			brandRepository.delete(entity.getUuid(), requestContext.getUsername());
+			
+			eventPublisher.publishEvent(new BrandEvent(this, entity, OperationEnum.delete));
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}", brandUuid, e);
+			
+			if (e instanceof BrandException) {
+				throw (BrandException) e;
+			}
+			
+			throw new BrandException(requestContext.getTrackingNumber(), BrandException.DELETE_FAILED, e);
 		}
 	}
 	
