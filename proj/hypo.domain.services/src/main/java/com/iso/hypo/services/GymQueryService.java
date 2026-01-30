@@ -3,7 +3,7 @@ package com.iso.hypo.services;
 import org.springframework.data.domain.Page;
 
 import com.iso.hypo.domain.dto.GymDto;
-import com.iso.hypo.domain.dto.GymSearchDto;
+import com.iso.hypo.domain.dto.search.GymSearchDto;
 import com.iso.hypo.services.exception.GymException;
 
 public interface GymQueryService {

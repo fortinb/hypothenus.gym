@@ -1,7 +1,6 @@
 package com.iso.hypo.domain.aggregate;
 
 import java.time.Instant;
-import java.util.UUID;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -9,6 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.iso.hypo.domain.BaseEntity;
 import com.iso.hypo.domain.contact.Person;
+import com.iso.hypo.domain.enumeration.MemberTypeEnum;
 import com.mongodb.lang.NonNull;
 
 import lombok.Getter;
@@ -23,13 +23,15 @@ public class Member extends BaseEntity {
 	private String id;
 	
 	@Indexed
-	private String uuid = UUID.randomUUID().toString();
+	private String uuid;
 
 	@Indexed
 	@NonNull
 	private String brandUuid;
 	
 	private Person person;
+	
+	private MemberTypeEnum memberType;
 	
 	private String preferredGymUuid;
 	

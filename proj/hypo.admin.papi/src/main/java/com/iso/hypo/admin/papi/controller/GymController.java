@@ -85,7 +85,7 @@ public class GymController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.domain.dto.GymSearchDto> domainDtos = null;
+		Page<com.iso.hypo.domain.dto.search.GymSearchDto> domainDtos = null;
 		try {
 			domainDtos = gymQueryService.search(page, pageSize, criteria, includeInactive);
 		} catch (GymException e) {

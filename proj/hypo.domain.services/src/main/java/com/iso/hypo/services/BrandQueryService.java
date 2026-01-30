@@ -3,7 +3,7 @@ package com.iso.hypo.services;
 import org.springframework.data.domain.Page;
 
 import com.iso.hypo.domain.dto.BrandDto;
-import com.iso.hypo.domain.dto.BrandSearchDto;
+import com.iso.hypo.domain.dto.search.BrandSearchDto;
 import com.iso.hypo.services.exception.BrandException;
 
 public interface BrandQueryService {

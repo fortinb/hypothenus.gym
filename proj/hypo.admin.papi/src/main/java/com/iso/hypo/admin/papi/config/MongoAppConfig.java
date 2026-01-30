@@ -41,7 +41,7 @@ public class MongoAppConfig extends AbstractMongoClientConfiguration {
 	}
 	
     @Bean
-    public MongoTransactionManager mongoTransactionManager(MongoDatabaseFactory dbFactory) {
+    MongoTransactionManager mongoTransactionManager(MongoDatabaseFactory dbFactory) {
         return new MongoTransactionManager(dbFactory);
     }
 

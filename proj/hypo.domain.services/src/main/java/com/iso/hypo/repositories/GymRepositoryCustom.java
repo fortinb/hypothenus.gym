@@ -6,7 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.iso.hypo.domain.aggregate.Gym;
-import com.iso.hypo.domain.dto.GymSearchDto;
+import com.iso.hypo.domain.dto.search.GymSearchDto;
 
 public interface GymRepositoryCustom {
 

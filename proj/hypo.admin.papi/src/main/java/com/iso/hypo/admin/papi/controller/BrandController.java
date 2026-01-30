@@ -84,7 +84,7 @@ public class BrandController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.domain.dto.BrandSearchDto> domainDtos = null;
+		Page<com.iso.hypo.domain.dto.search.BrandSearchDto> domainDtos = null;
 		try {
 			domainDtos = brandQueryService.search(page, pageSize, criteria, includeInactive);
 		} catch (BrandException e) {

@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import com.iso.hypo.common.context.RequestContext;
 import com.iso.hypo.domain.aggregate.Gym;
 import com.iso.hypo.domain.dto.GymDto;
-import com.iso.hypo.domain.dto.GymSearchDto;
+import com.iso.hypo.domain.dto.search.GymSearchDto;
 import com.iso.hypo.repositories.GymRepository;
 import com.iso.hypo.services.GymQueryService;
 import com.iso.hypo.services.exception.GymException;

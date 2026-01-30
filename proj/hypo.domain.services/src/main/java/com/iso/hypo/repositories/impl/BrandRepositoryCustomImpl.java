@@ -35,7 +35,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 import com.iso.hypo.domain.aggregate.Brand;
-import com.iso.hypo.domain.dto.BrandSearchDto;
+import com.iso.hypo.domain.dto.search.BrandSearchDto;
 import com.iso.hypo.repositories.BrandRepositoryCustom;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.MongoCollection;

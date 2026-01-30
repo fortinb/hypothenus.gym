@@ -35,7 +35,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 import com.iso.hypo.domain.aggregate.Gym;
-import com.iso.hypo.domain.dto.GymSearchDto;
+import com.iso.hypo.domain.dto.search.GymSearchDto;
 import com.iso.hypo.repositories.GymRepositoryCustom;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.MongoCollection;
@@ -133,7 +133,7 @@ public class GymRepositoryCustomImpl implements GymRepositoryCustom {
 		// Create a pipeline that searches, projects, and limits the number of results returned.
 		AggregateIterable<GymSearchDto> aggregationResults = collection.aggregate(
 				Arrays.asList(searchStage,
-						project(fields(excludeId(), include("uuid", "code", "name", "address", "email", "isActive"),
+						project(fields(excludeId(), include("brandUuid", "uuid", "code", "name", "address", "email", "isActive"),
 								metaSearchScore("score"),
 								meta("scoreDetails", "searchScoreDetails"))),
 						sort(Sorts.ascending("name")),

@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import com.iso.hypo.common.context.RequestContext;
 import com.iso.hypo.domain.aggregate.Brand;
 import com.iso.hypo.domain.dto.BrandDto;
-import com.iso.hypo.domain.dto.BrandSearchDto;
+import com.iso.hypo.domain.dto.search.BrandSearchDto;
 import com.iso.hypo.repositories.BrandRepository;
 import com.iso.hypo.services.BrandQueryService;
 import com.iso.hypo.services.exception.BrandException;
