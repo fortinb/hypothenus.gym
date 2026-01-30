@@ -3,6 +3,7 @@ package com.iso.hypo.services.impl;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
@@ -49,7 +50,7 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     @Transactional
-    public MemberDto create(MemberDto memberDto) throws MemberException {
+    public MemberDto create(MemberDto memberDto, String password) throws MemberException {
         try {
             Assert.notNull(memberDto, "memberDto must not be null");
 
@@ -59,6 +60,7 @@ public class MemberServiceImpl implements MemberService {
 
             member.setCreatedOn(Instant.now());
             member.setCreatedBy(requestContext.getUsername());
+            member.setUuid(UUID.randomUUID().toString());
 
             Member saved = memberRepository.save(member);
             return memberMapper.toDto(saved);
@@ -85,7 +87,7 @@ public class MemberServiceImpl implements MemberService {
             Member oldMember = this.readByMemberUuid(member.getBrandUuid(), member.getUuid());
 
             ModelMapper mapper = new ModelMapper();
-            mapper.getConfiguration().setSkipNullEnabled(false);
+            mapper.getConfiguration().setSkipNullEnabled(false).setCollectionsMergeEnabled(false);;
 
             mapper = memberMapper.initMemberMappings(mapper);
             mapper.map(member, oldMember);
@@ -115,7 +117,7 @@ public class MemberServiceImpl implements MemberService {
             Member oldMember = this.readByMemberUuid(member.getBrandUuid(), member.getUuid());
 
             ModelMapper mapper = new ModelMapper();
-            mapper.getConfiguration().setSkipNullEnabled(true);
+            mapper.getConfiguration().setSkipNullEnabled(true).setCollectionsMergeEnabled(false);;
 
             mapper = memberMapper.initMemberMappings(mapper);
             mapper.map(member, oldMember);

@@ -1,8 +1,8 @@
-package com.iso.hypo.domain.dto.search;
+package com.iso.hypo.admin.papi.dto.search;
 
 import java.util.List;
 
-import com.iso.hypo.domain.contact.PhoneNumber;
+import com.iso.hypo.admin.papi.dto.contact.PhoneNumberDto;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -20,10 +20,10 @@ public class MemberSearchDto {
     private String lastname;
     
     private String email;
-
-    private List<PhoneNumber> phoneNumbers;
     
     private String zipcode;
+
+    private List<PhoneNumberDto> phoneNumbers;
     
     private boolean isActive;
 }

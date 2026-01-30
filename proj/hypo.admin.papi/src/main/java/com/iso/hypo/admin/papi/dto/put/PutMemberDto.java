@@ -1,19 +1,22 @@
-package com.iso.hypo.admin.papi.dto.model;
+package com.iso.hypo.admin.papi.dto.put;
 
 import com.iso.hypo.admin.papi.dto.BaseDto;
 import com.iso.hypo.admin.papi.dto.contact.PersonDto;
 import com.iso.hypo.domain.enumeration.MemberTypeEnum;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class MemberDto extends BaseDto {
+public class PutMemberDto extends BaseDto {
 
+	@NotBlank
 	private String brandUuid;
 	
-	private String uuid;
+	@NotBlank
+    private String uuid;
 
 	private PersonDto person;
 	

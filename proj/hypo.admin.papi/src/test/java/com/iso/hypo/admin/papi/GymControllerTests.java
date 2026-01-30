@@ -59,6 +59,7 @@ import com.iso.hypo.repositories.BrandRepository;
 import com.iso.hypo.repositories.CoachRepository;
 import com.iso.hypo.repositories.CourseRepository;
 import com.iso.hypo.repositories.GymRepository;
+import com.iso.hypo.repositories.MemberRepository;
 import com.iso.hypo.repositories.MembershipPlanRepository;
 import com.iso.hypo.services.exception.GymException;
 import com.iso.hypo.tests.data.Populator;
@@ -105,7 +106,9 @@ class GymControllerTests {
 	CourseRepository courseRepository;
 	@Autowired
 	MembershipPlanRepository membershipPlanRepository;
-
+	@Autowired
+	MemberRepository memberRepository;
+	
 	@Autowired
 	ObjectMapper objectMapper;
 
@@ -646,7 +649,7 @@ class GymControllerTests {
 	@Test
 	void testDeleteSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Populator populator = new Populator(brandRepository, gymRepository, coachRepository, courseRepository, membershipPlanRepository);
+		Populator populator = new Populator(brandRepository, gymRepository, coachRepository, courseRepository, membershipPlanRepository, memberRepository);
 		Brand brand = populator.populateFullBrand("todelete", "Brand to delete");
 		Gym gymToDelete = gymRepository.findByBrandUuidAndCode(brand.getUuid(), "boucherville").get();
 		
@@ -656,7 +659,7 @@ class GymControllerTests {
 				URI.create(String.format(deleteURI, brand.getUuid(), gymToDelete.getUuid())), port, null),
 				HttpMethod.DELETE, httpEntity, JsonNode.class);
 
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
+		Assertions.assertEquals(HttpStatus.ACCEPTED, response.getStatusCode(),
 				String.format("Brand delete error: %s", response.getStatusCode()));
 		
 		httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);

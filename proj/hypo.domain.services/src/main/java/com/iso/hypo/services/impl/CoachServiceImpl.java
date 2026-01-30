@@ -81,7 +81,7 @@ public class CoachServiceImpl implements CoachService {
 			Coach oldCoach = this.readByCoachUuid(coach.getBrandUuid(), coach.getGymUuid(), coach.getUuid());
 
 			ModelMapper mapper = new ModelMapper();
-			mapper.getConfiguration().setSkipNullEnabled(false);
+			mapper.getConfiguration().setSkipNullEnabled(false).setCollectionsMergeEnabled(false);;
 
 			mapper = coachMapper.initCoachMappings(mapper);
 			mapper.map(coach, oldCoach);
@@ -111,7 +111,7 @@ public class CoachServiceImpl implements CoachService {
 			Coach oldCoach = this.readByCoachUuid(coach.getBrandUuid(), coach.getGymUuid(), coach.getUuid());
 
 			ModelMapper mapper = new ModelMapper();
-			mapper.getConfiguration().setSkipNullEnabled(true);
+			mapper.getConfiguration().setSkipNullEnabled(true).setCollectionsMergeEnabled(false);;
 
 			mapper = coachMapper.initCoachMappings(mapper);
 			mapper.map(coach, oldCoach);

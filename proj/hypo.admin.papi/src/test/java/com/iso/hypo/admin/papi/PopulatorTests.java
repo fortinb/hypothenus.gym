@@ -16,6 +16,7 @@ import com.iso.hypo.repositories.BrandRepository;
 import com.iso.hypo.repositories.CoachRepository;
 import com.iso.hypo.repositories.CourseRepository;
 import com.iso.hypo.repositories.GymRepository;
+import com.iso.hypo.repositories.MemberRepository;
 import com.iso.hypo.repositories.MembershipPlanRepository;
 import com.iso.hypo.tests.data.Populator;
 
@@ -40,6 +41,8 @@ class PopulatorTests {
 	@Autowired
 	MembershipPlanRepository membershipPlanRepository;
 	@Autowired
+	MemberRepository memberRepository;
+	@Autowired
 	ObjectMapper objectMapper;
 
 	@Autowired
@@ -53,6 +56,7 @@ class PopulatorTests {
 		gymRepository.deleteAll();
 		coachRepository.deleteAll();
 		courseRepository.deleteAll();
+		memberRepository.deleteAll();
 
 		for (int i = 0; i < 10; i++) {
 			Brand item = BrandBuilder.build(faker.code().isbn10(), faker.company().name());
@@ -66,7 +70,7 @@ class PopulatorTests {
 		}
 
 		Populator populator = new Populator(brandRepository, gymRepository, coachRepository, courseRepository,
-				membershipPlanRepository);
+				membershipPlanRepository, memberRepository);
 		populator.populateFullBrand("crossfitextreme", "Crossfit Extreme");
 		populator.populateFullBrand("fitnessboxing", "Fitness Boxing");
 	}

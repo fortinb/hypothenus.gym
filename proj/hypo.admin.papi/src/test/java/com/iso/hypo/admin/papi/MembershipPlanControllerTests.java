@@ -40,6 +40,7 @@ import com.iso.hypo.admin.papi.dto.model.MembershipPlanDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchMembershipPlanDto;
 import com.iso.hypo.admin.papi.dto.post.PostMembershipPlanDto;
 import com.iso.hypo.admin.papi.dto.pricing.OneTimeFeeDto;
+import com.iso.hypo.admin.papi.dto.put.PutCoachDto;
 import com.iso.hypo.admin.papi.dto.put.PutMembershipPlanDto;
 import com.iso.hypo.domain.BrandBuilder;
 import com.iso.hypo.domain.MembershipPlanBuilder;
@@ -66,6 +67,7 @@ class MembershipPlanControllerTests {
 	public static final String postActivateURI = "/v1/brands/%s/membership/plans/%s/activate";
 	public static final String postDeactivateURI = "/v1/brands/%s/membership/plans/%s/deactivate";
 	public static final String patchURI = "/v1/brands/%s/membership/plans/%s";
+	public static final String deleteURI = "/v1/brands/%s/membership/plans/%s";
 	public static final String pageNumber = "page";
 	public static final String pageSize = "pageSize";
 	public static final String includeInactive = "includeInactive";
@@ -594,6 +596,31 @@ class MembershipPlanControllerTests {
 		
 		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
 				String.format("Post error: %s", response.getStatusCode()));
+	}
+	
+	@Test
+	void testDeleteSuccess() throws JsonProcessingException, MalformedURLException {
+		// Arrange
+		MembershipPlan membershipPlanToDelete = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid());
+		membershipPlanToDelete = membershipPlanRepository.save(membershipPlanToDelete);
+
+		// Act
+		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(deleteURI, brand_FitnessBoxing.getUuid(), membershipPlanToDelete.getUuid())), port, null),
+				HttpMethod.DELETE, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.ACCEPTED, response.getStatusCode(),
+				String.format("Coach activation error: %s", response.getStatusCode()));
+
+		
+		httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
+		response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(getURI, brand_FitnessBoxing.getUuid(), membershipPlanToDelete.getUuid())), port, null),
+				HttpMethod.GET, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
+				String.format("Get error: %s", response.getStatusCode()));
 	}
 
 	public static final void assertMembershipPlan(MembershipPlanDto expected, MembershipPlanDto result) {

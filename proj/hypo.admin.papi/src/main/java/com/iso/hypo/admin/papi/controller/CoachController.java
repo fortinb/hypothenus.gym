@@ -354,6 +354,6 @@ public class CoachController {
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
-		return ResponseEntity.ok().build();
+		return ResponseEntity.accepted().build();
 	}
 }

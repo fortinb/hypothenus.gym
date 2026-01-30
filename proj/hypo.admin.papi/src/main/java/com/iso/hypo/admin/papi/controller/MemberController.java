@@ -5,7 +5,6 @@ import java.util.Objects;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.iso.hypo.common.context.RequestContext;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,44 +24,47 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.iso.hypo.admin.papi.config.security.Roles;
-import com.iso.hypo.admin.papi.dto.ErrorDto;
-import com.iso.hypo.admin.papi.dto.model.MembershipPlanDto;
-import com.iso.hypo.admin.papi.dto.patch.PatchMembershipPlanDto;
-import com.iso.hypo.admin.papi.dto.post.PostMembershipPlanDto;
-import com.iso.hypo.admin.papi.dto.put.PutMembershipPlanDto;
-import com.iso.hypo.services.exception.MembershipPlanException;
-import com.iso.hypo.services.MembershipPlanQueryService;
-import com.iso.hypo.services.MembershipPlanService;
 import com.iso.hypo.admin.papi.controller.util.ControllerErrorHandler;
+import com.iso.hypo.admin.papi.dto.ErrorDto;
+import com.iso.hypo.admin.papi.dto.model.MemberDto;
+import com.iso.hypo.admin.papi.dto.patch.PatchMemberDto;
+import com.iso.hypo.admin.papi.dto.post.PostMemberDto;
+import com.iso.hypo.admin.papi.dto.put.PutMemberDto;
+import com.iso.hypo.admin.papi.dto.search.MemberSearchDto;
+import com.iso.hypo.common.context.RequestContext;
+import com.iso.hypo.services.MemberQueryService;
+import com.iso.hypo.services.MemberService;
+import com.iso.hypo.services.exception.MemberException;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.media.*;
 
 @RestController
 @RequestMapping("/v1")
 @Validated
-public class MembershipPlanController {
+public class MemberController {
 
-	private static final Logger logger = LoggerFactory.getLogger(MembershipPlanController.class);
+	private static final Logger logger = LoggerFactory.getLogger(MemberController.class);
 
 	private final ModelMapper modelMapper;
 	private final RequestContext requestContext;
 
-	private final MembershipPlanService membershipPlanService;
-	private final MembershipPlanQueryService membershipPlanQueryService;
+	private final MemberService memberService;
+	private final MemberQueryService memberQueryService;
 
-	public MembershipPlanController(ModelMapper modelMapper, MembershipPlanService membershipPlanService, MembershipPlanQueryService membershipPlanQueryService, RequestContext requestContext) {
+	public MemberController(ModelMapper modelMapper, MemberService memberService, MemberQueryService memberQueryService, RequestContext requestContext) {
 		this.modelMapper = modelMapper;
-		this.membershipPlanService = membershipPlanService;
-		this.membershipPlanQueryService = membershipPlanQueryService;
+		this.memberService = memberService;
+		this.memberQueryService = memberQueryService;
 		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
-	@GetMapping("/brands/{brandUuid}/membership/plans")
-	@Operation(summary = "Retrieve a list of membership plans")
+	@GetMapping("/brands/{brandUuid}/members/search")
+	@Operation(summary = "Search for brands")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
 					@Content(schema = @Schema(implementation = Page.class), mediaType = "application/json") }),
@@ -76,70 +78,103 @@ public class MembershipPlanController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> listMembershipPlans(
+	public ResponseEntity<Object> searchBrand(
+			@Parameter(description = "search criteria") @RequestParam String criteria,
+			@Parameter(description = "page number") @RequestParam int page,
+			@Parameter(description = "page size") @RequestParam int pageSize,
+			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
+
+		Page<com.iso.hypo.domain.dto.search.MemberSearchDto> domainDtos = null;
+		try {
+			domainDtos = memberQueryService.search(page, pageSize, criteria, includeInactive);
+		} catch (MemberException e) {
+			logger.error(e.getMessage(), e);
+
+			return ControllerErrorHandler.buildErrorResponse(e, requestContext, criteria);
+		}
+		
+		return ResponseEntity.ok(domainDtos.map(item -> modelMapper.map(item, MemberSearchDto.class)));
+	}
+	
+	@GetMapping("/brands/{brandUuid}/members")
+	@Operation(summary = "Retrieve a list of members")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", content = {
+					@Content(schema = @Schema(implementation = Page.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "400", description = "Bad request. The request is invalid or missing required data.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "403", description = "Forbidden. The client does not have permission to access this resource.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "404", description = "Not found. The requested resource does not exist.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "500", description = "Unexpected server error.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
+	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
+	@ResponseStatus(value = HttpStatus.OK)
+	public ResponseEntity<Object> listMembers(
 			@PathVariable String brandUuid,
 			@Parameter(description = "page number") @RequestParam int page,
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.domain.dto.MembershipPlanDto> domainDtos = null;
+		Page<com.iso.hypo.domain.dto.MemberDto> domainDtos = null;
 		try {
-			domainDtos = membershipPlanQueryService.list(brandUuid, page, pageSize, includeInactive);
-		} catch (MembershipPlanException e) {
+			domainDtos = memberQueryService.list(brandUuid, page, pageSize, includeInactive);
+		} catch (MemberException e) {
 			logger.error(e.getMessage(), e);
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, null);
 		}
 
-		return ResponseEntity.ok(domainDtos.map(item -> modelMapper.map(item, MembershipPlanDto.class)));
+		return ResponseEntity.ok(domainDtos.map(item -> modelMapper.map(item, MemberDto.class)));
 	}
 
-	@GetMapping("/brands/{brandUuid}/membership/plans/{uuid}")
-	@Operation(summary = "Retrieve a specific membership plan")
+	@GetMapping("/brands/{brandUuid}/members/{uuid}")
+	@Operation(summary = "Retrieve a specific member")
 	@ApiResponses({ @ApiResponse(responseCode = "200", content = {
-			@Content(schema = @Schema(implementation = MembershipPlanDto.class), mediaType = "application/json") }),
+			@Content(schema = @Schema(implementation = MemberDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "404", description = "Not found.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> getMembershipPlan(
+	public ResponseEntity<Object> getMember(
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.domain.dto.MembershipPlanDto domainDto = null;
+		com.iso.hypo.domain.dto.MemberDto domainDto = null;
 		try {
-			domainDto = membershipPlanQueryService.find(brandUuid, uuid);
-		} catch (MembershipPlanException e) {
+			domainDto = memberQueryService.find(brandUuid, uuid);
+		} catch (MemberException e) {
 			logger.error(e.getMessage(), e);
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
-		return ResponseEntity.ok(modelMapper.map(domainDto, MembershipPlanDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, MemberDto.class));
 	}
 
-	@PostMapping("/brands/{brandUuid}/membership/plans")
-	@Operation(summary = "Create a new membership plan")
+	@PostMapping("/brands/{brandUuid}/members/register")
+	@Operation(summary = "Create a new member")
 	@ApiResponses({ @ApiResponse(responseCode = "201", content = {
-			@Content(schema = @Schema(implementation = MembershipPlanDto.class), mediaType = "application/json") }),
+			@Content(schema = @Schema(implementation = MemberDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.CREATED)
-	public ResponseEntity<Object> createMembershipPlan(
+	public ResponseEntity<Object> createMember(
 			@PathVariable String brandUuid,
-			@RequestBody PostMembershipPlanDto request) {
+			@RequestBody PostMemberDto request) {
 		
 		if (!request.getBrandUuid().equals(brandUuid)) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Brand UUID in path and request body do not match");
 		}
 		
-		com.iso.hypo.domain.dto.MembershipPlanDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.MembershipPlanDto.class);
+		com.iso.hypo.domain.dto.MemberDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.MemberDto.class);
 
 		try {
-			domainDto = membershipPlanService.create(domainDto);
-		} catch (MembershipPlanException e) {
+			domainDto = memberService.create(domainDto, request.getPassword());
+		} catch (MemberException e) {
 			logger.error(e.getMessage(), e);
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, null);
@@ -147,24 +182,25 @@ public class MembershipPlanController {
 
 		return ResponseEntity.created(
 				ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(domainDto.getUuid()).toUri())
-				.body(modelMapper.map(domainDto, MembershipPlanDto.class));
+				.body(modelMapper.map(domainDto, MemberDto.class));
 	}
 
-	@PutMapping("/brands/{brandUuid}/membership/plans/{uuid}")
-	@Operation(summary = "Update a membership plan")
+	@PutMapping("/brands/{brandUuid}/members/{uuid}")
+	@Operation(summary = "Update a member")
 	@ApiResponses({ @ApiResponse(responseCode = "200", content = {
-			@Content(schema = @Schema(implementation = MembershipPlanDto.class), mediaType = "application/json") }),
+			@Content(schema = @Schema(implementation = MemberDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "404", description = "Not found.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> updateMembershipPlan(
+	public ResponseEntity<Object> updateMember(
 			@PathVariable String brandUuid,
 			@PathVariable String uuid,
+			@Parameter(description = "activate or deactivate Member") 
 			@RequestParam(required = false, defaultValue = "true") boolean isActive,
-			@RequestBody PutMembershipPlanDto request) {
+			@RequestBody PutMemberDto request) {
 		
 		if (!request.getBrandUuid().equals(brandUuid)) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
@@ -174,85 +210,87 @@ public class MembershipPlanController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
-		com.iso.hypo.domain.dto.MembershipPlanDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.MembershipPlanDto.class);
+		com.iso.hypo.domain.dto.MemberDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.MemberDto.class);
 
 		try {
-			domainDto = membershipPlanService.update(domainDto);
-		} catch (MembershipPlanException e) {
+			domainDto = memberService.update(domainDto);
+		} catch (MemberException e) {
 			logger.error(e.getMessage(), e);
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
-		return ResponseEntity.ok(modelMapper.map(domainDto, MembershipPlanDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, MemberDto.class));
 	}
 
-	@PostMapping("/brands/{brandUuid}/membership/plans/{uuid}/activate")
-	@Operation(summary = "Activate a membership plan")
+	@PostMapping("/brands/{brandUuid}/members/{uuid}/activate")
+	@Operation(summary = "Activate a member")
 	@ApiResponses({ @ApiResponse(responseCode = "200", content = {
-			@Content(schema = @Schema(implementation = MembershipPlanDto.class), mediaType = "application/json") }),
+			@Content(schema = @Schema(implementation = MemberDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "404", description = "Not found.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> activateMembershipPlan(
+	public ResponseEntity<Object> activateMember(
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.domain.dto.MembershipPlanDto domainDto;
+		
+		com.iso.hypo.domain.dto.MemberDto domainDto;
 
 		try {
-			domainDto = membershipPlanService.activate(brandUuid, uuid);
-		} catch (MembershipPlanException e) {
+			domainDto = memberService.activate(brandUuid, uuid);
+		} catch (MemberException e) {
 			logger.error(e.getMessage(), e);
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
-		return ResponseEntity.ok(modelMapper.map(domainDto, MembershipPlanDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, MemberDto.class));
 	}
 
-	@PostMapping("/brands/{brandUuid}/membership/plans/{uuid}/deactivate")
-	@Operation(summary = "Deactivate a membership plan")
+	@PostMapping("/brands/{brandUuid}/members/{uuid}/deactivate")
+	@Operation(summary = "Deactivate a member")
 	@ApiResponses({ @ApiResponse(responseCode = "200", content = {
-			@Content(schema = @Schema(implementation = MembershipPlanDto.class), mediaType = "application/json") }),
+			@Content(schema = @Schema(implementation = MemberDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "404", description = "Not found.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> deactivateMembershipPlan(
+	public ResponseEntity<Object> deactivateMember(
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.domain.dto.MembershipPlanDto domainDto;
+		
+		com.iso.hypo.domain.dto.MemberDto domainDto;
 
 		try {
-			domainDto = membershipPlanService.deactivate(brandUuid, uuid);
-		} catch (MembershipPlanException e) {
+			domainDto = memberService.deactivate(brandUuid, uuid);
+		} catch (MemberException e) {
 			logger.error(e.getMessage(), e);
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
-		return ResponseEntity.ok(modelMapper.map(domainDto, MembershipPlanDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, MemberDto.class));
 	}
 
-	@PatchMapping("/brands/{brandUuid}/membership/plans/{uuid}")
-	@Operation(summary = "Patch a membership plan")
+	@PatchMapping("/brands/{brandUuid}/members/{uuid}")
+	@Operation(summary = "Patch a member")
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ApiResponses({ @ApiResponse(responseCode = "200", content = {
-			@Content(schema = @Schema(implementation = MembershipPlanDto.class), mediaType = "application/json") }),
+			@Content(schema = @Schema(implementation = MemberDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "404", description = "Not found.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> patchMembershipPlan(
+	public ResponseEntity<Object> patchMember(
 			@PathVariable String brandUuid,
 			@PathVariable String uuid, 
-			@RequestBody PatchMembershipPlanDto request) {
+			@RequestBody PatchMemberDto request) {
 		
 		if (!request.getBrandUuid().equals(brandUuid)) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
@@ -262,21 +300,21 @@ public class MembershipPlanController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
-		com.iso.hypo.domain.dto.MembershipPlanDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.MembershipPlanDto.class);
+		com.iso.hypo.domain.dto.MemberDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.MemberDto.class);
 
 		try {
-			domainDto = membershipPlanService.patch(domainDto);
-		} catch (MembershipPlanException e) {
+			domainDto = memberService.patch(domainDto);
+		} catch (MemberException e) {
 			logger.error(e.getMessage(), e);
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 
-		return ResponseEntity.ok(modelMapper.map(domainDto, MembershipPlanDto.class));
+		return ResponseEntity.ok(modelMapper.map(domainDto, MemberDto.class));
 	}
 
-	@DeleteMapping("/brands/{brandUuid}/membership/plans/{uuid}")
-	@Operation(summary = "Delete a membership plan")
+	@DeleteMapping("/brands/{brandUuid}/members/{uuid}")
+	@Operation(summary = "Delete a member")
 	@ApiResponses({ @ApiResponse(responseCode = "202"),
 			@ApiResponse(responseCode = "404", description = "Not found.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
@@ -284,12 +322,12 @@ public class MembershipPlanController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.ACCEPTED)
-	public ResponseEntity<Object> deleteMembershipPlan(
+	public ResponseEntity<Object> deleteMember(
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
 		try {
-			membershipPlanService.delete(brandUuid, uuid);
-		} catch (MembershipPlanException e) {
+			memberService.delete(brandUuid, uuid);
+		} catch (MemberException e) {
 			logger.error(e.getMessage(), e);
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);

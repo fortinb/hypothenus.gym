@@ -5,7 +5,7 @@ import com.iso.hypo.services.exception.MemberException;
 
 public interface MemberService {
 
-    MemberDto create(MemberDto memberDto) throws MemberException;
+    MemberDto create(MemberDto memberDto, String password) throws MemberException;
 
     MemberDto update(MemberDto memberDto) throws MemberException;
 
