@@ -31,6 +31,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 import com.iso.hypo.domain.aggregate.Member;
+import com.iso.hypo.domain.contact.PhoneNumber;
 import com.iso.hypo.domain.dto.search.MemberSearchDto;
 import com.iso.hypo.repositories.MemberRepositoryCustom;
 import com.mongodb.client.AggregateIterable;
@@ -54,7 +55,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
 
     @Override
     public Page<MemberSearchDto> searchAutocomplete(String criteria, Pageable pageable, boolean includeInactive) {
-		MongoCollection<Document> collection = mongoTemplate.getCollection("brand");
+		MongoCollection<Document> collection = mongoTemplate.getCollection("member");
 
 		ArrayList<Boolean> isActiveValues = new ArrayList<Boolean>();
 		isActiveValues.add(true);
@@ -66,57 +67,91 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
 				.append("index", indexName)
 				.append("compound", new Document()
 						.append("filter",
-								Arrays.asList(new Document()
-													.append("equals",
-															new Document()
-																.append("value", false)
-																.append("path", "isDeleted")),
-											  new Document()
-													.append("in",
-															new Document()
-																.append("value", isActiveValues)
-																.append("path", "isActive")
-																)))
+							Arrays.asList(new Document()
+										.append("equals",
+											new Document()
+												.append("value", false)
+												.append("path", "isDeleted")),
+							  new Document()
+										.append("in",
+											new Document()
+												.append("value", isActiveValues)
+												.append("path", "isActive")
+										)))
 						.append("must",
-								new Document().append("compound", new Document()
-										.append("should",
-												Arrays.asList(
-														new Document("autocomplete",
-																new Document()
-																	.append("query", criteria)
-																	.append("path", "person.firstname")),
-														new Document("autocomplete",
-																new Document()
-																	.append("query", criteria)
-																	.append("path", "person.lastname")),														
-														new Document("autocomplete",
-																new Document()
-																	.append("query", criteria)
-																	.append("path", "person.email")),
-														new Document("autocomplete",
-																new Document()
-																	.append("query", criteria)
-																	.append("path", "person.phoneNumbers.number")),
-														new Document("autocomplete",
-																new Document()
-																	.append("query", criteria)
-																	.append("path", "person.address.zipCode"))														
-												)))))
+							new Document().append("compound", new Document()
+									.append("should",
+										Arrays.asList(
+											new Document("autocomplete",
+												new Document()
+													.append("query", criteria)
+													.append("path", "person.firstname")),
+											new Document("autocomplete",
+												new Document()
+													.append("query", criteria)
+													.append("path", "person.lastname")),												
+											new Document("autocomplete",
+												new Document()
+													.append("query", criteria)
+													.append("path", "person.email")),
+											new Document("autocomplete",
+												new Document()
+													.append("query", criteria)
+													.append("path", "person.phoneNumbers.number")),
+											new Document("autocomplete",
+												new Document()
+													.append("query", criteria)
+													.append("path", "person.address.zipCode"))													
+										)))))
 				.append("returnStoredSource", true));
 		
-		// String query = searchStage.toJson();
-		// Create a pipeline that searches, projects, and limits the number of results returned.
-		AggregateIterable<MemberSearchDto> aggregationResults = collection.aggregate(
+		// Execute aggregation and defensively map raw Documents to MemberSearchDto so schema mismatches don't drop results
+		AggregateIterable<Document> aggregationResults = collection.aggregate(
 				Arrays.asList(searchStage,
 						project(fields(excludeId(), include("brandUuid","uuid", "person.firstname", "person.lastname", "person.email", "person.phoneNumbers", "person.address.zipCode", "isActive"),
 								metaSearchScore("score"),
 								meta("scoreDetails", "searchScoreDetails"))),
-						sort(Sorts.ascending("lastname", "firstname")),
-						skip(pageable.getPageNumber() * pageable.getPageSize()),
-						limit(searchLimit)),
-				MemberSearchDto.class);
+				sort(Sorts.ascending("lastname", "firstname")),
+				skip(pageable.getPageNumber() * pageable.getPageSize()),
+				limit(searchLimit)),
+				Document.class);
 		
-		List<MemberSearchDto> searchResults = StreamSupport.stream(aggregationResults.spliterator(), false).collect(Collectors.toList());
+		List<Document> documents = StreamSupport.stream(aggregationResults.spliterator(), false).collect(Collectors.toList());
+		
+		List<MemberSearchDto> searchResults = new ArrayList<>();
+		for (Document doc : documents) {
+			MemberSearchDto dto = new MemberSearchDto();
+
+			dto.setBrandUuid(getStringSafe(doc, "brandUuid"));
+			dto.setUuid(getStringSafe(doc, "uuid"));
+			dto.setActive((Boolean) doc.get("isActive"));
+			
+			Object personObj = doc.get("person");
+				Document personDoc = (Document) personObj;
+				
+				dto.setFirstname(getStringSafe(personDoc, "firstname"));
+				dto.setLastname(getStringSafe(personDoc, "lastname"));
+				dto.setEmail(getStringSafe(personDoc, "email"));
+
+				Object pnObj = personDoc.get("phoneNumbers");
+					List<?> pnList = (List<?>) pnObj;
+					List<PhoneNumber> phoneNumbers = new ArrayList<>();
+					for (Object p : pnList) {
+						if (p instanceof Document) {
+							Document pdoc = (Document) p;
+							PhoneNumber phone = new PhoneNumber();
+							phone.setNumber(getStringSafe(pdoc, "number"));
+							phoneNumbers.add(phone);
+						}
+					}
+					dto.setPhoneNumbers(phoneNumbers);
+
+				Object addrObj = personDoc.get("address");
+				dto.setZipcode(getStringSafe((Document) addrObj, "zipCode"));
+
+				searchResults.add(dto);
+		}
+		
 		return new PageImpl<MemberSearchDto>(searchResults, pageable, searchResults.size());
     }
 
@@ -177,5 +212,12 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
         UpdateResult result = mongoTemplate.updateMulti(query, update, Member.class);
 
         return result.getMatchedCount();
+    }
+
+    // helper to safely read strings from Documents
+    private String getStringSafe(Document doc, String key) {
+        if (doc == null || key == null) return null;
+        Object val = doc.get(key);
+        return val == null ? null : val.toString();
     }
 }

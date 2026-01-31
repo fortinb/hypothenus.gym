@@ -167,7 +167,7 @@ public class MemberController {
 			@RequestBody PostMemberDto request) {
 		
 		if (!request.getBrandUuid().equals(brandUuid)) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Brand UUID in path and request body do not match");
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
 		com.iso.hypo.domain.dto.MemberDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.MemberDto.class);

@@ -118,7 +118,7 @@ class MemberControllerTests {
         memberRepository.save(member2);
 
         member = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
-        member.setPreferredGymUuid(member1.getUuid());
+        member.setPreferredGymUuid(null);
         member.setActive(true);
         memberRepository.save(member);
 
@@ -128,7 +128,7 @@ class MemberControllerTests {
 
         for (int i = 0; i < 10; i++) {
             Member item = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
-            item.setPreferredGymUuid(member1.getUuid());
+            item.setPreferredGymUuid(null);
             item.setActive(true);
             memberRepository.save(item);
             members.add(item);
@@ -136,14 +136,14 @@ class MemberControllerTests {
 
         for (int i = 0; i < 4; i++) {
             Member item = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
-            item.setPreferredGymUuid(member2.getUuid());
+            item.setPreferredGymUuid(null);
             item.setActive(true);
             memberRepository.save(item);
             members.add(item);
         }
 
         Member item = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
-        item.setPreferredGymUuid(member2.getUuid());
+        item.setPreferredGymUuid(null);
         item.setActive(false);
         memberRepository.save(item);
     }
@@ -606,7 +606,7 @@ class MemberControllerTests {
         HttpEntity<PutMemberDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
         ResponseEntity<JsonNode> response = testRestTemplate.exchange(
                 HttpUtils.createURL(URI.create(String.format(deleteURI, brand.getUuid(), memberToDelete.getUuid())), port, null),
-                HttpMethod.POST, httpEntity, JsonNode.class);
+                HttpMethod.DELETE, httpEntity, JsonNode.class);
 
         Assertions.assertEquals(HttpStatus.ACCEPTED, response.getStatusCode(), String.format("Member delete error: %s", response.getStatusCode()));
 
@@ -643,7 +643,7 @@ class MemberControllerTests {
     		Page<MemberSearchDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<MemberSearchDto>>() {}, objectMapper);
 				Assertions.assertTrue(page.getNumberOfElements() >= minimumNumberOfElements &&
 						page.getNumberOfElements() <= maximumNumberOfElements,
-						String.format("Brand search return invalid number of results [%s]: %d",
+						String.format("Member search return invalid number of results [%s]: %d",
 							criteria, page.getNumberOfElements()));
 			});
 	}
