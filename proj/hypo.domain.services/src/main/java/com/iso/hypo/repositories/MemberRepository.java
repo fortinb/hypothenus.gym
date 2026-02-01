@@ -17,4 +17,5 @@ public interface MemberRepository extends PagingAndSortingRepository<Member, Str
 
     Page<Member> findAllByBrandUuidAndIsDeletedIsFalseAndIsActiveIsTrue(String brandUuid, Pageable pageable);
 
+	Optional<Member> findByBrandUuidAndPersonEmailAndIsDeletedIsFalse(String brandUuid, String email);
 }

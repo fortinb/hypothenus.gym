@@ -106,19 +106,19 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
 				.append("returnStoredSource", true));
 		
 		// Execute aggregation and defensively map raw Documents to MemberSearchDto so schema mismatches don't drop results
-		AggregateIterable<Document> aggregationResults = collection.aggregate(
+		AggregateIterable<MemberSearchDto> aggregationResults = collection.aggregate(
 				Arrays.asList(searchStage,
-						project(fields(excludeId(), include("brandUuid","uuid", "person.firstname", "person.lastname", "person.email", "person.phoneNumbers", "person.address.zipCode", "isActive"),
+						project(fields(excludeId(), include("brandUuid","uuid", "person.firstname", "person.lastname", "person.email", "person.dateOfBirth","person.phoneNumbers", "person.address.zipCode", "isActive"),
 								metaSearchScore("score"),
 								meta("scoreDetails", "searchScoreDetails"))),
 				sort(Sorts.ascending("lastname", "firstname")),
 				skip(pageable.getPageNumber() * pageable.getPageSize()),
 				limit(searchLimit)),
-				Document.class);
+				MemberSearchDto.class);
 		
-		List<Document> documents = StreamSupport.stream(aggregationResults.spliterator(), false).collect(Collectors.toList());
+		List<MemberSearchDto> searchResults = StreamSupport.stream(aggregationResults.spliterator(), false).collect(Collectors.toList());
 		
-		List<MemberSearchDto> searchResults = new ArrayList<>();
+	/*	List<MemberSearchDto> searchResults = new ArrayList<>();
 		for (Document doc : documents) {
 			MemberSearchDto dto = new MemberSearchDto();
 
@@ -150,7 +150,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
 				dto.setZipcode(getStringSafe((Document) addrObj, "zipCode"));
 
 				searchResults.add(dto);
-		}
+		}*/
 		
 		return new PageImpl<MemberSearchDto>(searchResults, pageable, searchResults.size());
     }

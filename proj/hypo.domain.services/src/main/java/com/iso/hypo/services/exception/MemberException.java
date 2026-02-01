@@ -11,10 +11,12 @@ public class MemberException extends DomainException {
 	public static final String MEMBER_NOT_FOUND = "404";
 	public static final String BRAND_NOT_FOUND = "404";
 	public static final String INVALID_BRAND = "403";
+	public static final String MEMBER_ALREADY_EXIST = "1001";
 	
 	private MemberDto memberDto;
 	
 	private static final long serialVersionUID = 1L;
+
 	
 	public MemberException(String trackingNumber, String code, String message, MemberDto memberDto) {
 		super(trackingNumber, code, message);

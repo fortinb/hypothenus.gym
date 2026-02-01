@@ -98,7 +98,7 @@ public class GymController {
 	}
 
 	@GetMapping("/brands/{brandUuid}/gyms")
-	@PreAuthorize("hasRole('" + Roles.Admin + "')")
+	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "','" + Roles.Member + "')")
 	@Operation(summary = "Retrieve a list of brands")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {

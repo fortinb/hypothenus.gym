@@ -14,16 +14,18 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import com.iso.hypo.common.context.RequestContext;
+import com.iso.hypo.domain.Message;
 import com.iso.hypo.domain.aggregate.Member;
 import com.iso.hypo.domain.dto.MemberDto;
+import com.iso.hypo.domain.enumeration.MessageSeverityEnum;
+import com.iso.hypo.events.event.OperationEnum;
 import com.iso.hypo.repositories.MemberRepository;
 import com.iso.hypo.services.BrandQueryService;
 import com.iso.hypo.services.MemberService;
+import com.iso.hypo.services.event.MemberEvent;
 import com.iso.hypo.services.exception.BrandException;
 import com.iso.hypo.services.exception.MemberException;
 import com.iso.hypo.services.mappers.MemberMapper;
-import com.iso.hypo.services.event.MemberEvent;
-import com.iso.hypo.events.event.OperationEnum;
 
 @Service
 public class MemberServiceImpl implements MemberService {
@@ -55,8 +57,19 @@ public class MemberServiceImpl implements MemberService {
             Assert.notNull(memberDto, "memberDto must not be null");
 
             Member member = memberMapper.toEntity(memberDto);
-
+			
             brandQueryService.assertExists(member.getBrandUuid());
+
+			Optional<Member> existingMember = memberRepository.findByBrandUuidAndPersonEmailAndIsDeletedIsFalse(member.getBrandUuid(), member.getPerson().getEmail());
+			if (existingMember.isPresent()) {
+				Message message = new Message();
+				message.setCode(MemberException.MEMBER_ALREADY_EXIST);
+				message.setDescription("Duplicate member");
+				message.setSeverity(MessageSeverityEnum.warning);
+				existingMember.get().getMessages().add(message);
+				
+				throw new MemberException(requestContext.getTrackingNumber(), MemberException.MEMBER_ALREADY_EXIST, "Duplicate member", memberMapper.toDto(existingMember.get()));
+			}
 
             member.setCreatedOn(Instant.now());
             member.setCreatedBy(requestContext.getUsername());

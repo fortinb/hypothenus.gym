@@ -264,6 +264,35 @@ class MemberControllerTests {
 		assertMember(modelMapper.map(postDto, MemberDto.class), createdDto);
 	}
 	
+	@Test
+	void testPostDuplicateFailure() throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		PostMemberDto postDto = modelMapper.map(MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular), PostMemberDto.class);
+		HttpEntity<PostMemberDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
+
+		// Act
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(postURI, brand.getUuid())), port, null),
+				HttpMethod.POST, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
+				String.format("Post error: %s", response.getStatusCode()));
+
+		// Act
+		response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(postURI, brand.getUuid())), port, null),
+				HttpMethod.POST, httpEntity, JsonNode.class);
+		
+		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
+				String.format("Post error: %s", response.getStatusCode()));
+		
+		MemberDto dupDto = TestResponseUtils.toDto(response, MemberDto.class, objectMapper);
+
+		Assertions.assertEquals(1, dupDto.getMessages().size(),
+				String.format("Duplicate error ,missing message: %s", dupDto.getMessages().size()));
+		
+		Assertions.assertEquals(MemberException.MEMBER_ALREADY_EXIST, dupDto.getMessages().getFirst().getCode(),
+				String.format("Duplicate error, missing message: %s", dupDto.getMessages().getFirst().getCode()));
+	}
+	
 	@ParameterizedTest
 	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
 	void testPostFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {

@@ -1,8 +1,6 @@
 package com.iso.hypo.domain.dto.search;
 
-import java.util.List;
-
-import com.iso.hypo.domain.contact.PhoneNumber;
+import com.iso.hypo.domain.contact.Person;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -15,15 +13,7 @@ public class MemberSearchDto {
 
     private String uuid;
 
-    private String firstname;
-    
-    private String lastname;
-    
-    private String email;
-
-    private List<PhoneNumber> phoneNumbers;
-    
-    private String zipcode;
+	private Person person;
     
     private boolean isActive;
 }
