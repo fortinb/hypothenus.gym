@@ -31,7 +31,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 import com.iso.hypo.domain.aggregate.Member;
-import com.iso.hypo.domain.contact.PhoneNumber;
 import com.iso.hypo.domain.dto.search.MemberSearchDto;
 import com.iso.hypo.repositories.MemberRepositoryCustom;
 import com.mongodb.client.AggregateIterable;
@@ -212,12 +211,5 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
         UpdateResult result = mongoTemplate.updateMulti(query, update, Member.class);
 
         return result.getMatchedCount();
-    }
-
-    // helper to safely read strings from Documents
-    private String getStringSafe(Document doc, String key) {
-        if (doc == null || key == null) return null;
-        Object val = doc.get(key);
-        return val == null ? null : val.toString();
     }
 }

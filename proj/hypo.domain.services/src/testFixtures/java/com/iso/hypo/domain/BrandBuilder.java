@@ -32,7 +32,7 @@ public class BrandBuilder {
 	public static List<PhoneNumber> buildPhoneNumbers() {
 		ArrayList<PhoneNumber> phoneNumbers = new ArrayList<PhoneNumber>();
 		phoneNumbers.add(new PhoneNumber(faker.phoneNumber().cellPhone(), PhoneNumberTypeEnum.Mobile));
-		phoneNumbers.add(new PhoneNumber(faker.phoneNumber().phoneNumber(), PhoneNumberTypeEnum.Home));
+		phoneNumbers.add(new PhoneNumber(faker.phoneNumber().cellPhone(), PhoneNumberTypeEnum.Home));
 
 		return phoneNumbers;
 	}

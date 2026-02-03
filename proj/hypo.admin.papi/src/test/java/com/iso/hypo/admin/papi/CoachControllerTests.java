@@ -367,7 +367,7 @@ class CoachControllerTests {
 			}
 			if (putDto.getPerson().getPhoneNumbers() != null && putDto.getPerson().getPhoneNumbers().size() > 0) {
 				// modify first phone number instead of removing
-				putDto.getPerson().getPhoneNumbers().get(0).setNumber(faker.phoneNumber().phoneNumber());
+				putDto.getPerson().getPhoneNumbers().get(0).setNumber(faker.phoneNumber().cellPhone());
 			}
 			if (putDto.getPerson().getContacts() != null && putDto.getPerson().getContacts().size() > 0) {
 				// modify a property on the first contact sub-object instead of removing
