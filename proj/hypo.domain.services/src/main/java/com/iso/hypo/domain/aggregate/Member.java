@@ -4,6 +4,7 @@ import java.time.Instant;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.iso.hypo.domain.BaseEntity;
@@ -34,6 +35,9 @@ public class Member extends BaseEntity {
 	private MemberTypeEnum memberType;
 	
 	private String preferredGymUuid;
+	
+	@DBRef
+	private User user;
 	
 	public Member() {
 		

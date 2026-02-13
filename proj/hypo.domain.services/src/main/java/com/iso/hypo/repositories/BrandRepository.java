@@ -15,6 +15,8 @@ public interface BrandRepository extends PagingAndSortingRepository<Brand, Strin
 	
 	Optional<Brand> findByCode(String code);
 	
+	Optional<Brand> findByCodeAndIsDeletedIsFalse(String code);
+	
 	Page<Brand> findAllByIsDeletedIsFalse(Pageable pageable);
 	
 	Page<Brand> findAllByIsDeletedIsFalseAndIsActiveIsTrue(Pageable pageable);

@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.iso.hypo.admin.papi.config.security.Roles;
 import com.iso.hypo.admin.papi.controller.util.ControllerErrorHandler;
 import com.iso.hypo.admin.papi.dto.ErrorDto;
 import com.iso.hypo.admin.papi.dto.model.BrandDto;
@@ -32,6 +31,7 @@ import com.iso.hypo.admin.papi.dto.post.PostBrandDto;
 import com.iso.hypo.admin.papi.dto.put.PutBrandDto;
 import com.iso.hypo.admin.papi.dto.search.BrandSearchDto;
 import com.iso.hypo.common.context.RequestContext;
+import com.iso.hypo.domain.security.Roles;
 import com.iso.hypo.services.BrandQueryService;
 import com.iso.hypo.services.BrandService;
 import com.iso.hypo.services.exception.BrandException;
@@ -142,7 +142,8 @@ public class BrandController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "500", description = "Unexpected server error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
-	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "','" + Roles.Member + "')")
+	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "','" + Roles.Coach + "','" + Roles.Member + "')")
+
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> getBrand(
 			@PathVariable String uuid) {
@@ -158,6 +159,35 @@ public class BrandController {
 		return ResponseEntity.ok(modelMapper.map(entity, BrandDto.class));
 	}
 
+	@GetMapping("/brands/code/{code}")
+	@Operation(summary = "Retrieve a specific brand")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", content = {
+					@Content(schema = @Schema(implementation = BrandDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "400", description = "Bad request. The request is invalid or missing required data.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "403", description = "Forbidden. The client does not have permission to access this resource.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "404", description = "Not found. The requested resource does not exist.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "500", description = "Unexpected server error.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
+	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "','" + Roles.Coach + "','" + Roles.Member + "')")
+	@ResponseStatus(value = HttpStatus.OK)
+	public ResponseEntity<Object> getBrandByCode(
+			@PathVariable String code) {
+		com.iso.hypo.domain.dto.BrandDto entity = null;
+		try {
+			entity = brandQueryService.findByCode(code);
+		} catch (BrandException e) {
+			logger.error(e.getMessage(), e);
+
+			return ControllerErrorHandler.buildErrorResponse(e, requestContext, code);
+		}
+
+		return ResponseEntity.ok(modelMapper.map(entity, BrandDto.class));
+	}
+	
 	@PostMapping("/brands")
 	@Operation(summary = "Create a new brand")
 	@ApiResponses({

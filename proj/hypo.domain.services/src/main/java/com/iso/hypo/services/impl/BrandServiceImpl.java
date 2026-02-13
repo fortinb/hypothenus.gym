@@ -9,6 +9,7 @@ import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ import com.iso.hypo.domain.enumeration.MessageSeverityEnum;
 import com.iso.hypo.events.event.OperationEnum;
 import com.iso.hypo.repositories.BrandRepository;
 import com.iso.hypo.services.BrandService;
+import com.iso.hypo.services.clients.AzureGraphClientService;
 import com.iso.hypo.services.event.BrandEvent;
 import com.iso.hypo.services.exception.BrandException;
 import com.iso.hypo.services.mappers.BrandMapper;
@@ -37,16 +39,23 @@ public class BrandServiceImpl implements BrandService {
 	
 	private final ApplicationEventPublisher eventPublisher;
 	
+	private final AzureGraphClientService azureGraphClientService;
+	
+	@Value("${app.test.run:false}")
+	private boolean testRun;
+	
 	private static final Logger logger = LoggerFactory.getLogger(BrandServiceImpl.class);
 
 	public BrandServiceImpl(BrandMapper brandMapper, 
 							BrandRepository brandRepository, 
-							ApplicationEventPublisher eventPublisher, 
+							ApplicationEventPublisher eventPublisher,
+							AzureGraphClientService azureGraphClientService,
 							RequestContext requestContext) {
         this.brandMapper = brandMapper;
         this.brandRepository = brandRepository;
         this.eventPublisher = eventPublisher;
         this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
+		this.azureGraphClientService = azureGraphClientService;
     }
 
 	@Override
@@ -67,11 +76,21 @@ public class BrandServiceImpl implements BrandService {
 				throw new BrandException(requestContext.getTrackingNumber(), BrandException.BRAND_CODE_ALREADY_EXIST, "Duplicate brand code", brandMapper.toDto(existingBrand.get()));
 			}
 
+			// persist the brand
 			brand.setCreatedOn(Instant.now());
 			brand.setCreatedBy(requestContext.getUsername());
 			brand.setUuid(UUID.randomUUID().toString());
-			
+
 			Brand saved = brandRepository.save(brand);
+			
+			// Create a group in identity provider for the brand
+			// Skip external side-effect during JUnit runs
+			if (!testRun) {
+				azureGraphClientService.createGroup(brand.getUuid(), brand.getName());
+			} else {
+				logger.debug("Skipping Azure Graph createGroup() because app.test-run=true. brandUuid={}", saved.getUuid());
+			}
+			
 			return brandMapper.toDto(saved);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}", brandDto != null ? brandDto.getUuid() : null, e);

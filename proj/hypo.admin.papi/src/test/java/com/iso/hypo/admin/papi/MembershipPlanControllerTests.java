@@ -27,6 +27,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
@@ -50,13 +51,14 @@ import com.iso.hypo.repositories.BrandRepository;
 import com.iso.hypo.repositories.MembershipPlanRepository;
 import com.iso.hypo.services.exception.MembershipPlanException;
 import com.iso.hypo.tests.http.HttpUtils;
-import com.iso.hypo.tests.security.Roles;
+import com.iso.hypo.domain.security.Roles;
 import com.iso.hypo.tests.security.Users;
 import com.iso.hypo.tests.utils.TestResponseUtils;
 
 import net.datafaker.Faker;
 
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@TestPropertySource(properties = "app.test.run=true")
 @TestInstance(Lifecycle.PER_CLASS)
 class MembershipPlanControllerTests {
 

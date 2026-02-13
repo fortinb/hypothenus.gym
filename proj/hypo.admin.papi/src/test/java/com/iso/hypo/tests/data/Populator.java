@@ -5,24 +5,22 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.iso.hypo.domain.BrandBuilder;
+import com.iso.hypo.admin.papi.dto.model.BrandDto;
 import com.iso.hypo.domain.CoachBuilder;
-import com.iso.hypo.domain.MemberBuilder;
 import com.iso.hypo.domain.CourseBuilder;
 import com.iso.hypo.domain.GymBuilder;
+import com.iso.hypo.domain.MemberBuilder;
 import com.iso.hypo.domain.MembershipPlanBuilder;
-import com.iso.hypo.domain.aggregate.Brand;
 import com.iso.hypo.domain.aggregate.Coach;
-import com.iso.hypo.domain.aggregate.Member;
 import com.iso.hypo.domain.aggregate.Course;
 import com.iso.hypo.domain.aggregate.Gym;
+import com.iso.hypo.domain.aggregate.Member;
 import com.iso.hypo.domain.aggregate.MembershipPlan;
 import com.iso.hypo.domain.enumeration.MemberTypeEnum;
-import com.iso.hypo.repositories.BrandRepository;
 import com.iso.hypo.repositories.CoachRepository;
-import com.iso.hypo.repositories.MemberRepository;
 import com.iso.hypo.repositories.CourseRepository;
 import com.iso.hypo.repositories.GymRepository;
+import com.iso.hypo.repositories.MemberRepository;
 import com.iso.hypo.repositories.MembershipPlanRepository;
 
 import net.datafaker.Faker;
@@ -30,17 +28,15 @@ import net.datafaker.Faker;
 public class Populator {
 
 	// Use constructor injection instead of field injection
-	private final BrandRepository brandRepository;
 	private final GymRepository gymRepository;
 	private final CoachRepository coachRepository;
 	private final MemberRepository memberRepository;
 	private final CourseRepository courseRepository;
 	private final MembershipPlanRepository membershipPlanRepository;
-
+	
 	@Autowired
-	public Populator(BrandRepository brandRepository, GymRepository gymRepository, CoachRepository coachRepository,
+	public Populator(GymRepository gymRepository, CoachRepository coachRepository,
 			CourseRepository courseRepository,MembershipPlanRepository membershipPlanRepository, MemberRepository memberRepository) {
-		this.brandRepository = brandRepository;
 		this.gymRepository = gymRepository;
 		this.coachRepository = coachRepository;
 		this.memberRepository = memberRepository;
@@ -50,12 +46,7 @@ public class Populator {
 
 	private Faker faker = new Faker();
 
-	public Brand populateFullBrand(String brandCode, String brandName) {
-		Brand brand;
-
-		brand = BrandBuilder.build(brandCode, brandName);
-		brand = brandRepository.save(brand);
-
+	public BrandDto populateFullBrand(BrandDto brand) {
 		// Gyms
 		final String gymCode_boucherville = "boucherville";
 		final String gymCode_longueuil = "longueuil";

@@ -71,6 +71,24 @@ public class BrandQueryServiceImpl implements BrandQueryService {
     }
     
     @Override
+    public BrandDto findByCode(String brandCode)  throws BrandException {
+        try {        	
+            Optional<Brand> entity = brandRepository.findByCodeAndIsDeletedIsFalse(brandCode);
+            if (entity.isEmpty()) {
+                throw new BrandException(requestContext.getTrackingNumber(), BrandException.BRAND_NOT_FOUND, "Brand not found");
+            }
+
+            return brandMapper.toDto(entity.get());
+        } catch (Exception e) {
+            logger.error("Error - brandUuid={}", brandCode, e);
+            if (e instanceof BrandException) {
+                throw (BrandException) e;
+            }
+            throw new BrandException(requestContext.getTrackingNumber(), BrandException.FIND_FAILED, e);
+        }
+    }
+    
+    @Override
     public Page<BrandSearchDto> search(int page, int pageSize, String criteria, boolean includeInactive)
             throws BrandException {
         try {

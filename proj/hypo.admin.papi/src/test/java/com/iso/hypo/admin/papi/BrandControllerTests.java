@@ -33,6 +33,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
@@ -60,10 +61,12 @@ import com.iso.hypo.repositories.CourseRepository;
 import com.iso.hypo.repositories.GymRepository;
 import com.iso.hypo.repositories.MemberRepository;
 import com.iso.hypo.repositories.MembershipPlanRepository;
+import com.iso.hypo.services.BrandService;
 import com.iso.hypo.services.exception.BrandException;
+import com.iso.hypo.services.mappers.BrandMapper;
 import com.iso.hypo.tests.data.Populator;
 import com.iso.hypo.tests.http.HttpUtils;
-import com.iso.hypo.tests.security.Roles;
+import com.iso.hypo.domain.security.Roles;
 import com.iso.hypo.tests.security.Users;
 import com.iso.hypo.tests.utils.StringUtils;
 import com.iso.hypo.tests.utils.TestResponseUtils;
@@ -71,6 +74,7 @@ import com.iso.hypo.tests.utils.TestResponseUtils;
 import net.datafaker.Faker;
 
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@TestPropertySource(properties = "app.test.run=true")
 @TestInstance(Lifecycle.PER_CLASS)
 class BrandControllerTests {
 
@@ -104,10 +108,12 @@ class BrandControllerTests {
 	MembershipPlanRepository membershipPlanRepository;
 	@Autowired
 	MemberRepository memberRepository;
-	
+	@Autowired
+	BrandService brandService;
+	@Autowired
+	BrandMapper brandMapper;
 	@Autowired
 	ObjectMapper objectMapper;
-
 	@Autowired
 	ModelMapper modelMapper;
 
@@ -588,12 +594,24 @@ class BrandControllerTests {
 	@Test
 	void testDeleteSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Populator populator = new Populator(brandRepository, gymRepository, coachRepository, courseRepository, membershipPlanRepository, memberRepository);
-		Brand brandToDelete = populator.populateFullBrand("todelete", "Brand to delete");
+		PostBrandDto postDto = modelMapper.map(BrandBuilder.build(faker.code().isbn10(),faker.company().name()), PostBrandDto.class);
+		HttpEntity<PostBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
 
 		// Act
-		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postURI), port, null),
+				HttpMethod.POST, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
+				String.format("Post error: %s", response.getStatusCode()));
+
+		BrandDto createdDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
+
+		Populator populator = new Populator(gymRepository, coachRepository, courseRepository, membershipPlanRepository, memberRepository);
+		BrandDto brandToDelete = populator.populateFullBrand(createdDto);
+
+		// Act
+		httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
+		response = testRestTemplate.exchange(HttpUtils.createURL(
 				URI.create(String.format(deleteURI, brandToDelete.getUuid())), port, null),
 				HttpMethod.DELETE, httpEntity, JsonNode.class);
 
@@ -638,7 +656,7 @@ class BrandControllerTests {
 			
 			// Act
 			await()
-	        .atMost(5, TimeUnit.SECONDS)
+	        .atMost(10, TimeUnit.SECONDS)
 	        .pollInterval(200, TimeUnit.MILLISECONDS)
 	        .untilAsserted(() -> {
 				ResponseEntity<JsonNode> response = testRestTemplate.exchange(

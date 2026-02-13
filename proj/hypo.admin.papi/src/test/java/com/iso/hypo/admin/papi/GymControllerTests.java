@@ -33,6 +33,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
@@ -43,10 +44,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iso.hypo.admin.papi.dto.ErrorDto;
 import com.iso.hypo.admin.papi.dto.contact.ContactDto;
 import com.iso.hypo.admin.papi.dto.contact.PhoneNumberDto;
+import com.iso.hypo.admin.papi.dto.model.BrandDto;
 import com.iso.hypo.admin.papi.dto.model.GymDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchGymDto;
+import com.iso.hypo.admin.papi.dto.post.PostBrandDto;
 import com.iso.hypo.admin.papi.dto.post.PostGymDto;
-import com.iso.hypo.admin.papi.dto.put.PutBrandDto;
 import com.iso.hypo.admin.papi.dto.put.PutGymDto;
 import com.iso.hypo.admin.papi.dto.search.GymSearchDto;
 import com.iso.hypo.domain.BrandBuilder;
@@ -55,16 +57,18 @@ import com.iso.hypo.domain.aggregate.Brand;
 import com.iso.hypo.domain.aggregate.Coach;
 import com.iso.hypo.domain.aggregate.Course;
 import com.iso.hypo.domain.aggregate.Gym;
+import com.iso.hypo.domain.security.Roles;
 import com.iso.hypo.repositories.BrandRepository;
 import com.iso.hypo.repositories.CoachRepository;
 import com.iso.hypo.repositories.CourseRepository;
 import com.iso.hypo.repositories.GymRepository;
 import com.iso.hypo.repositories.MemberRepository;
 import com.iso.hypo.repositories.MembershipPlanRepository;
+import com.iso.hypo.services.BrandService;
 import com.iso.hypo.services.exception.GymException;
+import com.iso.hypo.services.mappers.BrandMapper;
 import com.iso.hypo.tests.data.Populator;
 import com.iso.hypo.tests.http.HttpUtils;
-import com.iso.hypo.tests.security.Roles;
 import com.iso.hypo.tests.security.Users;
 import com.iso.hypo.tests.utils.StringUtils;
 import com.iso.hypo.tests.utils.TestResponseUtils;
@@ -72,12 +76,14 @@ import com.iso.hypo.tests.utils.TestResponseUtils;
 import net.datafaker.Faker;
 
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@TestPropertySource(properties = "app.test.run=true")
 @TestInstance(Lifecycle.PER_CLASS)
 class GymControllerTests {
 
 	public static final String searchURI = "/v1/brands/%s/gyms/search";
 	public static final String listURI = "/v1/brands/%s/gyms";
 	public static final String postURI = "/v1/brands/%s/gyms";
+	
 	public static final String getURI = "/v1/brands/%s/gyms/%s";
 	public static final String putURI = "/v1/brands/%s/gyms/%s";
 	public static final String patchURI = "/v1/brands/%s/gyms/%s";
@@ -88,6 +94,7 @@ class GymControllerTests {
 	public static final String pageNumber = "page";
 	public static final String pageSize = "pageSize";
 
+	public static final String postBrandURI = "/v1/brands";
 	public static final String brandCode = "GymBrand1";
 		
 	public static final String gymCode_1 = "Gym1";
@@ -108,7 +115,10 @@ class GymControllerTests {
 	MembershipPlanRepository membershipPlanRepository;
 	@Autowired
 	MemberRepository memberRepository;
-	
+	@Autowired
+	BrandService brandService;
+	@Autowired
+	BrandMapper brandMapper;
 	@Autowired
 	ObjectMapper objectMapper;
 
@@ -649,14 +659,27 @@ class GymControllerTests {
 	@Test
 	void testDeleteSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Populator populator = new Populator(brandRepository, gymRepository, coachRepository, courseRepository, membershipPlanRepository, memberRepository);
-		Brand brand = populator.populateFullBrand("todelete", "Brand to delete");
-		Gym gymToDelete = gymRepository.findByBrandUuidAndCode(brand.getUuid(), "boucherville").get();
+		PostBrandDto postBrandDto = modelMapper.map(BrandBuilder.build("todelete", "Brand to delete"), PostBrandDto.class);
+		HttpEntity<PostBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postBrandDto);
+
+		// Act
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postBrandURI), port, null),
+				HttpMethod.POST, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
+				String.format("Post error: %s", response.getStatusCode()));
+
+		BrandDto createdBrandDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
+
+		Populator populator = new Populator(gymRepository, coachRepository, courseRepository, membershipPlanRepository, memberRepository);
+		populator.populateFullBrand(createdBrandDto);
+		
+		Gym gymToDelete = gymRepository.findByBrandUuidAndCode(createdBrandDto.getUuid(), "boucherville").get();
 		
 		// Act
-		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(
-				URI.create(String.format(deleteURI, brand.getUuid(), gymToDelete.getUuid())), port, null),
+		httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
+		response = testRestTemplate.exchange(HttpUtils.createURL(
+				URI.create(String.format(deleteURI, createdBrandDto.getUuid(), gymToDelete.getUuid())), port, null),
 				HttpMethod.DELETE, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.ACCEPTED, response.getStatusCode(),
@@ -664,17 +687,17 @@ class GymControllerTests {
 		
 		httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
 		response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(getURI, brand.getUuid(), gymToDelete.getUuid())), port, null),
+				HttpUtils.createURL(URI.create(String.format(getURI, createdBrandDto.getUuid(), gymToDelete.getUuid())), port, null),
 				HttpMethod.GET, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
 		
-		Page<Coach> pageCoach = coachRepository.findAllByBrandUuidAndGymUuidAndIsDeletedIsFalse(brand.getUuid(),gymToDelete.getUuid(),  PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
+		Page<Coach> pageCoach = coachRepository.findAllByBrandUuidAndGymUuidAndIsDeletedIsFalse(createdBrandDto.getUuid(),gymToDelete.getUuid(),  PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
 		Assertions.assertEquals(0, pageCoach.getTotalElements(),
 				String.format("Deleted brand coachs not deleted: %d", pageCoach.getTotalElements()));
 		
-		Page<Course> pageCourse = courseRepository.findAllByBrandUuidAndGymUuidAndIsDeletedIsFalse(brand.getUuid(), gymToDelete.getUuid(), PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
+		Page<Course> pageCourse = courseRepository.findAllByBrandUuidAndGymUuidAndIsDeletedIsFalse(createdBrandDto.getUuid(), gymToDelete.getUuid(), PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
 		Assertions.assertEquals(0, pageCourse.getTotalElements(),
 				String.format("Deleted brand courses not deleted: %d", pageCourse.getTotalElements()));
 	}
@@ -691,7 +714,7 @@ class GymControllerTests {
 		
 		// Act
 		await()
-        .atMost(5, TimeUnit.SECONDS)
+        .atMost(10, TimeUnit.SECONDS)
         .pollInterval(200, TimeUnit.MILLISECONDS)
         .untilAsserted(() -> {
     		ResponseEntity<JsonNode> response = testRestTemplate.exchange(

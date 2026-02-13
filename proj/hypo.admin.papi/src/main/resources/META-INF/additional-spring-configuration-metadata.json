@@ -63,5 +63,30 @@
     "name": "spring.data.mongodb.search.index.member.name",
     "type": "java.lang.String",
     "description": "A description for 'spring.data.mongodb.search.index.member.name'"
+  },
+  {
+    "name": "azure.entra.app.clientid",
+    "type": "java.lang.String",
+    "description": "A description for 'azure.entra.app.clientId'"
+  },
+  {
+    "name": "azure.entra.app.clientsecret",
+    "type": "java.lang.String",
+    "description": "A description for 'azure.entra.app.clientSecret'"
+  },
+  {
+    "name": "azure.entra.app.tenantid",
+    "type": "java.lang.String",
+    "description": "A description for 'azure.entra.app.tenantId'"
+  },
+  {
+    "name": "azure.entra.app.domain.name",
+    "type": "java.lang.String",
+    "description": "A description for 'azure.entra.app.domain.name'"
+  },
+  {
+    "name": "app.test.run",
+    "type": "java.lang.String",
+    "description": "A description for 'app.test.run'"
   }
 ]}
