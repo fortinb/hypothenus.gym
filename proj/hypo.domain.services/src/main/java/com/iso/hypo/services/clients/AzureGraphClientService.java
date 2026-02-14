@@ -2,23 +2,30 @@ package com.iso.hypo.services.clients;
 
 import java.util.Optional;
 
-import com.iso.hypo.domain.dto.MemberDto;
 import com.microsoft.graph.models.AppRole;
 import com.microsoft.graph.models.Group;
 import com.microsoft.graph.models.User;
 
 public interface AzureGraphClientService {
-	User createUser(MemberDto memberDto, String password) throws Exception;
-	
-	AppRole assignRoleToUser(String userId, String roleName) throws Exception;
+	User createUser(User user) throws Exception;
+
+	User updateUser(User user) throws Exception;
 	
 	Optional<User> userExists(String email) throws Exception;
-
-	boolean isUserMemberOfGroup(String userId, String groupName) throws Exception;
-
+	
+	Optional<User> findUser(String userId) throws Exception;
+	
 	void deleteUser(String userId) throws Exception;
+	
+	AppRole assignRole(String userId, String roleName) throws Exception;
+	
+	void unassignRole(String userId, String roleName) throws Exception;
 
-	Group assignUserToGroup(String userId, String groupName) throws Exception;
+	boolean isMemberOfGroup(String userId, String groupName) throws Exception;
+
+	Group addToGroup(String userId, String groupName) throws Exception;
+	
+	void removeFromGroup(String userId, String groupName) throws Exception;
 	
 	Group createGroup(String groupName, String groupDescription) throws Exception;
 	

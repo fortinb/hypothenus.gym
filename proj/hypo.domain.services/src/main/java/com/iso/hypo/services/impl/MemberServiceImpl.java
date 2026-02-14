@@ -31,6 +31,7 @@ import com.iso.hypo.services.event.MemberEvent;
 import com.iso.hypo.services.exception.BrandException;
 import com.iso.hypo.services.exception.MemberException;
 import com.iso.hypo.services.mappers.MemberMapper;
+import com.microsoft.graph.models.PasswordProfile;
 
 @Service
 public class MemberServiceImpl implements MemberService {
@@ -103,13 +104,24 @@ public class MemberServiceImpl implements MemberService {
 					azureGraphClientService.deleteUser(idpUser.get().getId());
 				}
 				// Create user in identity provider
-				com.microsoft.graph.models.User createdUser = azureGraphClientService.createUser(memberDto, password);
+				com.microsoft.graph.models.User newUser = new com.microsoft.graph.models.User();
+				
+				newUser.setAccountEnabled(false);
+				newUser.setDisplayName(memberDto.getPerson().getFirstname() + " " + memberDto.getPerson().getLastname());
+				newUser.setGivenName(memberDto.getPerson().getFirstname());
+				newUser.setSurname(memberDto.getPerson().getLastname());
+				newUser.setMailNickname(memberDto.getUuid());
+				newUser.setUserPrincipalName(memberDto.getUuid());
+				newUser.setPasswordProfile(new PasswordProfile());
+				newUser.getPasswordProfile().setForceChangePasswordNextSignIn(true);
+				newUser.getPasswordProfile().setPassword(password);
+				com.microsoft.graph.models.User createdUser = azureGraphClientService.createUser(newUser);
 
 				// Assign role to user
-				azureGraphClientService.assignRoleToUser(createdUser.getId(), Roles.Member);
+				azureGraphClientService.assignRole(createdUser.getId(), Roles.Member);
 
 				// Assign Group to user
-				azureGraphClientService.assignUserToGroup(createdUser.getId(), member.getBrandUuid());
+				azureGraphClientService.addToGroup(createdUser.getId(), member.getBrandUuid());
 				
 				// Persist user
 				User user = new User();

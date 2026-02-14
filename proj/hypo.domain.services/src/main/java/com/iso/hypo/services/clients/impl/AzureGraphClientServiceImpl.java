@@ -6,13 +6,11 @@ import java.util.UUID;
 
 import com.azure.identity.ClientSecretCredential;
 import com.azure.identity.ClientSecretCredentialBuilder;
-import com.iso.hypo.domain.dto.MemberDto;
 import com.iso.hypo.services.clients.AzureGraphClientService;
 import com.microsoft.graph.models.AppRole;
 import com.microsoft.graph.models.AppRoleAssignment;
 import com.microsoft.graph.models.Application;
 import com.microsoft.graph.models.Group;
-import com.microsoft.graph.models.PasswordProfile;
 import com.microsoft.graph.models.ReferenceCreate;
 import com.microsoft.graph.models.ServicePrincipal;
 import com.microsoft.graph.models.User;
@@ -46,32 +44,28 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 	}
 
 	@Override
-	public User createUser(MemberDto memberDto, String password) {
-		try {
-			User newUser = new User();
-			newUser.setAccountEnabled(false);
-			newUser.setDisplayName(memberDto.getPerson().getFirstname() + " " + memberDto.getPerson().getLastname());
-			newUser.setGivenName(memberDto.getPerson().getFirstname());
-			newUser.setSurname(memberDto.getPerson().getLastname());
-			newUser.setMailNickname(memberDto.getUuid());
-			newUser.setUserPrincipalName(String.format("%s@%s", memberDto.getUuid(), domainName));
-			newUser.setPasswordProfile(new PasswordProfile());
-			newUser.getPasswordProfile().setForceChangePasswordNextSignIn(true);
-			newUser.getPasswordProfile().setPassword(password);
-
-			User createdUser = graphClient.users().post(newUser);
-
-			return createdUser;
-
-		} catch (Exception ex) {
-
-			throw new RuntimeException("Graph API call failed", ex);
+	public User createUser(User user) throws Exception {
+		if (user == null) {
+			throw new IllegalArgumentException("User must not be null");
 		}
+		
+		user.setUserPrincipalName(String.format("%s@%s", user.getUserPrincipalName(), domainName));
+		
+		return graphClient.users().post(user);
 	}
-
+	
 	@Override
-	public AppRole assignRoleToUser(String userId, String roleName) {
-		// Get application 
+	public User updateUser(User user) throws Exception {
+		if (user == null) {
+			throw new IllegalArgumentException("User must not be null");
+		}
+		
+		return graphClient.users().byUserId(user.getId()).patch(user);
+	}
+	
+	@Override
+	public AppRole assignRole(String userId, String roleName) throws Exception {
+		// Get application
 		Application app = graphClient.applicationsWithAppId(clientId).get();
 
 		// Find the role by name
@@ -84,6 +78,17 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 				.findFirst().orElseThrow(
 						() -> new IllegalStateException("Service principal not found for appId " + app.getAppId()));
 
+		// Retrieve the user's role assignments and find the one matching the role to unassigns
+		var assignmentsPage = graphClient.users().byUserId(userId).appRoleAssignments().get(req -> {
+			req.queryParameters.filter = "appRoleId eq " + role.getId();
+			req.queryParameters.top = 1;
+			req.queryParameters.select = new String[] { "id" };
+		});
+				
+		if (assignmentsPage != null && assignmentsPage.getValue() != null && !assignmentsPage.getValue().isEmpty()) {
+			return role; // Assignment found, nothing to assigns
+		}
+		
 		AppRoleAssignment assignment = new AppRoleAssignment();
 		assignment.setPrincipalId(UUID.fromString(userId));
 		assignment.setResourceId(UUID.fromString(servicePrincipal.getId()));
@@ -93,6 +98,32 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 		graphClient.users().byUserId(userId).appRoleAssignments().post(assignment);
 
 		return role;
+	}
+	
+	@Override
+	public void unassignRole(String userId, String roleName) throws Exception {
+		// Get application
+		Application app = graphClient.applicationsWithAppId(clientId).get();
+
+		// Find the role by name
+		Optional<AppRole> roleMember = app.getAppRoles().stream().filter(r -> r.getDisplayName().equals(roleName))
+				.findFirst();
+		AppRole role = roleMember.orElseThrow(() -> new IllegalStateException("App role not found"));
+		
+		// Retrieve the user's role assignments and find the one matching the role to unassigns
+		var assignmentsPage = graphClient.users().byUserId(userId).appRoleAssignments().get(req -> {
+			req.queryParameters.filter = "appRoleId eq " + role.getId();
+			req.queryParameters.top = 1;
+			req.queryParameters.select = new String[] { "id" };
+		});
+
+		if (assignmentsPage == null || assignmentsPage.getValue() == null || assignmentsPage.getValue().isEmpty()) {
+			return; // No assignment found, nothing to unassigns
+		}
+
+		String assignmentId = assignmentsPage.getValue().get(0).getId();
+
+		graphClient.users().byUserId(userId).appRoleAssignments().byAppRoleAssignmentId(assignmentId).delete();
 	}
 
 	@Override
@@ -124,9 +155,28 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 
 		return Optional.of(graphClient.users().byUserId(userId).get());
 	}
+	
+	@Override
+	public Optional<User> findUser(String userId) throws Exception {
+		if (userId == null || userId.isBlank()) {
+			throw new IllegalArgumentException("userId must not be null or blank");
+		}
+		
+		// Get user
+		Optional<User> user = Optional.of(graphClient.users().byUserId(userId).get());
+		if (user.isEmpty()) {
+			return Optional.empty();
+		}
+		
+		// Retrieve roles
+		var assignments = graphClient.users().byUserId(userId).appRoleAssignments().get();
+		user.get().setAppRoleAssignments(assignments.getValue());
+		
+		return user;
+	}
 
 	@Override
-	public boolean isUserMemberOfGroup(String userId, String groupName) throws Exception {
+	public boolean isMemberOfGroup(String userId, String groupName) throws Exception {
 		if (userId == null || userId.isBlank()) {
 			throw new IllegalArgumentException("userId must not be null or blank");
 		}
@@ -167,8 +217,8 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 	}
 
 	@Override
-	public Group assignUserToGroup(String userId, String groupName) {
-		 // 1) Resolve group by displayName
+	public Group addToGroup(String userId, String groupName) {
+		// 1) Resolve group by displayName
 		var groupsPage = graphClient.groups().get(req -> {
 			req.queryParameters.filter = "displayName eq '" + groupName.replace("'", "''") + "'";
 			req.queryParameters.top = 1;
@@ -185,27 +235,42 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 		ReferenceCreate ref = new ReferenceCreate();
 		ref.setOdataId("https://graph.microsoft.com/v1.0/directoryObjects/" + userId);
 
-		graphClient.groups()
-				.byGroupId(group.getId())
-				.members()
-				.ref()
-				.post(ref);
+		graphClient.groups().byGroupId(group.getId()).members().ref().post(ref);
 
 		return group;
+	}
+	
+	@Override
+	public void removeFromGroup(String userId, String groupName) throws Exception {
+		// 1) Resolve group by displayName
+		var groupsPage = graphClient.groups().get(req -> {
+			req.queryParameters.filter = "displayName eq '" + groupName.replace("'", "''") + "'";
+			req.queryParameters.top = 1;
+			req.queryParameters.select = new String[] { "id", "displayName" };
+		});
+
+		if (groupsPage == null || groupsPage.getValue() == null || groupsPage.getValue().isEmpty()) {
+			throw new IllegalStateException("Group not found: " + groupName);
+		}
+
+		Group group = groupsPage.getValue().get(0);
+
+		// 2) Remove user from group: DELETE /groups/{groupId}/members/{userId}/$ref
+		graphClient.groups().byGroupId(group.getId()).members().byDirectoryObjectId(userId).ref().delete();
+
 	}
 
 	@Override
 	public Group createGroup(String groupName, String groupDescription) throws Exception {
-		 Group newGroup = new Group();
-		 newGroup.setDisplayName(groupName);
-		 newGroup.setDescription(groupDescription);
-		 newGroup.setMailEnabled(false);
-		 newGroup.setSecurityEnabled(true);
-		 newGroup.setMailNickname(groupName);
+		Group newGroup = new Group();
+		
+		newGroup.setDisplayName(groupName);
+		newGroup.setDescription(groupDescription);
+		newGroup.setMailEnabled(false);
+		newGroup.setSecurityEnabled(true);
+		newGroup.setMailNickname(groupName);
 
-		 Group createdGroup = graphClient.groups().post(newGroup);
-
-		 return createdGroup;
+		return graphClient.groups().post(newGroup);
 	}
 
 	@Override
@@ -224,7 +289,7 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 		for (Group group : groupsPage.getValue()) {
 			graphClient.groups().byGroupId(group.getId()).delete();
 		}
-		
+
 	}
 
 	@Override
@@ -245,4 +310,3 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 		}
 	}
 }
-

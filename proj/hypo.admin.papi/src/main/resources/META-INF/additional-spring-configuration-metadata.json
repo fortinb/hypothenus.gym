@@ -88,5 +88,10 @@
     "name": "app.test.run",
     "type": "java.lang.String",
     "description": "A description for 'app.test.run'"
+  },
+  {
+    "name": "spring.data.mongodb.search.index.user.name",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.data.mongodb.search.index.user.name'"
   }
 ]}

@@ -9,6 +9,7 @@ import com.iso.hypo.common.exception.DomainException;
 import com.iso.hypo.events.event.OperationEnum;
 import com.iso.hypo.services.MemberService;
 import com.iso.hypo.services.event.BrandEvent;
+import com.iso.hypo.services.event.UserEvent;
 import com.iso.hypo.services.exception.MemberException;
 
 @Component
@@ -36,5 +37,20 @@ public class MemberListener {
 			logger.error("Error - brandId={}", event.getEntity().getUuid(), e);
 			throw e;
 		}
+	}	
+    
+    @EventListener
+    public void onUserEvent(UserEvent event) throws DomainException {
+		if (event.getOperation() == OperationEnum.delete) {
+			handleDeleteUser(event);
+		}
+    }
+    
+    private void handleDeleteUser(UserEvent event) throws DomainException {
+		/*
+		 * try { //memberService.(event.getEntity().getUuid()); } catch (MemberException
+		 * e) { logger.error("Error - brandId={}", event.getEntity().getUuid(), e);
+		 * throw e; }
+		 */
 	}	
 }

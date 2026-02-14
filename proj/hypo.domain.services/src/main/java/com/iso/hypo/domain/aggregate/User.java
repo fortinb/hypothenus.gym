@@ -18,11 +18,19 @@ public class User extends BaseEntity {
 	@Id
 	private String id;
 	
+	private String uuid;
+	
 	private String idpId;
 	
 	@Indexed (unique = true)
 	@NonNull
 	private String upn;
+	
+	private String firstname;
+
+	private String lastname;
+	
+	private String email;
 	
 	public User() {
 	}
