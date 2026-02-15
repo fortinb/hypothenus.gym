@@ -18,5 +18,6 @@ public interface UserService {
 	UserDto deactivate(String userUuid) throws UserException;
 
 	UserDto update(UserDto userDto) throws UserException;
-
+	
+	UserDto patch(UserDto userDto) throws UserException;
 }

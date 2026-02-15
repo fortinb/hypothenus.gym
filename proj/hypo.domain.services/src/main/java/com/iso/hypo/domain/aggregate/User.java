@@ -1,5 +1,7 @@
 package com.iso.hypo.domain.aggregate;
 
+import java.time.Instant;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -33,5 +35,15 @@ public class User extends BaseEntity {
 	private String email;
 	
 	public User() {
+		
+	}
+	
+	public User(String firstname, String lastname, String email, boolean isActive, Instant activatedOn, Instant deactivatedOn) {
+		super(isActive);
+		this.firstname = firstname;
+		this.lastname = lastname;
+		this.email = email;
+		this.activatedOn = activatedOn;
+		this.deactivatedOn = deactivatedOn;
 	}
 }

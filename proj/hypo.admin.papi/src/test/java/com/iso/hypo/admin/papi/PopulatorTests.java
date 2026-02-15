@@ -35,6 +35,7 @@ import com.iso.hypo.repositories.CourseRepository;
 import com.iso.hypo.repositories.GymRepository;
 import com.iso.hypo.repositories.MemberRepository;
 import com.iso.hypo.repositories.MembershipPlanRepository;
+import com.iso.hypo.repositories.UserRepository;
 import com.iso.hypo.services.BrandService;
 import com.iso.hypo.services.clients.AzureGraphClientService;
 import com.iso.hypo.services.mappers.BrandMapper;
@@ -67,6 +68,8 @@ class PopulatorTests {
 	@Autowired
 	MemberRepository memberRepository;
 	@Autowired
+	UserRepository userRepository;
+	@Autowired
 	ObjectMapper objectMapper;
 	@Autowired
 	BrandService brandService;
@@ -94,6 +97,7 @@ class PopulatorTests {
 			e.printStackTrace();
 		}
 		
+		userRepository.deleteAll();
 		brandRepository.deleteAll();
 		gymRepository.deleteAll();
 		coachRepository.deleteAll();

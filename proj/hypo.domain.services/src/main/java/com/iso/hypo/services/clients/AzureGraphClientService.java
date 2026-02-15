@@ -3,6 +3,7 @@ package com.iso.hypo.services.clients;
 import java.util.Optional;
 
 import com.microsoft.graph.models.AppRole;
+import com.microsoft.graph.models.AppRoleAssignment;
 import com.microsoft.graph.models.Group;
 import com.microsoft.graph.models.User;
 
@@ -21,6 +22,8 @@ public interface AzureGraphClientService {
 	
 	void unassignRole(String userId, String roleName) throws Exception;
 
+	String getRoleName(AppRoleAssignment appRoleAssignment) throws Exception;
+	
 	boolean isMemberOfGroup(String userId, String groupName) throws Exception;
 
 	Group addToGroup(String userId, String groupName) throws Exception;
@@ -32,4 +35,6 @@ public interface AzureGraphClientService {
 	void deleteAllGroup() throws Exception;
 	
 	void deleteAllUser() throws Exception;
+
+
 }

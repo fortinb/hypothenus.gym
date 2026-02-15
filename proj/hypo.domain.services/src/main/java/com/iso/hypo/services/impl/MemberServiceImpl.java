@@ -103,6 +103,7 @@ public class MemberServiceImpl implements MemberService {
 					// Delete user in identity provider
 					azureGraphClientService.deleteUser(idpUser.get().getId());
 				}
+				
 				// Create user in identity provider
 				com.microsoft.graph.models.User newUser = new com.microsoft.graph.models.User();
 				

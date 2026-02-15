@@ -1,15 +1,15 @@
-package com.iso.hypo.domain.dto;
+package com.iso.hypo.admin.papi.dto.patch;
 
 import java.util.List;
 
-import com.iso.hypo.common.dto.BaseEntityDto;
+import com.iso.hypo.admin.papi.dto.BaseDto;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class UserDto extends BaseEntityDto {
+public class PatchUserDto extends BaseDto {
 
 	private String uuid;
 	

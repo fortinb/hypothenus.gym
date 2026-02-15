@@ -12,5 +12,5 @@ public interface UserQueryService {
 
     Page<UserSearchDto> search(int page, int pageSize, String criteria, boolean includeInactive) throws UserException;
 
-    Page<UserDto> list(String brandUuid, int page, int pageSize, boolean includeInactive) throws UserException;
+    Page<UserDto> list(int page, int pageSize, boolean includeInactive) throws UserException;
 }
