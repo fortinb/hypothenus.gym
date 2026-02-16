@@ -82,8 +82,17 @@ public class UserServiceImpl implements UserService {
 				Optional<com.microsoft.graph.models.User> idpUser = azureGraphClientService.userExists(user.getEmail());
 				if (idpUser.isPresent()) {
 					// Delete user in identity provider
-					azureGraphClientService.deleteUser(idpUser.get().getId());
+					//azureGraphClientService.deleteUser(idpUser.get().getId());
+					Message message = new Message();
+					message.setCode(UserException.USER_ALREADY_EXIST);
+					message.setDescription("Duplicate user");
+					message.setSeverity(MessageSeverityEnum.warning);
+					user.getMessages().add(message);
+
+					throw new UserException(requestContext.getTrackingNumber(), UserException.USER_ALREADY_EXIST,
+							"Duplicate user", userMapper.toDto(user));
 				}
+				
 				// Create user in identity provider
 				com.microsoft.graph.models.User newUser = new com.microsoft.graph.models.User();
 
@@ -138,50 +147,7 @@ public class UserServiceImpl implements UserService {
 	@Transactional
 	public UserDto update(UserDto userDto) throws UserException {
 		try {
-			Assert.notNull(userDto, "userDto must not be null");
-
-			User oldUser = this.readByUserUuid(userDto.getUuid());
-
-			if (userDto.getEmail() != null && !userDto.getEmail().equals(oldUser.getEmail())) {
-				Optional<User> existingUser = userRepository.findByEmailAndIsDeletedIsFalse(userDto.getEmail());
-				if (existingUser.isPresent()) {
-					Message message = new Message();
-					message.setCode(UserException.USER_ALREADY_EXIST);
-					message.setDescription("Duplicate user");
-					message.setSeverity(MessageSeverityEnum.warning);
-					userDto.getMessages().add(message);
-
-					throw new UserException(requestContext.getTrackingNumber(), UserException.USER_ALREADY_EXIST,
-							"Duplicate user", userDto);
-				}
-			}
-
-			ModelMapper mapper = new ModelMapper();
-			mapper.getConfiguration().setSkipNullEnabled(false).setCollectionsMergeEnabled(false);
-
-			mapper = userMapper.initUserMappings(mapper);
-			mapper.map(userDto, oldUser);
-
-			if (!testRun) {
-				Optional<com.microsoft.graph.models.User> idpUser = azureGraphClientService
-						.findUser(oldUser.getIdpId());
-				if (idpUser.isPresent()) {
-					// Update user in identity provider
-					idpUser.get().setDisplayName(oldUser.getFirstname() + " " + oldUser.getLastname());
-					idpUser.get().setGivenName(oldUser.getFirstname());
-					idpUser.get().setSurname(oldUser.getLastname());
-					idpUser.get().setMail(oldUser.getEmail());
-					azureGraphClientService.updateUser(idpUser.get());
-				}
-			}
-
-			oldUser.setModifiedOn(Instant.now());
-			oldUser.setModifiedBy(requestContext.getUsername());
-
-			User saved = userRepository.save(oldUser);
-			UserDto savedDto = userMapper.toDto(saved);
-			savedDto.setRoles(userDto.getRoles());
-			return savedDto;
+			return updateUser(userDto, false);
 		} catch (Exception e) {
 			logger.error("Error - userUuid={}", userDto != null ? userDto.getUuid() : null, e);
 
@@ -195,50 +161,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public UserDto patch(UserDto userDto) throws UserException {
 		try {
-			Assert.notNull(userDto, "userDto must not be null");
-			
-			User oldUser = this.readByUserUuid(userDto.getUuid());
-
-			if (userDto.getEmail() != null && !userDto.getEmail().equals(oldUser.getEmail())) {
-				Optional<User> existingUser = userRepository.findByEmailAndIsDeletedIsFalse(userDto.getEmail());
-				if (existingUser.isPresent()) {
-					Message message = new Message();
-					message.setCode(UserException.USER_ALREADY_EXIST);
-					message.setDescription("Duplicate user");
-					message.setSeverity(MessageSeverityEnum.warning);
-					userDto.getMessages().add(message);
-
-					throw new UserException(requestContext.getTrackingNumber(), UserException.USER_ALREADY_EXIST,
-							"Duplicate user", userDto);
-				}
-			}
-
-			ModelMapper mapper = new ModelMapper();
-			mapper.getConfiguration().setSkipNullEnabled(true).setCollectionsMergeEnabled(false);
-
-			mapper = userMapper.initUserMappings(mapper);
-			mapper.map(userDto, oldUser);
-
-			if (!testRun) {
-				Optional<com.microsoft.graph.models.User> idpUser = azureGraphClientService
-						.findUser(oldUser.getIdpId());
-				if (idpUser.isPresent()) {
-					// Update user in identity provider
-					idpUser.get().setDisplayName(oldUser.getFirstname() + " " + oldUser.getLastname());
-					idpUser.get().setGivenName(oldUser.getFirstname());
-					idpUser.get().setSurname(oldUser.getLastname());
-					idpUser.get().setMail(oldUser.getEmail());
-					azureGraphClientService.updateUser(idpUser.get());
-				}
-			}
-
-			oldUser.setModifiedOn(Instant.now());
-			oldUser.setModifiedBy(requestContext.getUsername());
-
-			User saved = userRepository.save(oldUser);
-			UserDto savedDto = userMapper.toDto(saved);
-			savedDto.setRoles(userDto.getRoles());
-			return savedDto;
+			return updateUser(userDto, true);
 		} catch (Exception e) {
 			logger.error("Error - userUuid={}", userDto != null ? userDto.getUuid() : null, e);
 
@@ -340,6 +263,62 @@ public class UserServiceImpl implements UserService {
 		}
 	}
 
+	private UserDto updateUser(UserDto userDto, boolean skipNull) throws UserException {
+		try {
+			Assert.notNull(userDto, "userDto must not be null");
+
+			User oldUser = this.readByUserUuid(userDto.getUuid());
+
+			if (userDto.getEmail() != null && !userDto.getEmail().equals(oldUser.getEmail())) {
+				Optional<User> existingUser = userRepository.findByEmailAndIsDeletedIsFalse(userDto.getEmail());
+				if (existingUser.isPresent()) {
+					Message message = new Message();
+					message.setCode(UserException.USER_ALREADY_EXIST);
+					message.setDescription("Duplicate user");
+					message.setSeverity(MessageSeverityEnum.warning);
+					userDto.getMessages().add(message);
+
+					throw new UserException(requestContext.getTrackingNumber(), UserException.USER_ALREADY_EXIST,
+							"Duplicate user", userDto);
+				}
+			}
+
+			ModelMapper mapper = new ModelMapper();
+			mapper.getConfiguration().setSkipNullEnabled(skipNull).setCollectionsMergeEnabled(false);
+
+			mapper = userMapper.initUserMappings(mapper);
+			mapper.map(userDto, oldUser);
+
+			if (!testRun) {
+				Optional<com.microsoft.graph.models.User> idpUser = azureGraphClientService
+						.findUser(oldUser.getIdpId());
+				if (idpUser.isPresent()) {
+					// Update user in identity provider
+					idpUser.get().setDisplayName(oldUser.getFirstname() + " " + oldUser.getLastname());
+					idpUser.get().setGivenName(oldUser.getFirstname());
+					idpUser.get().setSurname(oldUser.getLastname());
+					idpUser.get().setMail(oldUser.getEmail());
+					azureGraphClientService.updateUser(idpUser.get());
+				}
+			}
+
+			oldUser.setModifiedOn(Instant.now());
+			oldUser.setModifiedBy(requestContext.getUsername());
+
+			User saved = userRepository.save(oldUser);
+			UserDto savedDto = userMapper.toDto(saved);
+			savedDto.setRoles(userDto.getRoles());
+			return savedDto;
+		} catch (Exception e) {
+			logger.error("Error - userUuid={}", userDto != null ? userDto.getUuid() : null, e);
+
+			if (e instanceof UserException) {
+				throw (UserException) e;
+			}
+			throw new UserException(requestContext.getTrackingNumber(), UserException.UPDATE_FAILED, e);
+		}
+	}
+	
 	private User readByUserUuid(String userUuid) throws UserException {
 		Optional<User> entity = userRepository.findByUuidAndIsDeletedIsFalse(userUuid);
 		if (entity.isEmpty()) {

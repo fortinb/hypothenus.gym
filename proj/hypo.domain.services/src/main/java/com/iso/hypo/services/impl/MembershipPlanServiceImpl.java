@@ -74,22 +74,7 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 	@Transactional
 	public MembershipPlanDto update(MembershipPlanDto membershipPlanDto) throws MembershipPlanException {
 		try {
-			Assert.notNull(membershipPlanDto, "membershipPlanDto must not be null");
-			MembershipPlan membershipPlan = membershipPlanMapper.toEntity(membershipPlanDto);
-
-			MembershipPlan oldMembershipPlan = this.readByMembershipPlanUuid(membershipPlan.getBrandUuid(), membershipPlan.getUuid());
-
-			ModelMapper mapper = new ModelMapper();
-			mapper.getConfiguration().setSkipNullEnabled(false).setCollectionsMergeEnabled(false);
-
-			mapper = membershipPlanMapper.initMembershipPlanMappings(mapper);
-			mapper.map(membershipPlan, oldMembershipPlan);
-
-			oldMembershipPlan.setModifiedOn(Instant.now());
-			oldMembershipPlan.setModifiedBy(requestContext.getUsername());
-
-			MembershipPlan saved = membershipPlanRepository.save(oldMembershipPlan);
-			return membershipPlanMapper.toDto(saved);
+			return updateMembershipPlan(membershipPlanDto, false);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, membershipPlanUuid={}", membershipPlanDto.getBrandUuid(), membershipPlanDto.getUuid(), e);
 			if (e instanceof MembershipPlanException) {
@@ -103,22 +88,7 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 	@Transactional
 	public MembershipPlanDto patch(MembershipPlanDto membershipPlanDto) throws MembershipPlanException {
 		try {
-			Assert.notNull(membershipPlanDto, "membershipPlanDto must not be null");
-			MembershipPlan membershipPlan = membershipPlanMapper.toEntity(membershipPlanDto);
-
-			MembershipPlan oldMembershipPlan = this.readByMembershipPlanUuid(membershipPlan.getBrandUuid(), membershipPlan.getUuid());
-
-			ModelMapper mapper = new ModelMapper();
-			mapper.getConfiguration().setSkipNullEnabled(true);
-
-			mapper = membershipPlanMapper.initMembershipPlanMappings(mapper);
-			mapper.map(membershipPlan, oldMembershipPlan);
-
-			oldMembershipPlan.setModifiedOn(Instant.now());
-			oldMembershipPlan.setModifiedBy(requestContext.getUsername());
-
-			MembershipPlan saved = membershipPlanRepository.save(oldMembershipPlan);
-			return membershipPlanMapper.toDto(saved);
+			return updateMembershipPlan(membershipPlanDto, true);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, membershipPlanUuid={}", membershipPlanDto.getBrandUuid(), membershipPlanDto.getUuid(), e);
 			if (e instanceof MembershipPlanException) {
@@ -194,6 +164,33 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 			logger.error("Error - brandId={}", brandUuid, e);
 			
 			throw new MembershipPlanException(requestContext.getTrackingNumber(), MembershipPlanException.DELETE_FAILED, e);
+		}
+	}
+	
+	private MembershipPlanDto updateMembershipPlan(MembershipPlanDto membershipPlanDto, boolean skipNull) throws MembershipPlanException {
+		try {
+			Assert.notNull(membershipPlanDto, "membershipPlanDto must not be null");
+			MembershipPlan membershipPlan = membershipPlanMapper.toEntity(membershipPlanDto);
+
+			MembershipPlan oldMembershipPlan = this.readByMembershipPlanUuid(membershipPlan.getBrandUuid(), membershipPlan.getUuid());
+
+			ModelMapper mapper = new ModelMapper();
+			mapper.getConfiguration().setSkipNullEnabled(skipNull).setCollectionsMergeEnabled(false);
+
+			mapper = membershipPlanMapper.initMembershipPlanMappings(mapper);
+			mapper.map(membershipPlan, oldMembershipPlan);
+
+			oldMembershipPlan.setModifiedOn(Instant.now());
+			oldMembershipPlan.setModifiedBy(requestContext.getUsername());
+
+			MembershipPlan saved = membershipPlanRepository.save(oldMembershipPlan);
+			return membershipPlanMapper.toDto(saved);
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, membershipPlanUuid={}", membershipPlanDto.getBrandUuid(), membershipPlanDto.getUuid(), e);
+			if (e instanceof MembershipPlanException) {
+				throw (MembershipPlanException) e;
+			}
+			throw new MembershipPlanException(requestContext.getTrackingNumber(), MembershipPlanException.UPDATE_FAILED, e);
 		}
 	}
 	

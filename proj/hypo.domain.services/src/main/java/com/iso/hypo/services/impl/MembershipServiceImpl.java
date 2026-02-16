@@ -73,22 +73,7 @@ public class MembershipServiceImpl implements MembershipService {
 	@Transactional
 	public MembershipDto update(MembershipDto membershipDto) throws MembershipException {
 		try {
-			Assert.notNull(membershipDto, "membershipDto must not be null");
-			Membership membership = membershipMapper.toEntity(membershipDto);
-			
-			Membership oldMembership = this.readByMembershipUuid(membership.getBrandUuid(), membership.getUuid());
-
-			ModelMapper mapper = new ModelMapper();
-			mapper.getConfiguration().setSkipNullEnabled(false);
-			
-			mapper = membershipMapper.initMembershipMappings(mapper);
-			mapper.map(membership, oldMembership);
-
-			oldMembership.setModifiedOn(Instant.now());
-			oldMembership.setModifiedBy(requestContext.getUsername());
-			
-			Membership saved = membershipRepository.save(oldMembership);
-			return membershipMapper.toDto(saved);
+			return updateMembership(membershipDto, false);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, membershipUuid={}", membershipDto != null ? membershipDto.getBrandUuid() : null, membershipDto != null ? membershipDto.getUuid() : null, e);
 			
@@ -103,22 +88,7 @@ public class MembershipServiceImpl implements MembershipService {
 	@Transactional
 	public MembershipDto patch(MembershipDto membershipDto) throws MembershipException {
 		try {
-			Assert.notNull(membershipDto, "membershipDto must not be null");
-			Membership membership = membershipMapper.toEntity(membershipDto);
-
-			Membership oldMembership = this.readByMembershipUuid(membership.getBrandUuid(), membership.getUuid());
-		
-			ModelMapper mapper = new ModelMapper();
-			mapper.getConfiguration().setSkipNullEnabled(true);
-			
-			mapper = membershipMapper.initMembershipMappings(mapper);
-			mapper.map(membership, oldMembership);
-			
-			oldMembership.setModifiedOn(Instant.now());
-			oldMembership.setModifiedBy(requestContext.getUsername());
-			
-			Membership saved = membershipRepository.save(oldMembership);
-			return membershipMapper.toDto(saved);
+			return updateMembership(membershipDto, true);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, membershipUuid={}", membershipDto != null ? membershipDto.getBrandUuid() : null, membershipDto != null ? membershipDto.getUuid() : null, e);
 			
@@ -195,6 +165,34 @@ public class MembershipServiceImpl implements MembershipService {
 			logger.error("Error - brandId={}", brandUuid, e);
 			
 			throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.DELETE_FAILED, e);
+		}
+	}
+	
+	private MembershipDto updateMembership(MembershipDto membershipDto, boolean skipNull) throws MembershipException {
+		try {
+			Assert.notNull(membershipDto, "membershipDto must not be null");
+			Membership membership = membershipMapper.toEntity(membershipDto);
+			
+			Membership oldMembership = this.readByMembershipUuid(membership.getBrandUuid(), membership.getUuid());
+
+			ModelMapper mapper = new ModelMapper();
+			mapper.getConfiguration().setSkipNullEnabled(skipNull);
+			
+			mapper = membershipMapper.initMembershipMappings(mapper);
+			mapper.map(membership, oldMembership);
+
+			oldMembership.setModifiedOn(Instant.now());
+			oldMembership.setModifiedBy(requestContext.getUsername());
+			
+			Membership saved = membershipRepository.save(oldMembership);
+			return membershipMapper.toDto(saved);
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, membershipUuid={}", membershipDto != null ? membershipDto.getBrandUuid() : null, membershipDto != null ? membershipDto.getUuid() : null, e);
+			
+			if (e instanceof MembershipException) {
+				throw (MembershipException) e;
+			}
+			throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.UPDATE_FAILED, e);
 		}
 	}
 	

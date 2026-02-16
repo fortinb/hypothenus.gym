@@ -105,32 +105,7 @@ public class BrandServiceImpl implements BrandService {
 	@Transactional
 	public BrandDto update(BrandDto brandDto) throws BrandException {
 		try {
-			Assert.notNull(brandDto, "brandDto must not be null");
-			Brand brand = brandMapper.toEntity(brandDto);
-			Brand oldBrand = this.readByBrandUuid(brand.getUuid());
-
-			ModelMapper mapper = new ModelMapper();
-			mapper.getConfiguration()
-				.setSkipNullEnabled(false)
-				.setCollectionsMergeEnabled(false);
-			
-			PropertyMap<Brand, Brand> brandPropertyMap = new PropertyMap<Brand, Brand>() {
-				protected void configure() {
-					skip().setId(null);
-					skip().setActive(false);
-				}
-			};
-			
-			mapper.addMappings(brandPropertyMap);
-			mapper = brandMapper.initBrandMappings(mapper);
-			
-			mapper.map(brand, oldBrand);
-
-			oldBrand.setModifiedOn(Instant.now());
-			oldBrand.setModifiedBy(requestContext.getUsername());
-
-			Brand saved = brandRepository.save(oldBrand);
-			return brandMapper.toDto(saved);
+			return updateBrand(brandDto, false);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}", brandDto != null ? brandDto.getUuid() : null, e);
 			if (e instanceof BrandException) {
@@ -144,31 +119,7 @@ public class BrandServiceImpl implements BrandService {
 	@Transactional
 	public BrandDto patch(BrandDto brandDto) throws BrandException {
 		try {
-			Assert.notNull(brandDto, "brandDto must not be null");
-			Brand brand = brandMapper.toEntity(brandDto);
-			Brand oldBrand = this.readByBrandUuid(brand.getUuid());
-
-			ModelMapper mapper = new ModelMapper();
-			mapper.getConfiguration().setSkipNullEnabled(true);
-
-			PropertyMap<Brand, Brand> brandPropertyMap = new PropertyMap<Brand, Brand>() {
-				protected void configure() {
-					skip().setId(null);
-					skip().setContacts(null);
-					skip().setPhoneNumbers(null);
-				}
-			};
-			
-			mapper.addMappings(brandPropertyMap);
-			mapper = brandMapper.initBrandMappings(mapper);
-			
-			mapper.map(brand, oldBrand);
-
-			oldBrand.setModifiedOn(Instant.now());
-			oldBrand.setModifiedBy(requestContext.getUsername());
-
-			Brand saved = brandRepository.save(oldBrand);
-			return brandMapper.toDto(saved);
+			return updateBrand(brandDto, true);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}", brandDto != null ? brandDto.getUuid() : null, e);
 			if (e instanceof BrandException) {
@@ -236,6 +187,42 @@ public class BrandServiceImpl implements BrandService {
 		}
 	}
 	
+	private BrandDto updateBrand(BrandDto brandDto, boolean skipNull) throws BrandException {
+		try {
+			Assert.notNull(brandDto, "brandDto must not be null");
+			Brand brand = brandMapper.toEntity(brandDto);
+			Brand oldBrand = this.readByBrandUuid(brand.getUuid());
+
+			ModelMapper mapper = new ModelMapper();
+			mapper.getConfiguration()
+				.setSkipNullEnabled(skipNull)
+				.setCollectionsMergeEnabled(false);
+			
+			PropertyMap<Brand, Brand> brandPropertyMap = new PropertyMap<Brand, Brand>() {
+				protected void configure() {
+					skip().setId(null);
+					skip().setActive(false);
+				}
+			};
+			
+			mapper.addMappings(brandPropertyMap);
+			mapper = brandMapper.initBrandMappings(mapper);
+			
+			mapper.map(brand, oldBrand);
+
+			oldBrand.setModifiedOn(Instant.now());
+			oldBrand.setModifiedBy(requestContext.getUsername());
+
+			Brand saved = brandRepository.save(oldBrand);
+			return brandMapper.toDto(saved);
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}", brandDto != null ? brandDto.getUuid() : null, e);
+			if (e instanceof BrandException) {
+				throw (BrandException) e;
+			}
+			throw new BrandException(requestContext.getTrackingNumber(), BrandException.UPDATE_FAILED, e);
+		}
+	}
 	private Brand readByBrandUuid(String brandUuid) throws BrandException {
 		Optional<Brand> entity = brandRepository.findByUuidAndIsDeletedIsFalse(brandUuid);
 		if (entity.isEmpty()) {

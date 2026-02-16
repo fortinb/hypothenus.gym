@@ -2,6 +2,7 @@ package com.iso.hypo.admin.papi;
 
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.sql.Date;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -647,22 +648,26 @@ class CourseControllerTests {
 		Course courseToPatch = CourseBuilder.build(brand_1.getUuid(), gym_1.getUuid(),  null);
 		courseToPatch = courseRepository.save(courseToPatch);
 
-		PatchCourseDto patchCourse = modelMapper.map(courseToPatch, PatchCourseDto.class);
-		patchCourse.setUuid(courseToPatch.getUuid());
-		patchCourse.setDescription(null);
-		patchCourse.setName(null);
-
+		PatchCourseDto patchCourseDto = modelMapper.map(courseToPatch, PatchCourseDto.class);
+		patchCourseDto.setUuid(courseToPatch.getUuid());
+		patchCourseDto.setStartDate(Date.from(Instant.now().plus(5, ChronoUnit.DAYS)));
+		patchCourseDto.setName(null);
+		patchCourseDto.setDescription(null);
+		
+		courseToPatch.setStartDate(patchCourseDto.getStartDate());
+		
 		// Act
-		HttpEntity<PatchCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchCourse);
+		HttpEntity<PatchCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchCourseDto);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(patchURI, brand_1.getUuid(), gym_1.getUuid(), patchCourse.getUuid())), port, null),
+				HttpUtils.createURL(URI.create(String.format(patchURI, brand_1.getUuid(), gym_1.getUuid(), patchCourseDto.getUuid())), port, null),
 				HttpMethod.PATCH, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
 
+
 		CourseDto patchedDto = TestResponseUtils.toDto(response, CourseDto.class, objectMapper);
-		assertCourse(modelMapper.map(patchCourse, CourseDto.class), patchedDto);
+		assertCourse(modelMapper.map(courseToPatch, CourseDto.class), patchedDto);
 	}
 
 	

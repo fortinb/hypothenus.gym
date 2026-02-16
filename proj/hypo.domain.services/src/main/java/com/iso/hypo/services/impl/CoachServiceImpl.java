@@ -75,22 +75,7 @@ public class CoachServiceImpl implements CoachService {
 	@Transactional
 	public CoachDto update(CoachDto coachDto) throws CoachException {
 		try {
-			Assert.notNull(coachDto, "coachDto must not be null");
-			Coach coach = coachMapper.toEntity(coachDto);
-			
-			Coach oldCoach = this.readByCoachUuid(coach.getBrandUuid(), coach.getGymUuid(), coach.getUuid());
-
-			ModelMapper mapper = new ModelMapper();
-			mapper.getConfiguration().setSkipNullEnabled(false).setCollectionsMergeEnabled(false);;
-
-			mapper = coachMapper.initCoachMappings(mapper);
-			mapper.map(coach, oldCoach);
-
-			oldCoach.setModifiedOn(Instant.now());
-			oldCoach.setModifiedBy(requestContext.getUsername());
-
-			Coach saved = coachRepository.save(oldCoach);
-			return coachMapper.toDto(saved);
+			return updateCoach(coachDto, false);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, gymUuid={}, coachUuid={}", coachDto.getBrandUuid(), coachDto.getGymUuid(), coachDto.getUuid(), e);
 			
@@ -105,22 +90,7 @@ public class CoachServiceImpl implements CoachService {
 	@Transactional
 	public CoachDto patch(CoachDto coachDto) throws CoachException {
 		try {
-			Assert.notNull(coachDto, "coachDto must not be null");
-			Coach coach = coachMapper.toEntity(coachDto);
-
-			Coach oldCoach = this.readByCoachUuid(coach.getBrandUuid(), coach.getGymUuid(), coach.getUuid());
-
-			ModelMapper mapper = new ModelMapper();
-			mapper.getConfiguration().setSkipNullEnabled(true).setCollectionsMergeEnabled(false);;
-
-			mapper = coachMapper.initCoachMappings(mapper);
-			mapper.map(coach, oldCoach);
-
-			oldCoach.setModifiedOn(Instant.now());
-			oldCoach.setModifiedBy(requestContext.getUsername());
-
-			Coach saved = coachRepository.save(oldCoach);
-			return coachMapper.toDto(saved);
+			return updateCoach(coachDto, true);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, gymUuid={}, coachUuid={}", coachDto.getBrandUuid(), coachDto.getGymUuid(), coachDto.getUuid(), e);
 			
@@ -220,6 +190,33 @@ public class CoachServiceImpl implements CoachService {
 		}
 	}
 	
+	private CoachDto updateCoach(CoachDto coachDto, boolean skipNull) throws CoachException {
+		try {
+			Assert.notNull(coachDto, "coachDto must not be null");
+			Coach coach = coachMapper.toEntity(coachDto);
+			
+			Coach oldCoach = this.readByCoachUuid(coach.getBrandUuid(), coach.getGymUuid(), coach.getUuid());
+
+			ModelMapper mapper = new ModelMapper();
+			mapper.getConfiguration().setSkipNullEnabled(skipNull).setCollectionsMergeEnabled(false);;
+
+			mapper = coachMapper.initCoachMappings(mapper);
+			mapper.map(coach, oldCoach);
+
+			oldCoach.setModifiedOn(Instant.now());
+			oldCoach.setModifiedBy(requestContext.getUsername());
+
+			Coach saved = coachRepository.save(oldCoach);
+			return coachMapper.toDto(saved);
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, gymUuid={}, coachUuid={}", coachDto.getBrandUuid(), coachDto.getGymUuid(), coachDto.getUuid(), e);
+			
+			if (e instanceof CoachException) {
+				throw (CoachException) e;
+			}
+			throw new CoachException(requestContext.getTrackingNumber(), CoachException.UPDATE_FAILED, e);
+		}
+	}
 	private Coach readByCoachUuid(String brandUuid, String gymUuid, String coachUuid) throws CoachException {
 		Optional<Coach> entity = coachRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid,
 						coachUuid);

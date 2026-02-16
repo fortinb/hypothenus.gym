@@ -30,6 +30,7 @@ import com.iso.hypo.services.clients.AzureGraphClientService;
 import com.iso.hypo.services.event.MemberEvent;
 import com.iso.hypo.services.exception.BrandException;
 import com.iso.hypo.services.exception.MemberException;
+import com.iso.hypo.services.exception.UserException;
 import com.iso.hypo.services.mappers.MemberMapper;
 import com.microsoft.graph.models.PasswordProfile;
 
@@ -100,34 +101,34 @@ public class MemberServiceImpl implements MemberService {
 						.userExists(member.getPerson().getEmail());
 				
 				if (idpUser.isPresent()) {
-					// Delete user in identity provider
-					azureGraphClientService.deleteUser(idpUser.get().getId());
+					idpUser.get().setAccountEnabled(false);				
+				} else {
+					// Create user in identity provider
+					com.microsoft.graph.models.User newUser = new com.microsoft.graph.models.User();
+					
+					newUser.setAccountEnabled(false);
+					newUser.setDisplayName(memberDto.getPerson().getFirstname() + " " + memberDto.getPerson().getLastname());
+					newUser.setGivenName(memberDto.getPerson().getFirstname());
+					newUser.setSurname(memberDto.getPerson().getLastname());
+					newUser.setMailNickname(memberDto.getUuid());
+					newUser.setUserPrincipalName(memberDto.getUuid());
+					newUser.setPasswordProfile(new PasswordProfile());
+					newUser.getPasswordProfile().setForceChangePasswordNextSignIn(true);
+					newUser.getPasswordProfile().setPassword(password);
+					
+					idpUser = Optional.of(azureGraphClientService.createUser(newUser));
 				}
-				
-				// Create user in identity provider
-				com.microsoft.graph.models.User newUser = new com.microsoft.graph.models.User();
-				
-				newUser.setAccountEnabled(false);
-				newUser.setDisplayName(memberDto.getPerson().getFirstname() + " " + memberDto.getPerson().getLastname());
-				newUser.setGivenName(memberDto.getPerson().getFirstname());
-				newUser.setSurname(memberDto.getPerson().getLastname());
-				newUser.setMailNickname(memberDto.getUuid());
-				newUser.setUserPrincipalName(memberDto.getUuid());
-				newUser.setPasswordProfile(new PasswordProfile());
-				newUser.getPasswordProfile().setForceChangePasswordNextSignIn(true);
-				newUser.getPasswordProfile().setPassword(password);
-				com.microsoft.graph.models.User createdUser = azureGraphClientService.createUser(newUser);
 
 				// Assign role to user
-				azureGraphClientService.assignRole(createdUser.getId(), Roles.Member);
+				azureGraphClientService.assignRole(idpUser.get().getId(), Roles.Member);
 
 				// Assign Group to user
-				azureGraphClientService.addToGroup(createdUser.getId(), member.getBrandUuid());
+				azureGraphClientService.addToGroup(idpUser.get().getId(), member.getBrandUuid());
 				
 				// Persist user
 				User user = new User();
-				user.setIdpId(createdUser.getId());
-				user.setUpn(createdUser.getUserPrincipalName());
+				user.setIdpId(idpUser.get().getId());
+				user.setUpn(idpUser.get().getUserPrincipalName());
 				
 				User userSaved = userRepository.save(user);
 				member.setUser(userSaved);
@@ -160,22 +161,7 @@ public class MemberServiceImpl implements MemberService {
 	@Transactional
 	public MemberDto update(MemberDto memberDto) throws MemberException {
 		try {
-			Assert.notNull(memberDto, "memberDto must not be null");
-			Member member = memberMapper.toEntity(memberDto);
-
-			Member oldMember = this.readByMemberUuid(member.getBrandUuid(), member.getUuid());
-
-			ModelMapper mapper = new ModelMapper();
-			mapper.getConfiguration().setSkipNullEnabled(false).setCollectionsMergeEnabled(false);
-
-			mapper = memberMapper.initMemberMappings(mapper);
-			mapper.map(member, oldMember);
-
-			oldMember.setModifiedOn(Instant.now());
-			oldMember.setModifiedBy(requestContext.getUsername());
-
-			Member saved = memberRepository.save(oldMember);
-			return memberMapper.toDto(saved);
+			return updateMember(memberDto, false);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, memberUuid={}", memberDto != null ? memberDto.getBrandUuid() : null,
 					memberDto != null ? memberDto.getUuid() : null, e);
@@ -191,23 +177,7 @@ public class MemberServiceImpl implements MemberService {
 	@Transactional
 	public MemberDto patch(MemberDto memberDto) throws MemberException {
 		try {
-			Assert.notNull(memberDto, "memberDto must not be null");
-			Member member = memberMapper.toEntity(memberDto);
-
-			Member oldMember = this.readByMemberUuid(member.getBrandUuid(), member.getUuid());
-
-			ModelMapper mapper = new ModelMapper();
-			mapper.getConfiguration().setSkipNullEnabled(true).setCollectionsMergeEnabled(false);
-			;
-
-			mapper = memberMapper.initMemberMappings(mapper);
-			mapper.map(member, oldMember);
-
-			oldMember.setModifiedOn(Instant.now());
-			oldMember.setModifiedBy(requestContext.getUsername());
-
-			Member saved = memberRepository.save(oldMember);
-			return memberMapper.toDto(saved);
+			return updateMember(memberDto, true);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, memberUuid={}", memberDto != null ? memberDto.getBrandUuid() : null,
 					memberDto != null ? memberDto.getUuid() : null, e);
@@ -291,6 +261,61 @@ public class MemberServiceImpl implements MemberService {
 		}
 	}
 
+	private MemberDto updateMember(MemberDto memberDto, boolean skipNull) throws MemberException {
+		try {
+			Assert.notNull(memberDto, "memberDto must not be null");
+			Member member = memberMapper.toEntity(memberDto);
+
+			Member oldMember = this.readByMemberUuid(member.getBrandUuid(), member.getUuid());
+
+			ModelMapper mapper = new ModelMapper();
+			mapper.getConfiguration().setSkipNullEnabled(skipNull).setCollectionsMergeEnabled(false);
+
+			mapper = memberMapper.initMemberMappings(mapper);
+			mapper.map(member, oldMember);
+			
+			if (memberDto.getPerson().getEmail() != null && !memberDto.getPerson().getEmail().equals(oldMember.getPerson().getEmail())) {
+				Optional<User> existingMember = userRepository.findByEmailAndIsDeletedIsFalse(memberDto.getPerson().getEmail());
+				if (existingMember.isPresent()) {
+					Message message = new Message();
+					message.setCode(UserException.USER_ALREADY_EXIST);
+					message.setDescription("Duplicate user");
+					message.setSeverity(MessageSeverityEnum.warning);
+					memberDto.getMessages().add(message);
+
+					throw new MemberException(requestContext.getTrackingNumber(), MemberException.MEMBER_ALREADY_EXIST,
+							"Duplicate member", memberMapper.toDto(oldMember));
+				}
+				
+				if (!testRun) {
+					Optional<com.microsoft.graph.models.User> idpUser = azureGraphClientService
+							.findUser(oldMember.getUser().getIdpId());
+					if (idpUser.isPresent()) {
+						idpUser.get().setDisplayName(oldMember.getPerson().getFirstname() + " " + oldMember.getPerson().getLastname());
+						idpUser.get().setGivenName(oldMember.getPerson().getFirstname());
+						idpUser.get().setSurname(oldMember.getPerson().getLastname());
+						idpUser.get().setMail(oldMember.getPerson().getEmail());
+						azureGraphClientService.updateUser(idpUser.get());
+					}
+				}
+			}
+
+			oldMember.setModifiedOn(Instant.now());
+			oldMember.setModifiedBy(requestContext.getUsername());
+
+			Member saved = memberRepository.save(oldMember);
+			return memberMapper.toDto(saved);
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, memberUuid={}", memberDto != null ? memberDto.getBrandUuid() : null,
+					memberDto != null ? memberDto.getUuid() : null, e);
+
+			if (e instanceof MemberException) {
+				throw (MemberException) e;
+			}
+			throw new MemberException(requestContext.getTrackingNumber(), MemberException.UPDATE_FAILED, e);
+		}
+	}
+	
 	private Member readByMemberUuid(String brandUuid, String memberUuid) throws MemberException {
 		Optional<Member> entity = memberRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, memberUuid);
 		if (entity.isEmpty()) {

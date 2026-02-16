@@ -99,33 +99,7 @@ public class GymServiceImpl implements GymService {
 	@Transactional
 	public GymDto update(GymDto gymDto) throws GymException {
 		try {
-			Assert.notNull(gymDto, "gymDto must not be null");
-			Gym gym = gymMapper.toEntity(gymDto);
-			
-			Gym oldGym = this.readByGymUuid(gym.getBrandUuid(),gym.getUuid());
-
-			ModelMapper mapper = new ModelMapper();
-			mapper.getConfiguration()
-				.setSkipNullEnabled(false)
-				.setCollectionsMergeEnabled(false);
-			
-			PropertyMap<Gym, Gym> gymPropertyMap = new PropertyMap<Gym, Gym>() {
-				protected void configure() {
-					skip().setId(null);
-					skip().setActive(false);
-				}
-			};
-			
-			mapper.addMappings(gymPropertyMap);
-			mapper = gymMapper.initGymMappings(mapper);
-			
-			mapper.map(gym, oldGym);
-
-			oldGym.setModifiedOn(Instant.now());
-			oldGym.setModifiedBy(requestContext.getUsername());
-
-			Gym saved = gymRepository.save(oldGym);
-			return gymMapper.toDto(saved);
+			return updateGym(gymDto, false);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, gymUuid={}", gymDto.getBrandUuid(), gymDto.getUuid(), e);
 			
@@ -140,31 +114,7 @@ public class GymServiceImpl implements GymService {
 	@Transactional
 	public GymDto patch(GymDto gymDto) throws GymException {
 		try {
-			Assert.notNull(gymDto, "gymDto must not be null");
-			Gym gym = gymMapper.toEntity(gymDto);
-			
-			Gym oldGym = this.readByGymUuid(gym.getBrandUuid(), gym.getUuid());
-
-			ModelMapper mapper = new ModelMapper();
-			mapper.getConfiguration().setSkipNullEnabled(true);
-
-			PropertyMap<Gym, Gym> gymPropertyMap = new PropertyMap<Gym, Gym>() {
-				protected void configure() {
-					skip().setId(null);
-					skip().setContacts(null);
-					skip().setPhoneNumbers(null);
-				}
-			};
-			
-			mapper.addMappings(gymPropertyMap);
-			mapper = gymMapper.initGymMappings(mapper);
-			mapper.map(gym, oldGym);
-
-			oldGym.setModifiedOn(Instant.now());
-			oldGym.setModifiedBy(requestContext.getUsername());
-
-			Gym saved = gymRepository.save(oldGym);
-			return gymMapper.toDto(saved);
+			return updateGym(gymDto, true);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, gymUuid={}", gymDto.getBrandUuid(), gymDto.getUuid(), e);
 			
@@ -244,6 +194,45 @@ public class GymServiceImpl implements GymService {
 			logger.error("Error - brandId={}", brandUuid, e);
 			
 			throw new GymException(requestContext.getTrackingNumber(), GymException.DELETE_FAILED, e);
+		}
+	}
+	
+	public GymDto updateGym(GymDto gymDto, boolean skipNull) throws GymException {
+		try {
+			Assert.notNull(gymDto, "gymDto must not be null");
+			Gym gym = gymMapper.toEntity(gymDto);
+			
+			Gym oldGym = this.readByGymUuid(gym.getBrandUuid(),gym.getUuid());
+
+			ModelMapper mapper = new ModelMapper();
+			mapper.getConfiguration()
+				.setSkipNullEnabled(skipNull)
+				.setCollectionsMergeEnabled(false);
+			
+			PropertyMap<Gym, Gym> gymPropertyMap = new PropertyMap<Gym, Gym>() {
+				protected void configure() {
+					skip().setId(null);
+					skip().setActive(false);
+				}
+			};
+			
+			mapper.addMappings(gymPropertyMap);
+			mapper = gymMapper.initGymMappings(mapper);
+			
+			mapper.map(gym, oldGym);
+
+			oldGym.setModifiedOn(Instant.now());
+			oldGym.setModifiedBy(requestContext.getUsername());
+
+			Gym saved = gymRepository.save(oldGym);
+			return gymMapper.toDto(saved);
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, gymUuid={}", gymDto.getBrandUuid(), gymDto.getUuid(), e);
+			
+			if (e instanceof GymException) {
+				throw (GymException) e;
+			}
+			throw new GymException(requestContext.getTrackingNumber(), GymException.UPDATE_FAILED, e);
 		}
 	}
 	

@@ -351,7 +351,7 @@ class UserControllerTests {
 
 		PutUserDto putDto = modelMapper.map(updatedUser, PutUserDto.class);
 
-		putDto.setFirstname(null);
+		putDto.setRoles(null);
 
 		// Act
 		HttpEntity<PutUserDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putDto);

@@ -28,10 +28,13 @@ public class User extends BaseEntity {
 	@NonNull
 	private String upn;
 	
+	@NonNull
 	private String firstname;
 
+	@NonNull
 	private String lastname;
 	
+	@NonNull
 	private String email;
 	
 	public User() {

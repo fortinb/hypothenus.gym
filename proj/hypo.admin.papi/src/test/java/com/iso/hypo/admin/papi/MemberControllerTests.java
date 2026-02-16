@@ -559,10 +559,12 @@ class MemberControllerTests {
         memberToPatch = memberRepository.save(memberToPatch);
 
         PatchMemberDto patchDto = modelMapper.map(memberToPatch, PatchMemberDto.class);
-        patchDto.getPerson().setEmail(null);
-        patchDto.getPerson().setFirstname(null);
+        patchDto.getPerson().setDateOfBirth(null);
         patchDto.getPerson().getAddress().setStreetName(null);
         patchDto.getPerson().setLastname(faker.name().lastName());
+        patchDto.setPreferredGymUuid(null);
+        
+        memberToPatch.getPerson().setLastname(patchDto.getPerson().getLastname());
 
         // Act
         HttpEntity<PatchMemberDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchDto);
@@ -571,8 +573,6 @@ class MemberControllerTests {
                 HttpMethod.PATCH, httpEntity, JsonNode.class);
 
         Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(), String.format("Get error: %s", response.getStatusCode()));
-
-        memberToPatch.getPerson().setLastname(patchDto.getPerson().getLastname());
 
         MemberDto patchedDto = TestResponseUtils.toDto(response, MemberDto.class, objectMapper);
         assertMember(modelMapper.map(memberToPatch, MemberDto.class), patchedDto);

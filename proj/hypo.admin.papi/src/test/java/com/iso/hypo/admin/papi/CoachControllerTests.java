@@ -398,9 +398,9 @@ class CoachControllerTests {
 		coachToUpdate = coachRepository.save(coachToUpdate);
 		
 		PutCoachDto putDto = modelMapper.map(coachToUpdate, PutCoachDto.class);
-		putDto.getPerson().setEmail(null);
+		putDto.getPerson().setPhotoUri(null);
 		
-		coachToUpdate.getPerson().setEmail(null);
+		coachToUpdate.getPerson().setPhotoUri(null);
 				
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
