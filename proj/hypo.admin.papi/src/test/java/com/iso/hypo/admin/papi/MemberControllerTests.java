@@ -296,7 +296,7 @@ class MemberControllerTests {
 	}
 	
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPostFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PostMemberDto postDto = modelMapper.map(MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular), PostMemberDto.class);
@@ -311,7 +311,7 @@ class MemberControllerTests {
 	}
 
     @ParameterizedTest
-    @CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis", "Member, Guillaume Fortin" })
+    @CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis", "member, Guillaume Fortin" })
     void testGetSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
         // Arrange
         PostMemberDto postDto = modelMapper.map(MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular), PostMemberDto.class);
@@ -351,7 +351,7 @@ class MemberControllerTests {
 
 
     @ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPutSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		Member updatedMember = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
@@ -390,7 +390,7 @@ class MemberControllerTests {
 	}
     
     @ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPutNullSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		Member updatedMember = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
@@ -432,7 +432,7 @@ class MemberControllerTests {
 	}
 	
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPutFailureForbiddenMemberMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PutMemberDto putDto = modelMapper.map(MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular), PutMemberDto.class);
@@ -447,7 +447,7 @@ class MemberControllerTests {
 	}
 	
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPutFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PutMemberDto putDto = modelMapper.map(MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular), PutMemberDto.class);
@@ -463,7 +463,7 @@ class MemberControllerTests {
 	}
     
     @ParameterizedTest
-    @CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+    @CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
     void testActivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
         // Arrange
         Member memberToActivate = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
@@ -488,7 +488,7 @@ class MemberControllerTests {
     }
     
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testActivateFailureNotFound(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 
@@ -508,7 +508,7 @@ class MemberControllerTests {
 	}
 
     @ParameterizedTest
-    @CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+    @CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
     void testDeactivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
         // Arrange
         Member memberToDeactivate = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
@@ -531,7 +531,7 @@ class MemberControllerTests {
     }
     
     @ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testDeactivateFailure(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 
@@ -551,7 +551,7 @@ class MemberControllerTests {
 	}
 
     @ParameterizedTest
-    @CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+    @CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
     void testPatchSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
         // Arrange
         Member memberToPatch = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
@@ -579,7 +579,7 @@ class MemberControllerTests {
     }
     
     @ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPatchFailureNotFound(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		Member patchTarget = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
@@ -597,7 +597,7 @@ class MemberControllerTests {
 	}
 	
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPatchFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PutMemberDto patchDto = modelMapper.map(MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular), PutMemberDto.class);
@@ -613,7 +613,7 @@ class MemberControllerTests {
 	}
 	
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPatchFailureForbiddenMemberMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PutMemberDto putDto = modelMapper.map(MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular), PutMemberDto.class);
@@ -679,107 +679,118 @@ class MemberControllerTests {
 			});
 	}
 
-    public static final void assertMember(MemberDto expected, MemberDto result) {
-        if (expected.getUuid() != null) {
-            Assertions.assertEquals(expected.getUuid(), result.getUuid());
-        }
+	public static final void assertMember(MemberDto expected, MemberDto result) {
+		if (expected.getUuid() != null) {
+			Assertions.assertEquals(expected.getUuid(), result.getUuid());
+		}
 
-        Assertions.assertEquals(expected.getBrandUuid(), result.getBrandUuid());
-        // preferredMemberUuid may be null in some scenarios
-        if (expected.getPreferredGymUuid() != null) {
+		Assertions.assertEquals(expected.getBrandUuid(), result.getBrandUuid());
+		// preferredMemberUuid may be null in some scenarios
+		if (expected.getPreferredGymUuid() != null) {
 			Assertions.assertEquals(expected.getPreferredGymUuid(), result.getPreferredGymUuid());
 		}
-        
-        Assertions.assertEquals(expected.getMemberType(), result.getMemberType());
-        Assertions.assertEquals(expected.getPerson().getFirstname(), result.getPerson().getFirstname());
-        Assertions.assertEquals(expected.getPerson().getLastname(), result.getPerson().getLastname());
-        Assertions.assertEquals(expected.getPerson().getEmail(), result.getPerson().getEmail());
-        Assertions.assertEquals(expected.getPerson().getPhotoUri(), result.getPerson().getPhotoUri());
-        Assertions.assertEquals(expected.getPerson().getCommunicationLanguage(), result.getPerson().getCommunicationLanguage());
-        Assertions.assertEquals(expected.getPerson().getNote(), result.getPerson().getNote());
 
-        if (expected.getPerson().getDateOfBirth() != null) {
-            java.time.LocalDate expecteDob = expected.getPerson().getDateOfBirth()
-                    .toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+		Assertions.assertEquals(expected.getMemberType(), result.getMemberType());
+		Assertions.assertEquals(expected.getPerson().getFirstname(), result.getPerson().getFirstname());
+		Assertions.assertEquals(expected.getPerson().getLastname(), result.getPerson().getLastname());
+		Assertions.assertEquals(expected.getPerson().getEmail(), result.getPerson().getEmail());
+		Assertions.assertEquals(expected.getPerson().getPhotoUri(), result.getPerson().getPhotoUri());
+		Assertions.assertEquals(expected.getPerson().getCommunicationLanguage(),
+				result.getPerson().getCommunicationLanguage());
+		Assertions.assertEquals(expected.getPerson().getNote(), result.getPerson().getNote());
 
-            java.time.LocalDate resultDob = result.getPerson().getDateOfBirth()
-                    .toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-            Assertions.assertEquals(expecteDob, resultDob);
-        }
+		if (expected.getPerson().getDateOfBirth() != null) {
+			java.time.LocalDate expecteDob = expected.getPerson().getDateOfBirth().toInstant()
+					.atZone(ZoneId.systemDefault()).toLocalDate();
 
-        Assertions.assertEquals(expected.isActive(), result.isActive());
+			java.time.LocalDate resultDob = result.getPerson().getDateOfBirth().toInstant()
+					.atZone(ZoneId.systemDefault()).toLocalDate();
+			Assertions.assertEquals(expecteDob, resultDob);
+		}
 
-        if (expected.getActivatedOn() != null) {
-            Assertions.assertNotNull(result.getActivatedOn());
-            Assertions.assertTrue(expected.getActivatedOn().truncatedTo(ChronoUnit.DAYS).equals(result.getActivatedOn().truncatedTo(ChronoUnit.DAYS)));
-        }
+		Assertions.assertEquals(expected.isActive(), result.isActive());
 
-        if (expected.getDeactivatedOn() != null) {
-            Assertions.assertNotNull(result.getDeactivatedOn());
-            Assertions.assertTrue(expected.getDeactivatedOn().truncatedTo(ChronoUnit.DAYS).equals(result.getDeactivatedOn().truncatedTo(ChronoUnit.DAYS)));
-        }
+		if (expected.getActivatedOn() != null) {
+			Assertions.assertNotNull(result.getActivatedOn());
+			Assertions.assertTrue(expected.getActivatedOn().truncatedTo(ChronoUnit.DAYS)
+					.equals(result.getActivatedOn().truncatedTo(ChronoUnit.DAYS)));
+		}
 
-        if (expected.getPerson().getAddress() != null) {
-            Assertions.assertEquals(expected.getPerson().getAddress().getCivicNumber(), result.getPerson().getAddress().getCivicNumber());
-            Assertions.assertEquals(expected.getPerson().getAddress().getStreetName(), result.getPerson().getAddress().getStreetName());
-            Assertions.assertEquals(expected.getPerson().getAddress().getAppartment(), result.getPerson().getAddress().getAppartment());
-            Assertions.assertEquals(expected.getPerson().getAddress().getCity(), result.getPerson().getAddress().getCity());
-            Assertions.assertEquals(expected.getPerson().getAddress().getState(), result.getPerson().getAddress().getState());
-            Assertions.assertEquals(expected.getPerson().getAddress().getZipCode(), result.getPerson().getAddress().getZipCode());
-        }
+		if (expected.getDeactivatedOn() != null) {
+			Assertions.assertNotNull(result.getDeactivatedOn());
+			Assertions.assertTrue(expected.getDeactivatedOn().truncatedTo(ChronoUnit.DAYS)
+					.equals(result.getDeactivatedOn().truncatedTo(ChronoUnit.DAYS)));
+		}
 
-        if (expected.getPerson().getAddress() == null) {
-            Assertions.assertNull(result.getPerson().getAddress());
-        }
+		if (expected.getPerson().getAddress() != null) {
+			Assertions.assertEquals(expected.getPerson().getAddress().getCivicNumber(),
+					result.getPerson().getAddress().getCivicNumber());
+			Assertions.assertEquals(expected.getPerson().getAddress().getStreetName(),
+					result.getPerson().getAddress().getStreetName());
+			Assertions.assertEquals(expected.getPerson().getAddress().getAppartment(),
+					result.getPerson().getAddress().getAppartment());
+			Assertions.assertEquals(expected.getPerson().getAddress().getCity(),
+					result.getPerson().getAddress().getCity());
+			Assertions.assertEquals(expected.getPerson().getAddress().getState(),
+					result.getPerson().getAddress().getState());
+			Assertions.assertEquals(expected.getPerson().getAddress().getZipCode(),
+					result.getPerson().getAddress().getZipCode());
+		}
 
-        if (expected.getPerson().getPhoneNumbers() != null) {
-            Assertions.assertNotNull(result.getPerson().getPhoneNumbers());
+		if (expected.getPerson().getAddress() == null) {
+			Assertions.assertNull(result.getPerson().getAddress());
+		}
 
-            Assertions.assertEquals(expected.getPerson().getPhoneNumbers().size(), result.getPerson().getPhoneNumbers().size());
-            expected.getPerson().getPhoneNumbers().forEach(phone -> {
-                Optional<PhoneNumberDto> previous = result.getPerson().getPhoneNumbers().stream()
-                        .filter(item -> item.getType().equals(phone.getType())).findFirst();
-                Assertions.assertTrue(previous.isPresent());
-            });
-        }
+		if (expected.getPerson().getPhoneNumbers() != null) {
+			Assertions.assertNotNull(result.getPerson().getPhoneNumbers());
 
-        if (expected.getPerson().getPhoneNumbers() == null) {
-            Assertions.assertNull(result.getPerson().getPhoneNumbers());
+			Assertions.assertEquals(expected.getPerson().getPhoneNumbers().size(),
+					result.getPerson().getPhoneNumbers().size());
+			expected.getPerson().getPhoneNumbers().forEach(phone -> {
+				Optional<PhoneNumberDto> previous = result.getPerson().getPhoneNumbers().stream()
+						.filter(item -> item.getType().equals(phone.getType())).findFirst();
+				Assertions.assertTrue(previous.isPresent());
+			});
+		}
 
-        if (expected.getPerson().getContacts() != null) {
-            Assertions.assertNotNull(result.getPerson().getContacts());
+		if (expected.getPerson().getPhoneNumbers() == null) {
+			Assertions.assertNull(result.getPerson().getPhoneNumbers());
 
-            Assertions.assertEquals(expected.getPerson().getContacts().size(), result.getPerson().getContacts().size());
-            expected.getPerson().getContacts().forEach(contact -> {
-                Optional<ContactDto> previous = result.getPerson().getContacts().stream()
-                        .filter(item -> item.getFirstname().equals(contact.getFirstname())).findFirst();
-                Assertions.assertTrue(previous.isPresent());
-                Assertions.assertEquals(previous.get().getLastname(), contact.getLastname());
-                Assertions.assertEquals(previous.get().getDescription(), contact.getDescription());
-                Assertions.assertEquals(previous.get().getEmail(), contact.getEmail());
+			if (expected.getPerson().getContacts() != null) {
+				Assertions.assertNotNull(result.getPerson().getContacts());
 
-                if (previous.get().getPhoneNumbers() != null) {
-                    Assertions.assertNotNull(contact.getPhoneNumbers());
+				Assertions.assertEquals(expected.getPerson().getContacts().size(),
+						result.getPerson().getContacts().size());
+				expected.getPerson().getContacts().forEach(contact -> {
+					Optional<ContactDto> previous = result.getPerson().getContacts().stream()
+							.filter(item -> item.getFirstname().equals(contact.getFirstname())).findFirst();
+					Assertions.assertTrue(previous.isPresent());
+					Assertions.assertEquals(previous.get().getLastname(), contact.getLastname());
+					Assertions.assertEquals(previous.get().getDescription(), contact.getDescription());
+					Assertions.assertEquals(previous.get().getEmail(), contact.getEmail());
 
-                    Assertions.assertEquals(contact.getPhoneNumbers().size(), contact.getPhoneNumbers().size());
+					if (previous.get().getPhoneNumbers() != null) {
+						Assertions.assertNotNull(contact.getPhoneNumbers());
 
-                    contact.getPhoneNumbers().forEach(phone -> {
-                        Optional<PhoneNumberDto> previousPhone = contact.getPhoneNumbers().stream()
-                                .filter(item -> item.getType().equals(phone.getType())).findFirst();
-                        Assertions.assertTrue(previousPhone.isPresent());
-                        Assertions.assertEquals(previousPhone.get().getNumber(), phone.getNumber());
-                    });
-                }
+						Assertions.assertEquals(contact.getPhoneNumbers().size(), contact.getPhoneNumbers().size());
 
-                if (previous.get().getPhoneNumbers() == null) {
-                    Assertions.assertNull(contact.getPhoneNumbers());
-                }
-            });
-        }
+						contact.getPhoneNumbers().forEach(phone -> {
+							Optional<PhoneNumberDto> previousPhone = contact.getPhoneNumbers().stream()
+									.filter(item -> item.getType().equals(phone.getType())).findFirst();
+							Assertions.assertTrue(previousPhone.isPresent());
+							Assertions.assertEquals(previousPhone.get().getNumber(), phone.getNumber());
+						});
+					}
 
-        if (expected.getPerson().getContacts() == null) {
-            Assertions.assertNull(result.getPerson().getContacts());
-        }            
-        }
+					if (previous.get().getPhoneNumbers() == null) {
+						Assertions.assertNull(contact.getPhoneNumbers());
+					}
+				});
+			}
+
+			if (expected.getPerson().getContacts() == null) {
+				Assertions.assertNull(result.getPerson().getContacts());
+			}
+		}
     }
 }

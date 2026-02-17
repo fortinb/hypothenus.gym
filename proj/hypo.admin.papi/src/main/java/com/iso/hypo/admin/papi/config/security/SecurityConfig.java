@@ -26,7 +26,6 @@ public class SecurityConfig {
 		http.cors(Customizer.withDefaults())
 				.addFilterBefore(authorizationFilter(), RequestHeaderAuthenticationFilter.class)
 				.csrf((i) -> i.disable()).authorizeHttpRequests((authorize) -> authorize
-
 						.requestMatchers("/swagger-ui/**").anonymous().requestMatchers("/*/api-docs/**").anonymous()
 						.anyRequest().authenticated());
 

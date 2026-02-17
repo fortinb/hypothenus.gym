@@ -1,15 +1,11 @@
 package com.iso.hypo.services;
 
 import com.iso.hypo.domain.dto.UserDto;
-import com.iso.hypo.domain.security.Roles;
 import com.iso.hypo.services.exception.UserException;
 
 public interface UserService {
-	UserDto create(UserDto userDto) throws UserException;
-
-	UserDto assignRole(String userUuid, Roles role) throws UserException;
 	
-	UserDto unassignRole(String userUuid, Roles role) throws UserException;
+	UserDto create(UserDto userDto) throws UserException;
 
 	void delete(String userUuid) throws UserException;
 

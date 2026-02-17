@@ -312,7 +312,7 @@ class BrandControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis", "Member, Guillaume Fortin", })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis", "member, Guillaume Fortin", })
 	void testGetSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PostBrandDto postDto = modelMapper.map(BrandBuilder.build(faker.code().isbn10(),faker.company().name()), PostBrandDto.class);
@@ -358,7 +358,7 @@ class BrandControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPutSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		Brand updatedBrand = BrandBuilder.build(faker.code().isbn10(),faker.company().name());
@@ -451,7 +451,7 @@ class BrandControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPatchSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		Brand brandToPatch = BrandBuilder.build(faker.code().isbn10(),faker.company().name());

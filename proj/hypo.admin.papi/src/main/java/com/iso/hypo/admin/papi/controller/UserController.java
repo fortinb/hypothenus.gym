@@ -179,6 +179,10 @@ public class UserController {
 			if (e.getCode() == UserException.USER_ALREADY_EXIST) {
 				return ResponseEntity.status(HttpStatus.OK).body(modelMapper.map(e.getUserDto(), UserDto.class));
 			}
+			
+			if (e.getCode() == UserException.ROLE_ASSIGNMENT_NOT_ALLOWED) {
+				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(modelMapper.map(e.getUserDto(), UserDto.class));
+			}
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, null);
 		}
@@ -214,6 +218,10 @@ public class UserController {
 			if (e.getCode() == UserException.USER_ALREADY_EXIST) {
 				return ResponseEntity.status(HttpStatus.OK).body(modelMapper.map(e.getUserDto(), UserDto.class));
 			}
+			
+			if (e.getCode() == UserException.ROLE_ASSIGNMENT_NOT_ALLOWED) {
+				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(modelMapper.map(e.getUserDto(), UserDto.class));
+			}
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, null);
 		}
@@ -243,6 +251,15 @@ public class UserController {
 			domainDto = userService.patch(domainDto);
 		} catch (UserException e) {
 			logger.error(e.getMessage(), e);
+			
+			if (e.getCode() == UserException.USER_ALREADY_EXIST) {
+				return ResponseEntity.status(HttpStatus.OK).body(modelMapper.map(e.getUserDto(), UserDto.class));
+			}
+			
+			if (e.getCode() == UserException.ROLE_ASSIGNMENT_NOT_ALLOWED) {
+				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(modelMapper.map(e.getUserDto(), UserDto.class));
+			}
+			
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 

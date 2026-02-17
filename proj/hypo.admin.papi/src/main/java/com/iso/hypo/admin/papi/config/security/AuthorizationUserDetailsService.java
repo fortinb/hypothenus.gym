@@ -31,7 +31,7 @@ public class AuthorizationUserDetailsService
 		try {
 			AuthorizationDto authorizationDto = objectMapper.readValue(principal, new TypeReference<AuthorizationDto>(){});
 			final Collection<SimpleGrantedAuthority> authorities = authorizationDto.getRoles().stream()
-					.map(i -> new SimpleGrantedAuthority("ROLE_".concat(i))).collect(Collectors.toList());
+					.map(i -> new SimpleGrantedAuthority("ROLE_".concat(i.toString()))).collect(Collectors.toList());
 			return new User(credentials, "", authorities);
 		} catch (JsonMappingException e) {
 			e.printStackTrace();

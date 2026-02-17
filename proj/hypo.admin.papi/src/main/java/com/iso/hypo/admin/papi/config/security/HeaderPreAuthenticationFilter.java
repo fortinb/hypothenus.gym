@@ -38,5 +38,4 @@ public class HeaderPreAuthenticationFilter extends RequestHeaderAuthenticationFi
 		String credentials = request.getHeader("x-credentials");
 		return credentials == null ? "n/a" : credentials;
 	}
-
 }

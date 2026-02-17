@@ -325,7 +325,7 @@ class GymControllerTests {
 	}
 	
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPostFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PostGymDto postDto = modelMapper.map(GymBuilder.build(brand.getUuid(), faker.code().isbn10(), faker.company().name()), PostGymDto.class);
@@ -340,7 +340,7 @@ class GymControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis", "Member, Guillaume Fortin", })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis", "member, Guillaume Fortin", })
 	void testGetSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PostGymDto postDto = modelMapper.map(GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name()), PostGymDto.class);
@@ -379,7 +379,7 @@ class GymControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPutSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		Gym updatedGym = GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name());
@@ -417,7 +417,7 @@ class GymControllerTests {
 	}
 	
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPutNullSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		Gym updatedGym = GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name());
@@ -459,7 +459,7 @@ class GymControllerTests {
 	}
 	
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPutFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PutGymDto putDto = modelMapper.map(GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name()), PutGymDto.class);
@@ -475,7 +475,7 @@ class GymControllerTests {
 	}
 	
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPutFailureForbiddenGymMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PutGymDto putDto = modelMapper.map(GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name()), PutGymDto.class);
@@ -490,7 +490,7 @@ class GymControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPatchSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		Gym gymToPatch = GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name());
@@ -515,7 +515,7 @@ class GymControllerTests {
 	}
 	
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPatchFailureNotFound(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		Gym patchTarget = GymBuilder.build(brand.getUuid(), faker.code().isbn10(), faker.company().name());
@@ -533,7 +533,7 @@ class GymControllerTests {
 	}
 	
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPatchFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PutGymDto patchDto = modelMapper.map(GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name()), PutGymDto.class);
@@ -549,7 +549,7 @@ class GymControllerTests {
 	}
 	
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPatchFailureForbiddenGymMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PutGymDto putDto = modelMapper.map(GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name()), PutGymDto.class);
@@ -564,7 +564,7 @@ class GymControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testActivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		Gym gymToActivate = GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name());
@@ -592,7 +592,7 @@ class GymControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testActivateFailureNotFound(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 
@@ -612,7 +612,7 @@ class GymControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testDeactivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		Gym gymToDeactivate = GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name());
@@ -637,7 +637,7 @@ class GymControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testDeactivateFailure(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 

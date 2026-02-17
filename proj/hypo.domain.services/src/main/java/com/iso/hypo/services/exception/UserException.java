@@ -16,6 +16,7 @@ public class UserException extends DomainException {
 	private static final long serialVersionUID = 1L;
 	public static final String ASSIGNROLE_FAILED = "500";
 	public static final String UNASSIGNROLE_FAILED = "500";
+	public static final String ROLE_ASSIGNMENT_NOT_ALLOWED = "201";
 
 	
 	public UserException(String trackingNumber, String code, String message, UserDto userDto) {

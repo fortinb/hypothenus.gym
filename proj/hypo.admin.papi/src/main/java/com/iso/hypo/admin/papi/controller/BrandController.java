@@ -76,7 +76,7 @@ public class BrandController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "500", description = "Unexpected server error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
-	@PreAuthorize("hasRole('" + Roles.Admin + "')")
+	@PreAuthorize("hasRole('" +  Roles.Admin + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> searchBrand(
 			@Parameter(description = "search criteria") @RequestParam String criteria,

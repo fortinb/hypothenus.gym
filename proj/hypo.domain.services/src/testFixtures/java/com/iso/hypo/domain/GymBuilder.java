@@ -30,8 +30,8 @@ public class GymBuilder {
 
 	public static List<PhoneNumber> buildPhoneNumbers() {
 		ArrayList<PhoneNumber> phoneNumbers = new ArrayList<PhoneNumber>();
-		phoneNumbers.add(new PhoneNumber(faker.phoneNumber().cellPhone(), PhoneNumberTypeEnum.Mobile));
-		phoneNumbers.add(new PhoneNumber(faker.phoneNumber().cellPhone(), PhoneNumberTypeEnum.Home));
+		phoneNumbers.add(new PhoneNumber(faker.phoneNumber().cellPhone(), PhoneNumberTypeEnum.mobile));
+		phoneNumbers.add(new PhoneNumber(faker.phoneNumber().cellPhone(), PhoneNumberTypeEnum.home));
 
 		return phoneNumbers;
 	}

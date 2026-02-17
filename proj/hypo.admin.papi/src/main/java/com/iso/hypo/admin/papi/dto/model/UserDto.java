@@ -3,6 +3,7 @@ package com.iso.hypo.admin.papi.dto.model;
 import java.util.List;
 
 import com.iso.hypo.admin.papi.dto.BaseDto;
+import com.iso.hypo.admin.papi.dto.enumeration.RoleEnum;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -19,5 +20,5 @@ public class UserDto extends BaseDto {
 	
 	private String email;
 	
-	private List<String> roles;
+	private List<RoleEnum> roles;
 }

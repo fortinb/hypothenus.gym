@@ -101,16 +101,14 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 	}
 	
 	@Override
-	public String getRoleName(AppRoleAssignment appRoleAssignment) throws Exception {
+	public AppRole getRole(AppRoleAssignment appRoleAssignment) throws Exception {
 		// Get application
 		Application app = graphClient.applicationsWithAppId(clientId).get();
 
 		// Find the role by name
 		Optional<AppRole> roleMember = app.getAppRoles().stream().filter(r -> r.getId().equals(appRoleAssignment.getAppRoleId()))
 				.findFirst();
-		AppRole role = roleMember.orElseThrow(() -> new IllegalStateException("App role not found"));
-		
-		return role.getValue();
+		return roleMember.orElseThrow(() -> new IllegalStateException("App role not found"));
 	}
 	
 	@Override

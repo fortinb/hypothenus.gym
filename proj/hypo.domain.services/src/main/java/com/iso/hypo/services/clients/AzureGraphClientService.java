@@ -22,7 +22,7 @@ public interface AzureGraphClientService {
 	
 	void unassignRole(String userId, String roleName) throws Exception;
 
-	String getRoleName(AppRoleAssignment appRoleAssignment) throws Exception;
+	AppRole getRole(AppRoleAssignment appRoleAssignment) throws Exception;
 	
 	boolean isMemberOfGroup(String userId, String groupName) throws Exception;
 

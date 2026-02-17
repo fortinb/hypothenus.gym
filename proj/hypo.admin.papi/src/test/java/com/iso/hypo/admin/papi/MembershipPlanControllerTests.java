@@ -146,7 +146,7 @@ class MembershipPlanControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testListActiveSuccess(String role, String user)
 			throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
@@ -181,7 +181,7 @@ class MembershipPlanControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testListFirstPageSuccess(String role, String user)
 			throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
@@ -215,7 +215,7 @@ class MembershipPlanControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testListSecondPageSuccess(String role, String user)
 			throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
@@ -246,7 +246,7 @@ class MembershipPlanControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPostSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PostMembershipPlanDto postDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid()), PostMembershipPlanDto.class);
@@ -265,7 +265,7 @@ class MembershipPlanControllerTests {
 	}
 	
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPostFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PostMembershipPlanDto postDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid()), PostMembershipPlanDto.class);
@@ -280,7 +280,7 @@ class MembershipPlanControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testGetSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PostMembershipPlanDto postDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid()), PostMembershipPlanDto.class);
@@ -322,7 +322,7 @@ class MembershipPlanControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPutSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		MembershipPlan membershipPlanToUpdate = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid());
@@ -359,7 +359,7 @@ class MembershipPlanControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPutNullSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		MembershipPlan membershipPlanToUpdate = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid());
@@ -403,7 +403,7 @@ class MembershipPlanControllerTests {
 	}
 	
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPutFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PutMembershipPlanDto putDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid()), PutMembershipPlanDto.class);
@@ -419,7 +419,7 @@ class MembershipPlanControllerTests {
 	}
 	
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPutFailureForbiddenMembershipPlanMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PutMembershipPlanDto putDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid()), PutMembershipPlanDto.class);
@@ -433,7 +433,7 @@ class MembershipPlanControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testActivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		MembershipPlan membershipPlanToActivate = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid());
@@ -461,7 +461,7 @@ class MembershipPlanControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testActivateFailureNotFound(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 
@@ -481,7 +481,7 @@ class MembershipPlanControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testDeactivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		MembershipPlan membershipPlanToDeactivate = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid());
@@ -506,7 +506,7 @@ class MembershipPlanControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testDeactivateFailureNotFound(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 
@@ -526,7 +526,7 @@ class MembershipPlanControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPatchSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		MembershipPlan membershipPlanToPatch = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid());
@@ -552,7 +552,7 @@ class MembershipPlanControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPatchFailureNotFound(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		MembershipPlan patchTarget = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid());
@@ -570,7 +570,7 @@ class MembershipPlanControllerTests {
 	}
 	
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPatchFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PutMembershipPlanDto putDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid()), PutMembershipPlanDto.class);
@@ -586,7 +586,7 @@ class MembershipPlanControllerTests {
 	}
 	
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPatchFailureForbiddenMembershipPlanMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PutMembershipPlanDto putDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid()), PutMembershipPlanDto.class);

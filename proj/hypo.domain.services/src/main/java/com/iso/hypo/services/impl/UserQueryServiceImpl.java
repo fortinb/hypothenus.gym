@@ -15,6 +15,7 @@ import com.iso.hypo.common.context.RequestContext;
 import com.iso.hypo.domain.aggregate.User;
 import com.iso.hypo.domain.dto.UserDto;
 import com.iso.hypo.domain.dto.search.UserSearchDto;
+import com.iso.hypo.domain.security.RoleEnum;
 import com.iso.hypo.repositories.UserRepository;
 import com.iso.hypo.services.UserQueryService;
 import com.iso.hypo.services.clients.AzureGraphClientService;
@@ -58,15 +59,14 @@ public class UserQueryServiceImpl implements UserQueryService {
 			UserDto userDto = userMapper.toDto(entity.get());
 			
 			if (!testRun) {
-				Optional<com.microsoft.graph.models.User> idpUser = azureGraphClientService
-						.findUser(entity.get().getIdpId());
+				Optional<com.microsoft.graph.models.User> idpUser = azureGraphClientService.findUser(entity.get().getIdpId());
 				if (!idpUser.isPresent()) {
 					throw new UserException(requestContext.getTrackingNumber(), UserException.USER_NOT_FOUND,
 							"User not found");
 				}
 				
 				for (AppRoleAssignment appRoleAssignment : idpUser.get().getAppRoleAssignments()) {
-					userDto.getRoles().add(azureGraphClientService.getRoleName(appRoleAssignment));
+					userDto.getRoles().add(RoleEnum.valueOf(azureGraphClientService.getRole(appRoleAssignment).getValue()));
 				}
 			}
 

@@ -37,6 +37,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iso.hypo.admin.papi.dto.ErrorDto;
+import com.iso.hypo.admin.papi.dto.enumeration.RoleEnum;
 import com.iso.hypo.admin.papi.dto.model.UserDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchUserDto;
 import com.iso.hypo.admin.papi.dto.post.PostUserDto;
@@ -214,8 +215,8 @@ class UserControllerTests {
 	void testPostSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PostUserDto postDto = modelMapper.map(UserBuilder.build(), PostUserDto.class);
-		postDto.setRoles(new ArrayList<String>());
-		postDto.getRoles().add(Roles.Member);
+		postDto.setRoles(new ArrayList<RoleEnum>());
+		postDto.getRoles().add(RoleEnum.member);
 		HttpEntity<PostUserDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
 
 		// Act
@@ -259,7 +260,7 @@ class UserControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testGetSuccess(String role, String userName) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PostUserDto postDto = modelMapper.map(UserBuilder.build(), PostUserDto.class);
@@ -305,7 +306,7 @@ class UserControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPutSuccess(String role, String userName) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		User updatedUser = UserBuilder.build();
@@ -388,7 +389,7 @@ class UserControllerTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "Admin, Bruno Fortin", "Manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPatchSuccess(String role, String userName) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		User userToPatch = UserBuilder.build();
@@ -593,7 +594,7 @@ class UserControllerTests {
 		Assertions.assertEquals(expected.getEmail(), result.getEmail());
 		
 		if (expected.getRoles() != null) {
-			for (String role : expected.getRoles()) {
+			for (RoleEnum role : expected.getRoles()) {
 				Assertions.assertTrue(result.getRoles().contains(role),
 						String.format("User role %s is missing in result", role));
 			}

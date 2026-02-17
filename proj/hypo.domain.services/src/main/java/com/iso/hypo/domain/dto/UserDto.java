@@ -3,6 +3,7 @@ package com.iso.hypo.domain.dto;
 import java.util.List;
 
 import com.iso.hypo.common.dto.BaseEntityDto;
+import com.iso.hypo.domain.security.RoleEnum;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -19,5 +20,5 @@ public class UserDto extends BaseEntityDto {
 	
 	private String email;
 	
-	private List<String> roles;
+	private List<RoleEnum> roles;
 }
