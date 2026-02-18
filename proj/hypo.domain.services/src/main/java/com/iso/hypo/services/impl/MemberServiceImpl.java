@@ -20,6 +20,7 @@ import com.iso.hypo.domain.aggregate.Member;
 import com.iso.hypo.domain.aggregate.User;
 import com.iso.hypo.domain.dto.MemberDto;
 import com.iso.hypo.domain.enumeration.MessageSeverityEnum;
+import com.iso.hypo.domain.security.RoleEnum;
 import com.iso.hypo.domain.security.Roles;
 import com.iso.hypo.events.event.OperationEnum;
 import com.iso.hypo.repositories.MemberRepository;
@@ -63,7 +64,7 @@ public class MemberServiceImpl implements MemberService {
 		this.memberMapper = memberMapper;
 		this.memberRepository = memberRepository;
 		this.userRepository = userRepository;
-		this.azureGraphClientService = null;
+		this.azureGraphClientService = azureGraphClientService;
 		this.eventPublisher = eventPublisher;
 		this.brandQueryService = brandQueryService;
 		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
@@ -94,24 +95,33 @@ public class MemberServiceImpl implements MemberService {
 						"Duplicate member", memberMapper.toDto(existingMember.get()));
 			}
 
+			// Create member
+			member.setCreatedOn(Instant.now());
+			member.setCreatedBy(requestContext.getUsername());
+			member.setUuid(UUID.randomUUID().toString());
+						
 			// Skip external side-effect during JUnit runs
 			if (!testRun) {
-				// Find user in identity provider with same email
-				Optional<com.microsoft.graph.models.User> idpUser = azureGraphClientService
-						.userExists(member.getPerson().getEmail());
+				Optional<com.microsoft.graph.models.User> idpUser = null;
 				
-				if (idpUser.isPresent()) {
-					idpUser.get().setAccountEnabled(false);				
+				Optional<User> existingUser = userRepository.findByEmailAndIsDeletedIsFalse(memberDto.getPerson().getEmail());
+				if (existingUser.isPresent()) {
+					idpUser = azureGraphClientService.findUser(existingUser.get().getIdpId());
 				} else {
+					idpUser = Optional.empty();
+				}
+				
+				if (!idpUser.isPresent()) {
 					// Create user in identity provider
 					com.microsoft.graph.models.User newUser = new com.microsoft.graph.models.User();
 					
 					newUser.setAccountEnabled(false);
-					newUser.setDisplayName(memberDto.getPerson().getFirstname() + " " + memberDto.getPerson().getLastname());
-					newUser.setGivenName(memberDto.getPerson().getFirstname());
-					newUser.setSurname(memberDto.getPerson().getLastname());
-					newUser.setMailNickname(memberDto.getUuid());
-					newUser.setUserPrincipalName(memberDto.getUuid());
+					newUser.setDisplayName(member.getPerson().getFirstname() + " " + member.getPerson().getLastname());
+					newUser.setGivenName(member.getPerson().getFirstname());
+					newUser.setSurname(member.getPerson().getLastname());
+					newUser.setMailNickname(member.getUuid());
+					newUser.setMail(member.getPerson().getEmail());
+					newUser.setUserPrincipalName(member.getUuid());
 					newUser.setPasswordProfile(new PasswordProfile());
 					newUser.getPasswordProfile().setForceChangePasswordNextSignIn(true);
 					newUser.getPasswordProfile().setPassword(password);
@@ -125,21 +135,22 @@ public class MemberServiceImpl implements MemberService {
 				// Assign Group to user
 				azureGraphClientService.addToGroup(idpUser.get().getId(), member.getBrandUuid());
 				
-				// Persist user
-				User user = new User();
-				user.setIdpId(idpUser.get().getId());
-				user.setUpn(idpUser.get().getUserPrincipalName());
-				
-				User userSaved = userRepository.save(user);
-				member.setUser(userSaved);
+				if (!existingUser.isPresent()) {
+					// Persist user
+					User user = new User();
+					user.setIdpId(idpUser.get().getId());
+					user.setUpn(idpUser.get().getUserPrincipalName());
+					user.setEmail(idpUser.get().getMail());
+					user.getRoles().add(RoleEnum.member);
+					User userSaved = userRepository.save(user);
+					
+					member.setUser(userSaved);
+				} else {
+					member.setUser(existingUser.get());
+				}
 			} else {
 				logger.debug("Skipping createUser() because app.test-run=true.");
 			}
-
-			// Create member
-			member.setCreatedOn(Instant.now());
-			member.setCreatedBy(requestContext.getUsername());
-			member.setUuid(UUID.randomUUID().toString());
 
 			Member saved = memberRepository.save(member);
 			return memberMapper.toDto(saved);
@@ -286,17 +297,16 @@ public class MemberServiceImpl implements MemberService {
 					throw new MemberException(requestContext.getTrackingNumber(), MemberException.MEMBER_ALREADY_EXIST,
 							"Duplicate member", memberMapper.toDto(oldMember));
 				}
-				
-				if (!testRun) {
-					Optional<com.microsoft.graph.models.User> idpUser = azureGraphClientService
-							.findUser(oldMember.getUser().getIdpId());
-					if (idpUser.isPresent()) {
-						idpUser.get().setDisplayName(oldMember.getPerson().getFirstname() + " " + oldMember.getPerson().getLastname());
-						idpUser.get().setGivenName(oldMember.getPerson().getFirstname());
-						idpUser.get().setSurname(oldMember.getPerson().getLastname());
-						idpUser.get().setMail(oldMember.getPerson().getEmail());
-						azureGraphClientService.updateUser(idpUser.get());
-					}
+			}
+			
+			if (!testRun) {
+				Optional<com.microsoft.graph.models.User> idpUser = azureGraphClientService.findUser(oldMember.getUser().getIdpId());
+				if (idpUser.isPresent()) {
+					idpUser.get().setDisplayName(oldMember.getPerson().getFirstname() + " " + oldMember.getPerson().getLastname());
+					idpUser.get().setGivenName(oldMember.getPerson().getFirstname());
+					idpUser.get().setSurname(oldMember.getPerson().getLastname());
+					idpUser.get().setMail(oldMember.getPerson().getEmail());
+					azureGraphClientService.updateUser(idpUser.get());
 				}
 			}
 
@@ -322,8 +332,6 @@ public class MemberServiceImpl implements MemberService {
 			throw new MemberException(requestContext.getTrackingNumber(), MemberException.MEMBER_NOT_FOUND,
 					"Member not found");
 		}
-
 		return entity.get();
 	}
-
 }

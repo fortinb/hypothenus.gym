@@ -39,6 +39,7 @@ public class MemberMapper {
                 skip().setActive(false);
                 skip().setActivatedOn(null);
                 skip().setDeactivatedOn(null);
+                skip().setUser(null);
             }
         };
 

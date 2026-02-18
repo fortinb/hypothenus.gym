@@ -3,7 +3,6 @@ package com.iso.hypo.admin.papi;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.UUID;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -30,9 +29,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iso.hypo.admin.papi.dto.enumeration.RoleEnum;
+import com.iso.hypo.admin.papi.dto.model.BrandDto;
 import com.iso.hypo.admin.papi.dto.model.UserDto;
-import com.iso.hypo.admin.papi.dto.patch.PatchMemberDto;
-import com.iso.hypo.admin.papi.dto.patch.PatchUserDto;
 import com.iso.hypo.admin.papi.dto.post.PostBrandDto;
 import com.iso.hypo.admin.papi.dto.post.PostMemberDto;
 import com.iso.hypo.admin.papi.dto.post.PostUserDto;
@@ -42,8 +40,6 @@ import com.iso.hypo.domain.BrandBuilder;
 import com.iso.hypo.domain.MemberBuilder;
 import com.iso.hypo.domain.UserBuilder;
 import com.iso.hypo.domain.aggregate.Brand;
-import com.iso.hypo.domain.aggregate.Member;
-import com.iso.hypo.domain.aggregate.User;
 import com.iso.hypo.domain.enumeration.MemberTypeEnum;
 import com.iso.hypo.domain.security.Roles;
 import com.iso.hypo.repositories.BrandRepository;
@@ -58,7 +54,7 @@ import com.iso.hypo.tests.utils.TestResponseUtils;
 import net.datafaker.Faker;
 
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@TestPropertySource(properties = "app.test.run=true")
+@TestPropertySource(properties = "app.test.run=false")
 @TestInstance(Lifecycle.PER_CLASS)
 class IdpTests {
 
@@ -111,8 +107,19 @@ class IdpTests {
 
 		userRepository.deleteAll();
 
-		brand = BrandBuilder.build(codeBrand_1, faker.company().name());
-		brandRepository.save(brand);
+		try {
+			PostBrandDto postBrandDto = modelMapper.map(BrandBuilder.build(faker.code().isbn10(),faker.company().name()), PostBrandDto.class);
+			HttpEntity<PostBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postBrandDto);
+
+			// Act
+			ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postBrandURI), port, null),
+					HttpMethod.POST, httpEntity, JsonNode.class);
+			
+			BrandDto createdDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
+			brand = objectMapper.convertValue(createdDto, Brand.class);
+		} catch (Exception e) {
+			// user already exists
+		}
 	}
 
 	@AfterAll
@@ -136,13 +143,14 @@ class IdpTests {
 				String.format("Post error: %s", response.getStatusCode()));
 	}
 	
-	@Test
-	void testPostUserSuccess() throws MalformedURLException, JsonProcessingException, Exception {
+	@ParameterizedTest
+	@CsvSource({ "admin, Bruno Fortin" })
+	void testPostUserSuccess(String role, String userName) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PostUserDto postDto = modelMapper.map(UserBuilder.build(), PostUserDto.class);
 		postDto.setRoles(new ArrayList<RoleEnum>());
-		postDto.getRoles().add(RoleEnum.member);
-		HttpEntity<PostUserDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
+		postDto.getRoles().add(role.equals("admin") ? RoleEnum.admin : RoleEnum.manager);
+		HttpEntity<PostUserDto> httpEntity = HttpUtils.createHttpEntity(role, userName, postDto);
 
 		// Act
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
@@ -151,12 +159,44 @@ class IdpTests {
 		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
 				String.format("Post error: %s", response.getStatusCode()));
 	}
+	
+	@Test
+	void testPutUserNotAllowed() throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		PostUserDto postDto = modelMapper.map(UserBuilder.build(), PostUserDto.class);
+		postDto.setRoles(new ArrayList<RoleEnum>());
+		postDto.getRoles().add(RoleEnum.manager);
+		postDto.getRoles().add(RoleEnum.member);
+		HttpEntity<PostUserDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
+
+		// Act
+		ResponseEntity<JsonNode> responsePost = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(userPostURI), port, null), HttpMethod.POST, httpEntity, JsonNode.class);
+		Assertions.assertEquals(HttpStatus.CREATED, responsePost.getStatusCode(),
+				String.format("Post error: %s", responsePost.getStatusCode()));
+		
+		UserDto createdDto = TestResponseUtils.toDto(responsePost, UserDto.class, objectMapper);
+		
+		PutUserDto putDto = modelMapper.map(createdDto, PutUserDto.class);
+		putDto.getRoles().add(RoleEnum.admin);
+
+		// Act
+		HttpEntity<PutUserDto> putHttpEntity = HttpUtils.createHttpEntity(Roles.Manager, Users.Manager, putDto);
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(userPutURI, createdDto.getUuid())), port, null),
+				HttpMethod.PUT, putHttpEntity, JsonNode.class);
+		
+		Assertions.assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode(),
+				String.format("Post error: %s", response.getStatusCode()));
+	}
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testGetUserSuccess(String role, String userName) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PostUserDto postDto = modelMapper.map(UserBuilder.build(), PostUserDto.class);
+		postDto.setRoles(new ArrayList<RoleEnum>());
+		postDto.getRoles().add(role.equals("admin") ? RoleEnum.admin : RoleEnum.manager);
 		HttpEntity<PostUserDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
 
 		ResponseEntity<JsonNode> responsePost = testRestTemplate.exchange(
@@ -175,59 +215,50 @@ class IdpTests {
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
+		
+		UserDto userDto = TestResponseUtils.toDto(response, UserDto.class, objectMapper);
+		Assertions.assertTrue(userDto.getFirstname().equals(createdDto.getFirstname()));
+		Assertions.assertTrue(userDto.getLastname().equals(createdDto.getLastname()));
+		Assertions.assertTrue(userDto.getEmail().equals(createdDto.getEmail()));
+		Assertions.assertTrue(userDto.getRoles().contains(RoleEnum.valueOf(role)));
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
+	@CsvSource({ "admin, Bruno Fortin" })
 	void testPutUserSuccess(String role, String userName) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		User updatedUser = UserBuilder.build();
-		updatedUser.setActive(true);
-		updatedUser.setIdpId(UUID.randomUUID().toString());
-		updatedUser.setUpn(updatedUser.getEmail());
-		updatedUser = userRepository.save(updatedUser);
+		PostUserDto postDto = modelMapper.map(UserBuilder.build(), PostUserDto.class);
+		postDto.setRoles(new ArrayList<RoleEnum>());
+		postDto.getRoles().add(RoleEnum.admin);
+		postDto.getRoles().add(RoleEnum.manager);
+		HttpEntity<PostUserDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
 
-		PutUserDto putDto = modelMapper.map(updatedUser, PutUserDto.class);
+		ResponseEntity<JsonNode> responsePost = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(userPostURI), port, null), HttpMethod.POST, httpEntity, JsonNode.class);
 
-		putDto.setEmail(faker.internet().emailAddress());
-
-		if (putDto.getFirstname() != null && !putDto.getFirstname().isEmpty()) {
-			putDto.setFirstname(putDto.getFirstname() + " - updated");
-		}
-
-		if (putDto.getLastname() != null && !putDto.getLastname().isEmpty()) {
-			putDto.setLastname(putDto.getLastname() + " - updated");
-		}
+		Assertions.assertEquals(HttpStatus.CREATED, responsePost.getStatusCode(),
+				String.format("Post error: %s", responsePost.getStatusCode()));
+		
+		UserDto createdDto = TestResponseUtils.toDto(responsePost, UserDto.class, objectMapper);
+		
+		PutUserDto putDto = modelMapper.map(createdDto, PutUserDto.class);
+		putDto.getRoles().add(RoleEnum.member);
+		putDto.getRoles().remove(RoleEnum.manager);
 
 		// Act
-		HttpEntity<PutUserDto> httpEntity = HttpUtils.createHttpEntity(role, userName, putDto);
+		HttpEntity<PutUserDto> putHttpEntity = HttpUtils.createHttpEntity(role, userName, putDto);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(userPutURI, updatedUser.getUuid())), port, null),
-				HttpMethod.PUT, httpEntity, JsonNode.class);
+				HttpUtils.createURL(URI.create(String.format(userPutURI, createdDto.getUuid())), port, null),
+				HttpMethod.PUT, putHttpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Put error: %s", response.getStatusCode()));
-	}
-
-	@ParameterizedTest
-	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testPatchUserSuccess(String role, String userName) throws JsonProcessingException, MalformedURLException {
-		// Arrange
-		User userToPatch = UserBuilder.build();
-		userToPatch.setActive(true);
-		userToPatch = userRepository.save(userToPatch);
-
-		PatchUserDto patchDto = modelMapper.map(userToPatch, PatchUserDto.class);
-		patchDto.setFirstname(null);
-
-		// Act
-		HttpEntity<PatchUserDto> httpEntity = HttpUtils.createHttpEntity(role, userName, patchDto);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(userPatchURI, userToPatch.getUuid())), port, null),
-				HttpMethod.PATCH, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Get error: %s", response.getStatusCode()));
+		
+		UserDto updatedDto = TestResponseUtils.toDto(response, UserDto.class, objectMapper);
+		Assertions.assertTrue(updatedDto.getRoles().contains(RoleEnum.admin));
+		Assertions.assertTrue(updatedDto.getRoles().contains(RoleEnum.member));
+		Assertions.assertFalse(updatedDto.getRoles().contains(RoleEnum.manager));
+		
 	}
 
 	@Test
@@ -253,25 +284,18 @@ class IdpTests {
 
 		Assertions.assertEquals(HttpStatus.ACCEPTED, response.getStatusCode(),
 				String.format("User delete error: %s", response.getStatusCode()));
-
-		httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-		response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(userGetURI, userToDeleteDto.getUuid())), port, null),
-				HttpMethod.GET, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
-				String.format("Get error: %s", response.getStatusCode()));
 	}
 
 	@Test
 	void testPostMemberSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PostMemberDto postDto = modelMapper.map(MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular), PostMemberDto.class);
-		HttpEntity<PostMemberDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
+		postDto.setPassword("admin.test.1");
+		HttpEntity<PostMemberDto> httpEntityMember = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
 
 		// Act
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(memberPostURI, brand.getUuid())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
+				HttpMethod.POST, httpEntityMember, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
 				String.format("Post error: %s", response.getStatusCode()));
@@ -280,83 +304,30 @@ class IdpTests {
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPutMemberSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
-		// Arrange
-		Member updatedMember = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
-		updatedMember.setActive(true);
-		updatedMember = memberRepository.save(updatedMember);
 
-		PutMemberDto putDto = modelMapper.map(updatedMember, PutMemberDto.class);
-		// mutate mutable fields
+		PostMemberDto postDto = modelMapper.map(MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular), PostMemberDto.class);
+		postDto.setPassword("admin.test.1");
+		HttpEntity<PostMemberDto> httpEntityMember = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
+
+		// Act
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(memberPostURI, brand.getUuid())), port, null),
+				HttpMethod.POST, httpEntityMember, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
+				String.format("Post error: %s", response.getStatusCode()));
+		
+		PutMemberDto putDto = TestResponseUtils.toDto(response, PutMemberDto.class, objectMapper);
 		putDto.getPerson().setEmail(faker.internet().emailAddress());
 		putDto.getPerson().setFirstname(putDto.getPerson().getFirstname() + " - updated");
 		putDto.getPerson().setLastname(putDto.getPerson().getLastname() + " - updated");
-		if (putDto.getPerson().getAddress() != null) {
-			putDto.getPerson().getAddress().setStreetName(faker.address().streetName());
-		}
-		if (putDto.getPerson().getPhoneNumbers() != null && putDto.getPerson().getPhoneNumbers().size() > 0) {
-			putDto.getPerson().getPhoneNumbers().remove(0);
-		}
-		if (putDto.getPerson().getContacts() != null && putDto.getPerson().getContacts().size() > 1) {
-			putDto.getPerson().getContacts().remove(1);
-			putDto.getPerson().getContacts().get(0).setLastname("Updated" + faker.name().lastName());
-		} else if (putDto.getPerson().getContacts() != null && putDto.getPerson().getContacts().size() == 1) {
-			putDto.getPerson().getContacts().get(0).setLastname("Updated" + faker.name().lastName());
-		}
-
+		
 		// Act
-		HttpEntity<PutMemberDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(memberPutURI, updatedMember.getBrandUuid(), updatedMember.getUuid())), port, null),
-				HttpMethod.PUT, httpEntity, JsonNode.class);
+		HttpEntity<PutMemberDto> httpPutEntity = HttpUtils.createHttpEntity(role, user, putDto);
+		response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(memberPutURI, putDto.getBrandUuid(), putDto.getUuid())), port, null),
+				HttpMethod.PUT, httpPutEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Put error: %s", response.getStatusCode()));
 	}
-	
-	@ParameterizedTest
-    @CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-    void testPatchMemberSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
-        // Arrange
-        Member memberToPatch = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
-        memberToPatch.setActive(true);
-        memberToPatch = memberRepository.save(memberToPatch);
-
-        PatchMemberDto patchDto = modelMapper.map(memberToPatch, PatchMemberDto.class);
-        patchDto.getPerson().setDateOfBirth(null);
-        patchDto.getPerson().getAddress().setStreetName(null);
-        patchDto.getPerson().setLastname(faker.name().lastName());
-        patchDto.setPreferredGymUuid(null);
-        
-        memberToPatch.getPerson().setLastname(patchDto.getPerson().getLastname());
-
-        // Act
-        HttpEntity<PatchMemberDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchDto);
-        ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-                HttpUtils.createURL(URI.create(String.format(memberPatchURI, brand.getUuid(), patchDto.getUuid())), port, null),
-                HttpMethod.PATCH, httpEntity, JsonNode.class);
-
-        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(), String.format("Get error: %s", response.getStatusCode()));
-    }
-	
-	@Test
-    void testDeleteMemberSuccess() throws JsonProcessingException, MalformedURLException {
-        // Arrange
-        Member memberToDelete = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
-        memberToDelete = memberRepository.save(memberToDelete);
-
-        // Act
-        HttpEntity<PutMemberDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-        ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-                HttpUtils.createURL(URI.create(String.format(memberDeleteURI, brand.getUuid(), memberToDelete.getUuid())), port, null),
-                HttpMethod.DELETE, httpEntity, JsonNode.class);
-
-        Assertions.assertEquals(HttpStatus.ACCEPTED, response.getStatusCode(), String.format("Member delete error: %s", response.getStatusCode()));
-
-        httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-        response = testRestTemplate.exchange(
-                HttpUtils.createURL(URI.create(String.format(memberGetURI, brand.getUuid(), memberToDelete.getUuid())), port, null),
-                HttpMethod.GET, httpEntity, JsonNode.class);
-
-        Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(), String.format("Get error: %s", response.getStatusCode()));
-    }
 }

@@ -1,6 +1,7 @@
 package com.iso.hypo.services.impl;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -28,7 +29,6 @@ import com.iso.hypo.services.clients.AzureGraphClientService;
 import com.iso.hypo.services.event.UserEvent;
 import com.iso.hypo.services.exception.UserException;
 import com.iso.hypo.services.mappers.UserMapper;
-import com.microsoft.graph.models.AppRole;
 import com.microsoft.graph.models.AppRoleAssignment;
 import com.microsoft.graph.models.PasswordProfile;
 
@@ -84,8 +84,6 @@ public class UserServiceImpl implements UserService {
 				// Find user in identity provider with same email
 				Optional<com.microsoft.graph.models.User> idpUser = azureGraphClientService.userExists(user.getEmail());
 				if (idpUser.isPresent()) {
-					// Delete user in identity provider
-					//azureGraphClientService.deleteUser(idpUser.get().getId());
 					Message message = new Message();
 					message.setCode(UserException.USER_ALREADY_EXIST);
 					message.setDescription("Duplicate user");
@@ -101,9 +99,6 @@ public class UserServiceImpl implements UserService {
 			user.setUuid(UUID.randomUUID().toString());
 			user.setCreatedOn(Instant.now());
 			user.setCreatedBy(requestContext.getUsername());
-
-			User saved = userRepository.save(user);
-			UserDto savedDto = userMapper.toDto(saved);
 			
 			if (!testRun) {
 				// Create user in identity provider
@@ -117,11 +112,11 @@ public class UserServiceImpl implements UserService {
 				newUser.setUserPrincipalName(user.getUuid());
 				newUser.setPasswordProfile(new PasswordProfile());
 				newUser.getPasswordProfile().setForceChangePasswordNextSignIn(true);
-				newUser.getPasswordProfile().setPassword(null); // Let Azure generate random password
+				newUser.getPasswordProfile().setPassword(UUID.randomUUID().toString()); 
 				com.microsoft.graph.models.User createdUser = azureGraphClientService.createUser(newUser);
 
 				// Verify security level
-				if (!Roles.isRolesAssignmentAllowed(requestContext.getRoles(), userDto.getRoles())) {
+				if (!Roles.isRolesAssignmentAllowed(requestContext.getRoles(), null, userDto.getRoles())) {
 					Message message = new Message();
 					message.setCode(UserException.ROLE_ASSIGNMENT_NOT_ALLOWED);
 					message.setDescription("Role assignment not allowed");
@@ -133,20 +128,20 @@ public class UserServiceImpl implements UserService {
 				}
 				
 				// Assign roles to user
-				savedDto.setRoles(new java.util.ArrayList<RoleEnum>());
 				for (RoleEnum role : userDto.getRoles()) {
-					AppRole appRole = azureGraphClientService.assignRole(createdUser.getId(), role.toString());
-					savedDto.getRoles().add(RoleEnum.valueOf(appRole.getValue()));
+					azureGraphClientService.assignRole(createdUser.getId(), role.toString());
 				}
-
+				
 				user.setIdpId(createdUser.getId());
 				user.setUpn(createdUser.getUserPrincipalName());
 			} else {
 				// For test run, generate random UUID for idpId and use email as upn
-				savedDto.setRoles(userDto.getRoles());
+				user.setIdpId(UUID.randomUUID().toString());
+				user.setUpn(userDto.getEmail());
 			}
-
-			return savedDto;
+			
+			User saved = userRepository.save(user);
+			return userMapper.toDto(saved);
 		} catch (
 
 		Exception e) {
@@ -192,13 +187,23 @@ public class UserServiceImpl implements UserService {
 	@Transactional
 	public UserDto activate(String userUuid) throws UserException {
 		try {
-			Optional<User> userOpt = userRepository.activate(userUuid);
-			if (userOpt.isEmpty()) {
+			Optional<User> entity = userRepository.activate(userUuid);
+			if (entity.isEmpty()) {
 				throw new UserException(requestContext.getTrackingNumber(), UserException.USER_NOT_FOUND,
 						"User not found");
 			}
 
-			return userMapper.toDto(userOpt.get());
+			if (!testRun) {
+				// Find user in identity provider with same email
+				Optional<com.microsoft.graph.models.User> idpUser = azureGraphClientService.findUser(entity.get().getIdpId());
+				if (idpUser.isPresent()) {
+					// Deactivate user in identity provider
+					idpUser.get().setAccountEnabled(true);
+					azureGraphClientService.updateUser(idpUser.get());
+				}
+			}
+			
+			return userMapper.toDto(entity.get());
 		} catch (Exception e) {
 			logger.error("Error - userUuid={}", userUuid, e);
 
@@ -213,13 +218,23 @@ public class UserServiceImpl implements UserService {
 	@Transactional
 	public UserDto deactivate(String userUuid) throws UserException {
 		try {
-			Optional<User> userOpt = userRepository.deactivate(userUuid);
-			if (userOpt.isEmpty()) {
+			Optional<User> entity = userRepository.deactivate(userUuid);
+			if (entity.isEmpty()) {
 				throw new UserException(requestContext.getTrackingNumber(), UserException.USER_NOT_FOUND,
 						"User not found");
 			}
 
-			return userMapper.toDto(userOpt.get());
+			if (!testRun) {
+				// Find user in identity provider with same email
+				Optional<com.microsoft.graph.models.User> idpUser = azureGraphClientService.findUser(entity.get().getIdpId());
+				if (idpUser.isPresent()) {
+					// Deactivate user in identity provider
+					idpUser.get().setAccountEnabled(false);
+					azureGraphClientService.updateUser(idpUser.get());
+				}
+			}
+			
+			return userMapper.toDto(entity.get());
 		} catch (Exception e) {
 			logger.error("Error - userUuid={}", userUuid, e);
 
@@ -236,6 +251,16 @@ public class UserServiceImpl implements UserService {
 		try {
 			User entity = this.readByUserUuid(userUuid);
 			userRepository.delete(entity.getUuid(), requestContext.getUsername());
+			
+			if (!testRun) {
+				// Find user in identity provider with same email
+				Optional<com.microsoft.graph.models.User> idpUser = azureGraphClientService.findUser(entity.getIdpId());
+				if (idpUser.isPresent()) {
+					// Delete user in identity provider
+					azureGraphClientService.deleteUser(idpUser.get().getId());
+				}
+			}
+				
 			eventPublisher.publishEvent(new UserEvent(this, entity, OperationEnum.delete));
 		} catch (Exception e) {
 			logger.error("Error - userUuid={}", userUuid, e);
@@ -275,11 +300,11 @@ public class UserServiceImpl implements UserService {
 
 			oldUser.setModifiedOn(Instant.now());
 			oldUser.setModifiedBy(requestContext.getUsername());
-
-			User saved = userRepository.save(oldUser);
-			UserDto savedDto = userMapper.toDto(saved);
 			
 			if (!testRun) {
+				List<RoleEnum> sourceRoles = new java.util.ArrayList<RoleEnum>();
+				List<RoleEnum> targetRoles = userDto.getRoles() != null ? userDto.getRoles() : new java.util.ArrayList<RoleEnum>();
+				
 				Optional<com.microsoft.graph.models.User> idpUser = azureGraphClientService.findUser(oldUser.getIdpId());
 				if (idpUser.isPresent()) {
 					// Update user in identity provider
@@ -288,11 +313,15 @@ public class UserServiceImpl implements UserService {
 					idpUser.get().setSurname(oldUser.getLastname());
 					idpUser.get().setMail(oldUser.getEmail());
 					azureGraphClientService.updateUser(idpUser.get());
+					
+					for (AppRoleAssignment appRoleAssignment : idpUser.get().getAppRoleAssignments()) {
+						sourceRoles.add(RoleEnum.valueOf(azureGraphClientService.getRole(appRoleAssignment).getValue()));
+					}
 				}
 
 				// Update roles if provided in request
-				if (userDto.getRoles() != null) {
-					if (!Roles.isRolesAssignmentAllowed(requestContext.getRoles(), userDto.getRoles())) {
+				if (targetRoles != null) {
+					if (!Roles.isRolesAssignmentAllowed(requestContext.getRoles(), sourceRoles, targetRoles)) {
 						Message message = new Message();
 						message.setCode(UserException.ROLE_ASSIGNMENT_NOT_ALLOWED);
 						message.setDescription("Role assignment not allowed");
@@ -303,20 +332,23 @@ public class UserServiceImpl implements UserService {
 								"Role assignment not allowed", userDto);
 					}
 					
-					// Remove all roles from user
-					for (AppRoleAssignment appRoleAssignment : idpUser.get().getAppRoleAssignments()) {
-						azureGraphClientService.unassignRole(idpUser.get().getId(), azureGraphClientService.getRole(appRoleAssignment).getValue());
+					// Remove roles from user
+					for (RoleEnum sourceRole : sourceRoles) {
+						if (!oldUser.getRoles().contains(sourceRole)) {
+							azureGraphClientService.unassignRole(idpUser.get().getId(), sourceRole.toString());
+						}
 					}
 					
-					// Add all roles from request
-					for (RoleEnum role : userDto.getRoles()) {
-						azureGraphClientService.assignRole(idpUser.get().getId(), role.toString());
-						savedDto.getRoles().add(role);
+					// Add roles from request
+					for (RoleEnum targetRole : targetRoles) {
+						if (!sourceRoles.contains(targetRole)) {
+							azureGraphClientService.assignRole(idpUser.get().getId(), targetRole.toString());
+						}
 					}
 				}
 			}
-			
-			return savedDto;
+			User saved = userRepository.save(oldUser);
+			return userMapper.toDto(saved);
 		} catch (Exception e) {
 			logger.error("Error - userUuid={}", userDto != null ? userDto.getUuid() : null, e);
 

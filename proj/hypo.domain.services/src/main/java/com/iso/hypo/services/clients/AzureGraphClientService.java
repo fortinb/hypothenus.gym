@@ -8,6 +8,7 @@ import com.microsoft.graph.models.Group;
 import com.microsoft.graph.models.User;
 
 public interface AzureGraphClientService {
+	
 	User createUser(User user) throws Exception;
 
 	User updateUser(User user) throws Exception;

@@ -47,7 +47,7 @@ import com.iso.hypo.tests.utils.TestResponseUtils;
 import net.datafaker.Faker;
 
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@TestPropertySource(properties = "app.test.run=false")
+@TestPropertySource(properties = "app.test.run=true")
 @TestInstance(Lifecycle.PER_CLASS)
 @Tag("populator")
 class PopulatorTests {
@@ -91,7 +91,7 @@ class PopulatorTests {
 		testRestTemplate = new TestRestTemplate(restTemplateBuilder);
 	
 		try {
-			azureGraphClientService.deleteAllUser();
+		//	azureGraphClientService.deleteAllUser();
 			azureGraphClientService.deleteAllGroup();
 		} catch (Exception e) {
 			e.printStackTrace();

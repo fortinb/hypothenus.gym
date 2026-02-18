@@ -1,12 +1,14 @@
 package com.iso.hypo.domain.aggregate;
 
 import java.time.Instant;
+import java.util.List;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.iso.hypo.domain.BaseEntity;
+import com.iso.hypo.domain.security.RoleEnum;
 import com.mongodb.lang.NonNull;
 
 import lombok.Getter;
@@ -37,6 +39,8 @@ public class User extends BaseEntity {
 	@NonNull
 	private String email;
 	
+	private List<RoleEnum> roles = new java.util.ArrayList<RoleEnum>();
+	
 	public User() {
 		
 	}
@@ -48,5 +52,6 @@ public class User extends BaseEntity {
 		this.email = email;
 		this.activatedOn = activatedOn;
 		this.deactivatedOn = deactivatedOn;
+		this.roles = new java.util.ArrayList<RoleEnum>();
 	}
 }
