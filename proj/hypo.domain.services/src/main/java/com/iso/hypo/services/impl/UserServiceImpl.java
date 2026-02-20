@@ -104,15 +104,17 @@ public class UserServiceImpl implements UserService {
 				// Create user in identity provider
 				com.microsoft.graph.models.User newUser = new com.microsoft.graph.models.User();
 
-				newUser.setAccountEnabled(false);
+				newUser.setAccountEnabled(true);
 				newUser.setDisplayName(user.getFirstname() + " " + user.getLastname());
 				newUser.setGivenName(user.getFirstname());
 				newUser.setSurname(user.getLastname());
 				newUser.setMailNickname(user.getUuid());
+				newUser.setMail(user.getEmail());
 				newUser.setUserPrincipalName(user.getUuid());
 				newUser.setPasswordProfile(new PasswordProfile());
 				newUser.getPasswordProfile().setForceChangePasswordNextSignIn(true);
-				newUser.getPasswordProfile().setPassword(UUID.randomUUID().toString()); 
+				newUser.getPasswordProfile().setPassword("password.test.1");
+				
 				com.microsoft.graph.models.User createdUser = azureGraphClientService.createUser(newUser);
 
 				// Verify security level

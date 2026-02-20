@@ -115,7 +115,7 @@ public class MemberServiceImpl implements MemberService {
 					// Create user in identity provider
 					com.microsoft.graph.models.User newUser = new com.microsoft.graph.models.User();
 					
-					newUser.setAccountEnabled(false);
+					newUser.setAccountEnabled(true);
 					newUser.setDisplayName(member.getPerson().getFirstname() + " " + member.getPerson().getLastname());
 					newUser.setGivenName(member.getPerson().getFirstname());
 					newUser.setSurname(member.getPerson().getLastname());
@@ -332,6 +332,8 @@ public class MemberServiceImpl implements MemberService {
 			throw new MemberException(requestContext.getTrackingNumber(), MemberException.MEMBER_NOT_FOUND,
 					"Member not found");
 		}
+
 		return entity.get();
 	}
+
 }

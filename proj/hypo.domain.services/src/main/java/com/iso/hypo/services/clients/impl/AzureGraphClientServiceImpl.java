@@ -15,6 +15,9 @@ import com.microsoft.graph.models.Group;
 import com.microsoft.graph.models.ReferenceCreate;
 import com.microsoft.graph.models.ServicePrincipal;
 import com.microsoft.graph.models.User;
+import com.microsoft.graph.models.ObjectIdentity;
+import com.microsoft.graph.models.DirectoryRole;
+import com.microsoft.graph.models.DirectoryObject;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
 import com.microsoft.graph.users.item.checkmembergroups.CheckMemberGroupsPostRequestBody;
 import com.microsoft.graph.users.item.checkmembergroups.CheckMemberGroupsPostResponse;
@@ -50,7 +53,40 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 			throw new IllegalArgumentException("User must not be null");
 		}
 
-		user.setUserPrincipalName(String.format("%s@%s", user.getUserPrincipalName(), domainName));
+		String upn = user.getUserPrincipalName();
+		if (upn == null || upn.isBlank()) {
+			throw new IllegalArgumentException("userPrincipalName must not be null or blank");
+		}
+
+		// Append tenant domain if caller provided only local part
+		if (!upn.contains("@")) {
+			upn = String.format("%s@%s", upn, domainName);
+			user.setUserPrincipalName(upn);
+		} else {
+			user.setUserPrincipalName(upn);
+		}
+
+		// Ensure emailAddress sign-in identity exists so the user can sign in by email
+		List<ObjectIdentity> identities = user.getIdentities();
+		if (identities == null) {
+			identities = new java.util.ArrayList<>();
+			user.setIdentities(identities);
+		}
+
+		boolean hasEmailIdentity = identities.stream().anyMatch(i -> i != null && "emailAddress".equalsIgnoreCase(i.getSignInType()));
+		if (!hasEmailIdentity) {
+			ObjectIdentity emailIdentity = new ObjectIdentity();
+			emailIdentity.setSignInType("emailAddress");
+			// Use tenant domain as issuer so Graph treats this as a tenant email identity
+			emailIdentity.setIssuer(domainName);
+			emailIdentity.setIssuerAssignedId(user.getMail() != null && !user.getMail().isBlank() ? user.getMail() : upn);
+			identities.add(emailIdentity);
+		}
+
+		// Optionally set the mail attribute if not provided
+		if (user.getMail() == null || user.getMail().isBlank()) {
+			user.setMail(upn);
+		}
 
 		return graphClient.users().post(user);
 	}
@@ -141,8 +177,7 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 				.findFirst().orElseThrow(
 						() -> new IllegalStateException("Service principal not found for appId " + app.getAppId()));
 
-		// Retrieve the user's role assignments and find the one matching the role to
-		// unassign
+		// Retrieve the user's role assignments and find the one matching the role to unassigns
 		var assignmentsPage = graphClient.users().byUserId(userId).appRoleAssignments().get(req -> {
 			req.queryParameters.top = 999; // or page normally
 			req.queryParameters.select = new String[] { "id", "appRoleId", "resourceId", "principalId" };
@@ -347,7 +382,7 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 	public void deleteAllGroup() throws Exception {
 		// 1) List all groups
 		var groupsPage = graphClient.groups().get(req -> {
-			req.queryParameters.top = 1000;
+			req.queryParameters.top = 999;
 			req.queryParameters.select = new String[] { "id" };
 		});
 
@@ -360,23 +395,89 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 			graphClient.groups().byGroupId(group.getId()).delete();
 		}
 
+		
 	}
 
 	@Override
 	public void deleteAllUser() throws Exception {
-		// 1) List all users
+		// 1) List all users (include identities so we can detect Microsoft Accounts)
 		var usersPage = graphClient.users().get(req -> {
-			req.queryParameters.top = 1000;
-			req.queryParameters.select = new String[] { "id" };
+			req.queryParameters.top = 999;
+			req.queryParameters.select = new String[] { "id", "userPrincipalName", "identities" };
 		});
 
 		if (usersPage == null || usersPage.getValue() == null) {
 			return;
 		}
 
-		// 2) Delete each user
+		// 2) Delete each user except Microsoft Account owners (issuer contains 'live.com')
 		for (User user : usersPage.getValue()) {
+			if (user == null || user.getId() == null) {
+				continue;
+			}
+
+			// Skip global administrators
+			if (isGlobalAdministrator(user.getId())) {
+				//String name = user.getUserPrincipalName();
+				continue;
+			}
+
+			List<ObjectIdentity> identities = user.getIdentities();
+			if (identities != null) {
+				for (ObjectIdentity oid : identities) {
+					String issuer = oid.getIssuer() != null ? oid.getIssuer().toLowerCase() : "";
+					String signInType = oid.getSignInType() != null ? oid.getSignInType().toLowerCase() : "";
+					// Do not delete tenant owner's Microsoft Account users to avoid potential lockout of the tenant. 
+					// These users typically have a signInType of "federated" and an issuer of "microsoftaccount" or "live.com"
+					if (signInType.equalsIgnoreCase("federated") &&	issuer.equalsIgnoreCase("microsoftaccount")) {
+						continue;
+					}
+				}
+			}
+
 			graphClient.users().byUserId(user.getId()).delete();
 		}
+	}
+
+	/**
+	 * Returns true if the user is a member of the tenant's Global Administrator
+	 * role (Company Administrator - roleTemplateId 62e90394-69f5-4237-9190-012177145e10).
+	 *
+	 * This implementation checks the user's memberOf collection for a DirectoryRole
+	 * with the matching roleTemplateId instead of listing role members.
+	 */
+	private boolean isGlobalAdministrator(String userId) throws Exception {
+		if (userId == null || userId.isBlank()) {
+			return false;
+		}
+
+		final String globalAdminRoleTemplateId = "62e90394-69f5-4237-9190-012177145e10";
+
+		// Retrieve all directory objects the user is a direct member of and look for DirectoryRole
+		var memberOfPage = graphClient.users().byUserId(userId).memberOf().get(req -> {
+			req.queryParameters.top = 999;
+			req.queryParameters.select = new String[] { "id", "roleTemplateId" };
+		});
+
+		if (memberOfPage == null || memberOfPage.getValue() == null) {
+			return false;
+		}
+
+		for (DirectoryObject obj : memberOfPage.getValue()) {
+			if (obj == null) {
+				continue;
+			}
+
+			// DirectoryRole objects appear in the memberOf collection when the user is assigned
+			if (obj instanceof DirectoryRole) {
+				DirectoryRole dr = (DirectoryRole) obj;
+				String templateId = dr.getRoleTemplateId();
+				if (templateId != null && templateId.equalsIgnoreCase(globalAdminRoleTemplateId)) {
+					return true;
+				}
+			}
+		}
+
+		return false;
 	}
 }

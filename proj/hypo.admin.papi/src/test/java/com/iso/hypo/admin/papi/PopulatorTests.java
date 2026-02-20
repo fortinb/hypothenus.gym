@@ -2,6 +2,7 @@ package com.iso.hypo.admin.papi;
 
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.util.ArrayList;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
@@ -24,9 +25,12 @@ import org.springframework.test.context.TestPropertySource;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.iso.hypo.admin.papi.dto.enumeration.RoleEnum;
 import com.iso.hypo.admin.papi.dto.model.BrandDto;
 import com.iso.hypo.admin.papi.dto.post.PostBrandDto;
+import com.iso.hypo.admin.papi.dto.post.PostUserDto;
 import com.iso.hypo.domain.BrandBuilder;
+import com.iso.hypo.domain.UserBuilder;
 import com.iso.hypo.domain.aggregate.Brand;
 import com.iso.hypo.domain.security.Roles;
 import com.iso.hypo.repositories.BrandRepository;
@@ -47,7 +51,7 @@ import com.iso.hypo.tests.utils.TestResponseUtils;
 import net.datafaker.Faker;
 
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@TestPropertySource(properties = "app.test.run=true")
+@TestPropertySource(properties = "app.test.run=false")
 @TestInstance(Lifecycle.PER_CLASS)
 @Tag("populator")
 class PopulatorTests {
@@ -91,7 +95,7 @@ class PopulatorTests {
 		testRestTemplate = new TestRestTemplate(restTemplateBuilder);
 	
 		try {
-		//	azureGraphClientService.deleteAllUser();
+			azureGraphClientService.deleteAllUser();
 			azureGraphClientService.deleteAllGroup();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -143,7 +147,27 @@ class PopulatorTests {
 
 		createdBrandDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
 		populator.populateFullBrand(createdBrandDto);
+		
+		createAdminUser();
 	}
+	
+	private void createAdminUser() throws JsonProcessingException, MalformedURLException {
+		// Arrange
+		final String userPostURI = "/v1/users";
+		
+		PostUserDto postDto = modelMapper.map(UserBuilder.build(), PostUserDto.class);
+		postDto.setFirstname("Bruno");
+		postDto.setLastname("Fortin");
+		postDto.setEmail("fortinb@videotron.ca");
+		postDto.setRoles(new ArrayList<RoleEnum>());
+		postDto.getRoles().add(RoleEnum.admin);
+		HttpEntity<PostUserDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
 
+		// Act
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(userPostURI), port, null), HttpMethod.POST, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
+				String.format("Post error: %s", response.getStatusCode()));
+	}
 }
-
