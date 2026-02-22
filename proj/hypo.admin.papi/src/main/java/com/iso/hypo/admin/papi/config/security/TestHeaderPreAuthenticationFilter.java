@@ -9,9 +9,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-public class HeaderPreAuthenticationFilter extends RequestHeaderAuthenticationFilter {
+public class TestHeaderPreAuthenticationFilter extends RequestHeaderAuthenticationFilter {
 
-	public HeaderPreAuthenticationFilter() {
+	public TestHeaderPreAuthenticationFilter() {
 		super();
 
 	}
@@ -22,7 +22,7 @@ public class HeaderPreAuthenticationFilter extends RequestHeaderAuthenticationFi
 
 		ObjectMapper mapper = new ObjectMapper();
 		try {
-			AuthorizationDto authorizationDto = mapper.readValue(principal, new TypeReference<AuthorizationDto>(){});
+			TestAuthorizationDto authorizationDto = mapper.readValue(principal, new TypeReference<TestAuthorizationDto>(){});
 			return authorizationDto;
 		} catch (JsonMappingException e) {
 			e.printStackTrace();

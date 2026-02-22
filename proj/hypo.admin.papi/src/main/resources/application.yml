@@ -13,3 +13,23 @@ app:
       - "*"
     allow-credentials: true
     max-age: 3600
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Use the issuer base that works for your tenant's discovery (policy path caused 404 in your environment)
+          issuer-uri: https://${azure.entra.app.tenantid}.ciamlogin.com/${azure.entra.app.tenantid}/v2.0
+          # audience (optional) - set to your API's Application (client) ID
+          # audience: ${azure.entra.app.clientid}
+
+# If the discovery endpoint without policy is working (as you reported), point to the JWKS directly if desired:
+# spring.security.oauth2.resourceserver.jwt.jwk-set-uri: https://${azure.entra.app.tenantid}.ciamlogin.com/${azure.entra.app.tenantid}/discovery/v2.0/keys
+
+# Note:
+# - Some Entra External ID (B2C) setups expose per-policy discovery (issuer contains the policy). In your tenant the metadata
+#   is available at the tenant-level (no policy in the path). Use whichever discovery URL matches the token 'iss' claim.
+# - If tokens from specific user flows include the policy in the 'iss' claim and you need to accept only those, you will
+#   need to either use the policy-specific issuer (if available) or implement a custom JwtDecoder/JwtValidator to validate tokens
+#   against the expected policy/audience values.

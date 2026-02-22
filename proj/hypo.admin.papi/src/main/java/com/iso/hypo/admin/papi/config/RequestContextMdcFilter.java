@@ -12,6 +12,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.MDC;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 /**
@@ -32,7 +34,13 @@ public class RequestContextMdcFilter implements Filter {
             if (request instanceof HttpServletRequest) {
                 HttpServletRequest httpReq = (HttpServletRequest) request;
                 tracking = httpReq.getHeader("x-tracking-number");
-                username = httpReq.getHeader("x-credentials");
+                // Prefer authenticated principal username if available
+                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                if (auth != null && auth.getName() != null) {
+                    username = auth.getName();
+                } else {
+                    username = httpReq.getHeader("x-credentials");
+                }
             }
 
             if (tracking != null) {

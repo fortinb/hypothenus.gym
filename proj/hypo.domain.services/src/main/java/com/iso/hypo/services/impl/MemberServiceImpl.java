@@ -123,7 +123,7 @@ public class MemberServiceImpl implements MemberService {
 					newUser.setMail(member.getPerson().getEmail());
 					newUser.setUserPrincipalName(member.getUuid());
 					newUser.setPasswordProfile(new PasswordProfile());
-					newUser.getPasswordProfile().setForceChangePasswordNextSignIn(true);
+					newUser.getPasswordProfile().setForceChangePasswordNextSignIn(false);
 					newUser.getPasswordProfile().setPassword(password);
 					
 					idpUser = Optional.of(azureGraphClientService.createUser(newUser));

@@ -113,7 +113,7 @@ public class UserServiceImpl implements UserService {
 				newUser.setUserPrincipalName(user.getUuid());
 				newUser.setPasswordProfile(new PasswordProfile());
 				newUser.getPasswordProfile().setForceChangePasswordNextSignIn(true);
-				newUser.getPasswordProfile().setPassword("password.test.1");
+				newUser.getPasswordProfile().setPassword("change.test.1");
 				
 				com.microsoft.graph.models.User createdUser = azureGraphClientService.createUser(newUser);
 

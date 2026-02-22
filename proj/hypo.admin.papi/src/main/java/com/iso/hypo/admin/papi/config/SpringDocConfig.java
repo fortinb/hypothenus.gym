@@ -11,14 +11,12 @@ public class SpringDocConfig {
 
 	@Bean
 	GroupedOpenApi publicApi() {
-		return GroupedOpenApi.builder().group("add-user-id-header").addOperationCustomizer((operation, _) -> {
+		return GroupedOpenApi.builder().group("add-auth-header").addOperationCustomizer((operation, _) -> {
 			operation
 					.addParametersItem(
-							new HeaderParameter().name("x-authorization").description("Roles").required(true))
+						new HeaderParameter().name("Authorization").description("Bearer <token>").required(true))
 					.addParametersItem(
-							new HeaderParameter().name("x-credentials").description("Username").required(true))
-					.addParametersItem(
-							new HeaderParameter().name("x-tracking-number").description("RequestId").required(false));
+						new HeaderParameter().name("x-tracking-number").description("RequestId").required(false));
 			return operation;
 		}).build();
 	}

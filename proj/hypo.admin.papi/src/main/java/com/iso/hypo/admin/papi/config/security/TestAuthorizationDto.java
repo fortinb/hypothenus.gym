@@ -9,6 +9,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class AuthorizationDto {
+public class TestAuthorizationDto {
 	private List<RoleEnum> roles;
 }
