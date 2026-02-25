@@ -309,16 +309,16 @@ public class UserServiceImpl implements UserService {
 				
 				Optional<com.microsoft.graph.models.User> idpUser = azureGraphClientService.findUser(oldUser.getIdpId());
 				if (idpUser.isPresent()) {
+					for (AppRoleAssignment appRoleAssignment : idpUser.get().getAppRoleAssignments()) {
+						sourceRoles.add(RoleEnum.valueOf(azureGraphClientService.getRole(appRoleAssignment).getValue()));
+					}
+					
 					// Update user in identity provider
 					idpUser.get().setDisplayName(oldUser.getFirstname() + " " + oldUser.getLastname());
 					idpUser.get().setGivenName(oldUser.getFirstname());
 					idpUser.get().setSurname(oldUser.getLastname());
 					idpUser.get().setMail(oldUser.getEmail());
 					azureGraphClientService.updateUser(idpUser.get());
-					
-					for (AppRoleAssignment appRoleAssignment : idpUser.get().getAppRoleAssignments()) {
-						sourceRoles.add(RoleEnum.valueOf(azureGraphClientService.getRole(appRoleAssignment).getValue()));
-					}
 				}
 
 				// Update roles if provided in request
@@ -349,6 +349,7 @@ public class UserServiceImpl implements UserService {
 					}
 				}
 			}
+			
 			User saved = userRepository.save(oldUser);
 			return userMapper.toDto(saved);
 		} catch (Exception e) {

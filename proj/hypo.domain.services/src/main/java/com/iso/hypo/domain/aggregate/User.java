@@ -39,7 +39,7 @@ public class User extends BaseEntity {
 	@NonNull
 	private String email;
 	
-	private List<RoleEnum> roles = new java.util.ArrayList<RoleEnum>();
+	private List<RoleEnum> roles;
 	
 	public User() {
 		

@@ -64,10 +64,6 @@ public class UserQueryServiceImpl implements UserQueryService {
 					throw new UserException(requestContext.getTrackingNumber(), UserException.USER_NOT_FOUND,
 							"User not found");
 				}
-				
-				for (AppRoleAssignment appRoleAssignment : idpUser.get().getAppRoleAssignments()) {
-					userDto.getRoles().add(RoleEnum.valueOf(azureGraphClientService.getRole(appRoleAssignment).getValue()));
-				}
 			}
 
 			return userDto;
