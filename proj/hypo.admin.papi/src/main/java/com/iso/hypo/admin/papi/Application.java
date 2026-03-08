@@ -12,7 +12,8 @@ import com.iso.hypo.admin.papi.config.CorsProperties;
 		"com.iso.hypo.admin", 
 		"com.iso.hypo.domain", 
 		"com.iso.hypo.services", 
-		"com.iso.hypo.common"
+		"com.iso.hypo.common",
+		"com.iso.hypo.admin.papi.cache"
 })
 @EnableConfigurationProperties(CorsProperties.class)
 public class Application {

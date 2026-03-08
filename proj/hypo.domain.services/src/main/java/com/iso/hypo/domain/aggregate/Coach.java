@@ -35,6 +35,7 @@ public class Coach extends BaseEntity {
 	private Person person;
 	
 	public Coach() {
+		super();
 	}
 	
 	public Coach(String brandUuid,

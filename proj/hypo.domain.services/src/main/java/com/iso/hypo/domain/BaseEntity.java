@@ -15,7 +15,7 @@ import lombok.Setter;
 public abstract class BaseEntity {
 	
 	@Transient
-	protected List<Message> messages = new java.util.ArrayList<Message>();
+	protected List<Message> messages;
 	
 	protected boolean isDeleted = false;
 	protected boolean isActive = true;
@@ -35,6 +35,7 @@ public abstract class BaseEntity {
 	protected Instant deactivatedOn;
 	
 	public BaseEntity() {
+		this.messages = new java.util.ArrayList<Message>();
 	}
 	
 	public BaseEntity(boolean isActive) {

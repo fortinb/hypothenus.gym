@@ -362,7 +362,6 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 
 		// 2) Remove user from group: DELETE /groups/{groupId}/members/{userId}/$ref
 		graphClient.groups().byGroupId(group.getId()).members().byDirectoryObjectId(userId).ref().delete();
-
 	}
 
 	@Override
@@ -378,6 +377,24 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 		return graphClient.groups().post(newGroup);
 	}
 
+
+	@Override
+	public Group getGroup(String groupName) throws Exception {
+		// 1) Resolve group by displayName
+		var groupsPage = graphClient.groups().get(req -> {
+			req.queryParameters.filter = "displayName eq '" + groupName.replace("'", "''") + "'";
+			req.queryParameters.top = 1;
+			req.queryParameters.select = new String[] { "id", "displayName" };
+		});
+
+		if (groupsPage == null || groupsPage.getValue() == null || groupsPage.getValue().isEmpty()) {
+			throw new IllegalStateException("Group not found: " + groupName);
+		}
+
+		Group group = groupsPage.getValue().get(0);
+		return group;
+	}
+	
 	@Override
 	public void deleteAllGroup() throws Exception {
 		// 1) List all groups
@@ -394,8 +411,6 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 		for (Group group : groupsPage.getValue()) {
 			graphClient.groups().byGroupId(group.getId()).delete();
 		}
-
-		
 	}
 
 	@Override
@@ -480,4 +495,5 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 
 		return false;
 	}
+
 }

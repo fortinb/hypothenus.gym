@@ -76,7 +76,7 @@ public class UserController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "500", description = "Unexpected server error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
-	@PreAuthorize("hasRole('" + Roles.Admin + "')")
+	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> searchUser(
 			@Parameter(description = "search criteria") @RequestParam String criteria,
@@ -96,7 +96,7 @@ public class UserController {
 	}
 
 	@GetMapping("/users")
-	@PreAuthorize("hasRole('" + Roles.Admin + "')")
+	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@Operation(summary = "Retrieve a list of users")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -220,7 +220,7 @@ public class UserController {
 			}
 			
 			if (e.getCode() == UserException.ROLE_ASSIGNMENT_NOT_ALLOWED) {
-				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(modelMapper.map(e.getUserDto(), UserDto.class));
+				return ResponseEntity.status(HttpStatus.OK).body(modelMapper.map(e.getUserDto(), UserDto.class));
 			}
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, null);
@@ -257,7 +257,7 @@ public class UserController {
 			}
 			
 			if (e.getCode() == UserException.ROLE_ASSIGNMENT_NOT_ALLOWED) {
-				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(modelMapper.map(e.getUserDto(), UserDto.class));
+				return ResponseEntity.status(HttpStatus.OK).body(modelMapper.map(e.getUserDto(), UserDto.class));
 			}
 			
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);

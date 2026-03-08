@@ -71,7 +71,7 @@ public class MembershipPlan extends BaseEntity {
 	private List<Gym> includedGyms;
 
 	public MembershipPlan() {
-
+		super();
 	}
 
 	public MembershipPlan(String brandUuid, String code, List<LocalizedString> name, List<LocalizedString> description,

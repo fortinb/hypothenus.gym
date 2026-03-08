@@ -10,15 +10,14 @@ public class UserException extends DomainException {
 	
 	public static final String USER_NOT_FOUND = "404";
 	public static final String USER_ALREADY_EXIST = "1001";
+	public static final String ROLE_ASSIGNMENT_NOT_ALLOWED = "1002";
 	
 	private UserDto userDto;
 	
 	private static final long serialVersionUID = 1L;
 	public static final String ASSIGNROLE_FAILED = "500";
 	public static final String UNASSIGNROLE_FAILED = "500";
-	public static final String ROLE_ASSIGNMENT_NOT_ALLOWED = "201";
 
-	
 	public UserException(String trackingNumber, String code, String message, UserDto userDto) {
 		super(trackingNumber, code, message);
 		this.userDto = userDto;

@@ -33,6 +33,8 @@ public interface AzureGraphClientService {
 	
 	Group createGroup(String groupName, String groupDescription) throws Exception;
 	
+	Group getGroup(String groupName) throws Exception;
+	
 	void deleteAllGroup() throws Exception;
 	
 	void deleteAllUser() throws Exception;

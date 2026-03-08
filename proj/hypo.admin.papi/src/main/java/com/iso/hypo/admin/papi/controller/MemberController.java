@@ -160,7 +160,6 @@ public class MemberController {
 			@Content(schema = @Schema(implementation = MemberDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
-	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "','" + Roles.Member + "')")
 	@ResponseStatus(value = HttpStatus.CREATED)
 	public ResponseEntity<Object> createMember(
 			@PathVariable String brandUuid,
@@ -180,7 +179,6 @@ public class MemberController {
 			if (e.getCode() == MemberException.MEMBER_ALREADY_EXIST) {
 				return ResponseEntity.status(HttpStatus.OK).body(modelMapper.map(e.getMemberDto(), MemberDto.class));
 			}
-
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, null);
 		}

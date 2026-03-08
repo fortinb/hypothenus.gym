@@ -42,7 +42,7 @@ public class User extends BaseEntity {
 	private List<RoleEnum> roles;
 	
 	public User() {
-		
+		super();
 	}
 	
 	public User(String firstname, String lastname, String email, boolean isActive, Instant activatedOn, Instant deactivatedOn) {

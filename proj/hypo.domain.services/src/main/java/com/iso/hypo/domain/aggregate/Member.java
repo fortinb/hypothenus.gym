@@ -40,7 +40,7 @@ public class Member extends BaseEntity {
 	private User user;
 	
 	public Member() {
-		
+		super();
 	}
 
 	public Member(String brandUuid, Person person, MemberTypeEnum memberType,  boolean isActive, Instant activatedOn, Instant deactivatedOn) {

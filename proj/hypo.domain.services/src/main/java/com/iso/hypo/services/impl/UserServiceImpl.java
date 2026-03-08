@@ -74,10 +74,10 @@ public class UserServiceImpl implements UserService {
 				message.setCode(UserException.USER_ALREADY_EXIST);
 				message.setDescription("Duplicate user");
 				message.setSeverity(MessageSeverityEnum.warning);
-				user.getMessages().add(message);
+				userDto.getMessages().add(message);
 
 				throw new UserException(requestContext.getTrackingNumber(), UserException.USER_ALREADY_EXIST,
-						"Duplicate user", userMapper.toDto(user));
+						"Duplicate user", userDto);
 			}
 			
 			if (!testRun) {
@@ -88,10 +88,10 @@ public class UserServiceImpl implements UserService {
 					message.setCode(UserException.USER_ALREADY_EXIST);
 					message.setDescription("Duplicate user");
 					message.setSeverity(MessageSeverityEnum.warning);
-					user.getMessages().add(message);
+					userDto.getMessages().add(message);
 
 					throw new UserException(requestContext.getTrackingNumber(), UserException.USER_ALREADY_EXIST,
-							"Duplicate user", userMapper.toDto(user));
+							"Duplicate user", userDto);
 				}
 			}
 
@@ -113,7 +113,7 @@ public class UserServiceImpl implements UserService {
 				newUser.setUserPrincipalName(user.getUuid());
 				newUser.setPasswordProfile(new PasswordProfile());
 				newUser.getPasswordProfile().setForceChangePasswordNextSignIn(true);
-				newUser.getPasswordProfile().setPassword("change.test.1");
+				newUser.getPasswordProfile().setPassword("password.test.1");
 				
 				com.microsoft.graph.models.User createdUser = azureGraphClientService.createUser(newUser);
 
@@ -287,7 +287,7 @@ public class UserServiceImpl implements UserService {
 					message.setCode(UserException.USER_ALREADY_EXIST);
 					message.setDescription("Duplicate user");
 					message.setSeverity(MessageSeverityEnum.warning);
-					userDto.getMessages().add(message);
+					userDto.setMessages(List.of(message));
 
 					throw new UserException(requestContext.getTrackingNumber(), UserException.USER_ALREADY_EXIST,
 							"Duplicate user", userDto);
@@ -328,7 +328,7 @@ public class UserServiceImpl implements UserService {
 						message.setCode(UserException.ROLE_ASSIGNMENT_NOT_ALLOWED);
 						message.setDescription("Role assignment not allowed");
 						message.setSeverity(MessageSeverityEnum.warning);
-						userDto.getMessages().add(message);
+						userDto.setMessages(List.of(message));
 
 						throw new UserException(requestContext.getTrackingNumber(), UserException.ROLE_ASSIGNMENT_NOT_ALLOWED,
 								"Role assignment not allowed", userDto);

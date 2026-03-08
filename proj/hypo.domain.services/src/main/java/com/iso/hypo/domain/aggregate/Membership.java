@@ -42,7 +42,7 @@ public class Membership extends BaseEntity {
 	private Instant cancelledOn;
 	
 	public Membership() {
-		
+		super();
 	}
 
 	public Membership(String brandUuid, Member member, MembershipPlan membershipPlan, boolean autoRenewal, boolean isCancelled, boolean isActive, Instant startedOn, Instant endedOn) {

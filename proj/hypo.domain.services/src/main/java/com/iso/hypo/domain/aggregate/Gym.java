@@ -52,6 +52,7 @@ public class Gym extends BaseEntity {
 	private List<PhoneNumber> phoneNumbers;
 	
 	public Gym() {
+		super();
 	}
 	
 	public Gym(String brandUuid, String gymUuid, String name, Address address, String email, String logoUri, boolean isActive,

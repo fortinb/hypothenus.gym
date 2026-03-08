@@ -15,6 +15,9 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.iso.hypo.admin.papi.cache.BrandGroupCache;
+import com.microsoft.graph.models.Group;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,11 +26,15 @@ import jakarta.servlet.http.HttpServletResponse;
 public class PreAuthBrandFilter extends OncePerRequestFilter {
 
 	private final JwtDecoder jwtDecoder;
+	private BrandGroupCache brandGroupCache;
+
+	
 	// Exclude 'code' path segments from being treated as brand UUIDs
 	private static final Pattern BRAND_UUID_PATTERN = Pattern.compile("/brands/(?!code)([^/]+)(?:/|$)");
 
-	public PreAuthBrandFilter(JwtDecoder jwtDecoder) {
+	public PreAuthBrandFilter(JwtDecoder jwtDecoder, BrandGroupCache brandGroupCache) {
 		this.jwtDecoder = jwtDecoder;
+		this.brandGroupCache = brandGroupCache;
 	}
 
 	@Override
@@ -70,10 +77,15 @@ public class PreAuthBrandFilter extends OncePerRequestFilter {
 
 		if (!isAdmin) {
 			if (brandUuid != null && !brandUuid.isBlank()) {
+				Group group = brandGroupCache.getGroup(brandUuid);
+				if (group == null) {
+					response.sendError(HttpServletResponse.SC_FORBIDDEN, "Group not found for brand");
+				}
+				
 				// groups claim may contain brand ids; check membership
 				boolean hasBrand = false;
 				if (groups instanceof Collection) {
-					hasBrand = groups.stream().anyMatch(a -> a.equals(brandUuid));
+					hasBrand = groups.stream().anyMatch(a -> a.equals(group.getId()));
 				}
 
 				if (!hasBrand) {

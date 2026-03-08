@@ -48,6 +48,7 @@ public class Brand extends BaseEntity {
 	private List<PhoneNumber> phoneNumbers;
 	
 	public Brand() {
+		super();
 	}
 	
 	public Brand(String code, String name, Address address, String email, String logoUri, boolean isActive,

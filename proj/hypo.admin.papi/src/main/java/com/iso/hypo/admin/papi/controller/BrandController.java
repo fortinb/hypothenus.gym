@@ -143,7 +143,6 @@ public class BrandController {
 			@ApiResponse(responseCode = "500", description = "Unexpected server error.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "','" + Roles.Coach + "','" + Roles.Member + "')")
-
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> getBrand(
 			@PathVariable String uuid) {

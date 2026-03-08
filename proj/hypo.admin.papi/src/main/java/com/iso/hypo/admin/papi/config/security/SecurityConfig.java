@@ -29,6 +29,8 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;
 
+import com.iso.hypo.admin.papi.cache.BrandGroupCache;
+
 @EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
 @Configuration
 public class SecurityConfig {
@@ -58,6 +60,9 @@ public class SecurityConfig {
 					.requestMatchers("/swagger-ui/**").anonymous()
 					.requestMatchers("/*/api-docs/**").anonymous()
 					.requestMatchers("/*/brands/code/*").permitAll()
+					.requestMatchers("/*/brands/*/gyms").permitAll()
+					.requestMatchers("/*/brands/*/members/register").permitAll()
+					
 					.anyRequest().authenticated()).oauth2ResourceServer((rs) -> rs.jwt((jwt) -> jwt.jwtAuthenticationConverter(jwtAuthConverter)));
 		}
 
@@ -134,8 +139,8 @@ public class SecurityConfig {
 
 	@Bean
 	@Profile("!test")
-	PreAuthBrandFilter authorizationHeaderPreAuthFilter(JwtDecoder jwtDecoder) {
-		return new PreAuthBrandFilter(jwtDecoder);
+	PreAuthBrandFilter authorizationHeaderPreAuthFilter(JwtDecoder jwtDecoder, BrandGroupCache brandGroupCache) {
+		return new PreAuthBrandFilter(jwtDecoder, brandGroupCache);
 	}
 
 	@Bean
@@ -149,7 +154,9 @@ public class SecurityConfig {
 				throw new UnsupportedOperationException("Jwt decoding not available in test profile");
 			}
 		};
-		return new PreAuthBrandFilter(noopDecoder);
+		
+		BrandGroupCache noopBrandGroupCache = new BrandGroupCache(null); // Pass null since it won't be used in tests
+		return new PreAuthBrandFilter(noopDecoder, noopBrandGroupCache);
 	}
 
 }
