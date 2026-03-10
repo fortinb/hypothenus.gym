@@ -4,13 +4,11 @@ import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
 import org.springframework.stereotype.Component;
 
-import com.iso.hypo.domain.aggregate.Gym;
-import com.iso.hypo.domain.dto.GymDto;
-import com.iso.hypo.domain.aggregate.Course;
-import com.iso.hypo.domain.dto.CourseDto;
 import com.iso.hypo.domain.LocalizedString;
 import com.iso.hypo.domain.aggregate.Coach;
+import com.iso.hypo.domain.aggregate.Course;
 import com.iso.hypo.domain.dto.CoachDto;
+import com.iso.hypo.domain.dto.CourseDto;
 
 @Component
 public class CourseMapper {
@@ -24,14 +22,6 @@ public class CourseMapper {
     public <D> D map(Object source, Class<D> destinationType) {
         if (source == null) return null;
         return modelMapper.map(source, destinationType);
-    }
-
-    public GymDto toDto(Gym entity) {
-        return map(entity, GymDto.class);
-    }
-
-    public Gym toEntity(GymDto dto) {
-        return map(dto, Gym.class);
     }
 
     public CourseDto toDto(Course entity) {

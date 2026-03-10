@@ -15,13 +15,11 @@ import com.iso.hypo.common.context.RequestContext;
 import com.iso.hypo.domain.aggregate.User;
 import com.iso.hypo.domain.dto.UserDto;
 import com.iso.hypo.domain.dto.search.UserSearchDto;
-import com.iso.hypo.domain.security.RoleEnum;
 import com.iso.hypo.repositories.UserRepository;
 import com.iso.hypo.services.UserQueryService;
 import com.iso.hypo.services.clients.AzureGraphClientService;
 import com.iso.hypo.services.exception.UserException;
 import com.iso.hypo.services.mappers.UserMapper;
-import com.microsoft.graph.models.AppRoleAssignment;
 
 @Service
 public class UserQueryServiceImpl implements UserQueryService {
