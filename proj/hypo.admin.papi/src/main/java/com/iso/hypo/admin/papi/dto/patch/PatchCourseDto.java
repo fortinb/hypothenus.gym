@@ -4,7 +4,6 @@ import java.util.Date;
 import java.util.List;
 
 import com.iso.hypo.admin.papi.dto.LocalizedStringDto;
-import com.iso.hypo.admin.papi.dto.model.CoachDto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -18,9 +17,6 @@ public class PatchCourseDto {
 	private String brandUuid;
 
 	@NotBlank
-	private String gymUuid;
-	
-	@NotBlank
 	private String uuid;
 	
 	private String code;
@@ -32,6 +28,4 @@ public class PatchCourseDto {
 	private Date startDate;
 	
 	private Date endDate;
-	
-	private List<CoachDto> coachs;
 }

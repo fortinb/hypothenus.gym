@@ -74,6 +74,7 @@ public class UserServiceImpl implements UserService {
 				message.setCode(UserException.USER_ALREADY_EXIST);
 				message.setDescription("Duplicate user");
 				message.setSeverity(MessageSeverityEnum.warning);
+				userDto.setMessages(new java.util.ArrayList<Message>());
 				userDto.getMessages().add(message);
 
 				throw new UserException(requestContext.getTrackingNumber(), UserException.USER_ALREADY_EXIST,
@@ -252,8 +253,7 @@ public class UserServiceImpl implements UserService {
 	public void delete(String userUuid) throws UserException {
 		try {
 			User entity = this.readByUserUuid(userUuid);
-			userRepository.delete(entity.getUuid(), requestContext.getUsername());
-			
+
 			if (!testRun) {
 				// Find user in identity provider with same email
 				Optional<com.microsoft.graph.models.User> idpUser = azureGraphClientService.findUser(entity.getIdpId());
@@ -262,7 +262,8 @@ public class UserServiceImpl implements UserService {
 					azureGraphClientService.deleteUser(idpUser.get().getId());
 				}
 			}
-				
+			userRepository.delete(entity.getUuid(), requestContext.getUsername());
+			
 			eventPublisher.publishEvent(new UserEvent(this, entity, OperationEnum.delete));
 		} catch (Exception e) {
 			logger.error("Error - userUuid={}", userUuid, e);

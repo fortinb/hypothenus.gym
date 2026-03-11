@@ -135,21 +135,24 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 				.findFirst().orElseThrow(
 						() -> new IllegalStateException("Service principal not found for appId " + app.getAppId()));
 
-		// Retrieve the user's role assignments and verify if the role already exists to
-		// avoid duplicate assignment
-		var assignmentsPage = graphClient.users().byUserId(userId).appRoleAssignments().get(req -> {
-			req.queryParameters.top = 999; // or page normally
-			req.queryParameters.select = new String[] { "id", "appRoleId", "resourceId", "principalId" };
-		});
+		// In Azure Entra External ID (CIAM) tenants, querying via users/{id}/appRoleAssignments
+		// can fail. Use the service principal's appRoleAssignedTo endpoint instead.
+		var assignmentsPage = graphClient.servicePrincipals()
+				.byServicePrincipalId(servicePrincipal.getId())
+				.appRoleAssignedTo()
+				.get(req -> {
+					req.queryParameters.top = 999;
+					req.queryParameters.select = new String[] { "id", "appRoleId", "principalId", "resourceId" };
+				});
 
 		AppRoleAssignment existingAssignment = assignmentsPage.getValue().stream()
 				.filter(a -> role.getId().equals(a.getAppRoleId())
-						// Match by appRoleId and resourceId (service principal object id)
-						&& a.getResourceId() != null && a.getResourceId().toString().equals(servicePrincipal.getId()))
+						&& a.getPrincipalId() != null
+						&& a.getPrincipalId().toString().equals(userId))
 				.findFirst().orElse(null);
 
 		if (existingAssignment != null) {
-			return role; // Assignment found, nothing to assigns
+			return role; // Assignment already exists, nothing to assign
 		}
 
 		AppRoleAssignment assignment = new AppRoleAssignment();
@@ -193,8 +196,7 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 			return; // Assignment found, nothing to assigns
 		}
 
-		graphClient.users().byUserId(userId).appRoleAssignments().byAppRoleAssignmentId(existingAssignment.getId())
-				.delete();
+		graphClient.users().byUserId(userId).appRoleAssignments().byAppRoleAssignmentId(existingAssignment.getId()).delete();
 	}
 
 	@Override
@@ -304,7 +306,7 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 
 		String safeName = groupName.replace("'", "''");
 		Group group = null;
-		final int maxAttempts = 3;
+		final int maxAttempts = 10;
 		int attempt = 0;
 		while (attempt < maxAttempts) {
 			var groupsPage = graphClient.groups().get(req -> {

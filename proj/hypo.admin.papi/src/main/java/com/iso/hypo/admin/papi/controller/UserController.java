@@ -181,7 +181,7 @@ public class UserController {
 			}
 			
 			if (e.getCode() == UserException.ROLE_ASSIGNMENT_NOT_ALLOWED) {
-				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(modelMapper.map(e.getUserDto(), UserDto.class));
+				return ResponseEntity.status(HttpStatus.OK).body(modelMapper.map(e.getUserDto(), UserDto.class));
 			}
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, null);

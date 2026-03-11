@@ -11,15 +11,11 @@ public interface CourseService {
 
     CourseDto patch(CourseDto courseDto) throws CourseException;
 
-    void delete(String brandUuid, String gymUuid, String courseUuid) throws CourseException;
+    void delete(String brandUuid, String courseUuid) throws CourseException;
 
-    CourseDto activate(String brandUuid, String gymUuid, String courseUuid) throws CourseException;
+    CourseDto activate(String brandUuid, String courseUuid) throws CourseException;
 
-    CourseDto deactivate(String brandUuid, String gymUuid, String courseUuid) throws CourseException;
+    CourseDto deactivate(String brandUuid, String courseUuid) throws CourseException;
     
     void deleteAllByBrandUuid(String brandUuid) throws CourseException;
-    
-    void deleteAllByGymUuid(String brandUuid, String gymUuid) throws CourseException;
 }
-
-

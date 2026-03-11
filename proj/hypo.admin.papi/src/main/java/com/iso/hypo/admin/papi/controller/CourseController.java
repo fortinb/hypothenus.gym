@@ -67,7 +67,7 @@ public class CourseController {
 		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
-	@GetMapping("/brands/{brandUuid}/gyms/{gymUuid}/courses")
+	@GetMapping("/brands/{brandUuid}/courses")
 	@Operation(summary = "Retrieve a list of courses")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -84,14 +84,13 @@ public class CourseController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> listCourse(
 			@PathVariable String brandUuid,
-			@PathVariable String gymUuid,
 			@Parameter(description = "page number") @RequestParam int page,
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
 		Page<com.iso.hypo.domain.dto.CourseDto> domainDtos = null;
 		try {
-			domainDtos = courseQueryService.list(brandUuid, gymUuid, page, pageSize, includeInactive);
+			domainDtos = courseQueryService.list(brandUuid, page, pageSize, includeInactive);
 		} catch (CourseException e) {
 			logger.error(e.getMessage(), e);
 
@@ -101,7 +100,7 @@ public class CourseController {
 		return ResponseEntity.ok(domainDtos.map(item -> modelMapper.map(item, CourseDto.class)));
 	}
 
-	@GetMapping("/brands/{brandUuid}/gyms/{gymUuid}/courses/{uuid}")
+	@GetMapping("/brands/{brandUuid}/courses/{uuid}")
 	@Operation(summary = "Retrieve a specific course")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -118,11 +117,10 @@ public class CourseController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> getCourse(
 			@PathVariable String brandUuid,
-			@PathVariable String gymUuid,
 			@PathVariable String uuid) {
 		com.iso.hypo.domain.dto.CourseDto domainDto = null;
 		try {
-			domainDto = courseQueryService.find(brandUuid, gymUuid, uuid);
+			domainDto = courseQueryService.find(brandUuid, uuid);
 		} catch (CourseException e) {
 			logger.error(e.getMessage(), e);
 
@@ -132,7 +130,7 @@ public class CourseController {
 		return ResponseEntity.ok(modelMapper.map(domainDto, CourseDto.class));
 	}
 
-	@PostMapping("/brands/{brandUuid}/gyms/{gymUuid}/courses")
+	@PostMapping("/brands/{brandUuid}/courses")
 	@Operation(summary = "Create a new course")
 	@ApiResponses({
 			@ApiResponse(responseCode = "201", content = {
@@ -149,14 +147,9 @@ public class CourseController {
 	@ResponseStatus(value = HttpStatus.CREATED)
 	public ResponseEntity<Object> createCourse(
 			@PathVariable String brandUuid,
-			@PathVariable String gymUuid,
 			@RequestBody PostCourseDto request) {
 		
 		if (!request.getBrandUuid().equals(brandUuid)) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-		}
-		
-		if (!request.getGymUuid().equals(gymUuid)) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
@@ -189,7 +182,7 @@ public class CourseController {
 				.body(modelMapper.map(domainDto, CourseDto.class));
 	}
 
-	@PutMapping("/brands/{brandUuid}/gyms/{gymUuid}/courses/{uuid}")
+	@PutMapping("/brands/{brandUuid}/courses/{uuid}")
 	@Operation(summary = "Update a course")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -206,16 +199,11 @@ public class CourseController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> updateCourse(
 			@PathVariable String brandUuid,
-			@PathVariable String gymUuid,
 			@PathVariable String uuid,
 			@Parameter(description = "activate or deactivate course") @RequestParam(required = false, defaultValue = "true") boolean isActive,
 			@RequestBody PutCourseDto request) {
 		
 		if (!request.getBrandUuid().equals(brandUuid)) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-		}
-		
-		if (!request.getGymUuid().equals(gymUuid)) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
@@ -236,7 +224,7 @@ public class CourseController {
 		return ResponseEntity.ok(modelMapper.map(domainDto, CourseDto.class));
 	}
 
-	@PostMapping("/brands/{brandUuid}/gyms/{gymUuid}/courses/{uuid}/activate")
+	@PostMapping("/brands/{brandUuid}/courses/{uuid}/activate")
 	@Operation(summary = "Activate a course")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -253,12 +241,11 @@ public class CourseController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> activateCourse(
 			@PathVariable String brandUuid,
-			@PathVariable String gymUuid,
 			@PathVariable String uuid) {
 		com.iso.hypo.domain.dto.CourseDto domainDto;
 
 		try {
-			domainDto = courseService.activate(brandUuid, gymUuid, uuid);
+			domainDto = courseService.activate(brandUuid, uuid);
 		} catch (CourseException e) {
 			logger.error(e.getMessage(), e);
 
@@ -268,7 +255,7 @@ public class CourseController {
 		return ResponseEntity.ok(modelMapper.map(domainDto, CourseDto.class));
 	}
 
-	@PostMapping("/brands/{brandUuid}/gyms/{gymUuid}/courses/{uuid}/deactivate")
+	@PostMapping("/brands/{brandUuid}/courses/{uuid}/deactivate")
 	@Operation(summary = "Deactivate a course")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -285,12 +272,11 @@ public class CourseController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> deactivateCourse(
 			@PathVariable String brandUuid,
-			@PathVariable String gymUuid,
 			@PathVariable String uuid) {
 		com.iso.hypo.domain.dto.CourseDto domainDto;
 
 		try {
-			domainDto = courseService.deactivate(brandUuid, gymUuid, uuid);
+			domainDto = courseService.deactivate(brandUuid, uuid);
 		} catch (CourseException e) {
 			logger.error(e.getMessage(), e);
 
@@ -300,7 +286,7 @@ public class CourseController {
 		return ResponseEntity.ok(modelMapper.map(domainDto, CourseDto.class));
 	}
 
-	@PatchMapping("/brands/{brandUuid}/gyms/{gymUuid}/courses/{uuid}")
+	@PatchMapping("/brands/{brandUuid}/courses/{uuid}")
 	@Operation(summary = "Patch a course")
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ApiResponses({
@@ -317,15 +303,10 @@ public class CourseController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> patchCourse(
 			@PathVariable String brandUuid,
-			@PathVariable String gymUuid,
 			@PathVariable String uuid, 
 			@RequestBody PatchCourseDto request) {
 		
 		if (!request.getBrandUuid().equals(brandUuid)) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-		}
-		
-		if (!request.getGymUuid().equals(gymUuid)) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
@@ -346,7 +327,7 @@ public class CourseController {
 		return ResponseEntity.ok(modelMapper.map(domainDto, CourseDto.class));
 	}
 
-	@DeleteMapping("/brands/{brandUuid}/gyms/{gymUuid}/courses/{uuid}")
+	@DeleteMapping("/brands/{brandUuid}/courses/{uuid}")
 	@Operation(summary = "Delete a course")
 	@ApiResponses({ @ApiResponse(responseCode = "202"),
 			@ApiResponse(responseCode = "400", description = "Bad request. The request is invalid or missing required data.", content = {
@@ -361,10 +342,9 @@ public class CourseController {
 	@ResponseStatus(value = HttpStatus.ACCEPTED)
 	public ResponseEntity<Object> deleteCourse(
 			@PathVariable String brandUuid,
-			@PathVariable String gymUuid,
 			@PathVariable String uuid) {
 		try {
-			courseService.delete(brandUuid, gymUuid, uuid);
+			courseService.delete(brandUuid, uuid);
 		} catch (CourseException e) {
 			logger.error(e.getMessage(), e);
 

@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.iso.hypo.domain.aggregate.Coach;
 import com.iso.hypo.domain.aggregate.Course;
 import com.iso.hypo.domain.enumeration.LanguageEnum;
 
@@ -15,10 +14,9 @@ import net.datafaker.Faker;
 public class CourseBuilder {
 	private static Faker faker = new Faker();
 	
-	public static Course build(String brandUuid, String gymUuid, List<Coach> coachs) {
-		Course entity = new Course(brandUuid, gymUuid, faker.code().isbn10(), buildName(), buildDescription(),
-				coachs, Date.from(Instant.now()), null,
-				 true, Instant.now(), null);
+	public static Course build(String brandUuid) {
+		Course entity = new Course(brandUuid, faker.code().isbn10(), buildName(), buildDescription(),
+				Date.from(Instant.now()), null, true, Instant.now(), null);
 		entity.setUuid(UUID.randomUUID().toString());
 		return entity;
 	}

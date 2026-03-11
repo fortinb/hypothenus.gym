@@ -5,9 +5,7 @@ import org.modelmapper.PropertyMap;
 import org.springframework.stereotype.Component;
 
 import com.iso.hypo.domain.LocalizedString;
-import com.iso.hypo.domain.aggregate.Coach;
 import com.iso.hypo.domain.aggregate.Course;
-import com.iso.hypo.domain.dto.CoachDto;
 import com.iso.hypo.domain.dto.CourseDto;
 
 @Component
@@ -32,14 +30,6 @@ public class CourseMapper {
         return map(dto, Course.class);
     }
 
-    public CoachDto toDto(Coach entity) {
-        return map(entity, CoachDto.class);
-    }
-
-    public Coach toEntity(CoachDto dto) {
-        return map(dto, Coach.class);
-    }
-    
     public ModelMapper initCourseMappings(ModelMapper mapper) {
 		PropertyMap<Course, Course> coursePropertyMap = new PropertyMap<Course, Course>() {
 			protected void configure() {
@@ -56,17 +46,9 @@ public class CourseMapper {
 			}
 		};
 
-		PropertyMap<Coach, Coach> coachPropertyMap = new PropertyMap<Coach, Coach>() {
-			@Override
-			protected void configure() {
-			}
-		};
-
 		mapper.addMappings(coursePropertyMap);
 		mapper.addMappings(localizedStringPropertyMap);
-		mapper.addMappings(coachPropertyMap);
 
 		return mapper;
 	}
 }
-

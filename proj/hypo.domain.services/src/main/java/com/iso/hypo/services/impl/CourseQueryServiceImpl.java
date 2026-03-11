@@ -36,15 +36,14 @@ public class CourseQueryServiceImpl implements CourseQueryService {
 	}
 
 	@Override
-	public void assertExists(String brandUuid, String gymUuid, String courseUuid) throws CourseException {
+	public void assertExists(String brandUuid, String courseUuid) throws CourseException {
 		try {
-			Optional<Course> entity = courseRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid,
-						courseUuid);
+			Optional<Course> entity = courseRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, courseUuid);
 			if (entity.isEmpty()) {
 				throw new CourseException(requestContext.getTrackingNumber(), CourseException.COURSE_NOT_FOUND, "Course not found");
 			}
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, courseUuid={}", brandUuid, gymUuid, courseUuid, e);
+			logger.error("Error - brandUuid={}, courseUuid={}", brandUuid, courseUuid, e);
 			
 			if (e instanceof CourseException) {
 				throw (CourseException) e;
@@ -54,17 +53,16 @@ public class CourseQueryServiceImpl implements CourseQueryService {
 	}
 	
 	@Override
-	public CourseDto find(String brandUuid, String gymUuid, String courseUuid) throws CourseException {
+	public CourseDto find(String brandUuid, String courseUuid) throws CourseException {
 		try {
-			Optional<Course> entity = courseRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid,
-						courseUuid);
+			Optional<Course> entity = courseRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, courseUuid);
 			if (entity.isEmpty()) {
 				throw new CourseException(requestContext.getTrackingNumber(), CourseException.COURSE_NOT_FOUND, "Course not found");
 			}
 
 			return courseMapper.toDto(entity.get());
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, courseUuid={}", brandUuid, gymUuid, courseUuid, e);
+			logger.error("Error - brandUuid={}, courseUuid={}", brandUuid, courseUuid, e);
 			
 			if (e instanceof CourseException) {
 				throw (CourseException) e;
@@ -74,19 +72,19 @@ public class CourseQueryServiceImpl implements CourseQueryService {
 	}
 
 	@Override
-	public Page<CourseDto> list(String brandUuid, String gymUuid, int page, int pageSize, boolean includeInactive) throws CourseException {
+	public Page<CourseDto> list(String brandUuid, int page, int pageSize, boolean includeInactive) throws CourseException {
 		try {
 			if (includeInactive) {
 				return courseRepository
-						.findAllByBrandUuidAndGymUuidAndIsDeletedIsFalse(brandUuid, gymUuid,
-							PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"))
+						.findAllByBrandUuidAndIsDeletedIsFalse(brandUuid,
+							PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"))
 						.map(c -> courseMapper.toDto(c));
 			}
 
-			return courseRepository.findAllByBrandUuidAndGymUuidAndIsDeletedIsFalseAndIsActiveIsTrue(brandUuid, gymUuid,
-					PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname")).map(c -> courseMapper.toDto(c));
+			return courseRepository.findAllByBrandUuidAndIsDeletedIsFalseAndIsActiveIsTrue(brandUuid,
+					PageRequest.of(page, pageSize, Sort.Direction.ASC, "name")).map(c -> courseMapper.toDto(c));
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}", brandUuid, gymUuid, e);
+			logger.error("Error - brandUuid={}", brandUuid, e);
 			throw new CourseException(requestContext.getTrackingNumber(), CourseException.FIND_FAILED, e);
 		}
 	}

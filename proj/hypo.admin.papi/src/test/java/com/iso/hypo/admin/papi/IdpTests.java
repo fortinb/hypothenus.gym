@@ -1,8 +1,11 @@
 package com.iso.hypo.admin.papi;
 
+import static org.awaitility.Awaitility.await;
+
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -47,6 +50,7 @@ import com.iso.hypo.repositories.BrandRepository;
 import com.iso.hypo.repositories.MemberRepository;
 import com.iso.hypo.repositories.UserRepository;
 import com.iso.hypo.services.UserService;
+import com.iso.hypo.services.exception.UserException;
 import com.iso.hypo.services.mappers.UserMapper;
 import com.iso.hypo.tests.http.HttpUtils;
 import com.iso.hypo.tests.security.Users;
@@ -120,7 +124,8 @@ class IdpTests {
 			BrandDto createdDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
 			brand = objectMapper.convertValue(createdDto, Brand.class);
 		} catch (Exception e) {
-			// user already exists
+			 Assertions.fail(String.format("Error during creation of brand: %s", e.getMessage()));
+			 return;
 		}
 	}
 
@@ -188,8 +193,11 @@ class IdpTests {
 				HttpUtils.createURL(URI.create(String.format(userPutURI, createdDto.getUuid())), port, null),
 				HttpMethod.PUT, putHttpEntity, JsonNode.class);
 		
-		Assertions.assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode(),
+		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Post error: %s", response.getStatusCode()));
+		
+		UserDto updatedDto = TestResponseUtils.toDto(response, UserDto.class, objectMapper);
+		Assertions.assertTrue(updatedDto.getMessages().getFirst().getCode().equals(UserException.ROLE_ASSIGNMENT_NOT_ALLOWED));
 	}
 
 	@ParameterizedTest
@@ -279,13 +287,18 @@ class IdpTests {
 		UserDto userToDeleteDto = TestResponseUtils.toDto(response, UserDto.class, objectMapper);
 
 		// Act
-		httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-		response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(userDeleteURI, userToDeleteDto.getUuid())), port, null),
-				HttpMethod.DELETE, httpEntity, JsonNode.class);
+		await()
+        .atMost(10, TimeUnit.SECONDS)
+        .pollInterval(200, TimeUnit.MILLISECONDS)
+        .untilAsserted(() -> {
+        	HttpEntity<PostUserDto> httpEntityDelete = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
+        	ResponseEntity<JsonNode> responseDelete = testRestTemplate.exchange(
+    				HttpUtils.createURL(URI.create(String.format(userDeleteURI, userToDeleteDto.getUuid())), port, null),
+    				HttpMethod.DELETE, httpEntityDelete, JsonNode.class);
 
-		Assertions.assertEquals(HttpStatus.ACCEPTED, response.getStatusCode(),
-				String.format("User delete error: %s", response.getStatusCode()));
+    		Assertions.assertEquals(HttpStatus.ACCEPTED, responseDelete.getStatusCode(),
+    				String.format("User delete error: %s", responseDelete.getStatusCode()));
+			});
 	}
 
 	@Test

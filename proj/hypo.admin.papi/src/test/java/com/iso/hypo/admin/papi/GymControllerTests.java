@@ -56,7 +56,6 @@ import com.iso.hypo.domain.BrandBuilder;
 import com.iso.hypo.domain.GymBuilder;
 import com.iso.hypo.domain.aggregate.Brand;
 import com.iso.hypo.domain.aggregate.Coach;
-import com.iso.hypo.domain.aggregate.Course;
 import com.iso.hypo.domain.aggregate.Gym;
 import com.iso.hypo.domain.security.Roles;
 import com.iso.hypo.repositories.BrandRepository;
@@ -698,10 +697,7 @@ class GymControllerTests {
 		Page<Coach> pageCoach = coachRepository.findAllByBrandUuidAndGymUuidAndIsDeletedIsFalse(createdBrandDto.getUuid(),gymToDelete.getUuid(),  PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
 		Assertions.assertEquals(0, pageCoach.getTotalElements(),
 				String.format("Deleted brand coachs not deleted: %d", pageCoach.getTotalElements()));
-		
-		Page<Course> pageCourse = courseRepository.findAllByBrandUuidAndGymUuidAndIsDeletedIsFalse(createdBrandDto.getUuid(), gymToDelete.getUuid(), PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
-		Assertions.assertEquals(0, pageCourse.getTotalElements(),
-				String.format("Deleted brand courses not deleted: %d", pageCourse.getTotalElements()));
+
 	}
 
 	private void assertSearch(String criteria, int minimumNumberOfElements, int maximumNumberOfElements) 

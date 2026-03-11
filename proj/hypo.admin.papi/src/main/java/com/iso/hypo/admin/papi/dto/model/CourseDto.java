@@ -14,8 +14,6 @@ import lombok.Setter;
 public class CourseDto extends BaseDto {
 	
 	private String brandUuid;
-
-	private String gymUuid;
 	
 	private String uuid;
 
@@ -28,6 +26,4 @@ public class CourseDto extends BaseDto {
 	private Date startDate;
 	
 	private Date endDate;
-	
-	private List<CoachDto> coachs;
 }

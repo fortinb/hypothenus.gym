@@ -9,7 +9,6 @@ import com.iso.hypo.common.exception.DomainException;
 import com.iso.hypo.events.event.OperationEnum;
 import com.iso.hypo.services.CourseService;
 import com.iso.hypo.services.event.BrandEvent;
-import com.iso.hypo.services.event.GymEvent;
 import com.iso.hypo.services.exception.CourseException;
 
 @Component
@@ -35,22 +34,6 @@ public class CourseListener {
 			courseService.deleteAllByBrandUuid(event.getEntity().getUuid());
 		} catch (CourseException e) {
 			logger.error("Error - brandId={}", event.getEntity().getUuid(), e);
-			throw e;
-		}
-	}
-    
-    @EventListener
-    public void onGymEvent(GymEvent event) throws DomainException {
-		if (event.getOperation() == OperationEnum.delete) {
-			handleDeleteGym(event);
-		}
-    }
-    
-    private void handleDeleteGym(GymEvent event) throws DomainException {
-		try {
-			courseService.deleteAllByGymUuid(event.getEntity().getBrandUuid(), event.getEntity().getUuid());
-		} catch (CourseException e) {
-			logger.error("Error - brandId={} gymId={}", event.getEntity().getBrandUuid(), event.getEntity().getUuid(), e);
 			throw e;
 		}
 	}

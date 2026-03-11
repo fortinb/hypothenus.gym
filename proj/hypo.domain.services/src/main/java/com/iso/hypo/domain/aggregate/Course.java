@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.iso.hypo.domain.BaseEntity;
@@ -27,10 +26,6 @@ public class Course extends BaseEntity {
 	@Indexed
 	@NonNull
 	private String brandUuid;
-
-	@Indexed
-	@NonNull
-	private String gymUuid;
 	
 	@Indexed
 	private String uuid;
@@ -45,22 +40,17 @@ public class Course extends BaseEntity {
 	private Date startDate;
 	
 	private Date endDate;
-	
-	@DBRef
-	private List<Coach> coachs;
 
 	public Course() {
 	}
  
-	public Course(String brandUuid, String gymUuid, String code, List<LocalizedString> name, List<LocalizedString> description,
-			List<Coach> coachs, Date startDate, Date endDate, boolean isActive, Instant activatedOn, Instant deactivatedOn) {
+	public Course(String brandUuid, String code, List<LocalizedString> name, List<LocalizedString> description,
+			Date startDate, Date endDate, boolean isActive, Instant activatedOn, Instant deactivatedOn) {
 		super(isActive);
 		this.brandUuid = brandUuid;
-		this.gymUuid = gymUuid;
 		this.code = code;
 		this.name = name;
 		this.description = description;
-		this.coachs = coachs;
 		this.startDate = startDate;
 		this.endDate = endDate;
 		this.activatedOn = activatedOn;

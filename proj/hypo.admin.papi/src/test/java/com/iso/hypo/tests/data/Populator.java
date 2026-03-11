@@ -72,19 +72,14 @@ public class Populator {
 		}
 
 		// Coaches
-		List<Coach> coachs_boucherville = new ArrayList<Coach>();
-		List<Coach> coachs_longueuil = new ArrayList<Coach>();
-
 		for (int i = 0; i < 10; i++) {
 			Coach item = CoachBuilder.build(brand.getUuid(), gym_boucherville.getUuid());
 			item.setActive(true);
-			item = coachRepository.save(item);
-			coachs_boucherville.add(item);
+			coachRepository.save(item);
 
 			item = CoachBuilder.build(brand.getUuid(), gym_longueuil.getUuid());
 			item.setActive(true);
-			item = coachRepository.save(item);
-			coachs_longueuil.add(item);
+			coachRepository.save(item);
 		}
 
 		for (int i = 0; i < 5; i++) {
@@ -99,12 +94,12 @@ public class Populator {
 
 		// Courses
 		for (int i = 0; i < 10; i++) {
-			Course item = CourseBuilder.build(brand.getUuid(), gym_boucherville.getUuid(), coachs_boucherville);
+			Course item = CourseBuilder.build(brand.getUuid());
 			item = courseRepository.save(item);
 		}
 
 		for (int i = 0; i < 4; i++) {
-			Course item = CourseBuilder.build(brand.getUuid(), gym_longueuil.getUuid(), coachs_longueuil);
+			Course item = CourseBuilder.build(brand.getUuid());
 			item = courseRepository.save(item);
 		}
 

@@ -12,7 +12,7 @@ import lombok.Setter;
 @Setter
 public class BaseEntityDto {
 
-    private List<Message> messages;
+    private List<Message> messages = new java.util.ArrayList<Message>();
 
     private boolean isDeleted = false;
     private boolean isActive = true;
