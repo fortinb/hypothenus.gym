@@ -7,16 +7,16 @@ import lombok.Setter;
 @Setter
 public class CostDto {
 	
-	private Integer cost;
+	private int amount;
 	
 	private CurrencyDto currency;
 	
 	public CostDto() {
 	}
 	
-	public CostDto(Integer cost, CurrencyDto currency) {
+	public CostDto(int amount, CurrencyDto currency) {
 		super();
-		this.cost = cost;
+		this.amount = amount;
 		this.currency = currency;
 	}
 }

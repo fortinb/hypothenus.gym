@@ -16,6 +16,4 @@ public interface MembershipPlanRepository extends PagingAndSortingRepository<Mem
 	Page<MembershipPlan> findAllByBrandUuidAndIsDeletedIsFalse(String brandUuid, Pageable pageable);
 	
 	Page<MembershipPlan> findAllByBrandUuidAndIsDeletedIsFalseAndIsActiveIsTrue(String brandUuid, Pageable pageable);
-
 }
-

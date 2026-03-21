@@ -7,16 +7,16 @@ import lombok.Setter;
 @Setter
 public class Cost {
 	
-	private Integer cost;
+	private int amount;
 	
 	private Currency currency;
 	
 	public Cost() {
 	}
 	
-	public Cost(Integer cost, Currency currency) {
+	public Cost(int amount, Currency currency) {
 		super();
-		this.cost = cost;
+		this.amount = amount;
 		this.currency = currency;
 	}
 }

@@ -1,8 +1,7 @@
 package com.iso.hypo.admin.papi.dto.enumeration;
 
 public enum BillingFrequencyEnum {
-	upfront,
-	days,
+	oneTime,
 	weekly,
 	biweekly,
 	monthly,

@@ -1,5 +1,6 @@
 package com.iso.hypo.admin.papi.dto.post;
 
+import java.util.Date;
 import java.util.List;
 
 import com.iso.hypo.admin.papi.dto.LocalizedStringDto;
@@ -8,7 +9,6 @@ import com.iso.hypo.admin.papi.dto.enumeration.MembershipPlanPeriodEnum;
 import com.iso.hypo.admin.papi.dto.model.CourseDto;
 import com.iso.hypo.admin.papi.dto.model.GymDto;
 import com.iso.hypo.admin.papi.dto.pricing.CostDto;
-import com.iso.hypo.admin.papi.dto.pricing.OneTimeFeeDto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -21,13 +21,13 @@ public class PostMembershipPlanDto {
 	@NotBlank
 	private String brandUuid;
 
-	private String code;
-
 	private List<LocalizedStringDto> name;
+
+	private List<LocalizedStringDto> title;
 
 	private List<LocalizedStringDto> description;
 
-	private Integer numberOfClasses;
+	private int numberOfClasses;
 	
 	private MembershipPlanPeriodEnum period;
 	
@@ -35,17 +35,19 @@ public class PostMembershipPlanDto {
 	
 	private CostDto cost;
 	
-	private List<OneTimeFeeDto> oneTimeFees;
-	
 	private boolean guestPrivilege;
 	
 	private boolean isGiftCard;
 	
-	private Integer durationInMonths;
+	private int durationInMonths;
 	
 	private boolean isPromotional;
 	
-	private List<CourseDto> courses;
+	private Date startDate;
+	
+	private Date endDate;
+	
+	private List<CourseDto> includedCourses;
 	
 	private List<GymDto> includedGyms;
 }

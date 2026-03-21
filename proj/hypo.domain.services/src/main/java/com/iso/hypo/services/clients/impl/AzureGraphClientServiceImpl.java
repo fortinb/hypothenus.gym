@@ -306,7 +306,7 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 
 		String safeName = groupName.replace("'", "''");
 		Group group = null;
-		final int maxAttempts = 10;
+		final int maxAttempts = 20;
 		int attempt = 0;
 		while (attempt < maxAttempts) {
 			var groupsPage = graphClient.groups().get(req -> {

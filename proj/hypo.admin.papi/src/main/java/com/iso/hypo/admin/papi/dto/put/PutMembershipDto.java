@@ -23,7 +23,7 @@ public class PutMembershipDto {
 
     private MemberDto member;
 
-    private Integer remainingClasses;
+    private int remainingClasses;
 
     private boolean autoRenewal = true;
 

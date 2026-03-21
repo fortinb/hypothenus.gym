@@ -60,9 +60,13 @@ public class Populator {
 		gym_longueuil = GymBuilder.build(brand.getUuid(), gymCode_longueuil, "Studio Longueuil");
 		gym_longueuil = gymRepository.save(gym_longueuil);
 
+		List<Gym> gyms = new ArrayList<Gym>();
+		gyms.add(gym_boucherville);
+		gyms.add(gym_longueuil);
 		for (int i = 0; i < 10; i++) {
 			Gym item = GymBuilder.build(brand.getUuid(), faker.code().isbn10(), faker.company().name());
 			gymRepository.save(item);
+			gyms.add(item);
 		}
 
 		for (int i = 0; i < 5; i++) {
@@ -93,9 +97,11 @@ public class Populator {
 		}
 
 		// Courses
+		List<Course> courses = new ArrayList<Course>();
 		for (int i = 0; i < 10; i++) {
 			Course item = CourseBuilder.build(brand.getUuid());
 			item = courseRepository.save(item);
+			courses.add(item);
 		}
 
 		for (int i = 0; i < 4; i++) {
@@ -105,12 +111,12 @@ public class Populator {
 
 		// Membership plans
 		for (int i = 0; i < 4; i++) {
-			MembershipPlan item = MembershipPlanBuilder.build(brand.getUuid());
+			MembershipPlan item = MembershipPlanBuilder.build(brand.getUuid(), gyms.subList(0, 2), courses);
 			membershipPlanRepository.save(item);
 		}
 
 		for (int i = 0; i < 2; i++) {
-			MembershipPlan item = MembershipPlanBuilder.build(brand.getUuid());
+			MembershipPlan item = MembershipPlanBuilder.build(brand.getUuid(), null, null);
 			item.setActive(false);
 			membershipPlanRepository.save(item);
 		}

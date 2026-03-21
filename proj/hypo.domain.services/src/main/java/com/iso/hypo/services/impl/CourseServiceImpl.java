@@ -8,16 +8,21 @@ import java.util.UUID;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import com.iso.hypo.common.context.RequestContext;
+import com.iso.hypo.domain.Message;
 import com.iso.hypo.domain.aggregate.Course;
 import com.iso.hypo.domain.dto.CourseDto;
+import com.iso.hypo.domain.enumeration.MessageSeverityEnum;
+import com.iso.hypo.events.event.OperationEnum;
 import com.iso.hypo.repositories.CourseRepository;
 import com.iso.hypo.services.BrandQueryService;
 import com.iso.hypo.services.CourseService;
+import com.iso.hypo.services.event.CourseEvent;
 import com.iso.hypo.services.exception.BrandException;
 import com.iso.hypo.services.exception.CourseException;
 import com.iso.hypo.services.mappers.CourseMapper;
@@ -29,16 +34,24 @@ public class CourseServiceImpl implements CourseService {
 
 	private final CourseRepository courseRepository;
 
+	private final ApplicationEventPublisher eventPublisher;
+	
 	private final CourseMapper courseMapper;
 
 	private static final Logger logger = LoggerFactory.getLogger(CourseServiceImpl.class);
 	
 	private final RequestContext requestContext;
 
-	public CourseServiceImpl(CourseMapper courseMapper, CourseRepository courseRepository, BrandQueryService brandQueryService, RequestContext requestContext) {
+	public CourseServiceImpl(
+			CourseMapper courseMapper, 
+			CourseRepository courseRepository, 
+			BrandQueryService brandQueryService, 
+			ApplicationEventPublisher eventPublisher,
+			RequestContext requestContext) {
 		this.courseMapper = courseMapper;
 		this.courseRepository = courseRepository;
 		this.brandQueryService = brandQueryService;
+		this.eventPublisher = eventPublisher;
 		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
@@ -54,7 +67,13 @@ public class CourseServiceImpl implements CourseService {
 			Optional<Course> existingCourse = courseRepository
 					.findByBrandUuidAndCodeAndIsDeletedIsFalse(course.getBrandUuid(), course.getCode());
 			if (existingCourse.isPresent()) {
-				throw new CourseException(requestContext.getTrackingNumber(), CourseException.COURSE_CODE_ALREADY_EXIST, "Duplicate course code");
+				Message message = new Message();
+				message.setCode(CourseException.COURSE_CODE_ALREADY_EXIST);
+				message.setDescription("Duplicate course code");
+				message.setSeverity(MessageSeverityEnum.warning);
+				existingCourse.get().getMessages().add(message);
+
+				throw new CourseException(requestContext.getTrackingNumber(), CourseException.COURSE_CODE_ALREADY_EXIST, "Duplicate course code", courseMapper.toDto(existingCourse.get()));
 			}
 
 			course.setUuid(UUID.randomUUID().toString());
@@ -145,7 +164,10 @@ public class CourseServiceImpl implements CourseService {
 	public void delete(String brandUuid, String courseUuid) throws CourseException {
 		try {
 			Course entity = this.readByCourseUuid(brandUuid, courseUuid);
+			
 			courseRepository.delete(entity.getBrandUuid(), entity.getUuid(), requestContext.getUsername());
+			
+			eventPublisher.publishEvent(new CourseEvent(this, entity, OperationEnum.delete));
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, courseUuid={}", brandUuid, courseUuid, e);
 			if (e instanceof CourseException) {

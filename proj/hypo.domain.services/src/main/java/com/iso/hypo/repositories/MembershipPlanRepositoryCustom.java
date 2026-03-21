@@ -13,5 +13,9 @@ public interface MembershipPlanRepositoryCustom {
 	void delete(String brandUuid, String membershipPlanUuid, String deletedBy);
 	
 	long deleteAllByBrandUuid(String brandUuid, String deletedBy);
+
+	long removeGymReferences(String gymId);
+
+	long removeCourseReferences(String courseId);
 }
 

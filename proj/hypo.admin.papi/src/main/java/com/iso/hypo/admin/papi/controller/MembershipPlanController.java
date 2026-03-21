@@ -5,9 +5,6 @@ import java.util.Objects;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.iso.hypo.common.context.RequestContext;
-import com.iso.hypo.domain.security.Roles;
-
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,21 +23,24 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.iso.hypo.admin.papi.controller.util.ControllerErrorHandler;
 import com.iso.hypo.admin.papi.dto.ErrorDto;
 import com.iso.hypo.admin.papi.dto.model.MembershipPlanDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchMembershipPlanDto;
 import com.iso.hypo.admin.papi.dto.post.PostMembershipPlanDto;
 import com.iso.hypo.admin.papi.dto.put.PutMembershipPlanDto;
-import com.iso.hypo.services.exception.MembershipPlanException;
+import com.iso.hypo.common.context.RequestContext;
+import com.iso.hypo.domain.security.Roles;
 import com.iso.hypo.services.MembershipPlanQueryService;
 import com.iso.hypo.services.MembershipPlanService;
-import com.iso.hypo.admin.papi.controller.util.ControllerErrorHandler;
+import com.iso.hypo.services.exception.MembershipPlanException;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.media.*;
 
 @RestController
 @RequestMapping("/v1")
@@ -233,7 +233,7 @@ public class MembershipPlanController {
 			domainDto = membershipPlanService.deactivate(brandUuid, uuid);
 		} catch (MembershipPlanException e) {
 			logger.error(e.getMessage(), e);
-
+			
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
 		}
 

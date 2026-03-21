@@ -1,6 +1,7 @@
 package com.iso.hypo.services.exception;
 
 import com.iso.hypo.common.exception.DomainException;
+import com.iso.hypo.domain.dto.MembershipPlanDto;
 
 import lombok.Getter;
 
@@ -10,9 +11,18 @@ public class MembershipPlanException extends DomainException {
 	public static final String MEMBERSHIPPLAN_NOT_FOUND = "404";
 	public static final String MEMBERSHIP_NOT_FOUND = "404";
 	public static final String BRAND_NOT_FOUND = "404";
+	public static final String GYM_NOT_FOUND = "404";
+	public static final String COURSE_NOT_FOUND = "404";
 	public static final String INVALID_BRAND = "403";
 	
+	private MembershipPlanDto membershipPlanDto;
+	
 	private static final long serialVersionUID = 1L;
+	
+	public MembershipPlanException(String trackingNumber, String code, String message, MembershipPlanDto membershipPlanDto) {
+		super(trackingNumber, code, message);
+		this.membershipPlanDto = membershipPlanDto;
+	}
 	
     public MembershipPlanException(String trackingNumber, String code, String message) {
     	super(trackingNumber, code, message);

@@ -19,7 +19,7 @@ public class MembershipDto extends BaseEntityDto {
 
     private MemberDto member;
 
-    private Integer remainingClasses;
+    private int remainingClasses;
 
     private boolean autoRenewal = true;
 

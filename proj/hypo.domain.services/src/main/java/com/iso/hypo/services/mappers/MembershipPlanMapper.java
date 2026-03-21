@@ -10,7 +10,6 @@ import com.iso.hypo.domain.aggregate.Gym;
 import com.iso.hypo.domain.aggregate.MembershipPlan;
 import com.iso.hypo.domain.dto.MembershipPlanDto;
 import com.iso.hypo.domain.pricing.Cost;
-import com.iso.hypo.domain.pricing.OneTimeFee;
 
 @Component
 public class MembershipPlanMapper {
@@ -58,12 +57,6 @@ public class MembershipPlanMapper {
 			}
 		};
 		
-	    PropertyMap<OneTimeFee, OneTimeFee> oneTimeFeePropertyMap = new PropertyMap<OneTimeFee, OneTimeFee>() {
-			@Override
-			protected void configure() {
-			}
-		};
-		
 	    PropertyMap<Gym, Gym> includedGymsPropertyMap = new PropertyMap<Gym, Gym>() {
 			@Override
 			protected void configure() {
@@ -79,7 +72,6 @@ public class MembershipPlanMapper {
 		mapper.addMappings(membershipPlanPropertyMap);
 		mapper.addMappings(localizedStringPropertyMap);
 		mapper.addMappings(coursePropertyMap);
-		mapper.addMappings(oneTimeFeePropertyMap);
 		mapper.addMappings(includedGymsPropertyMap);
 		mapper.addMappings(costPropertyMap);
 		

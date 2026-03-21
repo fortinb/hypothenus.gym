@@ -18,4 +18,8 @@ public interface MembershipPlanService {
     MembershipPlanDto deactivate(String brandUuid, String membershipPlanUuid) throws MembershipPlanException;
     
     void deleteAllByBrandUuid(String brandUuid) throws MembershipPlanException;
+
+	void removeAllGymReferencesByGymId(String gymId) throws MembershipPlanException;
+	
+	void removeAllCourseReferencesByCourseId(String courseId) throws MembershipPlanException;
 }

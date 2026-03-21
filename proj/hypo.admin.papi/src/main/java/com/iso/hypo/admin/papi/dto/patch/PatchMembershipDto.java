@@ -25,7 +25,7 @@ public class PatchMembershipDto {
 
     private MemberDto member;
 
-    private Integer remainingClasses;
+    private int remainingClasses;
 
     private Boolean autoRenewal;
 

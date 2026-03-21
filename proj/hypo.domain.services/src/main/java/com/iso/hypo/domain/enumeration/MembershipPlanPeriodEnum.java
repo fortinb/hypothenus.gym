@@ -1,11 +1,12 @@
 package com.iso.hypo.domain.enumeration;
 
 public enum MembershipPlanPeriodEnum {
-	weekly,
+	classes,
 	monthly,
-	days,
+	weekly,
+	trial,
 	hours,
-	classes
+	merchandise
 }
 
 // weekly,# classes per week - Monday to Sunday

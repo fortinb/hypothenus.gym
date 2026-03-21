@@ -1,15 +1,10 @@
 package com.iso.hypo.admin.papi.controller;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.iso.hypo.common.context.RequestContext;
-import com.iso.hypo.domain.security.Roles;
-
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,17 +23,17 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.iso.hypo.admin.papi.controller.util.ControllerErrorHandler;
 import com.iso.hypo.admin.papi.dto.ErrorDto;
-import com.iso.hypo.admin.papi.dto.MessageDto;
-import com.iso.hypo.admin.papi.dto.enumeration.MessageSeverityEnum;
 import com.iso.hypo.admin.papi.dto.model.CourseDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchCourseDto;
 import com.iso.hypo.admin.papi.dto.post.PostCourseDto;
 import com.iso.hypo.admin.papi.dto.put.PutCourseDto;
-import com.iso.hypo.services.exception.CourseException;
+import com.iso.hypo.common.context.RequestContext;
+import com.iso.hypo.domain.security.Roles;
 import com.iso.hypo.services.CourseQueryService;
 import com.iso.hypo.services.CourseService;
-import com.iso.hypo.admin.papi.controller.util.ControllerErrorHandler;
+import com.iso.hypo.services.exception.CourseException;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -161,17 +156,7 @@ public class CourseController {
 			logger.error(e.getMessage(), e);
 			
 			if (e.getCode() == CourseException.COURSE_CODE_ALREADY_EXIST) {
-				CourseDto errorResponse = modelMapper.map(request, CourseDto.class);
-				List<MessageDto> messages = new ArrayList<MessageDto>();
-				
-				MessageDto message = new MessageDto();
-				message.setCode(e.getCode());
-				message.setDescription(e.getMessage());
-				message.setSeverity(MessageSeverityEnum.Warning);
-				messages.add(message);
-				
-				errorResponse.setMessages(messages);
-				return ResponseEntity.status(HttpStatus.OK).body(errorResponse);
+				return ResponseEntity.status(HttpStatus.OK).body(modelMapper.map(e.getCourseDto(),CourseDto.class));
 			}
 
 			return ControllerErrorHandler.buildErrorResponse(e, requestContext, null);

@@ -1,13 +1,13 @@
 package com.iso.hypo.domain.dto;
 
+import java.util.Date;
 import java.util.List;
 
+import com.iso.hypo.common.dto.BaseEntityDto;
 import com.iso.hypo.domain.LocalizedString;
 import com.iso.hypo.domain.enumeration.BillingFrequencyEnum;
 import com.iso.hypo.domain.enumeration.MembershipPlanPeriodEnum;
 import com.iso.hypo.domain.pricing.Cost;
-import com.iso.hypo.domain.pricing.OneTimeFee;
-import com.iso.hypo.common.dto.BaseEntityDto;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -20,13 +20,13 @@ public class MembershipPlanDto extends BaseEntityDto {
 
     private String brandUuid;
 
-    private String code;
-
     private List<LocalizedString> name;
+
+    private List<LocalizedString> title;
 
     private List<LocalizedString> description;
 
-    private Integer numberOfClasses;
+    private int numberOfClasses;
 
     private MembershipPlanPeriodEnum period;
 
@@ -34,17 +34,19 @@ public class MembershipPlanDto extends BaseEntityDto {
 
     private Cost cost;
 
-    private List<OneTimeFee> oneTimeFees;
-
-    private Integer durationInMonths;
+    private int durationInMonths;
 
     private boolean guestPrivilege;
 
     private boolean isPromotional;
 
     private boolean isGiftCard;
+    
+    private Date startDate;
 
-    private List<CourseDto> courses;
+    private Date endDate;
+
+    private List<CourseDto> includedCourses;
 
     private List<GymDto> includedGyms;
 

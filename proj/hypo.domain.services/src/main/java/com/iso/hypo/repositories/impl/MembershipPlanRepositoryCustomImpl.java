@@ -4,6 +4,8 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
+import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -77,6 +79,34 @@ public class MembershipPlanRepositoryCustomImpl implements MembershipPlanReposit
 		UpdateResult result = mongoTemplate.updateMulti(query, update, MembershipPlan.class);
 		
 		return result.getMatchedCount();
+	}
+
+	@Override
+	public long removeGymReferences(String gymId) {
+		ObjectId objectId = new ObjectId(gymId);
+
+		Query query = new Query(Criteria.where("includedGyms.$id").is(objectId));
+
+		Document dbRef = new Document("$ref", "gym").append("$id", objectId);
+		Update update = new Update().pull("includedGyms", dbRef);
+
+		UpdateResult result = mongoTemplate.updateMulti(query, update, MembershipPlan.class);
+
+		return result.getModifiedCount();
+	}
+
+	@Override
+	public long removeCourseReferences(String courseId) {
+		ObjectId objectId = new ObjectId(courseId);
+
+		Query query = new Query(Criteria.where("includedCourses.$id").is(objectId));
+
+		Document dbRef = new Document("$ref", "course").append("$id", objectId);
+		Update update = new Update().pull("includedCourses", dbRef);
+
+		UpdateResult result = mongoTemplate.updateMulti(query, update, MembershipPlan.class);
+
+		return result.getModifiedCount();
 	}
 }
 

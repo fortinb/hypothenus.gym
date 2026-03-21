@@ -2,7 +2,10 @@ package com.iso.hypo.admin.papi;
 
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.sql.Date;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +25,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -38,21 +43,30 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iso.hypo.admin.papi.dto.ErrorDto;
 import com.iso.hypo.admin.papi.dto.LocalizedStringDto;
+import com.iso.hypo.admin.papi.dto.model.CourseDto;
+import com.iso.hypo.admin.papi.dto.model.GymDto;
 import com.iso.hypo.admin.papi.dto.model.MembershipPlanDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchMembershipPlanDto;
 import com.iso.hypo.admin.papi.dto.post.PostMembershipPlanDto;
-import com.iso.hypo.admin.papi.dto.pricing.OneTimeFeeDto;
 import com.iso.hypo.admin.papi.dto.put.PutCoachDto;
+import com.iso.hypo.admin.papi.dto.put.PutCourseDto;
+import com.iso.hypo.admin.papi.dto.put.PutGymDto;
 import com.iso.hypo.admin.papi.dto.put.PutMembershipPlanDto;
 import com.iso.hypo.domain.BrandBuilder;
+import com.iso.hypo.domain.CourseBuilder;
+import com.iso.hypo.domain.GymBuilder;
 import com.iso.hypo.domain.MembershipPlanBuilder;
 import com.iso.hypo.domain.aggregate.Brand;
+import com.iso.hypo.domain.aggregate.Course;
+import com.iso.hypo.domain.aggregate.Gym;
 import com.iso.hypo.domain.aggregate.MembershipPlan;
+import com.iso.hypo.domain.security.Roles;
 import com.iso.hypo.repositories.BrandRepository;
+import com.iso.hypo.repositories.CourseRepository;
+import com.iso.hypo.repositories.GymRepository;
 import com.iso.hypo.repositories.MembershipPlanRepository;
 import com.iso.hypo.services.exception.MembershipPlanException;
 import com.iso.hypo.tests.http.HttpUtils;
-import com.iso.hypo.domain.security.Roles;
 import com.iso.hypo.tests.security.Users;
 import com.iso.hypo.tests.utils.TestResponseUtils;
 
@@ -72,6 +86,10 @@ class MembershipPlanControllerTests {
 	public static final String postDeactivateURI = "/v1/brands/%s/membership/plans/%s/deactivate";
 	public static final String patchURI = "/v1/brands/%s/membership/plans/%s";
 	public static final String deleteURI = "/v1/brands/%s/membership/plans/%s";
+	
+	public static final String deleteGymURI = "/v1/brands/%s/gyms/%s";
+	public static final String deleteCourseURI = "/v1/brands/%s/courses/%s";
+
 	public static final String pageNumber = "page";
 	public static final String pageSize = "pageSize";
 	public static final String includeInactive = "includeInactive";
@@ -89,6 +107,12 @@ class MembershipPlanControllerTests {
 	MembershipPlanRepository membershipPlanRepository;
 
 	@Autowired
+	CourseRepository courseRepository;
+	
+	@Autowired
+	GymRepository gymRepository;
+	
+	@Autowired
 	ObjectMapper objectMapper;
 
 	@Autowired
@@ -104,39 +128,52 @@ class MembershipPlanControllerTests {
 	private Brand brand_CrossfitExtreme;
 	
 	private List<MembershipPlan> membershipPlans = new ArrayList<MembershipPlan>();
+	private List<Course> courses = new ArrayList<Course>();
+	private List<Gym> gyms = new ArrayList<Gym>();
 
 	@BeforeAll
 	void arrange() {
 		testRestTemplate.getRestTemplate().setRequestFactory(new HttpComponentsClientHttpRequestFactory());
-
 		membershipPlanRepository.deleteAll();
 
 		brand_FitnessBoxing = BrandBuilder.build(brandCode_FitnessBoxing, "Fitness Boxing");
 		brandRepository.save(brand_FitnessBoxing);
 		
-		brand_CrossfitExtreme = BrandBuilder.build(brandCode_CrossfitExtreme, "Crossfit Extremeg");
+		brand_CrossfitExtreme = BrandBuilder.build(brandCode_CrossfitExtreme, "Crossfit Extreme");
 		brandRepository.save(brand_FitnessBoxing);
 		
-		membershipPlan = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid());
+		for (int i = 0; i < 5; i++) {
+			Course item = CourseBuilder.build(brand_FitnessBoxing.getUuid());
+			item = courseRepository.save(item);
+			courses.add(item);
+		}
+		
+		for (int i = 0; i < 5; i++) {
+			Gym item = GymBuilder.build(brand_FitnessBoxing.getUuid(), faker.code().isbn10(), faker.address().cityName());
+			item = gymRepository.save(item);
+			gyms.add(item);
+		}
+		
+		membershipPlan = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), gyms.subList(0, 2), courses.subList(0, 2));
 		membershipPlanRepository.save(membershipPlan);
 
-		membershipPlanIsDeleted = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid());
+		membershipPlanIsDeleted = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null);
 		membershipPlanIsDeleted.setDeleted(true);
 		membershipPlanIsDeleted = membershipPlanRepository.save(membershipPlanIsDeleted);
 
 		for (int i = 0; i < 10; i++) {
-			MembershipPlan item = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid());
+			MembershipPlan item = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), gyms, courses);
 			membershipPlanRepository.save(item);
 			membershipPlans.add(item);
 		}
 
 		for (int i = 0; i < 4; i++) {
-			MembershipPlan item = MembershipPlanBuilder.build(brand_CrossfitExtreme.getUuid());
+			MembershipPlan item = MembershipPlanBuilder.build(brand_CrossfitExtreme.getUuid(), null, null);
 			membershipPlanRepository.save(item);
 			membershipPlans.add(item);
 		}
 
-		MembershipPlan item = MembershipPlanBuilder.build(brand_CrossfitExtreme.getUuid());
+		MembershipPlan item = MembershipPlanBuilder.build(brand_CrossfitExtreme.getUuid(), null, null);
 		item.setActive(false);
 		membershipPlanRepository.save(item);
 	}
@@ -251,7 +288,7 @@ class MembershipPlanControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPostSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostMembershipPlanDto postDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid()), PostMembershipPlanDto.class);
+		PostMembershipPlanDto postDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), gyms, courses), PostMembershipPlanDto.class);
 
 		HttpEntity<PostMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, postDto);
 
@@ -262,6 +299,7 @@ class MembershipPlanControllerTests {
 
 		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
+		
 		MembershipPlanDto createdDto = TestResponseUtils.toDto(response, MembershipPlanDto.class, objectMapper);
 		assertMembershipPlan(modelMapper.map(postDto, MembershipPlanDto.class), createdDto);
 	}
@@ -270,7 +308,7 @@ class MembershipPlanControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPostFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostMembershipPlanDto postDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid()), PostMembershipPlanDto.class);
+		PostMembershipPlanDto postDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null), PostMembershipPlanDto.class);
 		HttpEntity<PostMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, postDto);
 
 		// Act
@@ -285,7 +323,7 @@ class MembershipPlanControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testGetSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostMembershipPlanDto postDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid()), PostMembershipPlanDto.class);
+		PostMembershipPlanDto postDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), gyms, courses), PostMembershipPlanDto.class);
 
 		HttpEntity<PostMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, postDto);
 
@@ -327,7 +365,7 @@ class MembershipPlanControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPutSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		MembershipPlan membershipPlanToUpdate = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid());
+		MembershipPlan membershipPlanToUpdate = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), gyms.subList(0, 2), courses.subList(0, 2));
 		membershipPlanToUpdate = membershipPlanRepository.save(membershipPlanToUpdate);
 
 		PutMembershipPlanDto putDto = modelMapper.map(membershipPlanToUpdate, PutMembershipPlanDto.class);
@@ -340,11 +378,11 @@ class MembershipPlanControllerTests {
 		if (putDto.getDescription() != null && !putDto.getDescription().isEmpty()) {
 			putDto.getDescription().get(0).setText(putDto.getDescription().get(0).getText() + " - updated");
 		}
-		if (putDto.getOneTimeFees() != null && putDto.getOneTimeFees().size() > 0) {
-			putDto.getOneTimeFees().remove(0);
+		if (putDto.getIncludedCourses() != null && putDto.getIncludedCourses().size() > 0) {
+			putDto.getIncludedCourses().remove(0);
 		}
-		if (putDto.getCourses() != null && putDto.getCourses().size() > 0) {
-			putDto.getCourses().remove(0);
+		if (putDto.getIncludedGyms() != null && putDto.getIncludedGyms().size() > 0) {
+			putDto.getIncludedGyms().remove(0);
 		}
 
 		// Act
@@ -364,7 +402,7 @@ class MembershipPlanControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPutNullSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		MembershipPlan membershipPlanToUpdate = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid());
+		MembershipPlan membershipPlanToUpdate = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null);
 		membershipPlanToUpdate.setActive(false);
 		membershipPlanToUpdate.setActivatedOn(null);
 		membershipPlanToUpdate.setDeactivatedOn(null);
@@ -373,9 +411,11 @@ class MembershipPlanControllerTests {
 		PutMembershipPlanDto putDto = modelMapper.map(membershipPlanToUpdate, PutMembershipPlanDto.class);
 		putDto.setDescription(null);
 		putDto.setName(null);
+		putDto.setTitle(null);
 		
 		membershipPlanToUpdate.setDescription(null);
 		membershipPlanToUpdate.setName(null);
+		membershipPlanToUpdate.setTitle(null);
 
 		// Act
 		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
@@ -392,7 +432,7 @@ class MembershipPlanControllerTests {
 	
 	@Test
 	void testPutFailureNotFound() throws MalformedURLException, JsonProcessingException, Exception {
-		PutMembershipPlanDto putDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid()), PutMembershipPlanDto.class);
+		PutMembershipPlanDto putDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null), PutMembershipPlanDto.class);
 		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putDto);
 		
 		// Act
@@ -408,7 +448,7 @@ class MembershipPlanControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPutFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PutMembershipPlanDto putDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid()), PutMembershipPlanDto.class);
+		PutMembershipPlanDto putDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null), PutMembershipPlanDto.class);
 		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
 
 		// Act
@@ -424,7 +464,7 @@ class MembershipPlanControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPutFailureForbiddenMembershipPlanMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PutMembershipPlanDto putDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid()), PutMembershipPlanDto.class);
+		PutMembershipPlanDto putDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null), PutMembershipPlanDto.class);
 		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
 		// Act
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
@@ -438,7 +478,7 @@ class MembershipPlanControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testActivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		MembershipPlan membershipPlanToActivate = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid());
+		MembershipPlan membershipPlanToActivate = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null);
 		membershipPlanToActivate.setActive(false);
 		membershipPlanToActivate.setActivatedOn(null);
 		membershipPlanToActivate.setDeactivatedOn(null);
@@ -486,7 +526,7 @@ class MembershipPlanControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testDeactivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		MembershipPlan membershipPlanToDeactivate = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid());
+		MembershipPlan membershipPlanToDeactivate = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null);
 		membershipPlanToDeactivate.setActive(true);
 		membershipPlanToDeactivate.setActivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
 		membershipPlanToDeactivate = membershipPlanRepository.save(membershipPlanToDeactivate);
@@ -531,14 +571,17 @@ class MembershipPlanControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPatchSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		MembershipPlan membershipPlanToPatch = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid());
+		MembershipPlan membershipPlanToPatch = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null);
 		membershipPlanToPatch = membershipPlanRepository.save(membershipPlanToPatch);
 
 		PatchMembershipPlanDto patchDto = modelMapper.map(membershipPlanToPatch, PatchMembershipPlanDto.class);
 		patchDto.setUuid(membershipPlanToPatch.getUuid());
+		patchDto.setStartDate(Date.from(Instant.now().plus(5, ChronoUnit.DAYS)));
 		patchDto.setDescription(null);
 		patchDto.setName(null);
 
+		membershipPlanToPatch.setStartDate(patchDto.getStartDate());
+		
 		// Act
 		HttpEntity<PatchMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchDto);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
@@ -548,7 +591,6 @@ class MembershipPlanControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
 
-		membershipPlanToPatch.setCode(patchDto.getCode());
 		MembershipPlanDto patchedDto = TestResponseUtils.toDto(response, MembershipPlanDto.class, objectMapper);
 		assertMembershipPlan(modelMapper.map(membershipPlanToPatch, MembershipPlanDto.class), patchedDto);
 	}
@@ -557,7 +599,7 @@ class MembershipPlanControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPatchFailureNotFound(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		MembershipPlan patchTarget = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid());
+		MembershipPlan patchTarget = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null);
 		PatchMembershipPlanDto patchDto = modelMapper.map(patchTarget, PatchMembershipPlanDto.class);
 		
 		HttpEntity<PatchMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchDto);
@@ -575,7 +617,7 @@ class MembershipPlanControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPatchFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PutMembershipPlanDto putDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid()), PutMembershipPlanDto.class);
+		PutMembershipPlanDto putDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null), PutMembershipPlanDto.class);
 		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
 
 		// Act
@@ -591,7 +633,7 @@ class MembershipPlanControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPatchFailureForbiddenMembershipPlanMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PutMembershipPlanDto putDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid()), PutMembershipPlanDto.class);
+		PutMembershipPlanDto putDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null), PutMembershipPlanDto.class);
 		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
 		// Act
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
@@ -605,7 +647,7 @@ class MembershipPlanControllerTests {
 	@Test
 	void testDeleteSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		MembershipPlan membershipPlanToDelete = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid());
+		MembershipPlan membershipPlanToDelete = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), gyms, courses);
 		membershipPlanToDelete = membershipPlanRepository.save(membershipPlanToDelete);
 
 		// Act
@@ -626,6 +668,70 @@ class MembershipPlanControllerTests {
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
 	}
+	
+	
+	@Test
+	void testDeleteReferencesSuccess() throws JsonProcessingException, MalformedURLException {
+		//DELETE REFERENCES SUCCESS: when a course or gym is deleted, it should be removed from all membership plans that reference it. This test will create a course and a gym, create multiple membership plans that reference them, delete the course and the gym, and verify that the membership plans no longer reference the deleted course and gym.
+		// Arrange
+		List<Course> courses = new ArrayList<Course>();
+		List<Gym> gyms = new ArrayList<Gym>();
+		
+		for (int i = 0; i < 2; i++) {
+			Course item = CourseBuilder.build(brand_FitnessBoxing.getUuid());
+			item = courseRepository.save(item);
+			courses.add(item);
+		}
+		
+		for (int i = 0; i < 2; i++) {
+			Gym item = GymBuilder.build(brand_FitnessBoxing.getUuid(), faker.code().isbn10(), faker.address().cityName());
+			item = gymRepository.save(item);
+			gyms.add(item);
+		}
+		
+		MembershipPlan membershipPlanReferences1 = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), gyms, courses);
+		membershipPlanRepository.save(membershipPlanReferences1);
+		
+		MembershipPlan membershipPlanReferences2 = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), gyms, courses);
+		membershipPlanRepository.save(membershipPlanReferences2);
+		
+		HttpEntity<PutGymDto> httpGymEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(
+				URI.create(String.format(deleteGymURI, brand_FitnessBoxing.getUuid(), gyms.getFirst().getUuid())), port, null),
+				HttpMethod.DELETE, httpGymEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.ACCEPTED, response.getStatusCode(),
+				String.format("Gym delete error: %s", response.getStatusCode()));
+		
+		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
+		response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(deleteCourseURI, brand_FitnessBoxing.getUuid(), courses.getFirst().getUuid())), port, null),
+				HttpMethod.DELETE, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.ACCEPTED, response.getStatusCode(),
+				String.format("Course delete error: %s", response.getStatusCode()));
+		
+		Page<MembershipPlan> pageMembershipPlan = membershipPlanRepository.findAllByBrandUuidAndIsDeletedIsFalse(brand_FitnessBoxing.getUuid(),  PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
+		
+		pageMembershipPlan.getContent().forEach(membershipPlan -> {
+			Assertions.assertFalse(membershipPlan.getIncludedCourses().stream().filter(course -> course.getUuid().equals(courses.getFirst().getUuid())).findFirst().isPresent(),
+					String.format("Deleted course %s still present in membership plan %s", courses.getFirst().getUuid(), membershipPlan.getUuid()));
+			Assertions.assertFalse(membershipPlan.getIncludedGyms().stream().filter(gym -> gym.getUuid().equals(gyms.getFirst().getUuid())).findFirst().isPresent(),
+					String.format("Deleted gym %s still present in membership plan %s", gyms.getFirst().getUuid(), membershipPlan.getUuid()));
+		});
+		
+		membershipPlanReferences1 = membershipPlanRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brand_FitnessBoxing.getUuid(),  membershipPlanReferences1.getUuid()).get();
+		Assertions.assertTrue(membershipPlanReferences1.getIncludedGyms().size() == 1 && membershipPlanReferences1.getIncludedGyms().get(0).getUuid().equals(gyms.getLast().getUuid()),
+				String.format("Non deleted gym %s not found in membership plan %s", gyms.getLast().getUuid(), membershipPlan.getUuid()));
+		Assertions.assertTrue(membershipPlanReferences1.getIncludedCourses().size() == 1 && membershipPlanReferences1.getIncludedCourses().get(0).getUuid().equals(courses.getLast().getUuid()),
+				String.format("Non deleted course %s not found in membership plan %s", courses.getLast().getUuid(), membershipPlan.getUuid()));
+
+		membershipPlanReferences2 = membershipPlanRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brand_FitnessBoxing.getUuid(),  membershipPlanReferences2.getUuid()).get();
+		Assertions.assertTrue(membershipPlanReferences2.getIncludedGyms().size() == 1 && membershipPlanReferences2.getIncludedGyms().get(0).getUuid().equals(gyms.getLast().getUuid()),
+				String.format("Non deleted gym %s not found in membership plan %s", gyms.getLast().getUuid(), membershipPlan.getUuid()));
+		Assertions.assertTrue(membershipPlanReferences2.getIncludedCourses().size() == 1 && membershipPlanReferences2.getIncludedCourses().get(0).getUuid().equals(courses.getLast().getUuid()),
+				String.format("Non deleted course %s not found in membership plan %s", courses.getLast().getUuid(), membershipPlan.getUuid()));
+	}
 
 	public static final void assertMembershipPlan(MembershipPlanDto expected, MembershipPlanDto result) {
 		if (expected.getUuid() != null) {
@@ -633,7 +739,6 @@ class MembershipPlanControllerTests {
 		}
 		
 		Assertions.assertEquals(expected.getBrandUuid(), result.getBrandUuid());
-		Assertions.assertEquals(expected.getCode(), result.getCode());
 		Assertions.assertEquals(expected.getDurationInMonths(), result.getDurationInMonths());
 		Assertions.assertEquals(expected.getNumberOfClasses(), result.getNumberOfClasses());
 		Assertions.assertEquals(expected.isGuestPrivilege(), result.isGuestPrivilege());
@@ -673,6 +778,22 @@ class MembershipPlanControllerTests {
 			Assertions.assertNull(result.getName());
 		}
 
+		if (expected.getTitle() != null) {
+			Assertions.assertNotNull(result.getTitle());
+
+			Assertions.assertEquals(expected.getTitle().size(), result.getTitle().size());
+			expected.getTitle().forEach(title -> {
+				Optional<LocalizedStringDto> previous = result.getTitle().stream()
+						.filter(item -> item.getLanguage().equals(title.getLanguage())).findFirst();
+				Assertions.assertTrue(previous.isPresent());
+				Assertions.assertEquals(previous.get().getText(), title.getText());
+			});
+		}
+
+		if (expected.getTitle() == null) {
+			Assertions.assertNull(result.getTitle());
+		}
+
 		if (expected.getDescription() != null) {
 			Assertions.assertNotNull(result.getDescription());
 
@@ -696,7 +817,7 @@ class MembershipPlanControllerTests {
 		if (expected.getCost() != null) {
 			Assertions.assertNotNull(result.getCost());
 			
-			Assertions.assertEquals(expected.getCost().getCost(), result.getCost().getCost());
+			Assertions.assertEquals(expected.getCost().getAmount(), result.getCost().getAmount());
 			Assertions.assertNotNull(result.getCost().getCurrency());
 			Assertions.assertEquals(expected.getCost().getCurrency().getCode(), result.getCost().getCurrency().getCode());
 			Assertions.assertEquals(expected.getCost().getCurrency().getName(), result.getCost().getCurrency().getName());
@@ -707,29 +828,36 @@ class MembershipPlanControllerTests {
 			Assertions.assertNull(result.getCost());
 		}
 		
-		if (expected.getOneTimeFees() != null) {
-			Assertions.assertNotNull(result.getOneTimeFees());
+		if (expected.getStartDate() != null) {
+			LocalDate expecteStart = expected.getStartDate()
+			        .toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
-			Assertions.assertEquals(expected.getOneTimeFees().size(), result.getOneTimeFees().size());
-			
-			expected.getOneTimeFees().forEach(oneTimeFee -> {
-				Optional<OneTimeFeeDto> previous = result.getOneTimeFees().stream()
-				.filter(item -> item.getCode().equals(oneTimeFee.getCode())).findFirst();
-				Assertions.assertEquals(previous.get().getCost().getCost(), oneTimeFee.getCost().getCost());
-				
-				Assertions.assertNotNull(previous.get().getCost().getCurrency());
-				Assertions.assertEquals(previous.get().getCost().getCurrency().getCode(), oneTimeFee.getCost().getCurrency().getCode());
-				Assertions.assertEquals(previous.get().getCost().getCurrency().getName(), oneTimeFee.getCost().getCurrency().getName());
-				Assertions.assertEquals(previous.get().getCost().getCurrency().getSymbol(), oneTimeFee.getCost().getCurrency().getSymbol());
+			LocalDate resultStart = result.getStartDate()
+			        .toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+			Assertions.assertEquals(expecteStart, resultStart);
+		}
+		
+		if (expected.getEndDate() != null) {
+			LocalDate expecteEnd = expected.getEndDate()
+			        .toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
-			
-				oneTimeFee.getDescription().forEach(description -> {
-					Optional<LocalizedStringDto> previousDescription = previous.get().getDescription().stream()
-							.filter(item -> item.getLanguage().equals(description.getLanguage())).findFirst();
-					Assertions.assertTrue(previousDescription.isPresent());
-					Assertions.assertEquals(previousDescription.get().getText(), description.getText());
-				});
-			});
+			LocalDate resultEnd = result.getEndDate()
+			        .toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+			Assertions.assertEquals(expecteEnd, resultEnd);
+		}
+		
+		if (expected.getIncludedGyms() != null) {
+			for (GymDto gym : expected.getIncludedGyms()) {
+				Assertions.assertTrue(result.getIncludedGyms().stream().filter(g -> g.getUuid().equals(gym.getUuid())).findFirst().isPresent(),
+						String.format("Gym %s is missing in result", gym.getUuid()));
+			}
+		}
+		
+		if (expected.getIncludedCourses() != null) {
+			for (CourseDto course : expected.getIncludedCourses()) {
+				Assertions.assertTrue(result.getIncludedCourses().stream().filter(item -> item.getUuid().equals(course.getUuid())).findFirst().isPresent(),
+						String.format("Course %s is missing in result", course.getUuid()));
+			}
 		}
 	}
 }

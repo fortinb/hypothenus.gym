@@ -1,5 +1,6 @@
 package com.iso.hypo.admin.papi.dto.model;
 
+import java.util.Date;
 import java.util.List;
 
 import com.iso.hypo.admin.papi.dto.BaseDto;
@@ -7,7 +8,6 @@ import com.iso.hypo.admin.papi.dto.LocalizedStringDto;
 import com.iso.hypo.admin.papi.dto.enumeration.BillingFrequencyEnum;
 import com.iso.hypo.admin.papi.dto.enumeration.MembershipPlanPeriodEnum;
 import com.iso.hypo.admin.papi.dto.pricing.CostDto;
-import com.iso.hypo.admin.papi.dto.pricing.OneTimeFeeDto;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -20,13 +20,13 @@ public class MembershipPlanDto extends BaseDto {
 	
 	private String uuid;
 
-	private String code;
-
 	private List<LocalizedStringDto> name;
+
+	private List<LocalizedStringDto> title;
 
 	private List<LocalizedStringDto> description;
 
-	private Integer numberOfClasses;
+	private int numberOfClasses;
 	
 	private MembershipPlanPeriodEnum period;
 	
@@ -34,17 +34,19 @@ public class MembershipPlanDto extends BaseDto {
 	
 	private CostDto cost;
 	
-	private List<OneTimeFeeDto> oneTimeFees;
-	
 	private boolean guestPrivilege;
 	
 	private boolean isGiftCard;
 	
-	private Integer durationInMonths;
+	private int durationInMonths;
 	
 	private boolean isPromotional;
 	
-	private List<CourseDto> courses;
+	private Date startDate;
+	
+	private Date endDate;
+	
+	private List<CourseDto> includedCourses;
 	
 	private List<GymDto> includedGyms;
 }

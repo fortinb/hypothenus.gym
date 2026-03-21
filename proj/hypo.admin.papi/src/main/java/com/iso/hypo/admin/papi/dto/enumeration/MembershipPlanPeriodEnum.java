@@ -1,9 +1,10 @@
 package com.iso.hypo.admin.papi.dto.enumeration;
 
 public enum MembershipPlanPeriodEnum {
-	weekly,
+	classes,
 	monthly,
-	days,
+	weekly,
+	trial,
 	hours,
-	classes
+	merchandise
 }

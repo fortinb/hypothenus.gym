@@ -1,8 +1,7 @@
 package com.iso.hypo.domain.enumeration;
 
 public enum BillingFrequencyEnum {
-	upfront,
-	days,
+	oneTime,
 	weekly,
 	biweekly,
 	monthly,
