@@ -77,21 +77,21 @@ public class Populator {
 
 		// Coaches
 		for (int i = 0; i < 10; i++) {
-			Coach item = CoachBuilder.build(brand.getUuid(), gym_boucherville.getUuid());
+			Coach item = CoachBuilder.build(brand.getUuid());
 			item.setActive(true);
 			coachRepository.save(item);
 
-			item = CoachBuilder.build(brand.getUuid(), gym_longueuil.getUuid());
+			item = CoachBuilder.build(brand.getUuid());
 			item.setActive(true);
 			coachRepository.save(item);
 		}
 
 		for (int i = 0; i < 5; i++) {
-			Coach item = CoachBuilder.build(brand.getUuid(), gym_boucherville.getUuid());
+			Coach item = CoachBuilder.build(brand.getUuid());
 			item.setActive(false);
 			coachRepository.save(item);
 
-			item = CoachBuilder.build(brand.getUuid(), gym_longueuil.getUuid());
+			item = CoachBuilder.build(brand.getUuid());
 			item.setActive(false);
 			coachRepository.save(item);
 		}

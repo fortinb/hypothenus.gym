@@ -11,8 +11,6 @@ import lombok.Setter;
 public class CoachDto extends BaseEntityDto {
 
     private String brandUuid;
-
-    private String gymUuid;
     
     private String uuid;
 

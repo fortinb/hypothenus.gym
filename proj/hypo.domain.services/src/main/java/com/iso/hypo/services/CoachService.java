@@ -11,15 +11,11 @@ public interface CoachService {
 
     CoachDto patch(CoachDto coachDto) throws CoachException;
 
-    void delete(String brandUuid, String gymUuid, String coachUuid) throws CoachException;
+    void delete(String brandUuid, String coachUuid) throws CoachException;
 
-    CoachDto activate(String brandUuid, String gymUuid, String coachUuid) throws CoachException;
+    CoachDto activate(String brandUuid, String coachUuid) throws CoachException;
 
-    CoachDto deactivate(String brandUuid, String gymUuid, String coachUuid) throws CoachException;
+    CoachDto deactivate(String brandUuid, String coachUuid) throws CoachException;
     
     void deleteAllByBrandUuid(String brandUuid) throws CoachException;
-    
-    void deleteAllByGymUuid(String brandUuid, String gymUuid) throws CoachException;
 }
-
-

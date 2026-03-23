@@ -63,7 +63,7 @@ public class CoachController {
 		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
-	@GetMapping("/brands/{brandUuid}/gyms/{gymUuid}/coachs")
+	@GetMapping("/brands/{brandUuid}/coachs")
 	@Operation(summary = "Retrieve a list of coachs")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -80,14 +80,13 @@ public class CoachController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> listCoach(
 			@PathVariable String brandUuid,
-			@PathVariable String gymUuid,
 			@Parameter(description = "page number") @RequestParam int page,
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue="false") boolean includeInactive) {
 
 		Page<com.iso.hypo.domain.dto.CoachDto> domainDtos = null;
 		try {
-			domainDtos = coachQueryService.list(brandUuid, gymUuid, page, pageSize, includeInactive);
+			domainDtos = coachQueryService.list(brandUuid, page, pageSize, includeInactive);
 		} catch (CoachException e) {
 			logger.error(e.getMessage(), e);
 
@@ -98,7 +97,7 @@ public class CoachController {
 		return ResponseEntity.ok(domainDtos.map(item -> modelMapper.map(item, CoachDto.class)));
 	}
 
-	@GetMapping("/brands/{brandUuid}/gyms/{gymUuid}/coachs/{uuid}")
+	@GetMapping("/brands/{brandUuid}/coachs/{uuid}")
 	@Operation(summary = "Retrieve a specific coach")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -115,11 +114,10 @@ public class CoachController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> getCoach(
 			@PathVariable String brandUuid,
-			@PathVariable String gymUuid,
 			@PathVariable String uuid) {
 		com.iso.hypo.domain.dto.CoachDto domainDto = null;
 		try {
-			domainDto = coachQueryService.find(brandUuid, gymUuid, uuid);
+			domainDto = coachQueryService.find(brandUuid, uuid);
 		} catch (CoachException e) {
 			logger.error(e.getMessage(), e);
 
@@ -129,7 +127,7 @@ public class CoachController {
 		return ResponseEntity.ok(modelMapper.map(domainDto, CoachDto.class));
 	}
 
-	@PostMapping("/brands/{brandUuid}/gyms/{gymUuid}/coachs")
+	@PostMapping("/brands/{brandUuid}/coachs")
 	@Operation(summary = "Create a new coach")
 	@ApiResponses({
 			@ApiResponse(responseCode = "201", content = {
@@ -146,14 +144,9 @@ public class CoachController {
 	@ResponseStatus(value = HttpStatus.CREATED)
 	public ResponseEntity<Object> createCoach(
 			@PathVariable String brandUuid,
-			@PathVariable String gymUuid,
 			@RequestBody PostCoachDto request) {
 		
 		if (!request.getBrandUuid().equals(brandUuid)) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-		}
-		
-		if (!request.getGymUuid().equals(gymUuid)) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
@@ -172,7 +165,7 @@ public class CoachController {
 				.body(modelMapper.map(domainDto, CoachDto.class));
 	}
 
-	@PutMapping("/brands/{brandUuid}/gyms/{gymUuid}/coachs/{uuid}")
+	@PutMapping("/brands/{brandUuid}/coachs/{uuid}")
 	@Operation(summary = "Update a coach")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -189,17 +182,12 @@ public class CoachController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> updateCoach(
 			@PathVariable String brandUuid,
-			@PathVariable String gymUuid,
 			@PathVariable String uuid,
 			@Parameter(description = "activate or deactivate coach") 
 			@RequestParam(required = false, defaultValue = "true") boolean isActive,
 			@RequestBody PutCoachDto request) {
 		
 		if (!request.getBrandUuid().equals(brandUuid)) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-		}
-		
-		if (!request.getGymUuid().equals(gymUuid)) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
@@ -220,7 +208,7 @@ public class CoachController {
 		return ResponseEntity.ok(modelMapper.map(domainDto, CoachDto.class));
 	}
 
-	@PostMapping("/brands/{brandUuid}/gyms/{gymUuid}/coachs/{uuid}/activate")
+	@PostMapping("/brands/{brandUuid}/coachs/{uuid}/activate")
 	@Operation(summary = "Activate a coach")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -237,12 +225,11 @@ public class CoachController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> activateCoach(
 			@PathVariable String brandUuid,
-			@PathVariable String gymUuid,
 			@PathVariable String uuid) {
 		com.iso.hypo.domain.dto.CoachDto domainDto;
 		
 		try {
-			domainDto = coachService.activate(brandUuid, gymUuid, uuid);
+			domainDto = coachService.activate(brandUuid, uuid);
 		} catch (CoachException e) {
 			logger.error(e.getMessage(), e);
 
@@ -252,7 +239,7 @@ public class CoachController {
 		return ResponseEntity.ok(modelMapper.map(domainDto, CoachDto.class));
 	}
 	
-	@PostMapping("/brands/{brandUuid}/gyms/{gymUuid}/coachs/{uuid}/deactivate")
+	@PostMapping("/brands/{brandUuid}/coachs/{uuid}/deactivate")
 	@Operation(summary = "Deactivate a coach")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
@@ -269,12 +256,11 @@ public class CoachController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> deactivateCoach(
 			@PathVariable String brandUuid,
-			@PathVariable String gymUuid,
 			@PathVariable String uuid) {
 		com.iso.hypo.domain.dto.CoachDto domainDto;
 		
 		try {
-			domainDto = coachService.deactivate(brandUuid, gymUuid, uuid);
+			domainDto = coachService.deactivate(brandUuid, uuid);
 		} catch (CoachException e) {
 			logger.error(e.getMessage(), e);
 
@@ -284,7 +270,7 @@ public class CoachController {
 		return ResponseEntity.ok(modelMapper.map(domainDto, CoachDto.class));
 	}
 	
-	@PatchMapping("/brands/{brandUuid}/gyms/{gymUuid}/coachs/{uuid}")
+	@PatchMapping("/brands/{brandUuid}/coachs/{uuid}")
 	@Operation(summary = "Patch a coach")
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ApiResponses({
@@ -301,15 +287,10 @@ public class CoachController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> patchCoach(
 			@PathVariable String brandUuid,
-			@PathVariable String gymUuid,
 			@PathVariable String uuid,
 			@RequestBody PatchCoachDto request) {
 		
 		if (!request.getBrandUuid().equals(brandUuid)) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-		}
-		
-		if (!request.getGymUuid().equals(gymUuid)) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
@@ -330,7 +311,7 @@ public class CoachController {
 		return ResponseEntity.ok(modelMapper.map(domainDto, CoachDto.class));
 	}
 
-	@DeleteMapping("/brands/{brandUuid}/gyms/{gymUuid}/coachs/{uuid}")
+	@DeleteMapping("/brands/{brandUuid}/coachs/{uuid}")
 	@Operation(summary = "Delete a coach")
 	@ApiResponses({ @ApiResponse(responseCode = "202"),
 			@ApiResponse(responseCode = "400", description = "Bad request. The request is invalid or missing required data.", content = {
@@ -345,10 +326,9 @@ public class CoachController {
 	@ResponseStatus(value = HttpStatus.ACCEPTED)
 	public ResponseEntity<Object> deleteCoach(
 			@PathVariable String brandUuid,
-			@PathVariable String gymUuid,
 			@PathVariable String uuid) {
 		try {
-			coachService.delete(brandUuid, gymUuid, uuid);
+			coachService.delete(brandUuid, uuid);
 		} catch (CoachException e) {
 			logger.error(e.getMessage(), e);
 

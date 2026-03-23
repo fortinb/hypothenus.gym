@@ -14,9 +14,6 @@ public class PutCoachDto {
 	private String brandUuid;
 	
 	@NotBlank
-	private String gymUuid;
-	
-	@NotBlank
 	private String uuid;
 	
 	private PersonDto person;

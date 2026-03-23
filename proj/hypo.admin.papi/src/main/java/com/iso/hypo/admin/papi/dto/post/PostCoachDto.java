@@ -13,8 +13,5 @@ public class PostCoachDto {
 	@NotBlank
 	private String brandUuid;
 	
-	@NotBlank
-	private String gymUuid;
-	
 	private PersonDto person;
 }
