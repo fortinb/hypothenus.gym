@@ -9,6 +9,7 @@ import lombok.Getter;
 public class GymException extends DomainException {
 	
 	public static final String GYM_NOT_FOUND = "404";
+	public static final String COACH_NOT_FOUND = "404";
 	public static final String GYM_CODE_ALREADY_EXIST = "1001";
 	public static final String BRAND_NOT_FOUND = "404";
 	public static final String INVALID_BRAND = "403";

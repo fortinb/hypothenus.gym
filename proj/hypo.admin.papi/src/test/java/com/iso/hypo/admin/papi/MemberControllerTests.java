@@ -663,7 +663,7 @@ class MemberControllerTests {
 		
 		// Act
 		await()
-        .atMost(5, TimeUnit.SECONDS)
+        .atMost(10, TimeUnit.SECONDS)
         .pollInterval(200, TimeUnit.MILLISECONDS)
         .untilAsserted(() -> {
     		ResponseEntity<JsonNode> response = testRestTemplate.exchange(

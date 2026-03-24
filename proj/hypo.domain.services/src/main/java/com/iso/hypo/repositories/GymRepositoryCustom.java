@@ -19,5 +19,7 @@ public interface GymRepositoryCustom {
 	void delete(String brandUuid, String gymUuid, String deletedBy);
 	
 	long deleteAllByBrandUuid(String brandUuid, String deletedBy);
+	
+	long removeCoachReferences(String coachId);
 }
 

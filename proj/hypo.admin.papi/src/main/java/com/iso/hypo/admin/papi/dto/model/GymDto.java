@@ -33,4 +33,6 @@ public class GymDto extends BaseDto {
 	private List<PhoneNumberDto> phoneNumbers;
 	
 	private List<ContactDto> contacts;
+	
+	private List<CoachDto> coachs;
 }

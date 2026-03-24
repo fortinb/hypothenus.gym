@@ -37,13 +37,19 @@ public class BrandBuilder {
 		return phoneNumbers;
 	}
 	
+	public static List<PhoneNumber> buildContactPhoneNumbers() {
+		ArrayList<PhoneNumber> phoneNumbers = new ArrayList<PhoneNumber>();
+		phoneNumbers.add(new PhoneNumber(faker.phoneNumber().cellPhone(), PhoneNumberTypeEnum.home));
+		phoneNumbers.add(new PhoneNumber(faker.phoneNumber().cellPhone(), PhoneNumberTypeEnum.mobile));
 
+		return phoneNumbers;
+	}
 	public static List<Contact> buildContacts() {
 		ArrayList<Contact> contacts = new ArrayList<Contact>();
 		contacts.add(new Contact(faker.name().firstName(), faker.name().lastName(),faker.company().profession(),
-				faker.internet().emailAddress(), buildPhoneNumbers()));
+				faker.internet().emailAddress(), buildContactPhoneNumbers()));
 		contacts.add(new Contact(faker.name().firstName(), faker.name().lastName(),faker.company().profession(),
-				faker.internet().emailAddress(), buildPhoneNumbers()));
+				faker.internet().emailAddress(), buildContactPhoneNumbers()));
 		contacts.add(new Contact(faker.name().firstName(), faker.name().lastName(),faker.company().profession(),
 				faker.internet().emailAddress(), buildPhoneNumbers()));
 

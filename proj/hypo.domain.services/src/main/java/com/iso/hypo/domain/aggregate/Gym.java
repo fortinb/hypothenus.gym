@@ -1,11 +1,13 @@
 package com.iso.hypo.domain.aggregate;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
 
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.iso.hypo.domain.BaseEntity;
@@ -51,12 +53,15 @@ public class Gym extends BaseEntity {
 	
 	private List<PhoneNumber> phoneNumbers;
 	
+	@DBRef
+	private List<Coach> coachs = new ArrayList<>();
+	
 	public Gym() {
 		super();
 	}
 	
 	public Gym(String brandUuid, String gymUuid, String name, Address address, String email, String logoUri, boolean isActive,
-			List<PhoneNumber> phoneNumbers, List<Contact> contacts, Instant activatedOn, Instant deactivatedOn) {
+			List<PhoneNumber> phoneNumbers, List<Contact> contacts, List<Coach> coachs, Instant activatedOn, Instant deactivatedOn) {
 		super(isActive);
 		this.brandUuid = brandUuid;
 		this.code = gymUuid;
@@ -66,6 +71,7 @@ public class Gym extends BaseEntity {
 		this.logoUri = logoUri;
 		this.phoneNumbers = phoneNumbers;
 		this.contacts = contacts;
+		this.coachs = coachs != null ? coachs : new ArrayList<>();
 		this.activatedOn = activatedOn;
 		this.deactivatedOn = deactivatedOn;
 	}

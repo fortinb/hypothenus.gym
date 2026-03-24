@@ -18,6 +18,6 @@ public interface GymService {
     GymDto deactivate(String brandUuid, String gymUuid) throws GymException;
     
     void deleteAllByBrandUuid(String brandUuid) throws GymException;
+
+	void removeAllCoachReferencesByCoachId(String coachId) throws GymException;
 }
-
-

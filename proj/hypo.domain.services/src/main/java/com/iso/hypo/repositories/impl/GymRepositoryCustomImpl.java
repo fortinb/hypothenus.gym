@@ -1,9 +1,9 @@
 package com.iso.hypo.repositories.impl;
 
 import static com.mongodb.client.model.Aggregates.limit;
-import static com.mongodb.client.model.Aggregates.sort;
-import static com.mongodb.client.model.Aggregates.skip;
 import static com.mongodb.client.model.Aggregates.project;
+import static com.mongodb.client.model.Aggregates.skip;
+import static com.mongodb.client.model.Aggregates.sort;
 import static com.mongodb.client.model.Projections.excludeId;
 import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -200,6 +201,20 @@ public class GymRepositoryCustomImpl implements GymRepositoryCustom {
 		UpdateResult result = mongoTemplate.updateMulti(query, update, Gym.class);
 		
 		return result.getMatchedCount();
+	}
+	
+	@Override
+	public long removeCoachReferences(String coachId) {
+		ObjectId objectId = new ObjectId(coachId);
+
+		Query query = new Query(Criteria.where("coachs.$id").is(objectId));
+
+		Document dbRef = new Document("$ref", "coach").append("$id", objectId);
+		Update update = new Update().pull("coachs", dbRef);
+
+		UpdateResult result = mongoTemplate.updateMulti(query, update, Gym.class);
+
+		return result.getModifiedCount();
 	}
 }
 

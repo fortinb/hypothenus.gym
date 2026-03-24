@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
@@ -15,9 +16,11 @@ import org.springframework.util.Assert;
 import com.iso.hypo.common.context.RequestContext;
 import com.iso.hypo.domain.aggregate.Coach;
 import com.iso.hypo.domain.dto.CoachDto;
+import com.iso.hypo.events.event.OperationEnum;
 import com.iso.hypo.repositories.CoachRepository;
 import com.iso.hypo.services.BrandQueryService;
 import com.iso.hypo.services.CoachService;
+import com.iso.hypo.services.event.CoachEvent;
 import com.iso.hypo.services.exception.CoachException;
 import com.iso.hypo.services.mappers.CoachMapper;
 
@@ -27,6 +30,8 @@ public class CoachServiceImpl implements CoachService {
 	private final BrandQueryService brandQueryService;
 	
 	private final CoachRepository coachRepository;
+	
+	private final ApplicationEventPublisher eventPublisher;
 
 	private final CoachMapper coachMapper;
 
@@ -37,10 +42,12 @@ public class CoachServiceImpl implements CoachService {
 	public CoachServiceImpl(CoachMapper coachMapper, 
 			CoachRepository coachRepository,
 			BrandQueryService brandQueryService, 
+			ApplicationEventPublisher eventPublisher,
 			RequestContext requestContext) {
 		this.coachMapper = coachMapper;
 		this.coachRepository = coachRepository;
 		this.brandQueryService = brandQueryService;
+		this.eventPublisher = eventPublisher;
 		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
@@ -145,7 +152,10 @@ public class CoachServiceImpl implements CoachService {
 	public void delete(String brandUuid, String coachUuid) throws CoachException {
 		try {
 			Coach entity = this.readByCoachUuid(brandUuid, coachUuid);
+			
 			coachRepository.delete(entity.getBrandUuid(), entity.getUuid(), requestContext.getUsername());
+			
+			eventPublisher.publishEvent(new CoachEvent(this, entity, OperationEnum.delete));
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, coachUuid={}", brandUuid, coachUuid, e);
 			

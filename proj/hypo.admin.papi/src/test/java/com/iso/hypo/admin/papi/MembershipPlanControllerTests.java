@@ -149,7 +149,7 @@ class MembershipPlanControllerTests {
 		}
 		
 		for (int i = 0; i < 5; i++) {
-			Gym item = GymBuilder.build(brand_FitnessBoxing.getUuid(), faker.code().isbn10(), faker.address().cityName());
+			Gym item = GymBuilder.build(brand_FitnessBoxing.getUuid(), faker.code().isbn10(), faker.address().cityName(), null);
 			item = gymRepository.save(item);
 			gyms.add(item);
 		}
@@ -672,7 +672,7 @@ class MembershipPlanControllerTests {
 	
 	@Test
 	void testDeleteReferencesSuccess() throws JsonProcessingException, MalformedURLException {
-		//DELETE REFERENCES SUCCESS: when a course or gym is deleted, it should be removed from all membership plans that reference it. This test will create a course and a gym, create multiple membership plans that reference them, delete the course and the gym, and verify that the membership plans no longer reference the deleted course and gym.
+		//DELETE REFERENCES SUCCESS: when a course or gym is deleted, it should be removed from all membership plans that reference it. 
 		// Arrange
 		List<Course> courses = new ArrayList<Course>();
 		List<Gym> gyms = new ArrayList<Gym>();
@@ -684,7 +684,7 @@ class MembershipPlanControllerTests {
 		}
 		
 		for (int i = 0; i < 2; i++) {
-			Gym item = GymBuilder.build(brand_FitnessBoxing.getUuid(), faker.code().isbn10(), faker.address().cityName());
+			Gym item = GymBuilder.build(brand_FitnessBoxing.getUuid(), faker.code().isbn10(), faker.address().cityName(), null);
 			item = gymRepository.save(item);
 			gyms.add(item);
 		}

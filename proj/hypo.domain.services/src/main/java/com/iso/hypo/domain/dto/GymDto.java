@@ -34,4 +34,6 @@ public class GymDto extends BaseEntityDto {
 
     private List<PhoneNumber> phoneNumbers;
 
+    private List<CoachDto> coachs;
+
 }

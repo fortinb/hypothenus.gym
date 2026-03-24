@@ -51,49 +51,43 @@ public class Populator {
 		final String gymCode_boucherville = "boucherville";
 		final String gymCode_longueuil = "longueuil";
 
+		// Coaches
+		List<Coach> coachs = new ArrayList<>();
+		for (int i = 0; i < 10; i++) {
+			Coach item = CoachBuilder.build(brand.getUuid());
+			item.setActive(true);
+			coachRepository.save(item);
+			coachs.add(item);
+		}
+
+		for (int i = 0; i < 5; i++) {
+			Coach item = CoachBuilder.build(brand.getUuid());
+			item.setActive(false);
+			coachRepository.save(item);
+		}
+		
 		Gym gym_boucherville;
 		Gym gym_longueuil;
 
-		gym_boucherville = GymBuilder.build(brand.getUuid(), gymCode_boucherville, "Studio Boucherville");
+		gym_boucherville = GymBuilder.build(brand.getUuid(), gymCode_boucherville, "Studio Boucherville",coachs.subList(0, 2));
 		gym_boucherville = gymRepository.save(gym_boucherville);
 
-		gym_longueuil = GymBuilder.build(brand.getUuid(), gymCode_longueuil, "Studio Longueuil");
+		gym_longueuil = GymBuilder.build(brand.getUuid(), gymCode_longueuil, "Studio Longueuil", coachs.subList(0, 4));
 		gym_longueuil = gymRepository.save(gym_longueuil);
-
+		
 		List<Gym> gyms = new ArrayList<Gym>();
 		gyms.add(gym_boucherville);
 		gyms.add(gym_longueuil);
 		for (int i = 0; i < 10; i++) {
-			Gym item = GymBuilder.build(brand.getUuid(), faker.code().isbn10(), faker.company().name());
+			Gym item = GymBuilder.build(brand.getUuid(), faker.code().isbn10(), faker.company().name(), coachs.subList(0, 2));
 			gymRepository.save(item);
 			gyms.add(item);
 		}
 
 		for (int i = 0; i < 5; i++) {
-			Gym item = GymBuilder.build(brand.getUuid(), faker.code().isbn10(), faker.company().name());
+			Gym item = GymBuilder.build(brand.getUuid(), faker.code().isbn10(), faker.company().name(), null);
 			item.setActive(false);
 			gymRepository.save(item);
-		}
-
-		// Coaches
-		for (int i = 0; i < 10; i++) {
-			Coach item = CoachBuilder.build(brand.getUuid());
-			item.setActive(true);
-			coachRepository.save(item);
-
-			item = CoachBuilder.build(brand.getUuid());
-			item.setActive(true);
-			coachRepository.save(item);
-		}
-
-		for (int i = 0; i < 5; i++) {
-			Coach item = CoachBuilder.build(brand.getUuid());
-			item.setActive(false);
-			coachRepository.save(item);
-
-			item = CoachBuilder.build(brand.getUuid());
-			item.setActive(false);
-			coachRepository.save(item);
 		}
 
 		// Courses
