@@ -94,6 +94,8 @@ class GymControllerTests {
 	public static final String deleteURI = "/v1/brands/%s/gyms/%s";
 	public static final String postActivateURI = "/v1/brands/%s/gyms/%s/activate";
 	public static final String postDeactivateURI = "/v1/brands/%s/gyms/%s/deactivate";
+	public static final String postAssignCoachURI = "/v1/brands/%s/gyms/%s/coachs/%s/assign";
+	public static final String postUnassignCoachURI = "/v1/brands/%s/gyms/%s/coachs/%s/unassign";
 	public static final String searchCriteria = "criteria";
 	public static final String pageNumber = "page";
 	public static final String pageSize = "pageSize";
@@ -656,8 +658,6 @@ class GymControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testDeactivateFailure(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-
-		// Act
 		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils
 				.createURL(URI.create(String.format(postDeactivateURI, brand.getUuid(), faker.code().ean13())), port, null),
@@ -675,7 +675,7 @@ class GymControllerTests {
 	@Test
 	void testDeleteSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		PostBrandDto postBrandDto = modelMapper.map(BrandBuilder.build("todelete", "Brand to delete"), PostBrandDto.class);
+		PostBrandDto postBrandDto = modelMapper.map(BrandBuilder.build(faker.code().isbn10(), "Brand to delete"), PostBrandDto.class);
 		HttpEntity<PostBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postBrandDto);
 
 		// Act
@@ -757,6 +757,148 @@ class GymControllerTests {
 		gymReferences2 = gymRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brand.getUuid(),  gymReferences2.getUuid()).get();
 		Assertions.assertTrue(gymReferences2.getCoachs().size() == 1 && gymReferences2.getCoachs().get(0).getUuid().equals(coachs.getLast().getUuid()),
 				String.format("Non deleted coach %s not found in gym %s", coachs.getLast().getUuid(), gym.getUuid()));
+	}
+	
+	@ParameterizedTest
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
+	void testAssignCoachSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
+		// Arrange
+		Gym updatedGym = GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name(), coachs.subList(0, 2));
+		updatedGym.setActive(true);
+		updatedGym = gymRepository.save(updatedGym);
+		
+		// Act
+		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(postAssignCoachURI, updatedGym.getBrandUuid(), updatedGym.getUuid(), coachs.getLast().getUuid())),
+						port, null),
+				HttpMethod.POST, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
+				String.format("Gym coach assign error: %s", response.getStatusCode()));
+
+		GymDto gymAssigned = TestResponseUtils.toDto(response, GymDto.class, objectMapper);
+		Assertions.assertTrue(gymAssigned.getCoachs().stream().filter(coach -> coach.getUuid().equals(coachs.getLast().getUuid())).findFirst().isPresent(),
+				String.format("Assigned coach %s not found in gym %s", coachs.getLast().getUuid(), gym.getUuid()));
+
+	}
+
+	@ParameterizedTest
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
+	void testAssignCoachFailureNotFound(String role, String user) throws JsonProcessingException, MalformedURLException {
+		// Arrange
+		Gym updatedGym = GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name(), coachs.subList(0, 2));
+		updatedGym.setActive(true);
+		updatedGym = gymRepository.save(updatedGym);
+		
+		// Act
+		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(postAssignCoachURI, updatedGym.getBrandUuid(), updatedGym.getUuid(), "non-existing-coach")),
+						port, null),
+				HttpMethod.POST, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
+				String.format("Gym coach assignation error: %s", response.getStatusCode()));
+
+		if (response.getBody() != null && response.getBody().size() > 0) {
+			ErrorDto err = TestResponseUtils.toError(response, objectMapper);
+			Assertions.assertEquals(GymException.COACH_NOT_FOUND, err.getCode());
+		}
+	}
+	
+	@ParameterizedTest
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
+	void testAssignCoachAlreadyAssigned(String role, String user) throws JsonProcessingException, MalformedURLException {
+		// Arrange
+		Gym updatedGym = GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name(), coachs.subList(0, 2));
+		updatedGym.setActive(true);
+		updatedGym = gymRepository.save(updatedGym);
+		
+		// Act
+		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(postAssignCoachURI, updatedGym.getBrandUuid(), updatedGym.getUuid(), coachs.getFirst().getUuid())),
+						port, null),
+				HttpMethod.POST, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
+				String.format("Gym coach assign error: %s", response.getStatusCode()));
+
+		GymDto gymAssigned = TestResponseUtils.toDto(response, GymDto.class, objectMapper);
+		Assertions.assertEquals(GymException.COACH_ALREADY_ASSIGNED, gymAssigned.getMessages().getFirst().getCode(),
+				String.format("Coach already assigned error, missing message: %s", gymAssigned.getMessages().getFirst().getCode()));
+	}
+	
+	@ParameterizedTest
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
+	void testUnassignCoachSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
+		// Arrange
+		Gym updatedGym = GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name(), coachs.subList(0, 2));
+		updatedGym.setActive(true);
+		updatedGym = gymRepository.save(updatedGym);
+		
+		// Act
+		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(postUnassignCoachURI, updatedGym.getBrandUuid(), updatedGym.getUuid(), coachs.getFirst().getUuid())),
+						port, null),
+				HttpMethod.POST, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
+				String.format("Gym coach assign error: %s", response.getStatusCode()));
+
+		GymDto gymUnassigned = TestResponseUtils.toDto(response, GymDto.class, objectMapper);
+		Assertions.assertTrue(gymUnassigned.getCoachs().stream().filter(coach -> coach.getUuid().equals(coachs.getLast().getUuid())).findFirst().isEmpty(),
+				String.format("Unassigned coach %s found in gym %s", coachs.getFirst().getUuid(), gym.getUuid()));
+
+	}
+
+	@ParameterizedTest
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
+	void testUnassignCoachFailureNotFound(String role, String user) throws JsonProcessingException, MalformedURLException {
+		// Arrange
+		Gym updatedGym = GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name(), coachs.subList(0, 2));
+		updatedGym.setActive(true);
+		updatedGym = gymRepository.save(updatedGym);
+		
+		// Act
+		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(postUnassignCoachURI, updatedGym.getBrandUuid(), updatedGym.getUuid(), "non-existing-coach")),
+						port, null),
+				HttpMethod.POST, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
+				String.format("Gym coach assignation error: %s", response.getStatusCode()));
+
+		if (response.getBody() != null && response.getBody().size() > 0) {
+			ErrorDto err = TestResponseUtils.toError(response, objectMapper);
+			Assertions.assertEquals(GymException.COACH_NOT_FOUND, err.getCode());
+		}
+	}
+	
+	@ParameterizedTest
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
+	void testUnassignCoachAlreadyUnassigned(String role, String user) throws JsonProcessingException, MalformedURLException {
+		// Arrange
+		Gym updatedGym = GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name(), coachs.subList(0, 2));
+		updatedGym.setActive(true);
+		updatedGym = gymRepository.save(updatedGym);
+		
+		// Act
+		HttpEntity<PutGymDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(postUnassignCoachURI, updatedGym.getBrandUuid(), updatedGym.getUuid(), coachs.getLast().getUuid())),
+						port, null),
+				HttpMethod.POST, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
+				String.format("Gym coach assign error: %s", response.getStatusCode()));
+
+		GymDto gymUnassigned = TestResponseUtils.toDto(response, GymDto.class, objectMapper);
+		Assertions.assertEquals(GymException.COACH_NOT_ASSIGNED, gymUnassigned.getMessages().getFirst().getCode(),
+				String.format("Coach already unassigned error, missing message: %s", gymUnassigned.getMessages().getFirst().getCode()));
 	}
 	
 	private void assertSearch(String criteria, int minimumNumberOfElements, int maximumNumberOfElements) 

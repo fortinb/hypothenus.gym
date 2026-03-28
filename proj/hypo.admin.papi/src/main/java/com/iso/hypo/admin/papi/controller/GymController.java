@@ -354,4 +354,73 @@ public class GymController {
 
 		return ResponseEntity.accepted().build();
 	}
+	
+	@PostMapping("/brands/{brandUuid}/gyms/{uuid}/coachs/{coachUuid}/assign")
+	@Operation(summary = "Assign a coach to a gym")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", content = {
+					@Content(schema = @Schema(implementation = GymDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "403", description = "Forbidden. The client does not have permission to access this resource.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "404", description = "Not found. The requested resource does not exist.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
+	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
+	@ResponseStatus(value = HttpStatus.OK)
+	public ResponseEntity<Object> assignCoach(
+			@PathVariable String brandUuid,
+			@PathVariable String uuid,
+			@PathVariable String coachUuid) {
+		com.iso.hypo.domain.dto.GymDto domainDto;
+
+		try {
+			domainDto = gymService.assignCoach(brandUuid, uuid, coachUuid);
+		} catch (GymException e) {
+			logger.error(e.getMessage(), e);
+			
+			if (e.getCode() == GymException.COACH_ALREADY_ASSIGNED) {
+				return ResponseEntity.status(HttpStatus.OK).body(modelMapper.map(e.getGymDto(), GymDto.class));
+			}
+
+			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
+		}
+
+		return ResponseEntity.ok(modelMapper.map(domainDto, GymDto.class));
+	}
+	
+	@PostMapping("/brands/{brandUuid}/gyms/{uuid}/coachs/{coachUuid}/unassign")
+	@Operation(summary = "Assign a coach to a gym")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", content = {
+					@Content(schema = @Schema(implementation = GymDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "403", description = "Forbidden. The client does not have permission to access this resource.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "404", description = "Not found. The requested resource does not exist.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
+	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
+	@ResponseStatus(value = HttpStatus.OK)
+	public ResponseEntity<Object> unassignCoach(
+			@PathVariable String brandUuid,
+			@PathVariable String uuid,
+			@PathVariable String coachUuid) {
+		com.iso.hypo.domain.dto.GymDto domainDto;
+
+		try {
+			domainDto = gymService.unassignCoach(brandUuid, uuid, coachUuid);
+		} catch (GymException e) {
+			logger.error(e.getMessage(), e);
+			
+			if (e.getCode() == GymException.COACH_NOT_ASSIGNED) {
+				return ResponseEntity.status(HttpStatus.OK).body(modelMapper.map(e.getGymDto(), GymDto.class));
+			}
+
+			return ControllerErrorHandler.buildErrorResponse(e, requestContext, uuid);
+		}
+
+		return ResponseEntity.ok(modelMapper.map(domainDto, GymDto.class));
+	}
+
 }

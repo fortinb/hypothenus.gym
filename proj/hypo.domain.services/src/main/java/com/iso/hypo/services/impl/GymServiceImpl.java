@@ -281,4 +281,74 @@ public class GymServiceImpl implements GymService {
 			throw new GymException(requestContext.getTrackingNumber(), GymException.DELETE_FAILED, e);
 		}
 	}
+
+	@Override
+	public GymDto assignCoach(String brandUuid, String gymUuid, String coachUuid) throws GymException {
+		try {
+			Optional<Coach> coach = coachRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, coachUuid);
+			if (coach.isEmpty()) {
+				throw new GymException(requestContext.getTrackingNumber(), GymException.COACH_NOT_FOUND, "Coach not found");
+			}
+			
+			Gym oldGym = this.readByGymUuid(brandUuid, gymUuid);
+			
+			if (oldGym.getCoachs() != null && oldGym.getCoachs().stream().anyMatch(c -> c.getUuid().equals(coachUuid))) {
+				Message message = new Message();
+				message.setCode(GymException.COACH_ALREADY_ASSIGNED);
+				message.setDescription("Coach already assigned to gym");
+				message.setSeverity(MessageSeverityEnum.warning);
+				oldGym.getMessages().add(message);
+
+				throw new GymException(requestContext.getTrackingNumber(), GymException.COACH_ALREADY_ASSIGNED,
+						"Coach already assigned to gym", gymMapper.toDto(oldGym));
+			}
+
+			oldGym.getCoachs().add(coach.get());
+			Gym saved = gymRepository.save(oldGym);
+			
+			return gymMapper.toDto(saved);
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, gymUuid={}", brandUuid, gymUuid, e);
+
+			if (e instanceof GymException) {
+				throw (GymException) e;
+			}
+			throw new GymException(requestContext.getTrackingNumber(), GymException.COACH_ASSIGNATION_FAILED, e);
+		}
+	}
+
+	@Override
+	public GymDto unassignCoach(String brandUuid, String gymUuid, String coachUuid) throws GymException {
+		try {
+			Optional<Coach> coach = coachRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, coachUuid);
+			if (coach.isEmpty()) {
+				throw new GymException(requestContext.getTrackingNumber(), GymException.COACH_NOT_FOUND, "Coach not found");
+			}
+			
+			Gym oldGym = this.readByGymUuid(brandUuid, gymUuid);
+			
+			if (oldGym.getCoachs() == null || oldGym.getCoachs().stream().noneMatch(c -> c.getUuid().equals(coachUuid))) {
+				Message message = new Message();
+				message.setCode(GymException.COACH_NOT_ASSIGNED);
+				message.setDescription("Coach not assigned to gym");
+				message.setSeverity(MessageSeverityEnum.warning);
+				oldGym.getMessages().add(message);
+
+				throw new GymException(requestContext.getTrackingNumber(), GymException.COACH_NOT_ASSIGNED,
+						"Coach not assigned to gym", gymMapper.toDto(oldGym));
+			}
+
+			oldGym.getCoachs().removeIf(c -> c.getUuid().equals(coachUuid));
+			Gym saved = gymRepository.save(oldGym);
+	
+			return gymMapper.toDto(saved);
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, gymUuid={}, coachUuid={}", brandUuid, gymUuid, coachUuid, e);
+
+			if (e instanceof GymException) {
+				throw (GymException) e;
+			}
+			throw new GymException(requestContext.getTrackingNumber(), GymException.COACH_UNASSIGNATION_FAILED, e);
+		}
+	}
 }

@@ -8,15 +8,23 @@ import lombok.Getter;
 @Getter
 public class GymException extends DomainException {
 	
-	public static final String GYM_NOT_FOUND = "404";
-	public static final String COACH_NOT_FOUND = "404";
-	public static final String GYM_CODE_ALREADY_EXIST = "1001";
 	public static final String BRAND_NOT_FOUND = "404";
-	public static final String INVALID_BRAND = "403";
-	public static final String INVALID_GYM = "403";
+	
+	public static final String GYM_NOT_FOUND = "404";
+	public static final String GYM_CODE_ALREADY_EXIST = "1001";
+
+	public static final String COACH_NOT_FOUND = "404";
+	public static final String COACH_ALREADY_ASSIGNED = "1002";
+	public static final String COACH_NOT_ASSIGNED = "1003";
+
+	public static final String COACH_ASSIGNATION_FAILED =  "101";
+	public static final String COACH_UNASSIGNATION_FAILED =  "102";
 	
 	private GymDto gymDto;
 	private static final long serialVersionUID = 1L;
+
+
+
 	
 	public GymException(String trackingNumber, String code, String message, GymDto gymDto) {
 		super(trackingNumber, code, message);
