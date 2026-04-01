@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.UUID;
 
 import net.datafaker.Faker;
+
+import com.iso.hypo.domain.aggregate.Coach;
 import com.iso.hypo.domain.aggregate.Gym;
 import com.iso.hypo.domain.contact.Contact;
 import com.iso.hypo.domain.contact.PhoneNumber;
@@ -15,10 +17,10 @@ import com.iso.hypo.domain.location.Address;
 public class GymBuilder {
 	private static Faker faker = new Faker();
 	
-	public static Gym build(String brandUuid, String code, String gymName) {
+	public static Gym build(String brandUuid, String code, String gymName,List<Coach> coachs) {
 		Gym entity = new Gym(brandUuid, code, gymName, buildAddress(),
 				faker.internet().emailAddress(), faker.internet().image(), true, buildPhoneNumbers(), 
-				buildContacts(), Instant.now(), null);
+				buildContacts(), coachs, Instant.now(), null);
 		entity.setUuid(UUID.randomUUID().toString());
 		return entity;
 	}

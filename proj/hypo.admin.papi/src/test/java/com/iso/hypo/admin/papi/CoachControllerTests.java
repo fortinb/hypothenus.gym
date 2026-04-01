@@ -47,13 +47,10 @@ import com.iso.hypo.admin.papi.dto.post.PostCoachDto;
 import com.iso.hypo.admin.papi.dto.put.PutCoachDto;
 import com.iso.hypo.domain.BrandBuilder;
 import com.iso.hypo.domain.CoachBuilder;
-import com.iso.hypo.domain.GymBuilder;
 import com.iso.hypo.domain.aggregate.Brand;
 import com.iso.hypo.domain.aggregate.Coach;
-import com.iso.hypo.domain.aggregate.Gym;
 import com.iso.hypo.repositories.BrandRepository;
 import com.iso.hypo.repositories.CoachRepository;
-import com.iso.hypo.repositories.GymRepository;
 import com.iso.hypo.services.exception.CoachException;
 import com.iso.hypo.tests.http.HttpUtils;
 import com.iso.hypo.domain.security.Roles;
@@ -68,14 +65,14 @@ import net.datafaker.Faker;
 @ActiveProfiles("test")
 class CoachControllerTests {
 
-	public static final String listURI = "/v1/brands/%s/gyms/%s/coachs";
-	public static final String postURI = "/v1/brands/%s/gyms/%s/coachs";
-	public static final String getURI = "/v1/brands/%s/gyms/%s/coachs/%s";
-	public static final String putURI = "/v1/brands/%s/gyms/%s/coachs/%s";
-	public static final String postActivateURI = "/v1/brands/%s/gyms/%s/coachs/%s/activate";
-	public static final String postDeactivateURI = "/v1/brands/%s/gyms/%s/coachs/%s/deactivate";
-	public static final String patchURI = "/v1/brands/%s/gyms/%s/coachs/%s";
-	public static final String deleteURI = "/v1/brands/%s/gyms/%s/coachs/%s";
+	public static final String listURI = "/v1/brands/%s/coachs";
+	public static final String postURI = "/v1/brands/%s/coachs";
+	public static final String getURI = "/v1/brands/%s/coachs/%s";
+	public static final String putURI = "/v1/brands/%s/coachs/%s";
+	public static final String postActivateURI = "/v1/brands/%s/coachs/%s/activate";
+	public static final String postDeactivateURI = "/v1/brands/%s/coachs/%s/deactivate";
+	public static final String patchURI = "/v1/brands/%s/coachs/%s";
+	public static final String deleteURI = "/v1/brands/%s/coachs/%s";
 	public static final String pageNumber = "page";
 	public static final String pageSize = "pageSize";
 	public static final String includeInactive = "includeInactive";
@@ -83,17 +80,11 @@ class CoachControllerTests {
 	public static final String brandCode_1 = "CoachBrand1";
 	public static final String brandCode_2= "CoachBrand2";
 	
-	public static final String gymCode_1 = "CoachGym1";
-	public static final String gymCode_2 = "CoachGym2";
-	
 	@LocalServerPort
 	private int port;
 
 	@Autowired
 	BrandRepository brandRepository;
-	
-	@Autowired
-	GymRepository gymRepository;
 	
 	@Autowired
 	CoachRepository coachRepository;
@@ -112,8 +103,6 @@ class CoachControllerTests {
 	private Coach coachIsDeleted;
 	private Brand brand_1;
 	private Brand brand_2;
-	private Gym gym_1;
-	private Gym gym_2;
 	private List<Coach> coachs = new ArrayList<Coach>();
 
 	@BeforeAll
@@ -126,37 +115,31 @@ class CoachControllerTests {
 		brandRepository.save(brand_1);
 		
 		brand_2 = BrandBuilder.build(brandCode_2, faker.company().name());
-		brandRepository.save(brand_1);
+		brandRepository.save(brand_2);
 		
-		gym_1 = GymBuilder.build(brand_1.getUuid(), gymCode_1, faker.address().cityName());
-		gymRepository.save(gym_1);
-		
-		gym_2 = GymBuilder.build(brand_2.getUuid(), gymCode_2, faker.address().cityName());
-		gymRepository.save(gym_2);
-		
-		coach = CoachBuilder.build(brand_1.getUuid(), gym_1.getUuid());
+		coach = CoachBuilder.build(brand_1.getUuid());
 		coach.setActive(true);
 		coachRepository.save(coach);
 		
-		coachIsDeleted = CoachBuilder.build(brand_1.getUuid(), gym_1.getUuid());
+		coachIsDeleted = CoachBuilder.build(brand_1.getUuid());
 		coachIsDeleted.setDeleted(true);
 		coachIsDeleted = coachRepository.save(coachIsDeleted);
 
 		for (int i = 0; i < 10; i++) {
-			Coach item = CoachBuilder.build(brand_1.getUuid(), gym_1.getUuid());
+			Coach item = CoachBuilder.build(brand_1.getUuid());
 			item.setActive(true);
 			coachRepository.save(item);
 			coachs.add(item);
 		}
 		
 		for (int i = 0; i < 4; i++) {
-			Coach item = CoachBuilder.build(brand_2.getUuid(), gym_2.getUuid());
+			Coach item = CoachBuilder.build(brand_2.getUuid());
 			item.setActive(true);
 			coachRepository.save(item);
 			coachs.add(item);
 		}
 		
-		Coach item = CoachBuilder.build(brandCode_2, gym_2.getUuid());
+		Coach item = CoachBuilder.build(brand_2.getUuid());
 		item.setActive(false);
 		coachRepository.save(item);
 	}
@@ -179,7 +162,7 @@ class CoachControllerTests {
 		params.add(includeInactive, "false");
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(listURI, brand_2.getUuid(), gym_2.getUuid())), port, params),
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(listURI, brand_2.getUuid())), port, params),
 				HttpMethod.GET, httpEntity, JsonNode.class);
 
 		// Assert
@@ -212,7 +195,7 @@ class CoachControllerTests {
 		params.add(includeInactive, "true");
 		
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(listURI, brand_2.getUuid(), gym_2.getUuid())), port, params),
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(listURI, brand_2.getUuid())), port, params),
 				HttpMethod.GET, httpEntity, JsonNode.class);
 
 		// Assert
@@ -224,9 +207,9 @@ class CoachControllerTests {
 		// Assert
 		Assertions.assertEquals(0, page.getPageable().getPageNumber(),
 				String.format("Coach list first page number invalid: %d", page.getPageable().getPageNumber()));
-		Assertions.assertEquals(4, page.getNumberOfElements(),
+		Assertions.assertEquals(5, page.getNumberOfElements(),
 				String.format("Coach list first page number of elements invalid: %d", page.getNumberOfElements()));
-		Assertions.assertEquals(4, page.getTotalElements(),
+		Assertions.assertEquals(5, page.getTotalElements(),
 				String.format("Coach total number of elements invalid: %d", page.getTotalElements()));
 		
 		page.get().forEach(coach ->Assertions.assertTrue(coach.isDeleted() == false));
@@ -243,7 +226,7 @@ class CoachControllerTests {
 		params.add(pageSize, "2");
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(listURI, brand_2.getUuid(), gym_2.getUuid())), port, params),
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(listURI, brand_2.getUuid())), port, params),
 				HttpMethod.GET, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -265,12 +248,12 @@ class CoachControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPostSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostCoachDto postDto = modelMapper.map(CoachBuilder.build(brand_1.getUuid(), gym_1.getUuid()), PostCoachDto.class);
+		PostCoachDto postDto = modelMapper.map(CoachBuilder.build(brand_1.getUuid()), PostCoachDto.class);
 		
 		HttpEntity<PostCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, postDto);
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(postURI, brand_1.getUuid(), gym_1.getUuid())), port, null),
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(postURI, brand_1.getUuid())), port, null),
 				HttpMethod.POST, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
@@ -284,12 +267,12 @@ class CoachControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPostFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostCoachDto postDto = modelMapper.map(CoachBuilder.build(brand_1.getUuid(), gym_1.getUuid()), PostCoachDto.class);
+		PostCoachDto postDto = modelMapper.map(CoachBuilder.build(brand_1.getUuid()), PostCoachDto.class);
 		
 		HttpEntity<PostCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, postDto);
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(postURI, faker.code().isbn10(), gym_1.getUuid())), port, null),
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(postURI, faker.code().isbn10())), port, null),
 				HttpMethod.POST, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
@@ -298,30 +281,14 @@ class CoachControllerTests {
 	
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testPostFailureForbiddenGymMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
-		// Arrange
-		PostCoachDto postDto = modelMapper.map(CoachBuilder.build(brand_1.getUuid(), gym_1.getUuid()), PostCoachDto.class);
-		
-		HttpEntity<PostCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, postDto);
-
-		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(postURI, brand_1.getUuid(), faker.code().isbn10())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
-	}
-
-	@ParameterizedTest
-	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testGetSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostCoachDto postDto = modelMapper.map(CoachBuilder.build(brand_1.getUuid() , gym_1.getUuid()), PostCoachDto.class);
+		PostCoachDto postDto = modelMapper.map(CoachBuilder.build(brand_1.getUuid()), PostCoachDto.class);
 
 		HttpEntity<PostCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, postDto);
 
 		ResponseEntity<JsonNode> responsePost = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postURI, brand_1.getUuid(), gym_1.getUuid())), port, null), HttpMethod.POST, httpEntity, JsonNode.class);
+				HttpUtils.createURL(URI.create(String.format(postURI, brand_1.getUuid())), port, null), HttpMethod.POST, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.CREATED, responsePost.getStatusCode(),
 				String.format("Post error: %s", responsePost.getStatusCode()));
@@ -330,7 +297,7 @@ class CoachControllerTests {
 		httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		CoachDto createdDto = TestResponseUtils.toDto(responsePost, CoachDto.class, objectMapper);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(getURI, brand_1.getUuid(), gym_1.getUuid(), createdDto.getUuid())), port, null),
+				HttpUtils.createURL(URI.create(String.format(getURI, brand_1.getUuid(), createdDto.getUuid())), port, null),
 				HttpMethod.GET, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -345,7 +312,7 @@ class CoachControllerTests {
 		// Arrange
 		HttpEntity<Object> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(getURI, brand_1.getUuid(), gym_1.getUuid(), faker.code().isbn10())), port, null),
+				HttpUtils.createURL(URI.create(String.format(getURI, brand_1.getUuid(), faker.code().isbn10())), port, null),
 				HttpMethod.GET, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
@@ -356,7 +323,7 @@ class CoachControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPutSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Coach coachToUpdate = CoachBuilder.build(brand_1.getUuid(), gym_1.getUuid());
+		Coach coachToUpdate = CoachBuilder.build(brand_1.getUuid());
 		coachToUpdate = coachRepository.save(coachToUpdate);
 		
 		PutCoachDto putDto = modelMapper.map(coachToUpdate, PutCoachDto.class);
@@ -382,7 +349,7 @@ class CoachControllerTests {
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, brand_1.getUuid(), gym_1.getUuid(), putDto.getUuid())), port, null),
+				HttpUtils.createURL(URI.create(String.format(putURI, brand_1.getUuid(), putDto.getUuid())), port, null),
 				HttpMethod.PUT, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -396,7 +363,7 @@ class CoachControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPutNullSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Coach coachToUpdate = CoachBuilder.build(brand_1.getUuid(), gym_1.getUuid());
+		Coach coachToUpdate = CoachBuilder.build(brand_1.getUuid());
 		coachToUpdate = coachRepository.save(coachToUpdate);
 		
 		PutCoachDto putDto = modelMapper.map(coachToUpdate, PutCoachDto.class);
@@ -407,7 +374,7 @@ class CoachControllerTests {
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, brand_1.getUuid(), gym_1.getUuid(), putDto.getUuid())), port, null),
+				HttpUtils.createURL(URI.create(String.format(putURI, brand_1.getUuid(), putDto.getUuid())), port, null),
 				HttpMethod.PUT, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -420,12 +387,12 @@ class CoachControllerTests {
 	@Test
 	void testPutFailureNotFound() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		Coach coachToUpdate = CoachBuilder.build(brand_1.getUuid(), gym_1.getUuid());
+		Coach coachToUpdate = CoachBuilder.build(brand_1.getUuid());
 		PutCoachDto putCoach = modelMapper.map(coachToUpdate, PutCoachDto.class);
 		
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putCoach);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, brand_1.getUuid(), gym_1.getUuid(), putCoach.getUuid())), port, null),
+				HttpUtils.createURL(URI.create(String.format(putURI, brand_1.getUuid(), putCoach.getUuid())), port, null),
 				HttpMethod.PUT, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
@@ -436,32 +403,15 @@ class CoachControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPutFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PutCoachDto putDto = modelMapper.map(CoachBuilder.build(brand_1.getUuid(), gym_1.getUuid()), PutCoachDto.class);
+		PutCoachDto putDto = modelMapper.map(CoachBuilder.build(brand_1.getUuid()), PutCoachDto.class);
 		
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
 
 		// Act
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, faker.code().isbn10(), gym_1.getUuid(), putDto.getUuid())), port, null),
+				HttpUtils.createURL(URI.create(String.format(putURI, faker.code().isbn10(), putDto.getUuid())), port, null),
 				HttpMethod.PUT, httpEntity, JsonNode.class);
 		
-		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
-	}
-	
-	@ParameterizedTest
-	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testPutFailureForbiddenGymMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
-		// Arrange
-		PutCoachDto putDto = modelMapper.map(CoachBuilder.build(brand_1.getUuid(), faker.code().isbn10()), PutCoachDto.class);
-		
-		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
-
-		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, brand_1.getUuid(), gym_1.getUuid(), putDto.getUuid())), port, null),
-				HttpMethod.PUT, httpEntity, JsonNode.class);
-
 		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
 				String.format("Post error: %s", response.getStatusCode()));
 	}
@@ -470,13 +420,13 @@ class CoachControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPutFailureForbiddenCoachMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PutCoachDto putDto = modelMapper.map(CoachBuilder.build(brand_1.getUuid(), gym_1.getUuid()), PutCoachDto.class);
+		PutCoachDto putDto = modelMapper.map(CoachBuilder.build(brand_1.getUuid()), PutCoachDto.class);
 		
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
 
 		// Act
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, brand_1.getUuid(), gym_1.getUuid(), faker.code().isbn10())), port, null),
+				HttpUtils.createURL(URI.create(String.format(putURI, brand_1.getUuid(), faker.code().isbn10())), port, null),
 				HttpMethod.PUT, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
@@ -487,7 +437,7 @@ class CoachControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testActivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Coach coachToActivate = CoachBuilder.build(brand_1.getUuid(), gym_1.getUuid());
+		Coach coachToActivate = CoachBuilder.build(brand_1.getUuid());
 		coachToActivate.setActive(false);
 		coachToActivate.setActivatedOn(null);
 		coachToActivate.setDeactivatedOn(null);
@@ -499,7 +449,7 @@ class CoachControllerTests {
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postActivateURI, brand_1.getUuid(), gym_1.getUuid(), coachToActivate.getUuid())), port, null),
+				HttpUtils.createURL(URI.create(String.format(postActivateURI, brand_1.getUuid(), coachToActivate.getUuid())), port, null),
 				HttpMethod.POST, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -516,7 +466,7 @@ class CoachControllerTests {
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postActivateURI, brand_1.getUuid(), gym_1.getUuid(), faker.code().isbn10())), port, null),
+				HttpUtils.createURL(URI.create(String.format(postActivateURI, brand_1.getUuid(), faker.code().isbn10())), port, null),
 				HttpMethod.POST, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
@@ -532,8 +482,7 @@ class CoachControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testDeactivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Coach coachToDeactivate = CoachBuilder.build(brand_1.getUuid(), gym_1.getUuid());
-		coachToDeactivate.setGymUuid(gym_1.getUuid());
+		Coach coachToDeactivate = CoachBuilder.build(brand_1.getUuid());
 		coachToDeactivate.setActive(true);
 		coachToDeactivate.setActivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
 		coachToDeactivate = coachRepository.save(coachToDeactivate);
@@ -543,7 +492,7 @@ class CoachControllerTests {
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postDeactivateURI, brand_1.getUuid(), gym_1.getUuid(), coachToDeactivate.getUuid())), port, null),
+				HttpUtils.createURL(URI.create(String.format(postDeactivateURI, brand_1.getUuid(), coachToDeactivate.getUuid())), port, null),
 				HttpMethod.POST, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -561,7 +510,7 @@ class CoachControllerTests {
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postDeactivateURI, brand_1.getUuid(), gym_1.getUuid(), faker.code().ean13())), port, null),
+				HttpUtils.createURL(URI.create(String.format(postDeactivateURI, brand_1.getUuid(), faker.code().ean13())), port, null),
 				HttpMethod.POST, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
@@ -577,7 +526,7 @@ class CoachControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPatchSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Coach coachToPatch = CoachBuilder.build(brand_1.getUuid(), gym_1.getUuid());
+		Coach coachToPatch = CoachBuilder.build(brand_1.getUuid());
 		coachToPatch.setActive(true);
 		coachToPatch = coachRepository.save(coachToPatch);
 
@@ -590,7 +539,7 @@ class CoachControllerTests {
 		// Act
 		HttpEntity<PatchCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchDto);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(patchURI, brand_1.getUuid(), gym_1.getUuid(), patchDto.getUuid())), port, null),
+				HttpUtils.createURL(URI.create(String.format(patchURI, brand_1.getUuid(), patchDto.getUuid())), port, null),
 				HttpMethod.PATCH, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
@@ -606,14 +555,14 @@ class CoachControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPatchFailureNotFound(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		Coach patchTarget = CoachBuilder.build(brand_1.getUuid(), gym_1.getUuid());
+		Coach patchTarget = CoachBuilder.build(brand_1.getUuid());
 		PatchCoachDto patchDto = modelMapper.map(patchTarget, PatchCoachDto.class);
 		
 		HttpEntity<PatchCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchDto);
 		
 		// Act
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(patchURI, brand_1.getUuid(), gym_1.getUuid(), patchDto.getUuid())), port, null),
+				HttpUtils.createURL(URI.create(String.format(patchURI, brand_1.getUuid(), patchDto.getUuid())), port, null),
 				HttpMethod.PATCH, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
@@ -624,32 +573,15 @@ class CoachControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPatchFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PatchCoachDto patchDto = modelMapper.map(CoachBuilder.build(brand_1.getUuid(), gym_1.getUuid()), PatchCoachDto.class);
+		PatchCoachDto patchDto = modelMapper.map(CoachBuilder.build(brand_1.getUuid()), PatchCoachDto.class);
 		
 		HttpEntity<PatchCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchDto);
 
 		// Act
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(patchURI, faker.code().isbn10(), gym_1.getUuid(), patchDto.getUuid())), port, null),
+				HttpUtils.createURL(URI.create(String.format(patchURI, faker.code().isbn10(), patchDto.getUuid())), port, null),
 				HttpMethod.PATCH, httpEntity, JsonNode.class);
 		
-		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
-	}
-	
-	@ParameterizedTest
-	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testPatchFailureForbiddenGymMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
-		// Arrange
-		PatchCoachDto patchDto = modelMapper.map(CoachBuilder.build(brand_1.getUuid(), gym_1.getUuid()), PatchCoachDto.class);
-		
-		HttpEntity<PatchCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchDto);
-
-		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(patchURI, brand_1.getUuid(), faker.code().isbn10(), patchDto.getUuid())), port, null),
-				HttpMethod.PATCH, httpEntity, JsonNode.class);
-
 		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
 				String.format("Post error: %s", response.getStatusCode()));
 	}
@@ -658,13 +590,13 @@ class CoachControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPatchFailureForbiddenCoachMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PatchCoachDto patchDto = modelMapper.map(CoachBuilder.build(brand_1.getUuid(), gym_1.getUuid()), PatchCoachDto.class);
+		PatchCoachDto patchDto = modelMapper.map(CoachBuilder.build(brand_1.getUuid()), PatchCoachDto.class);
 		
 		HttpEntity<PatchCoachDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchDto);
 
 		// Act
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(patchURI, brand_1.getUuid(), gym_1.getUuid(), faker.code().isbn10())), port, null),
+				HttpUtils.createURL(URI.create(String.format(patchURI, brand_1.getUuid(), faker.code().isbn10())), port, null),
 				HttpMethod.PATCH, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
@@ -674,22 +606,21 @@ class CoachControllerTests {
 	@Test
 	void testDeleteSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		Coach coachToDelete = CoachBuilder.build(brand_1.getUuid(), gym_1.getUuid());
+		Coach coachToDelete = CoachBuilder.build(brand_1.getUuid());
 		coachToDelete = coachRepository.save(coachToDelete);
 
 		// Act
 		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(deleteURI, brand_1.getUuid(), gym_1.getUuid(), coachToDelete.getUuid())), port, null),
+				HttpUtils.createURL(URI.create(String.format(deleteURI, brand_1.getUuid(), coachToDelete.getUuid())), port, null),
 				HttpMethod.DELETE, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.ACCEPTED, response.getStatusCode(),
 				String.format("Coach activation error: %s", response.getStatusCode()));
 
-		
 		httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
 		response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(getURI, brand_1.getUuid(), gym_1.getUuid(), coachToDelete.getUuid())), port, null),
+				HttpUtils.createURL(URI.create(String.format(getURI, brand_1.getUuid(), coachToDelete.getUuid())), port, null),
 				HttpMethod.GET, httpEntity, JsonNode.class);
 
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
@@ -702,7 +633,6 @@ class CoachControllerTests {
 		}
 		
 		Assertions.assertEquals(expected.getBrandUuid(), result.getBrandUuid());
-		Assertions.assertEquals(expected.getGymUuid(), result.getGymUuid());
 		Assertions.assertEquals(expected.getPerson().getFirstname(), result.getPerson().getFirstname());
 		Assertions.assertEquals(expected.getPerson().getLastname(), result.getPerson().getLastname());
 		Assertions.assertEquals(expected.getPerson().getEmail(), result.getPerson().getEmail());

@@ -36,15 +36,14 @@ public class CoachQueryServiceImpl implements CoachQueryService {
 	}
 
 	@Override
-	public void assertExists(String brandUuid, String gymUuid, String coachUuid) throws CoachException {
+	public void assertExists(String brandUuid, String coachUuid) throws CoachException {
 		try {
-			Optional<Coach> entity = coachRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid,
-						gymUuid, coachUuid);
+			Optional<Coach> entity = coachRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, coachUuid);
 			if (entity.isEmpty()) {
 				throw new CoachException(requestContext.getTrackingNumber(), CoachException.COACH_NOT_FOUND, "Coach not found");
 			}
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, coachUuid={}", brandUuid, gymUuid, coachUuid, e);
+			logger.error("Error - brandUuid={}, coachUuid={}", brandUuid, coachUuid, e);
 			
 			if (e instanceof CoachException) {
 				throw (CoachException) e;
@@ -54,17 +53,16 @@ public class CoachQueryServiceImpl implements CoachQueryService {
 	}
 
 	@Override
-	public CoachDto find(String brandUuid, String gymUuid, String coachUuid) throws CoachException {
+	public CoachDto find(String brandUuid, String coachUuid) throws CoachException {
 		try {
-			Optional<Coach> entity = coachRepository.findByBrandUuidAndGymUuidAndUuidAndIsDeletedIsFalse(brandUuid,
-						gymUuid, coachUuid);
+			Optional<Coach> entity = coachRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, coachUuid);
 			if (entity.isEmpty()) {
 				throw new CoachException(requestContext.getTrackingNumber(), CoachException.COACH_NOT_FOUND, "Coach not found");
 			}
 
 			return coachMapper.toDto(entity.get());
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}, coachUuid={}", brandUuid, gymUuid, coachUuid, e);
+			logger.error("Error - brandUuid={}, coachUuid={}", brandUuid, coachUuid, e);
 			
 			if (e instanceof CoachException) {
 				throw (CoachException) e;
@@ -74,22 +72,22 @@ public class CoachQueryServiceImpl implements CoachQueryService {
 	}
 
 	@Override
-	public Page<CoachDto> list(String brandUuid, String gymUuid, int page, int pageSize, boolean includeInactive) throws CoachException {
+	public Page<CoachDto> list(String brandUuid, int page, int pageSize, boolean includeInactive) throws CoachException {
 		try {
 			if (includeInactive) {
 				return coachRepository
-						.findAllByBrandUuidAndGymUuidAndIsDeletedIsFalse(brandUuid, gymUuid,
+						.findAllByBrandUuidAndIsDeletedIsFalse(brandUuid,
 							PageRequest.of(page, pageSize, Sort.Direction.ASC, "person.lastname"))
 						.map(c -> coachMapper.toDto(c));
 			}
 
 			return coachRepository
-					.findAllByBrandUuidAndGymUuidAndIsDeletedIsFalseAndIsActiveIsTrue(brandUuid, gymUuid,
+					.findAllByBrandUuidAndIsDeletedIsFalseAndIsActiveIsTrue(brandUuid,
 						PageRequest.of(page, pageSize, Sort.Direction.ASC, "person.lastname"))
 					.map(c -> coachMapper.toDto(c));
 
 		} catch (Exception e) {
-			logger.error("Error - brandUuid={}, gymUuid={}", brandUuid, gymUuid, e);
+			logger.error("Error - brandUuid={}", brandUuid, e);
 			throw new CoachException(requestContext.getTrackingNumber(), CoachException.FIND_FAILED, e);
 		}
 	}

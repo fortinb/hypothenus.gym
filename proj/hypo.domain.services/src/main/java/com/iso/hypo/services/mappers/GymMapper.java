@@ -4,6 +4,7 @@ import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
 import org.springframework.stereotype.Component;
 
+import com.iso.hypo.domain.aggregate.Coach;
 import com.iso.hypo.domain.aggregate.Gym;
 import com.iso.hypo.domain.contact.Contact;
 import com.iso.hypo.domain.contact.PhoneNumber;
@@ -51,10 +52,17 @@ public class GymMapper {
 			protected void configure() {
 			}
 		};
+		
+	    PropertyMap<Coach, Coach> coachsPropertyMap = new PropertyMap<Coach, Coach>() {
+			@Override
+			protected void configure() {
+			}
+		};
 
 		mapper.addMappings(addressPropertyMap);
 		mapper.addMappings(phoneNumberPropertyMap);
 		mapper.addMappings(contactPropertyMap);
+		mapper.addMappings(coachsPropertyMap);
 		
 		return mapper;
 	}

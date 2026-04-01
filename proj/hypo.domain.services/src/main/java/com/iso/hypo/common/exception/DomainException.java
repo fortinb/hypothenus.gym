@@ -12,6 +12,7 @@ public class DomainException extends Exception {
 	public static final String ACTIVATION_FAILED =  "104";
 	public static final String DEACTIVATION_FAILED ="105";
 	
+	
 	private static final long serialVersionUID = 1L;
 	private String code;
 	private String trackingNumber;

@@ -22,11 +22,10 @@ public class CoachRepositoryCustomImpl implements CoachRepositoryCustom {
 	}
 
 	@Override
-	public Optional<Coach> activate(String brandUuid, String gymUuid, String coachUuid) {
+	public Optional<Coach> activate(String brandUuid, String coachUuid) {
 		
 		Query query = new Query(
 	            Criteria.where("brandUuid").is(brandUuid)
-	            		  .and("gymUuid").is(gymUuid)
 	            		  .and("uuid").is(coachUuid));
 		
 		Update update = new Update()
@@ -39,10 +38,9 @@ public class CoachRepositoryCustomImpl implements CoachRepositoryCustom {
 	}
 
 	@Override
-	public Optional<Coach> deactivate(String brandUuid, String gymUuid, String coachUuid) {
+	public Optional<Coach> deactivate(String brandUuid, String coachUuid) {
 		Query query = new Query(
 				  Criteria.where("brandUuid").is(brandUuid)
-        		  .and("gymUuid").is(gymUuid)
         		  .and("uuid").is(coachUuid));
 		
 		Update update = new Update()
@@ -54,9 +52,9 @@ public class CoachRepositoryCustomImpl implements CoachRepositoryCustom {
 	}
 
 	@Override
-	public void delete(String brandUuid, String gymUuid, String coachUuid, String deletedBy) {
+	public void delete(String brandUuid, String coachUuid, String deletedBy) {
 		Query query = new Query(
-				 Criteria.where("brandUuid").is(brandUuid).and("gymUuid").is(gymUuid).and("uuid").is(coachUuid));
+				 Criteria.where("brandUuid").is(brandUuid).and("uuid").is(coachUuid));
 		
 		Update update = new Update()
 					.set("isDeleted", true)
@@ -64,21 +62,6 @@ public class CoachRepositoryCustomImpl implements CoachRepositoryCustom {
 					.set("deletedBy", deletedBy);
 
 		mongoTemplate.updateFirst(query, update, Coach.class);
-	}
-
-	@Override
-	public long deleteAllByGymUuid(String brandUuid, String gymUuid, String deletedBy) {
-		Query query = new Query(
-				 Criteria.where("brandUuid").is(brandUuid).and("gymUuid").is(gymUuid));
-		
-		Update update = new Update()
-					.set("isDeleted", true)
-					.set("deletedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
-					.set("deletedBy", deletedBy);
-
-		UpdateResult result = mongoTemplate.updateMulti(query, update, Coach.class);
-		
-		return result.getMatchedCount();
 	}
 
 	@Override
@@ -97,5 +80,3 @@ public class CoachRepositoryCustomImpl implements CoachRepositoryCustom {
 	}
 
 }
-
-

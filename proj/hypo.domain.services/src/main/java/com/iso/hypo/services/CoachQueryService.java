@@ -7,11 +7,9 @@ import com.iso.hypo.services.exception.CoachException;
 
 public interface CoachQueryService {
 
-    void assertExists(String brandUuid, String gymUuid, String coachUuid) throws CoachException;
+    void assertExists(String brandUuid, String coachUuid) throws CoachException;
 
-    CoachDto find(String brandUuid, String gymUuid, String coachUuid) throws CoachException;
+    CoachDto find(String brandUuid, String coachUuid) throws CoachException;
 
-    Page<CoachDto> list(String brandUuid, String gymUuid, int page, int pageSize, boolean includeInactive) throws CoachException;
+    Page<CoachDto> list(String brandUuid, int page, int pageSize, boolean includeInactive) throws CoachException;
 }
-
-

@@ -35,9 +35,9 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 	private final BrandQueryService brandQueryService;
 
 	private final GymRepository gymRepository;
-	
+
 	private final CourseRepository courseRepository;
-	
+
 	private final MembershipPlanRepository membershipPlanRepository;
 
 	private final MembershipPlanMapper membershipPlanMapper;
@@ -47,11 +47,8 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 	private final RequestContext requestContext;
 
 	public MembershipPlanServiceImpl(MembershipPlanMapper membershipPlanMapper,
-			MembershipPlanRepository membershipPlanRepository, 
-			BrandQueryService brandQueryService,
-			GymRepository gymRepository,
-			CourseRepository courseRepository,
-			RequestContext requestContext) {
+			MembershipPlanRepository membershipPlanRepository, BrandQueryService brandQueryService,
+			GymRepository gymRepository, CourseRepository courseRepository, RequestContext requestContext) {
 		this.membershipPlanMapper = membershipPlanMapper;
 		this.membershipPlanRepository = membershipPlanRepository;
 		this.brandQueryService = brandQueryService;
@@ -71,7 +68,7 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 
 			membershipPlan.setIncludedGyms(this.resolveGymReferences(membershipPlan.getIncludedGyms()));
 			membershipPlan.setIncludedCourses(this.resolveCourseReferences(membershipPlan.getIncludedCourses()));
-			
+
 			membershipPlan.setCreatedOn(Instant.now());
 			membershipPlan.setCreatedBy(requestContext.getUsername());
 			membershipPlan.setUuid(UUID.randomUUID().toString());
@@ -209,7 +206,7 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 
 			membershipPlan.setIncludedGyms(this.resolveGymReferences(membershipPlan.getIncludedGyms()));
 			membershipPlan.setIncludedCourses(this.resolveCourseReferences(membershipPlan.getIncludedCourses()));
-			
+
 			ModelMapper mapper = new ModelMapper();
 			mapper.getConfiguration().setSkipNullEnabled(skipNull).setCollectionsMergeEnabled(false);
 
@@ -243,7 +240,7 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 
 		return entity.get();
 	}
-	
+
 	private List<Gym> resolveGymReferences(List<Gym> gyms) throws MembershipPlanException {
 		if (gyms == null || gyms.isEmpty()) {
 			return Collections.emptyList();
@@ -251,7 +248,8 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 
 		List<Gym> resolvedGyms = new ArrayList<>();
 		for (Gym gym : gyms) {
-			Optional<Gym> entity = gymRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(gym.getBrandUuid(), gym.getUuid());
+			Optional<Gym> entity = gymRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(gym.getBrandUuid(),
+					gym.getUuid());
 			if (entity.isEmpty()) {
 				throw new MembershipPlanException(requestContext.getTrackingNumber(),
 						MembershipPlanException.GYM_NOT_FOUND, "Gym not found - gymUuid=" + gym.getUuid());
@@ -269,7 +267,8 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 
 		List<Course> resolvedCourses = new ArrayList<>();
 		for (Course course : courses) {
-			Optional<Course> entity = courseRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(course.getBrandUuid(), course.getUuid());
+			Optional<Course> entity = courseRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(course.getBrandUuid(),
+					course.getUuid());
 			if (entity.isEmpty()) {
 				throw new MembershipPlanException(requestContext.getTrackingNumber(),
 						MembershipPlanException.COURSE_NOT_FOUND, "Course not found - courseUuid=" + course.getUuid());
@@ -284,11 +283,12 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 	public void removeAllGymReferencesByGymId(String gymId) throws MembershipPlanException {
 		try {
 			long modifiedCount = membershipPlanRepository.removeGymReferences(gymId);
-			logger.info("Gym references removed from membership plans - gymUuid={} modifiedCount={}", gymId, modifiedCount);
+			logger.info("Gym references removed from membership plans - gymUuid={} modifiedCount={}", gymId,
+					modifiedCount);
 		} catch (Exception e) {
 			logger.error("Error removing gym references - gymUuid={}", gymId, e);
-			throw new MembershipPlanException(requestContext.getTrackingNumber(),
-					MembershipPlanException.DELETE_FAILED, e);
+			throw new MembershipPlanException(requestContext.getTrackingNumber(), MembershipPlanException.DELETE_FAILED,
+					e);
 		}
 	}
 
@@ -296,12 +296,12 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 	public void removeAllCourseReferencesByCourseId(String courseId) throws MembershipPlanException {
 		try {
 			long modifiedCount = membershipPlanRepository.removeCourseReferences(courseId);
-			logger.info("Course references removed from membership plans - courseUuid={} modifiedCount={}", courseId, modifiedCount);
+			logger.info("Course references removed from membership plans - courseId={} modifiedCount={}", courseId,
+					modifiedCount);
 		} catch (Exception e) {
-			logger.error("Error removing course references - courseUuid={}", courseId, e);
-			throw new MembershipPlanException(requestContext.getTrackingNumber(),
-					MembershipPlanException.DELETE_FAILED, e);
+			logger.error("Error removing course references - courseId={}", courseId, e);
+			throw new MembershipPlanException(requestContext.getTrackingNumber(), MembershipPlanException.DELETE_FAILED,
+					e);
 		}
 	}
-
 }

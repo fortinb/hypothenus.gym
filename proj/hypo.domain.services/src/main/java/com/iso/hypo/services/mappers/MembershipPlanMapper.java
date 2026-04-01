@@ -57,7 +57,7 @@ public class MembershipPlanMapper {
 			}
 		};
 		
-	    PropertyMap<Gym, Gym> includedGymsPropertyMap = new PropertyMap<Gym, Gym>() {
+	    PropertyMap<Gym, Gym> gymsPropertyMap = new PropertyMap<Gym, Gym>() {
 			@Override
 			protected void configure() {
 			}
@@ -72,7 +72,7 @@ public class MembershipPlanMapper {
 		mapper.addMappings(membershipPlanPropertyMap);
 		mapper.addMappings(localizedStringPropertyMap);
 		mapper.addMappings(coursePropertyMap);
-		mapper.addMappings(includedGymsPropertyMap);
+		mapper.addMappings(gymsPropertyMap);
 		mapper.addMappings(costPropertyMap);
 		
 		return mapper;

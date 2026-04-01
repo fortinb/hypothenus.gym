@@ -9,6 +9,7 @@ import com.iso.hypo.common.exception.DomainException;
 import com.iso.hypo.events.event.OperationEnum;
 import com.iso.hypo.services.GymService;
 import com.iso.hypo.services.event.BrandEvent;
+import com.iso.hypo.services.event.CoachEvent;
 import com.iso.hypo.services.exception.GymException;
 
 @Component
@@ -37,4 +38,20 @@ public class GymListener {
 			throw e;
 		}
 	}	
+    
+    @EventListener
+    public void onCoachEvent(CoachEvent event) throws DomainException {
+		if (event.getOperation() == OperationEnum.delete) {
+			handleDeleteCoach(event);
+		}
+    }
+    
+    private void handleDeleteCoach(CoachEvent event) throws DomainException {
+    	try {
+    		gymService.removeAllCoachReferencesByCoachId(event.getEntity().getId());
+		} catch (GymException e) {
+			logger.error("Error - coachUuid={}", event.getEntity().getUuid(), e);
+			throw e;
+		}
+	}
 }

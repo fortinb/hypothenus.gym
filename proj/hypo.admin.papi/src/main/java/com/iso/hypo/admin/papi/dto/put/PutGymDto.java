@@ -5,6 +5,7 @@ import java.util.List;
 import com.iso.hypo.admin.papi.dto.contact.ContactDto;
 import com.iso.hypo.admin.papi.dto.contact.PhoneNumberDto;
 import com.iso.hypo.admin.papi.dto.location.AddressDto;
+import com.iso.hypo.admin.papi.dto.model.CoachDto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -38,4 +39,6 @@ public class PutGymDto {
 	private List<PhoneNumberDto> phoneNumbers;
 	
 	private List<ContactDto> contacts;
+	
+	private List<CoachDto> coachs;
 }

@@ -8,9 +8,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.iso.hypo.domain.BaseEntity;
 import com.iso.hypo.domain.contact.Person;
-import com.mongodb.lang.NonNull;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 
 @Getter
@@ -26,10 +26,6 @@ public class Coach extends BaseEntity {
 	private String brandUuid;
 	
 	@Indexed
-	@NonNull
-	private String gymUuid;
-	
-	@Indexed
 	private String uuid;
 	
 	private Person person;
@@ -39,14 +35,12 @@ public class Coach extends BaseEntity {
 	}
 	
 	public Coach(String brandUuid,
-				 String gymUuid, 
 			     Person person, 
 			     boolean isActive, 
 			     Instant activatedOn, 
 			     Instant deactivatedOn) {
 		super(isActive);
 		this.brandUuid = brandUuid;
-		this.gymUuid = gymUuid;
 		this.person = person;
 		this.activatedOn = activatedOn;
 		this.deactivatedOn = deactivatedOn;
