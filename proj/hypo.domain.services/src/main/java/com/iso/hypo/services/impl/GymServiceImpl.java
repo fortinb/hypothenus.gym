@@ -244,7 +244,7 @@ public class GymServiceImpl implements GymService {
 	}
 
 	private Gym readByGymUuid(String brandUuid, String gymUuid) throws GymException {
-		Optional<Gym> entity = gymRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid);
+		Optional<Gym> entity = gymRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brandUuid, gymUuid);
 		if (entity.isEmpty()) {
 			throw new GymException(requestContext.getTrackingNumber(), GymException.GYM_NOT_FOUND, "Gym not found");
 		}
@@ -259,7 +259,7 @@ public class GymServiceImpl implements GymService {
 
 		List<Coach> resolvedCoachs = new ArrayList<>();
 		for (Coach coach : coachs) {
-			Optional<Coach> entity = coachRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(coach.getBrandUuid(),
+			Optional<Coach> entity = coachRepository.findByBrandUuidAndUuidAndDeletedIsFalse(coach.getBrandUuid(),
 					coach.getUuid());
 			if (entity.isEmpty()) {
 				throw new GymException(requestContext.getTrackingNumber(), GymException.COACH_NOT_FOUND,
@@ -285,7 +285,7 @@ public class GymServiceImpl implements GymService {
 	@Override
 	public GymDto assignCoach(String brandUuid, String gymUuid, String coachUuid) throws GymException {
 		try {
-			Optional<Coach> coach = coachRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, coachUuid);
+			Optional<Coach> coach = coachRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brandUuid, coachUuid);
 			if (coach.isEmpty()) {
 				throw new GymException(requestContext.getTrackingNumber(), GymException.COACH_NOT_FOUND, "Coach not found");
 			}
@@ -320,7 +320,7 @@ public class GymServiceImpl implements GymService {
 	@Override
 	public GymDto unassignCoach(String brandUuid, String gymUuid, String coachUuid) throws GymException {
 		try {
-			Optional<Coach> coach = coachRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, coachUuid);
+			Optional<Coach> coach = coachRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brandUuid, coachUuid);
 			if (coach.isEmpty()) {
 				throw new GymException(requestContext.getTrackingNumber(), GymException.COACH_NOT_FOUND, "Coach not found");
 			}

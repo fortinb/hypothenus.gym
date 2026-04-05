@@ -44,8 +44,8 @@ public class Membership extends BaseEntity {
 		super();
 	}
 
-	public Membership(String brandUuid, Member member, MembershipPlan membershipPlan, boolean autoRenewal, boolean isCancelled, boolean isActive, Instant startedOn, Instant endedOn) {
-		super(isActive);
+	public Membership(String brandUuid, Member member, MembershipPlan membershipPlan, boolean autoRenewal, boolean isCancelled, boolean active, Instant startedOn, Instant endedOn) {
+		super(active);
 		this.brandUuid = brandUuid;
 		this.member = member;
 		this.membershipPlan = membershipPlan;

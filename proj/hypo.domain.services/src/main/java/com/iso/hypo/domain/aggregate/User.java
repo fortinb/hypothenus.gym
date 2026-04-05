@@ -45,8 +45,8 @@ public class User extends BaseEntity {
 		super();
 	}
 	
-	public User(String firstname, String lastname, String email, boolean isActive, Instant activatedOn, Instant deactivatedOn) {
-		super(isActive);
+	public User(String firstname, String lastname, String email, boolean active, Instant activatedOn, Instant deactivatedOn) {
+		super(active);
 		this.firstname = firstname;
 		this.lastname = lastname;
 		this.email = email;

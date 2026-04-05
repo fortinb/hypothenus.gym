@@ -138,7 +138,7 @@ class GymControllerTests {
 	private RestTemplateBuilder restTemplateBuilder;
 	private TestRestTemplate testRestTemplate;
 	private Gym gym;
-	private Gym gymIsDeleted;
+	private Gym gymDeleted;
 	private Brand brand;
 	private List<Gym> gyms = new ArrayList<>();
 	private List<Coach> coachs = new ArrayList<>();
@@ -169,9 +169,9 @@ class GymControllerTests {
 		gym = GymBuilder.build(brand.getUuid(), gymCode_2, faker.address().cityName(),coachs.subList(2, 2));
 		gymRepository.save(gym);
 		
-		gymIsDeleted = GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.code().isbn10(), null);
-		gymIsDeleted.setDeleted(true);
-		gymIsDeleted = gymRepository.save(gymIsDeleted);
+		gymDeleted = GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.code().isbn10(), null);
+		gymDeleted.setDeleted(true);
+		gymDeleted = gymRepository.save(gymDeleted);
 
 		for (int i = 0; i < 10; i++) {
 			Gym item = GymBuilder.build(brand.getUuid(), faker.code().isbn10(),faker.company().name(), null);
@@ -195,9 +195,9 @@ class GymControllerTests {
 	}
 
 	@Test
-	void testSearchAutocompleteIsDeletedSuccess() throws MalformedURLException, JsonProcessingException, Exception {
+	void testSearchAutocompleteDeletedSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Act
-		String criteria = StringUtils.extractRandomWordPartial(gymIsDeleted.getName(), 10);
+		String criteria = StringUtils.extractRandomWordPartial(gymDeleted.getName(), 10);
 		assertSearch(criteria,0,0);
 	}
 	
@@ -743,18 +743,18 @@ class GymControllerTests {
 				String.format("Gym delete error: %s", response.getStatusCode()));
 		
 		
-		Page<Gym> pageGym = gymRepository.findAllByBrandUuidAndIsDeletedIsFalse(brand.getUuid(),  PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
+		Page<Gym> pageGym = gymRepository.findAllByBrandUuidAndDeletedIsFalse(brand.getUuid(),  PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
 		
 		pageGym.getContent().forEach(gym -> {
 			Assertions.assertFalse(gym.getCoachs().stream().filter(coach -> coach.getUuid().equals(coachs.getFirst().getUuid())).findFirst().isPresent(),
 					String.format("Deleted coach %s still present in gym %s", coachs.getFirst().getUuid(), gym.getUuid()));
 		});
 		
-		gymReferences1 = gymRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brand.getUuid(),  gymReferences1.getUuid()).get();
+		gymReferences1 = gymRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brand.getUuid(),  gymReferences1.getUuid()).get();
 		Assertions.assertTrue(gymReferences1.getCoachs().size() == 1 && gymReferences1.getCoachs().get(0).getUuid().equals(coachs.getLast().getUuid()),
 				String.format("Non deleted coach %s not found in gym %s", coachs.getLast().getUuid(), gym.getUuid()));
 	
-		gymReferences2 = gymRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brand.getUuid(),  gymReferences2.getUuid()).get();
+		gymReferences2 = gymRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brand.getUuid(),  gymReferences2.getUuid()).get();
 		Assertions.assertTrue(gymReferences2.getCoachs().size() == 1 && gymReferences2.getCoachs().get(0).getUuid().equals(coachs.getLast().getUuid()),
 				String.format("Non deleted coach %s not found in gym %s", coachs.getLast().getUuid(), gym.getUuid()));
 	}

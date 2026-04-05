@@ -109,6 +109,7 @@ class PopulatorTests {
 		coachRepository.deleteAll();
 		courseRepository.deleteAll();
 		memberRepository.deleteAll();
+		membershipPlanRepository.deleteAll();
 
 		for (int i = 0; i < 10; i++) {
 			Brand item = BrandBuilder.build(faker.code().isbn10(), faker.company().name());

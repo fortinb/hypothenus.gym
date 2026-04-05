@@ -68,7 +68,7 @@ public class UserServiceImpl implements UserService {
 
 			User user = userMapper.toEntity(userDto);
 
-			Optional<User> existingUser = userRepository.findByEmailAndIsDeletedIsFalse(user.getEmail());
+			Optional<User> existingUser = userRepository.findByEmailAndDeletedIsFalse(user.getEmail());
 			if (existingUser.isPresent()) {
 				Message message = new Message();
 				message.setCode(UserException.USER_ALREADY_EXIST);
@@ -282,7 +282,7 @@ public class UserServiceImpl implements UserService {
 			User oldUser = this.readByUserUuid(userDto.getUuid());
 
 			if (userDto.getEmail() != null && !userDto.getEmail().equals(oldUser.getEmail())) {
-				Optional<User> existingUser = userRepository.findByEmailAndIsDeletedIsFalse(userDto.getEmail());
+				Optional<User> existingUser = userRepository.findByEmailAndDeletedIsFalse(userDto.getEmail());
 				if (existingUser.isPresent()) {
 					Message message = new Message();
 					message.setCode(UserException.USER_ALREADY_EXIST);
@@ -364,7 +364,7 @@ public class UserServiceImpl implements UserService {
 	}
 	
 	private User readByUserUuid(String userUuid) throws UserException {
-		Optional<User> entity = userRepository.findByUuidAndIsDeletedIsFalse(userUuid);
+		Optional<User> entity = userRepository.findByUuidAndDeletedIsFalse(userUuid);
 		if (entity.isEmpty()) {
 			throw new UserException(requestContext.getTrackingNumber(), UserException.USER_NOT_FOUND, "User not found");
 		}

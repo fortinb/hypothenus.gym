@@ -11,11 +11,11 @@ import com.iso.hypo.domain.aggregate.Membership;
 
 public interface MembershipRepository extends PagingAndSortingRepository<Membership, String>, CrudRepository<Membership, String>, MembershipRepositoryCustom {
 	
-	Optional<Membership> findByBrandUuidAndUuidAndIsDeletedIsFalse(String brandUuid, String membershipUuid);
+	Optional<Membership> findByBrandUuidAndUuidAndDeletedIsFalse(String brandUuid, String membershipUuid);
 	
-	Page<Membership> findAllByBrandUuidAndIsDeletedIsFalse(String brandUuid, Pageable pageable);
+	Page<Membership> findAllByBrandUuidAndDeletedIsFalse(String brandUuid, Pageable pageable);
 	
-	Page<Membership> findAllByBrandUuidAndIsDeletedIsFalseAndIsActiveIsTrue(String brandUuid, Pageable pageable);
+	Page<Membership> findAllByBrandUuidAndDeletedIsFalseAndActiveIsTrue(String brandUuid, Pageable pageable);
 	
 	
 }

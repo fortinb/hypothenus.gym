@@ -28,7 +28,7 @@ public class CourseRepositoryCustomImpl implements CourseRepositoryCustom {
 	      		  .and("uuid").is(courseUuid));
 		
 		Update update = new Update()
-					.set("isActive", true)
+					.set("active", true)
 					.set("activatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
 					.set("deactivatedOn", null);
 
@@ -43,7 +43,7 @@ public class CourseRepositoryCustomImpl implements CourseRepositoryCustom {
 		      		  .and("uuid").is(courseUuid));
 		
 		Update update = new Update()
-					.set("isActive", false)
+					.set("active", false)
 					.set("deactivatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS));
 
 		Course course = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Course.class);
@@ -56,7 +56,7 @@ public class CourseRepositoryCustomImpl implements CourseRepositoryCustom {
 				 Criteria.where("brandUuid").is(brandUuid).and("uuid").is(courseUuid));
 		
 		Update update = new Update()
-					.set("isDeleted", true)
+					.set("deleted", true)
 					.set("deletedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
 					.set("deletedBy", deletedBy);
 
@@ -69,7 +69,7 @@ public class CourseRepositoryCustomImpl implements CourseRepositoryCustom {
 				 Criteria.where("brandUuid").is(brandUuid));
 		
 		Update update = new Update()
-					.set("isDeleted", true)
+					.set("deleted", true)
 					.set("deletedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
 					.set("deletedBy", deletedBy);
 

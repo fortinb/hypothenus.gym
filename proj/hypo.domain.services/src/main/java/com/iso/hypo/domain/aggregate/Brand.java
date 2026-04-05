@@ -51,9 +51,9 @@ public class Brand extends BaseEntity {
 		super();
 	}
 	
-	public Brand(String code, String name, Address address, String email, String logoUri, boolean isActive,
+	public Brand(String code, String name, Address address, String email, String logoUri, boolean active,
 			List<PhoneNumber> phoneNumbers, List<Contact> contacts, Instant activatedOn, Instant deactivatedOn) {
-		super(isActive);
+		super(active);
 		this.code = code;
 		this.name = name;
 		this.address = address;

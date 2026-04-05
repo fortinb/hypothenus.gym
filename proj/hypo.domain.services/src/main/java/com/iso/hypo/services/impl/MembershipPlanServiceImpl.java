@@ -231,7 +231,7 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 
 	private MembershipPlan readByMembershipPlanUuid(String brandUuid, String membershipPlanUuid)
 			throws MembershipPlanException {
-		Optional<MembershipPlan> entity = membershipPlanRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid,
+		Optional<MembershipPlan> entity = membershipPlanRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brandUuid,
 				membershipPlanUuid);
 		if (entity.isEmpty()) {
 			throw new MembershipPlanException(requestContext.getTrackingNumber(),
@@ -248,7 +248,7 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 
 		List<Gym> resolvedGyms = new ArrayList<>();
 		for (Gym gym : gyms) {
-			Optional<Gym> entity = gymRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(gym.getBrandUuid(),
+			Optional<Gym> entity = gymRepository.findByBrandUuidAndUuidAndDeletedIsFalse(gym.getBrandUuid(),
 					gym.getUuid());
 			if (entity.isEmpty()) {
 				throw new MembershipPlanException(requestContext.getTrackingNumber(),
@@ -267,7 +267,7 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 
 		List<Course> resolvedCourses = new ArrayList<>();
 		for (Course course : courses) {
-			Optional<Course> entity = courseRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(course.getBrandUuid(),
+			Optional<Course> entity = courseRepository.findByBrandUuidAndUuidAndDeletedIsFalse(course.getBrandUuid(),
 					course.getUuid());
 			if (entity.isEmpty()) {
 				throw new MembershipPlanException(requestContext.getTrackingNumber(),

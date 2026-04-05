@@ -1,5 +1,6 @@
 package com.iso.hypo.admin.papi.controller;
 
+import java.util.Date;
 import java.util.Objects;
 
 import org.modelmapper.ModelMapper;
@@ -9,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -85,7 +87,39 @@ public class MembershipPlanController {
 
 		Page<com.iso.hypo.domain.dto.MembershipPlanDto> domainDtos = null;
 		try {
-			domainDtos = membershipPlanQueryService.list(brandUuid, page, pageSize, includeInactive);
+			domainDtos = membershipPlanQueryService.list(brandUuid, null, page, pageSize, includeInactive);
+		} catch (MembershipPlanException e) {
+			logger.error(e.getMessage(), e);
+
+			return ControllerErrorHandler.buildErrorResponse(e, requestContext, null);
+		}
+
+		return ResponseEntity.ok(domainDtos.map(item -> modelMapper.map(item, MembershipPlanDto.class)));
+	}
+	
+	@GetMapping("/brands/{brandUuid}/membership/plans/active")
+	@Operation(summary = "Retrieve a list of membership plans that are active for the current date")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", content = {
+					@Content(schema = @Schema(implementation = Page.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "400", description = "Bad request. The request is invalid or missing required data.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "403", description = "Forbidden. The client does not have permission to access this resource.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "404", description = "Not found. The requested resource does not exist.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "500", description = "Unexpected server error.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
+	@ResponseStatus(value = HttpStatus.OK)
+	public ResponseEntity<Object> listActiveMembershipPlans(
+			@PathVariable String brandUuid,
+			@Parameter(description = "page number") @RequestParam int page,
+			@Parameter(description = "page size") @RequestParam int pageSize,
+			@Parameter(description = "current date") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date currentDate) {
+
+		Page<com.iso.hypo.domain.dto.MembershipPlanDto> domainDtos = null;
+		try {
+			domainDtos = membershipPlanQueryService.list(brandUuid, currentDate, page, pageSize, false);
 		} catch (MembershipPlanException e) {
 			logger.error(e.getMessage(), e);
 
@@ -164,7 +198,7 @@ public class MembershipPlanController {
 	public ResponseEntity<Object> updateMembershipPlan(
 			@PathVariable String brandUuid,
 			@PathVariable String uuid,
-			@RequestParam(required = false, defaultValue = "true") boolean isActive,
+			@RequestParam(required = false, defaultValue = "true") boolean active,
 			@RequestBody PutMembershipPlanDto request) {
 		
 		if (!request.getBrandUuid().equals(brandUuid)) {

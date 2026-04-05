@@ -17,8 +17,8 @@ public abstract class BaseEntity {
 	@Transient
 	protected List<Message> messages;
 	
-	protected boolean isDeleted = false;
-	protected boolean isActive = true;
+	protected boolean deleted = false;
+	protected boolean active = true;
 	
 	@CreatedBy
 	protected String createdBy;
@@ -38,7 +38,7 @@ public abstract class BaseEntity {
 		this.messages = new java.util.ArrayList<Message>();
 	}
 	
-	public BaseEntity(boolean isActive) {
-		this.isActive = isActive;
+	public BaseEntity(boolean active) {
+		this.active = active;
 	}
 }

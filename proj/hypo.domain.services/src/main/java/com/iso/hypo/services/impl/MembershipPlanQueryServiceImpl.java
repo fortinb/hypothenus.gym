@@ -1,5 +1,6 @@
 package com.iso.hypo.services.impl;
 
+import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -38,7 +39,7 @@ public class MembershipPlanQueryServiceImpl implements MembershipPlanQueryServic
 	@Override
 	public void assertExists(String brandUuid, String membershipPlanUuid) throws MembershipPlanException {
 		try {
-			Optional<MembershipPlan> entity = membershipPlanRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, membershipPlanUuid);
+			Optional<MembershipPlan> entity = membershipPlanRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brandUuid, membershipPlanUuid);
 			if (entity.isEmpty()) {
 				throw new MembershipPlanException(requestContext.getTrackingNumber(), MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND, "MembershipPlan not found");
 			}
@@ -54,7 +55,7 @@ public class MembershipPlanQueryServiceImpl implements MembershipPlanQueryServic
 	@Override
 	public MembershipPlanDto find(String brandUuid, String membershipPlanUuid) throws MembershipPlanException {
 		try {
-			Optional<MembershipPlan> entity = membershipPlanRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, membershipPlanUuid);
+			Optional<MembershipPlan> entity = membershipPlanRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brandUuid, membershipPlanUuid);
 			if (entity.isEmpty()) {
 				throw new MembershipPlanException(requestContext.getTrackingNumber(), MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND, "MembershipPlan not found");
 			}
@@ -70,15 +71,21 @@ public class MembershipPlanQueryServiceImpl implements MembershipPlanQueryServic
 	}
 
 	@Override
-	public Page<MembershipPlanDto> list(String brandUuid, int page, int pageSize, boolean includeInactive) throws MembershipPlanException {
+	public Page<MembershipPlanDto> list(String brandUuid, Date currentDate, int page, int pageSize, boolean includeInactive) throws MembershipPlanException {
 		try {
 			Page<MembershipPlan> pageEntities;
-			if (includeInactive) {
-				pageEntities = membershipPlanRepository.findAllByBrandUuidAndIsDeletedIsFalse(brandUuid, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"));
-			} else {
-				pageEntities = membershipPlanRepository.findAllByBrandUuidAndIsDeletedIsFalseAndIsActiveIsTrue(brandUuid, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"));
+			
+			// If currentDate is null, return all non-deleted plans
+			if (currentDate == null) {
+				if (includeInactive) {
+					pageEntities = membershipPlanRepository.findAllByBrandUuidAndDeletedIsFalse(brandUuid, PageRequest.of(page, pageSize, Sort.Direction.ASC, "period"));
+				} else {
+					pageEntities = membershipPlanRepository.findAllByBrandUuidAndDeletedIsFalseAndActiveIsTrue(brandUuid, PageRequest.of(page, pageSize, Sort.Direction.ASC, "period"));
+				}
+			} else { //If currentDate is not null, return plans that are active on the currentDate.
+				pageEntities = membershipPlanRepository.findActiveOnDate(brandUuid, currentDate, PageRequest.of(page, pageSize, Sort.Direction.ASC, "period"));
 			}
-
+			
 			return pageEntities.map(e -> membershipPlanMapper.toDto(e));
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}", brandUuid, e);

@@ -2,6 +2,7 @@ package com.iso.hypo.domain;
 
 import java.sql.Date;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -21,9 +22,9 @@ public class MembershipPlanBuilder {
 	private static Faker faker = new Faker();
 	
 	public static MembershipPlan build(String brandUuid, List<Gym> includedGyms, List<Course> includedCourses) {
-		MembershipPlan entity = new MembershipPlan(brandUuid, buildName(), buildTitle(), buildDescription(),
+		MembershipPlan entity = new MembershipPlan(brandUuid, buildName(), buildTitle(), buildDescription(), buildDetail(),
 				faker.number().numberBetween(2, 3), MembershipPlanPeriodEnum.monthly, BillingFrequencyEnum.monthly,
-				BuildCost(), 12, includedGyms, includedCourses, Date.from(Instant.now()), null, true, false, false, true, Instant.now(), null);
+				BuildCost(), 12, includedGyms, includedCourses, Date.from(Instant.now().truncatedTo(ChronoUnit.DAYS)), null, true, false, false, true, Instant.now(), null);
 		entity.setUuid(UUID.randomUUID().toString());
 		return entity;
 	}
@@ -46,6 +47,14 @@ public class MembershipPlanBuilder {
 		ArrayList<LocalizedString> items = new ArrayList<LocalizedString>();
 		items.add(new LocalizedString(faker.lorem().sentence(), LanguageEnum.fr));
 		items.add(new LocalizedString(faker.lorem().sentence(), LanguageEnum.en));
+
+		return items;
+	}
+
+	public static List<LocalizedString> buildDetail() {
+		ArrayList<LocalizedString> items = new ArrayList<LocalizedString>();
+		items.add(new LocalizedString(faker.lorem().paragraph(), LanguageEnum.fr));
+		items.add(new LocalizedString(faker.lorem().paragraph(), LanguageEnum.en));
 
 		return items;
 	}

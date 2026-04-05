@@ -10,12 +10,12 @@ import com.iso.hypo.domain.aggregate.User;
 
 public interface UserRepository extends CrudRepository<User, String>, UserRepositoryCustom {
 
-	Optional<User> findByEmailAndIsDeletedIsFalse(String email);
+	Optional<User> findByEmailAndDeletedIsFalse(String email);
 
-	Optional<User> findByUuidAndIsDeletedIsFalse(String userUuid);
+	Optional<User> findByUuidAndDeletedIsFalse(String userUuid);
 
-	Page<User> findAllByIsDeletedIsFalse(Pageable pageable);
+	Page<User> findAllByDeletedIsFalse(Pageable pageable);
 	
-	Page<User> findAllByIsDeletedIsFalseAndIsActiveIsTrue(Pageable pageable);
+	Page<User> findAllByDeletedIsFalseAndActiveIsTrue(Pageable pageable);
 }
 

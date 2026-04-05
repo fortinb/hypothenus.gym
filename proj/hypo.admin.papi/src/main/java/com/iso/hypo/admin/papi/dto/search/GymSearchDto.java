@@ -21,5 +21,5 @@ public class GymSearchDto {
 	
 	private AddressDto address;
 	
-	private boolean isActive;
+	private boolean active;
 }

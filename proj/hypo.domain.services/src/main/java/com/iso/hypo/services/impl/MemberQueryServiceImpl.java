@@ -39,7 +39,7 @@ public class MemberQueryServiceImpl implements MemberQueryService {
     @Override
     public void assertExists(String brandUuid, String memberUuid) throws MemberException {
         try {
-            Optional<Member> entity = memberRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, memberUuid);
+            Optional<Member> entity = memberRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brandUuid, memberUuid);
             if (entity.isEmpty()) {
                 throw new MemberException(requestContext.getTrackingNumber(), MemberException.MEMBER_NOT_FOUND, "Member not found");
             }
@@ -55,7 +55,7 @@ public class MemberQueryServiceImpl implements MemberQueryService {
     @Override
     public MemberDto find(String brandUuid, String memberUuid) throws MemberException {
         try {
-            Optional<Member> entity = memberRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, memberUuid);
+            Optional<Member> entity = memberRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brandUuid, memberUuid);
             if (entity.isEmpty()) {
                 throw new MemberException(requestContext.getTrackingNumber(), MemberException.MEMBER_NOT_FOUND, "Member not found");
             }
@@ -85,11 +85,11 @@ public class MemberQueryServiceImpl implements MemberQueryService {
     public Page<MemberDto> list(String brandUuid, int page, int pageSize, boolean includeInactive) throws MemberException {
         try {
             if (includeInactive) {
-                return memberRepository.findAllByBrandUuidAndIsDeletedIsFalse(brandUuid, PageRequest.of(page, pageSize, Sort.Direction.ASC, "person.lastname"))
+                return memberRepository.findAllByBrandUuidAndDeletedIsFalse(brandUuid, PageRequest.of(page, pageSize, Sort.Direction.ASC, "person.lastname"))
                         .map(m -> memberMapper.toDto(m));
             }
 
-            return memberRepository.findAllByBrandUuidAndIsDeletedIsFalseAndIsActiveIsTrue(brandUuid, PageRequest.of(page, pageSize, Sort.Direction.ASC, "person.lastname"))
+            return memberRepository.findAllByBrandUuidAndDeletedIsFalseAndActiveIsTrue(brandUuid, PageRequest.of(page, pageSize, Sort.Direction.ASC, "person.lastname"))
                     .map(m -> memberMapper.toDto(m));
         } catch (Exception e) {
             logger.error("Error - brandUuid={}", brandUuid, e);

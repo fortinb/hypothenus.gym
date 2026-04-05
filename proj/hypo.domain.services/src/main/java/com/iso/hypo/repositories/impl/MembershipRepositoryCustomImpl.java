@@ -29,7 +29,7 @@ public class MembershipRepositoryCustomImpl implements MembershipRepositoryCusto
 	            		  .and("uuid").is(membershipUuid));
 		
 		Update update = new Update()
-				.set("isActive", true)
+				.set("active", true)
 				.set("activatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
 				.set("deactivatedOn", null);
 
@@ -44,7 +44,7 @@ public class MembershipRepositoryCustomImpl implements MembershipRepositoryCusto
 	            		  .and("uuid").is(membershipUuid));
 		
 		Update update = new Update()
-				.set("isActive", false)
+				.set("active", false)
 				.set("deactivatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS));
 
 		Membership membership = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Membership.class);
@@ -57,7 +57,7 @@ public class MembershipRepositoryCustomImpl implements MembershipRepositoryCusto
 				 Criteria.where("brandUuid").is(brandUuid).and("uuid").is(membershipUuid));
 		
 		Update update = new Update()
-					.set("isDeleted", true)
+					.set("deleted", true)
 					.set("deletedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
 					.set("deletedBy", deletedBy);
 
@@ -71,7 +71,7 @@ public class MembershipRepositoryCustomImpl implements MembershipRepositoryCusto
 				 Criteria.where("brandUuid").is(brandUuid));
 		
 		Update update = new Update()
-					.set("isDeleted", true)
+					.set("deleted", true)
 					.set("deletedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
 					.set("deletedBy", deletedBy);
 

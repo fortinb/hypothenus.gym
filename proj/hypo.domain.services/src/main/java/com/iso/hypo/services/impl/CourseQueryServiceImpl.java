@@ -38,7 +38,7 @@ public class CourseQueryServiceImpl implements CourseQueryService {
 	@Override
 	public void assertExists(String brandUuid, String courseUuid) throws CourseException {
 		try {
-			Optional<Course> entity = courseRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, courseUuid);
+			Optional<Course> entity = courseRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brandUuid, courseUuid);
 			if (entity.isEmpty()) {
 				throw new CourseException(requestContext.getTrackingNumber(), CourseException.COURSE_NOT_FOUND, "Course not found");
 			}
@@ -55,7 +55,7 @@ public class CourseQueryServiceImpl implements CourseQueryService {
 	@Override
 	public CourseDto find(String brandUuid, String courseUuid) throws CourseException {
 		try {
-			Optional<Course> entity = courseRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, courseUuid);
+			Optional<Course> entity = courseRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brandUuid, courseUuid);
 			if (entity.isEmpty()) {
 				throw new CourseException(requestContext.getTrackingNumber(), CourseException.COURSE_NOT_FOUND, "Course not found");
 			}
@@ -76,12 +76,12 @@ public class CourseQueryServiceImpl implements CourseQueryService {
 		try {
 			if (includeInactive) {
 				return courseRepository
-						.findAllByBrandUuidAndIsDeletedIsFalse(brandUuid,
+						.findAllByBrandUuidAndDeletedIsFalse(brandUuid,
 							PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"))
 						.map(c -> courseMapper.toDto(c));
 			}
 
-			return courseRepository.findAllByBrandUuidAndIsDeletedIsFalseAndIsActiveIsTrue(brandUuid,
+			return courseRepository.findAllByBrandUuidAndDeletedIsFalseAndActiveIsTrue(brandUuid,
 					PageRequest.of(page, pageSize, Sort.Direction.ASC, "name")).map(c -> courseMapper.toDto(c));
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}", brandUuid, e);

@@ -103,7 +103,7 @@ class MemberControllerTests {
 
     private TestRestTemplate testRestTemplate = new TestRestTemplate();
     private Member member;
-    private Member memberIsDeleted;
+    private Member memberDeleted;
     private Brand brand;
     private List<Member> members = new ArrayList<Member>();
 
@@ -126,9 +126,9 @@ class MemberControllerTests {
         member.setActive(true);
         memberRepository.save(member);
 
-        memberIsDeleted = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
-        memberIsDeleted.setDeleted(true);
-        memberIsDeleted = memberRepository.save(memberIsDeleted);
+        memberDeleted = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
+        memberDeleted.setDeleted(true);
+        memberDeleted = memberRepository.save(memberDeleted);
 
         for (int i = 0; i < 10; i++) {
             Member item = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
@@ -158,9 +158,9 @@ class MemberControllerTests {
     }
     
     @Test
-	void testSearchAutocompleteIsDeletedSuccess() throws MalformedURLException, JsonProcessingException, Exception {
+	void testSearchAutocompleteDeletedSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Act
-		String criteria = StringUtils.extractRandomWordPartial(memberIsDeleted.getPerson().getFirstname(), 10);
+		String criteria = StringUtils.extractRandomWordPartial(memberDeleted.getPerson().getFirstname(), 10);
 		assertSearch(criteria,0,0);
 	}
 	

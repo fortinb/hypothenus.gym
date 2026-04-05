@@ -56,10 +56,10 @@ public class UserRepositoryCustomImpl implements UserRepositoryCustom {
 
 		MongoCollection<Document> collection = mongoTemplate.getCollection("user");
 
-		ArrayList<Boolean> isActiveValues = new ArrayList<Boolean>();
-		isActiveValues.add(true);
+		ArrayList<Boolean> activeValues = new ArrayList<Boolean>();
+		activeValues.add(true);
 		if (includeInactive) {
-			isActiveValues.add(false);
+			activeValues.add(false);
 		}
 		
 		Document searchStage = new Document().append("$search", new Document()
@@ -70,12 +70,12 @@ public class UserRepositoryCustomImpl implements UserRepositoryCustom {
 													.append("equals",
 															new Document()
 																.append("value", false)
-																.append("path", "isDeleted")),
+																.append("path", "deleted")),
 											  new Document()
 													.append("in",
 															new Document()
-																.append("value", isActiveValues)
-																.append("path", "isActive")
+																.append("value", activeValues)
+																.append("path", "active")
 																)))
 						.append("must",
 								new Document().append("compound", new Document()
@@ -101,7 +101,7 @@ public class UserRepositoryCustomImpl implements UserRepositoryCustom {
 		// Create a pipeline that searches, projects, and limits the number of results returned.
 		AggregateIterable<UserSearchDto> aggregationResults = collection.aggregate(
 				Arrays.asList(searchStage,
-						project(fields(excludeId(), include("uuid", "firstname", "lastname","email", "isActive"),
+						project(fields(excludeId(), include("uuid", "firstname", "lastname","email", "active"),
 								metaSearchScore("score"),
 								meta("scoreDetails", "searchScoreDetails"))),
 						sort(Sorts.ascending("name")),
@@ -119,7 +119,7 @@ public class UserRepositoryCustomImpl implements UserRepositoryCustom {
                 Criteria.where("uuid").is(userUuid));
 
         Update update = new Update()
-                .set("isActive", true)
+                .set("active", true)
                 .set("activatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
                 .set("deactivatedOn", null);
 
@@ -133,7 +133,7 @@ public class UserRepositoryCustomImpl implements UserRepositoryCustom {
                 Criteria.where("uuid").is(userUuid));
 
         Update update = new Update()
-                .set("isActive", false)
+                .set("active", false)
                 .set("deactivatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS));
 
         User user = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), User.class);
@@ -146,7 +146,7 @@ public class UserRepositoryCustomImpl implements UserRepositoryCustom {
                  Criteria.where("uuid").is(userUuid));
 
         Update update = new Update()
-                    .set("isDeleted", true)
+                    .set("deleted", true)
                     .set("deletedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
                     .set("deletedBy", deletedBy);
 
@@ -159,7 +159,7 @@ public class UserRepositoryCustomImpl implements UserRepositoryCustom {
         Query query = new Query();
 
         Update update = new Update()
-                    .set("isDeleted", true)
+                    .set("deleted", true)
                     .set("deletedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
                     .set("deletedBy", deletedBy);
 

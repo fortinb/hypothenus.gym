@@ -165,7 +165,7 @@ public class MembershipController {
 			@PathVariable String brandUuid,
 			@PathVariable String uuid,
 			@Parameter(description = "activate or deactivate Membership") 
-			@RequestParam(required = false, defaultValue = "true") boolean isActive,
+			@RequestParam(required = false, defaultValue = "true") boolean active,
 			@RequestBody PutMembershipDto request) {
 		
 		if (!request.getBrandUuid().equals(brandUuid)) {

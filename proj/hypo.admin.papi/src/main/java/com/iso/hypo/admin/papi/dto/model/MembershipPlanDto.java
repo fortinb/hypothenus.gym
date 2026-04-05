@@ -26,6 +26,8 @@ public class MembershipPlanDto extends BaseDto {
 
 	private List<LocalizedStringDto> description;
 
+	private List<LocalizedStringDto> detail;
+
 	private int numberOfClasses;
 	
 	private MembershipPlanPeriodEnum period;
@@ -36,11 +38,11 @@ public class MembershipPlanDto extends BaseDto {
 	
 	private boolean guestPrivilege;
 	
-	private boolean isGiftCard;
+	private boolean giftCard;
 	
 	private int durationInMonths;
 	
-	private boolean isPromotional;
+	private boolean promotional;
 	
 	private Date startDate;
 	
@@ -50,5 +52,3 @@ public class MembershipPlanDto extends BaseDto {
 	
 	private List<GymDto> includedGyms;
 }
-
-

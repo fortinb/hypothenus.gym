@@ -212,7 +212,7 @@ public class CoachServiceImpl implements CoachService {
 	}
 
 	private Coach readByCoachUuid(String brandUuid, String coachUuid) throws CoachException {
-		Optional<Coach> entity = coachRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, coachUuid);
+		Optional<Coach> entity = coachRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brandUuid, coachUuid);
 		if (entity.isEmpty()) {
 			throw new CoachException(requestContext.getTrackingNumber(), CoachException.COACH_NOT_FOUND, "Coach not found");
 		}

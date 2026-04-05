@@ -2,10 +2,15 @@ package com.iso.hypo.repositories.impl;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -31,7 +36,7 @@ public class MembershipPlanRepositoryCustomImpl implements MembershipPlanReposit
 	            		  .and("uuid").is(membershipPlanUuid));
 		
 		Update update = new Update()
-					.set("isActive", true)
+					.set("active", true)
 					.set("activatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
 					.set("deactivatedOn", null);
 
@@ -46,7 +51,7 @@ public class MembershipPlanRepositoryCustomImpl implements MembershipPlanReposit
 	            		  .and("uuid").is(membershipPlanUuid));
 		
 		Update update = new Update()
-					.set("isActive", false)
+					.set("active", false)
 					.set("deactivatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS));
 
 		MembershipPlan entity = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), MembershipPlan.class);
@@ -59,7 +64,7 @@ public class MembershipPlanRepositoryCustomImpl implements MembershipPlanReposit
 				 Criteria.where("brandUuid").is(brandUuid).and("uuid").is(membershipPlanUuid));
 		
 		Update update = new Update()
-					.set("isDeleted", true)
+					.set("deleted", true)
 					.set("deletedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
 					.set("deletedBy", deletedBy);
 
@@ -72,7 +77,7 @@ public class MembershipPlanRepositoryCustomImpl implements MembershipPlanReposit
 				 Criteria.where("brandUuid").is(brandUuid));
 		
 		Update update = new Update()
-					.set("isDeleted", true)
+					.set("deleted", true)
 					.set("deletedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
 					.set("deletedBy", deletedBy);
 
@@ -108,6 +113,23 @@ public class MembershipPlanRepositoryCustomImpl implements MembershipPlanReposit
 
 		return result.getModifiedCount();
 	}
+
+	@Override
+	public Page<MembershipPlan> findActiveOnDate(String brandUuid, Date currentDate, Pageable pageable) {
+		Criteria criteria = Criteria.where("brandUuid").is(brandUuid)
+				.and("deleted").is(false)
+				.and("active").is(true)
+				.and("startDate").lte(currentDate)
+				.andOperator(new Criteria().orOperator(
+						Criteria.where("endDate").exists(false),
+						Criteria.where("endDate").is(null),
+						Criteria.where("endDate").gte(currentDate)));
+
+		Query query = new Query(criteria).with(pageable);
+
+		List<MembershipPlan> results = mongoTemplate.find(query, MembershipPlan.class);
+		long total = mongoTemplate.count(new Query(criteria), MembershipPlan.class);
+
+		return new PageImpl<>(results, pageable, total);
+	}
 }
-
-

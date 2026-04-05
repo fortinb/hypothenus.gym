@@ -73,10 +73,10 @@ public class BrandRepositoryCustomImpl implements BrandRepositoryCustom {
 //										autocomplete(fieldPath("name"), criteria))))),
 //				searchOptions().index(indexName).returnStoredSource(true)
 //		);
-		ArrayList<Boolean> isActiveValues = new ArrayList<Boolean>();
-		isActiveValues.add(true);
+		ArrayList<Boolean> activeValues = new ArrayList<Boolean>();
+		activeValues.add(true);
 		if (includeInactive) {
-			isActiveValues.add(false);
+			activeValues.add(false);
 		}
 		
 		Document searchStage = new Document().append("$search", new Document()
@@ -87,12 +87,12 @@ public class BrandRepositoryCustomImpl implements BrandRepositoryCustom {
 													.append("equals",
 															new Document()
 																.append("value", false)
-																.append("path", "isDeleted")),
+																.append("path", "deleted")),
 											  new Document()
 													.append("in",
 															new Document()
-																.append("value", isActiveValues)
-																.append("path", "isActive")
+																.append("value", activeValues)
+																.append("path", "active")
 																)))
 						.append("must",
 								new Document().append("compound", new Document()
@@ -133,7 +133,7 @@ public class BrandRepositoryCustomImpl implements BrandRepositoryCustom {
 		// Create a pipeline that searches, projects, and limits the number of results returned.
 		AggregateIterable<BrandSearchDto> aggregationResults = collection.aggregate(
 				Arrays.asList(searchStage,
-						project(fields(excludeId(), include("uuid", "code", "name", "address", "email", "isActive"),
+						project(fields(excludeId(), include("uuid", "code", "name", "address", "email", "active"),
 								metaSearchScore("score"),
 								meta("scoreDetails", "searchScoreDetails"))),
 						sort(Sorts.ascending("name")),
@@ -152,7 +152,7 @@ public class BrandRepositoryCustomImpl implements BrandRepositoryCustom {
 	            Criteria.where("uuid").is(brandUuid));
 		
 		Update update = new Update()
-					.set("isActive", true)
+					.set("active", true)
 					.set("activatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
 					.set("deactivatedOn", null);
 
@@ -166,7 +166,7 @@ public class BrandRepositoryCustomImpl implements BrandRepositoryCustom {
 	            Criteria.where("uuid").is(brandUuid));
 		
 		Update update = new Update()
-					.set("isActive", false)
+					.set("active", false)
 					.set("deactivatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS));
 
 		Brand gym = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Brand.class);
@@ -179,7 +179,7 @@ public class BrandRepositoryCustomImpl implements BrandRepositoryCustom {
 				 Criteria.where("uuid").is(brandUuid));
 		
 		Update update = new Update()
-					.set("isDeleted", true)
+					.set("deleted", true)
 					.set("deletedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
 					.set("deletedBy", deletedBy);
 

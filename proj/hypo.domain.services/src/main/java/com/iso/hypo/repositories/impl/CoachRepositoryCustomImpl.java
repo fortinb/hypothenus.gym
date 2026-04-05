@@ -29,7 +29,7 @@ public class CoachRepositoryCustomImpl implements CoachRepositoryCustom {
 	            		  .and("uuid").is(coachUuid));
 		
 		Update update = new Update()
-					.set("isActive", true)
+					.set("active", true)
 					.set("activatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
 					.set("deactivatedOn", null);
 
@@ -44,7 +44,7 @@ public class CoachRepositoryCustomImpl implements CoachRepositoryCustom {
         		  .and("uuid").is(coachUuid));
 		
 		Update update = new Update()
-					.set("isActive", false)
+					.set("active", false)
 					.set("deactivatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS));
 
 		Coach coach = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Coach.class);
@@ -57,7 +57,7 @@ public class CoachRepositoryCustomImpl implements CoachRepositoryCustom {
 				 Criteria.where("brandUuid").is(brandUuid).and("uuid").is(coachUuid));
 		
 		Update update = new Update()
-					.set("isDeleted", true)
+					.set("deleted", true)
 					.set("deletedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
 					.set("deletedBy", deletedBy);
 
@@ -70,7 +70,7 @@ public class CoachRepositoryCustomImpl implements CoachRepositoryCustom {
 				 Criteria.where("brandUuid").is(brandUuid));
 		
 		Update update = new Update()
-					.set("isDeleted", true)
+					.set("deleted", true)
 					.set("deletedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
 					.set("deletedBy", deletedBy);
 

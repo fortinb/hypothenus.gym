@@ -96,7 +96,7 @@ class UserControllerTests {
 	private RestTemplateBuilder restTemplateBuilder;
 	private TestRestTemplate testRestTemplate;
 	private User user;
-	private User userIsDeleted;
+	private User userDeleted;
 	private List<User> users = new ArrayList<User>();
 
 	@BeforeAll
@@ -111,9 +111,9 @@ class UserControllerTests {
 		user = UserBuilder.build();
 		userRepository.save(user);
 
-		userIsDeleted = UserBuilder.build();
-		userIsDeleted.setDeleted(true);
-		userIsDeleted = userRepository.save(userIsDeleted);
+		userDeleted = UserBuilder.build();
+		userDeleted.setDeleted(true);
+		userDeleted = userRepository.save(userDeleted);
 
 		for (int i = 0; i < 10; i++) {
 			User item = UserBuilder.build();
@@ -137,9 +137,9 @@ class UserControllerTests {
 	}
 
 	/*
-	 * @Test void testSearchAutocompleteIsDeletedSuccess() throws
+	 * @Test void testSearchAutocompleteDeletedSuccess() throws
 	 * MalformedURLException, JsonProcessingException, Exception { // Act String
-	 * criteria = StringUtils.extractRandomWordPartial(userIsDeleted.getFirstname(),
+	 * criteria = StringUtils.extractRandomWordPartial(userDeleted.getFirstname(),
 	 * 10); assertSearch(criteria, 0, 0); }
 	 */
 	 /* 		 

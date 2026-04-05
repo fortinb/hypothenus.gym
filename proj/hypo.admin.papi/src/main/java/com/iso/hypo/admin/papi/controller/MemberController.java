@@ -202,7 +202,7 @@ public class MemberController {
 			@PathVariable String brandUuid,
 			@PathVariable String uuid,
 			@Parameter(description = "activate or deactivate Member") 
-			@RequestParam(required = false, defaultValue = "true") boolean isActive,
+			@RequestParam(required = false, defaultValue = "true") boolean active,
 			@RequestBody PutMemberDto request) {
 		
 		if (!request.getBrandUuid().equals(brandUuid)) {

@@ -11,14 +11,14 @@ import com.iso.hypo.domain.aggregate.Brand;
 
 public interface BrandRepository extends PagingAndSortingRepository<Brand, String>, CrudRepository<Brand, String>, BrandRepositoryCustom {
 	
-	Optional<Brand> findByUuidAndIsDeletedIsFalse(String brandUuid);
+	Optional<Brand> findByUuidAndDeletedIsFalse(String brandUuid);
 	
 	Optional<Brand> findByCode(String code);
 	
-	Optional<Brand> findByCodeAndIsDeletedIsFalse(String code);
+	Optional<Brand> findByCodeAndDeletedIsFalse(String code);
 	
-	Page<Brand> findAllByIsDeletedIsFalse(Pageable pageable);
+	Page<Brand> findAllByDeletedIsFalse(Pageable pageable);
 	
-	Page<Brand> findAllByIsDeletedIsFalseAndIsActiveIsTrue(Pageable pageable);
+	Page<Brand> findAllByDeletedIsFalseAndActiveIsTrue(Pageable pageable);
 }
 

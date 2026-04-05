@@ -60,9 +60,9 @@ public class Gym extends BaseEntity {
 		super();
 	}
 	
-	public Gym(String brandUuid, String gymUuid, String name, Address address, String email, String logoUri, boolean isActive,
+	public Gym(String brandUuid, String gymUuid, String name, Address address, String email, String logoUri, boolean active,
 			List<PhoneNumber> phoneNumbers, List<Contact> contacts, List<Coach> coachs, Instant activatedOn, Instant deactivatedOn) {
-		super(isActive);
+		super(active);
 		this.brandUuid = brandUuid;
 		this.code = gymUuid;
 		this.name = name;

@@ -197,7 +197,7 @@ public class MembershipServiceImpl implements MembershipService {
 	}
 	
 	private Membership readByMembershipUuid(String brandUuid, String membershipUuid) throws MembershipException {
-		Optional<Membership> entity = membershipRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, membershipUuid);
+		Optional<Membership> entity = membershipRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brandUuid, membershipUuid);
 		if (entity.isEmpty()) {
 			throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.MEMBERSHIP_NOT_FOUND, "Membership not found");
 		}

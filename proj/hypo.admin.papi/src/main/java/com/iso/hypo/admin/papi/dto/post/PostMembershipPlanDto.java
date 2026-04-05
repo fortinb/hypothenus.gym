@@ -27,6 +27,8 @@ public class PostMembershipPlanDto {
 
 	private List<LocalizedStringDto> description;
 
+	private List<LocalizedStringDto> detail;
+
 	private int numberOfClasses;
 	
 	private MembershipPlanPeriodEnum period;
@@ -37,11 +39,11 @@ public class PostMembershipPlanDto {
 	
 	private boolean guestPrivilege;
 	
-	private boolean isGiftCard;
+	private boolean giftCard;
 	
 	private int durationInMonths;
 	
-	private boolean isPromotional;
+	private boolean promotional;
 	
 	private Date startDate;
 	

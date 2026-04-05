@@ -19,5 +19,5 @@ public class BrandSearchDto {
 	
 	private AddressDto address;
 	
-	private boolean isActive;
+	private boolean active;
 }

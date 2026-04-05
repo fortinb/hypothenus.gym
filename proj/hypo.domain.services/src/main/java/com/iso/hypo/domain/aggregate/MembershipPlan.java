@@ -41,6 +41,8 @@ public class MembershipPlan extends BaseEntity {
 
 	private List<LocalizedString> description;
 
+	private List<LocalizedString> detail;
+
 	private int numberOfClasses;
 
 	private MembershipPlanPeriodEnum period;
@@ -58,9 +60,9 @@ public class MembershipPlan extends BaseEntity {
 
 	private boolean guestPrivilege;
 
-	private boolean isPromotional;
+	private boolean promotional;
 
-	private boolean isGiftCard;
+	private boolean giftCard;
 	
 	private Date startDate;
 	
@@ -77,23 +79,24 @@ public class MembershipPlan extends BaseEntity {
 	}
 
 	public MembershipPlan(String brandUuid, List<LocalizedString> name, List<LocalizedString> title,
-			List<LocalizedString> description, int numberOfClasses, MembershipPlanPeriodEnum period,
+			List<LocalizedString> description, List<LocalizedString> detail, int numberOfClasses, MembershipPlanPeriodEnum period,
 			BillingFrequencyEnum billingFrequency, Cost cost, int durationInMonths,
-			List<Gym> includedGyms,List<Course> includedCourses, Date startDate, Date endDate, boolean guestPrivilege, boolean isGiftCard,
-			boolean isPromotional, boolean isActive, Instant startedOn, Instant endedOn) {
-		super(isActive);
+			List<Gym> includedGyms,List<Course> includedCourses, Date startDate, Date endDate, boolean guestPrivilege, boolean giftCard,
+			boolean promotional, boolean active, Instant startedOn, Instant endedOn) {
+		super(active);
 		this.brandUuid = brandUuid;
 		this.name = name;
 		this.title = title;
 		this.description = description;
+		this.detail = detail;
 		this.startDate = startDate;
 		this.endDate = endDate;
 		this.numberOfClasses = numberOfClasses;
 		this.period = period;
 		this.billingFrequency = billingFrequency;
 		this.guestPrivilege = guestPrivilege;
-		this.isGiftCard = isGiftCard;
-		this.isPromotional = isPromotional;
+		this.giftCard = giftCard;
+		this.promotional = promotional;
 		this.cost = cost;
 		this.durationInMonths = durationInMonths;
 		this.includedCourses = includedCourses;

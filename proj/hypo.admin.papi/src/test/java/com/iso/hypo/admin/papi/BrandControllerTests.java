@@ -124,7 +124,7 @@ class BrandControllerTests {
 	private RestTemplateBuilder restTemplateBuilder;
 	private TestRestTemplate testRestTemplate;
 	private Brand brand;
-	private Brand brandIsDeleted;
+	private Brand brandDeleted;
 	private List<Brand> brands = new ArrayList<Brand>();
 
 	@BeforeAll
@@ -141,9 +141,9 @@ class BrandControllerTests {
 		brand = BrandBuilder.build(codeBrand_1, faker.company().name());
 		brandRepository.save(brand);
 		
-		brandIsDeleted = BrandBuilder.build(faker.code().isbn10(), faker.code().isbn10());
-		brandIsDeleted.setDeleted(true);
-		brandIsDeleted = brandRepository.save(brandIsDeleted);
+		brandDeleted = BrandBuilder.build(faker.code().isbn10(), faker.code().isbn10());
+		brandDeleted.setDeleted(true);
+		brandDeleted = brandRepository.save(brandDeleted);
 
 		for (int i = 0; i < 10; i++) {
 			Brand item = BrandBuilder.build(faker.code().isbn10(), faker.company().name());
@@ -167,9 +167,9 @@ class BrandControllerTests {
 	}
 
 	@Test
-	void testSearchAutocompleteIsDeletedSuccess() throws MalformedURLException, JsonProcessingException, Exception {
+	void testSearchAutocompleteDeletedSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Act
-		String criteria = StringUtils.extractRandomWordPartial(brandIsDeleted.getName(), 10);
+		String criteria = StringUtils.extractRandomWordPartial(brandDeleted.getName(), 10);
 		assertSearch(criteria,0,0);
 	}
 	
@@ -628,19 +628,19 @@ class BrandControllerTests {
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
 		
-		Page<Gym> pageGym = gymRepository.findAllByBrandUuidAndIsDeletedIsFalse(brandToDelete.getUuid(),  PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
+		Page<Gym> pageGym = gymRepository.findAllByBrandUuidAndDeletedIsFalse(brandToDelete.getUuid(),  PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
 		Assertions.assertEquals(0, pageGym.getTotalElements(),
 				String.format("Deleted brand gyms not deleted: %d", pageGym.getTotalElements()));
 		
-		Page<Coach> pageCoach = coachRepository.findAllByBrandUuidAndIsDeletedIsFalse(brandToDelete.getUuid(),  PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
+		Page<Coach> pageCoach = coachRepository.findAllByBrandUuidAndDeletedIsFalse(brandToDelete.getUuid(),  PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
 		Assertions.assertEquals(0, pageCoach.getTotalElements(),
 				String.format("Deleted brand coachs not deleted: %d", pageCoach.getTotalElements()));
 		
-		Page<Course> pageCourse = courseRepository.findAllByBrandUuidAndIsDeletedIsFalse(brandToDelete.getUuid(),  PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
+		Page<Course> pageCourse = courseRepository.findAllByBrandUuidAndDeletedIsFalse(brandToDelete.getUuid(),  PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
 		Assertions.assertEquals(0, pageCourse.getTotalElements(),
 				String.format("Deleted brand courses not deleted: %d", pageCourse.getTotalElements()));
 		
-		Page<MembershipPlan> pageMembershipPlan = membershipPlanRepository.findAllByBrandUuidAndIsDeletedIsFalse(brandToDelete.getUuid(),  PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
+		Page<MembershipPlan> pageMembershipPlan = membershipPlanRepository.findAllByBrandUuidAndDeletedIsFalse(brandToDelete.getUuid(),  PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
 		Assertions.assertEquals(0, pageMembershipPlan.getTotalElements(),
 				String.format("Deleted brand membership plans not deleted: %d", pageMembershipPlan.getTotalElements()));
 	}

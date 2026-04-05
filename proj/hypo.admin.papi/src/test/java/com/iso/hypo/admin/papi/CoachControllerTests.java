@@ -100,7 +100,7 @@ class CoachControllerTests {
 	private TestRestTemplate testRestTemplate = new TestRestTemplate();
 
 	private Coach coach;
-	private Coach coachIsDeleted;
+	private Coach coachDeleted;
 	private Brand brand_1;
 	private Brand brand_2;
 	private List<Coach> coachs = new ArrayList<Coach>();
@@ -121,9 +121,9 @@ class CoachControllerTests {
 		coach.setActive(true);
 		coachRepository.save(coach);
 		
-		coachIsDeleted = CoachBuilder.build(brand_1.getUuid());
-		coachIsDeleted.setDeleted(true);
-		coachIsDeleted = coachRepository.save(coachIsDeleted);
+		coachDeleted = CoachBuilder.build(brand_1.getUuid());
+		coachDeleted.setDeleted(true);
+		coachDeleted = coachRepository.save(coachDeleted);
 
 		for (int i = 0; i < 10; i++) {
 			Coach item = CoachBuilder.build(brand_1.getUuid());

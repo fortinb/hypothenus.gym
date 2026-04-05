@@ -3,8 +3,6 @@ package com.iso.hypo.admin.papi.dto;
 import java.time.Instant;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,11 +12,8 @@ public abstract class BaseDto {
 
 	protected List<MessageDto> messages;
 	
-	@JsonProperty(value="isDeleted")   
-	protected boolean isDeleted = false;
-	
-	@JsonProperty(value="isActive")   
-	protected boolean isActive = true;
+	protected boolean deleted = false;
+	protected boolean active = true;
 	
 	protected String createdBy;
 	protected Instant createdOn;

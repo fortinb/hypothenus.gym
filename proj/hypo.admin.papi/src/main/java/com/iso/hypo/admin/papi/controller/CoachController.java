@@ -184,7 +184,7 @@ public class CoachController {
 			@PathVariable String brandUuid,
 			@PathVariable String uuid,
 			@Parameter(description = "activate or deactivate coach") 
-			@RequestParam(required = false, defaultValue = "true") boolean isActive,
+			@RequestParam(required = false, defaultValue = "true") boolean active,
 			@RequestBody PutCoachDto request) {
 		
 		if (!request.getBrandUuid().equals(brandUuid)) {

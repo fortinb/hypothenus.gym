@@ -43,8 +43,8 @@ public class Member extends BaseEntity {
 		super();
 	}
 
-	public Member(String brandUuid, Person person, MemberTypeEnum memberType,  boolean isActive, Instant activatedOn, Instant deactivatedOn) {
-		super(isActive);
+	public Member(String brandUuid, Person person, MemberTypeEnum memberType,  boolean active, Instant activatedOn, Instant deactivatedOn) {
+		super(active);
 		this.brandUuid = brandUuid;
 		this.person = person;
 		this.memberType = memberType;

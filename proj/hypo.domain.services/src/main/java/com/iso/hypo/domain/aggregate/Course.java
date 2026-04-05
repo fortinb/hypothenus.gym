@@ -45,8 +45,8 @@ public class Course extends BaseEntity {
 	}
  
 	public Course(String brandUuid, String code, List<LocalizedString> name, List<LocalizedString> description,
-			Date startDate, Date endDate, boolean isActive, Instant activatedOn, Instant deactivatedOn) {
-		super(isActive);
+			Date startDate, Date endDate, boolean active, Instant activatedOn, Instant deactivatedOn) {
+		super(active);
 		this.brandUuid = brandUuid;
 		this.code = code;
 		this.name = name;

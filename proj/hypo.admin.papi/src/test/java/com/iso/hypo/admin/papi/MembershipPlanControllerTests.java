@@ -79,6 +79,7 @@ import net.datafaker.Faker;
 class MembershipPlanControllerTests {
 
 	public static final String listURI = "/v1/brands/%s/membership/plans";
+	public static final String listActiveURI = "/v1/brands/%s/membership/plans/active";
 	public static final String postURI = "/v1/brands/%s/membership/plans";
 	public static final String getURI = "/v1/brands/%s/membership/plans/%s";
 	public static final String putURI = "/v1/brands/%s/membership/plans/%s";
@@ -93,9 +94,11 @@ class MembershipPlanControllerTests {
 	public static final String pageNumber = "page";
 	public static final String pageSize = "pageSize";
 	public static final String includeInactive = "includeInactive";
+	public static final String currentDateParam = "currentDate";
 
 	public static final String brandCode_FitnessBoxing = "MPFitnessBoxing";
 	public static final String brandCode_CrossfitExtreme = "MPCrossfitExtreme";
+	public static final String brandCode_ActiveDateBrand = "MPActiveDateBrand";
 	
 	@LocalServerPort
 	private int port;
@@ -123,7 +126,7 @@ class MembershipPlanControllerTests {
 	private TestRestTemplate testRestTemplate = new TestRestTemplate();
 
 	private MembershipPlan membershipPlan;
-	private MembershipPlan membershipPlanIsDeleted;
+	private MembershipPlan membershipPlanDeleted;
 	private Brand brand_FitnessBoxing;
 	private Brand brand_CrossfitExtreme;
 	
@@ -157,9 +160,9 @@ class MembershipPlanControllerTests {
 		membershipPlan = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), gyms.subList(0, 2), courses.subList(0, 2));
 		membershipPlanRepository.save(membershipPlan);
 
-		membershipPlanIsDeleted = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null);
-		membershipPlanIsDeleted.setDeleted(true);
-		membershipPlanIsDeleted = membershipPlanRepository.save(membershipPlanIsDeleted);
+		membershipPlanDeleted = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null);
+		membershipPlanDeleted.setDeleted(true);
+		membershipPlanDeleted = membershipPlanRepository.save(membershipPlanDeleted);
 
 		for (int i = 0; i < 10; i++) {
 			MembershipPlan item = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), gyms, courses);
@@ -711,7 +714,7 @@ class MembershipPlanControllerTests {
 		Assertions.assertEquals(HttpStatus.ACCEPTED, response.getStatusCode(),
 				String.format("Course delete error: %s", response.getStatusCode()));
 		
-		Page<MembershipPlan> pageMembershipPlan = membershipPlanRepository.findAllByBrandUuidAndIsDeletedIsFalse(brand_FitnessBoxing.getUuid(),  PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
+		Page<MembershipPlan> pageMembershipPlan = membershipPlanRepository.findAllByBrandUuidAndDeletedIsFalse(brand_FitnessBoxing.getUuid(),  PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
 		
 		pageMembershipPlan.getContent().forEach(membershipPlan -> {
 			Assertions.assertFalse(membershipPlan.getIncludedCourses().stream().filter(course -> course.getUuid().equals(courses.getFirst().getUuid())).findFirst().isPresent(),
@@ -720,17 +723,145 @@ class MembershipPlanControllerTests {
 					String.format("Deleted gym %s still present in membership plan %s", gyms.getFirst().getUuid(), membershipPlan.getUuid()));
 		});
 		
-		membershipPlanReferences1 = membershipPlanRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brand_FitnessBoxing.getUuid(),  membershipPlanReferences1.getUuid()).get();
+		membershipPlanReferences1 = membershipPlanRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brand_FitnessBoxing.getUuid(),  membershipPlanReferences1.getUuid()).get();
 		Assertions.assertTrue(membershipPlanReferences1.getIncludedGyms().size() == 1 && membershipPlanReferences1.getIncludedGyms().get(0).getUuid().equals(gyms.getLast().getUuid()),
 				String.format("Non deleted gym %s not found in membership plan %s", gyms.getLast().getUuid(), membershipPlan.getUuid()));
 		Assertions.assertTrue(membershipPlanReferences1.getIncludedCourses().size() == 1 && membershipPlanReferences1.getIncludedCourses().get(0).getUuid().equals(courses.getLast().getUuid()),
 				String.format("Non deleted course %s not found in membership plan %s", courses.getLast().getUuid(), membershipPlan.getUuid()));
 
-		membershipPlanReferences2 = membershipPlanRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brand_FitnessBoxing.getUuid(),  membershipPlanReferences2.getUuid()).get();
+		membershipPlanReferences2 = membershipPlanRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brand_FitnessBoxing.getUuid(),  membershipPlanReferences2.getUuid()).get();
 		Assertions.assertTrue(membershipPlanReferences2.getIncludedGyms().size() == 1 && membershipPlanReferences2.getIncludedGyms().get(0).getUuid().equals(gyms.getLast().getUuid()),
 				String.format("Non deleted gym %s not found in membership plan %s", gyms.getLast().getUuid(), membershipPlan.getUuid()));
 		Assertions.assertTrue(membershipPlanReferences2.getIncludedCourses().size() == 1 && membershipPlanReferences2.getIncludedCourses().get(0).getUuid().equals(courses.getLast().getUuid()),
 				String.format("Non deleted course %s not found in membership plan %s", courses.getLast().getUuid(), membershipPlan.getUuid()));
+	}
+
+	@Test
+	void testListActiveMembershipPlansOnDateSuccess() throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		Brand brand_ActiveDateBrand = BrandBuilder.build(brandCode_ActiveDateBrand, "Active Date Brand");
+		brandRepository.save(brand_ActiveDateBrand);
+
+		// Active plan: started in the past, no end date
+		MembershipPlan activePlanNoEndDate = MembershipPlanBuilder.build(brand_ActiveDateBrand.getUuid(), null, null);
+		activePlanNoEndDate.setStartDate(Date.from(Instant.now().minus(30, ChronoUnit.DAYS)));
+		activePlanNoEndDate.setEndDate(null);
+		activePlanNoEndDate.setActive(true);
+		activePlanNoEndDate.setDeleted(false);
+		membershipPlanRepository.save(activePlanNoEndDate);
+
+		// Active plan: started in the past, ends in the future
+		MembershipPlan activePlanWithEndDate = MembershipPlanBuilder.build(brand_ActiveDateBrand.getUuid(), null, null);
+		activePlanWithEndDate.setStartDate(Date.from(Instant.now().minus(30, ChronoUnit.DAYS)));
+		activePlanWithEndDate.setEndDate(Date.from(Instant.now().plus(30, ChronoUnit.DAYS)));
+		activePlanWithEndDate.setActive(true);
+		activePlanWithEndDate.setDeleted(false);
+		membershipPlanRepository.save(activePlanWithEndDate);
+
+		// Future plan: starts in the future — should NOT be returned
+		MembershipPlan futurePlan = MembershipPlanBuilder.build(brand_ActiveDateBrand.getUuid(), null, null);
+		futurePlan.setStartDate(Date.from(Instant.now().plus(10, ChronoUnit.DAYS)));
+		futurePlan.setEndDate(null);
+		futurePlan.setActive(true);
+		futurePlan.setDeleted(false);
+		membershipPlanRepository.save(futurePlan);
+
+		// Expired plan: started in the past, ended in the past — should NOT be returned
+		MembershipPlan expiredPlan = MembershipPlanBuilder.build(brand_ActiveDateBrand.getUuid(), null, null);
+		expiredPlan.setStartDate(Date.from(Instant.now().minus(60, ChronoUnit.DAYS)));
+		expiredPlan.setEndDate(Date.from(Instant.now().minus(10, ChronoUnit.DAYS)));
+		expiredPlan.setActive(true);
+		expiredPlan.setDeleted(false);
+		membershipPlanRepository.save(expiredPlan);
+
+		// Deleted plan that would otherwise match — should NOT be returned
+		MembershipPlan deletedActivePlan = MembershipPlanBuilder.build(brand_ActiveDateBrand.getUuid(), null, null);
+		deletedActivePlan.setStartDate(Date.from(Instant.now().minus(30, ChronoUnit.DAYS)));
+		deletedActivePlan.setEndDate(null);
+		deletedActivePlan.setActive(true);
+		deletedActivePlan.setDeleted(true);
+		membershipPlanRepository.save(deletedActivePlan);
+
+		// Inactive plan that would otherwise match — should NOT be returned
+		MembershipPlan inactivePlan = MembershipPlanBuilder.build(brand_ActiveDateBrand.getUuid(), null, null);
+		inactivePlan.setStartDate(Date.from(Instant.now().minus(30, ChronoUnit.DAYS)));
+		inactivePlan.setEndDate(null);
+		inactivePlan.setActive(false);
+		inactivePlan.setDeleted(false);
+		membershipPlanRepository.save(inactivePlan);
+		
+		java.util.Date currentDate = Date.from(Instant.now().truncatedTo(ChronoUnit.DAYS));
+		String currentDateStr = currentDate.toInstant().toString();
+
+		HttpEntity<String> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
+
+		MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+		params.add(pageNumber, "0");
+		params.add(pageSize, "100");
+		params.add(currentDateParam, currentDateStr);
+
+		// Act
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+				HttpUtils.createURL(URI.create(String.format(listActiveURI, brand_ActiveDateBrand.getUuid())), port, params),
+				HttpMethod.GET, httpEntity, JsonNode.class);
+
+		// Assert — HTTP status
+		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
+				String.format("List active error: %s", response.getStatusCode()));
+
+		Page<MembershipPlanDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<MembershipPlanDto>>() {}, objectMapper);
+
+		// Assert — only the 2 active plans are returned (activePlanNoEndDate + activePlanWithEndDate)
+		Assertions.assertEquals(2, page.getTotalElements(),
+				String.format("Expected 2 active membership plans but got: %d", page.getTotalElements()));
+		Assertions.assertEquals(2, page.getNumberOfElements(),
+				String.format("Expected 2 elements on page but got: %d", page.getNumberOfElements()));
+
+		// Assert — every returned plan is not deleted, is active
+		page.get().forEach(plan -> {
+			Assertions.assertFalse(plan.isDeleted() ,
+					String.format("Plan %s should not be deleted", plan.getUuid()));
+			Assertions.assertTrue(plan.isActive(),
+					String.format("Plan %s should be active", plan.getUuid()));
+		});
+
+		// Assert — every returned plan has startDate <= currentDate
+		page.get().forEach(plan -> {
+			Assertions.assertNotNull(plan.getStartDate(),
+					String.format("Plan %s startDate must not be null", plan.getUuid()));
+			Assertions.assertFalse(plan.getStartDate().after(currentDate),
+					String.format("Plan %s startDate %s is after currentDate %s", plan.getUuid(), plan.getStartDate(), currentDate));
+		});
+
+		// Assert — every returned plan has endDate == null or endDate >= currentDate
+		page.get().forEach(plan -> {
+			if (plan.getEndDate() != null) {
+				Assertions.assertFalse(plan.getEndDate().before(currentDate),
+						String.format("Plan %s endDate %s is before currentDate %s", plan.getUuid(), plan.getEndDate(), currentDate));
+			}
+		});
+
+		// Assert — the two expected plans are present
+		Assertions.assertTrue(
+				page.get().anyMatch(p -> p.getUuid().equals(activePlanNoEndDate.getUuid())),
+				"Expected activePlanNoEndDate to be present in results");
+		Assertions.assertTrue(
+				page.get().anyMatch(p -> p.getUuid().equals(activePlanWithEndDate.getUuid())),
+				"Expected activePlanWithEndDate to be present in results");
+
+		// Assert — excluded plans are NOT present
+		Assertions.assertFalse(
+				page.get().anyMatch(p -> p.getUuid().equals(futurePlan.getUuid())),
+				"futurePlan should not be returned");
+		Assertions.assertFalse(
+				page.get().anyMatch(p -> p.getUuid().equals(expiredPlan.getUuid())),
+				"expiredPlan should not be returned");
+		Assertions.assertFalse(
+				page.get().anyMatch(p -> p.getUuid().equals(deletedActivePlan.getUuid())),
+				"deletedActivePlan should not be returned");
+		Assertions.assertFalse(
+				page.get().anyMatch(p -> p.getUuid().equals(inactivePlan.getUuid())),
+				"inactivePlan should not be returned");
 	}
 
 	public static final void assertMembershipPlan(MembershipPlanDto expected, MembershipPlanDto result) {
@@ -808,6 +939,22 @@ class MembershipPlanControllerTests {
 
 		if (expected.getDescription() == null) {
 			Assertions.assertNull(result.getDescription());
+		}
+
+		if (expected.getDetail() != null) {
+			Assertions.assertNotNull(result.getDetail());
+
+			Assertions.assertEquals(expected.getDetail().size(), result.getDetail().size());
+			expected.getDetail().forEach(detail -> {
+				Optional<LocalizedStringDto> previous = result.getDetail().stream()
+						.filter(item -> item.getLanguage().equals(detail.getLanguage())).findFirst();
+				Assertions.assertTrue(previous.isPresent());
+				Assertions.assertEquals(previous.get().getText(), detail.getText());
+			});
+		}
+
+		if (expected.getDetail() == null) {
+			Assertions.assertNull(result.getDetail());
 		}
 		
 		if (expected.getCost() == null) {

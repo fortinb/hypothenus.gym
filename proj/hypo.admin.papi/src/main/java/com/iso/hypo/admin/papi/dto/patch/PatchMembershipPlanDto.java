@@ -31,6 +31,8 @@ public class PatchMembershipPlanDto {
 
 	private List<LocalizedStringDto> description;
 
+	private List<LocalizedStringDto> detail;
+
 	private int numberOfClasses;
 	
 	private MembershipPlanPeriodEnum period;
@@ -41,11 +43,11 @@ public class PatchMembershipPlanDto {
 	
 	private boolean guestPrivilege;
 	
-	private boolean isGiftCard;
+	private boolean giftCard;
 	
 	private int durationInMonths;
 	
-	private boolean isPromotional;
+	private boolean promotional;
 	
 	private Date startDate;
 	

@@ -100,7 +100,7 @@ class CourseControllerTests {
 	private TestRestTemplate testRestTemplate = new TestRestTemplate();
 
 	private Course course;
-	private Course courseIsDeleted;
+	private Course courseDeleted;
 	private Brand brand_1;
 	private Brand brand_2;
 	private List<Course> courses = new ArrayList<Course>();
@@ -120,9 +120,9 @@ class CourseControllerTests {
 		course = CourseBuilder.build(brand_1.getUuid());
 		course = courseRepository.save(course);
 
-		courseIsDeleted = CourseBuilder.build(brand_2.getUuid());
-		courseIsDeleted.setDeleted(true);
-		courseIsDeleted = courseRepository.save(courseIsDeleted);
+		courseDeleted = CourseBuilder.build(brand_2.getUuid());
+		courseDeleted.setDeleted(true);
+		courseDeleted = courseRepository.save(courseDeleted);
 
 		for (int i = 0; i < 10; i++) {
 			Course item = CourseBuilder.build(brand_2.getUuid());

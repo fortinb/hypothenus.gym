@@ -39,7 +39,7 @@ public class BrandQueryServiceImpl implements BrandQueryService {
     @Override
     public void assertExists(String brandUuid) throws BrandException {
         try {
-            Optional<Brand> entity = brandRepository.findByUuidAndIsDeletedIsFalse(brandUuid);
+            Optional<Brand> entity = brandRepository.findByUuidAndDeletedIsFalse(brandUuid);
             if (entity.isEmpty()) {
                 throw new BrandException(requestContext.getTrackingNumber(), BrandException.BRAND_NOT_FOUND, "Brand not found");
             }
@@ -55,7 +55,7 @@ public class BrandQueryServiceImpl implements BrandQueryService {
     @Override
     public BrandDto find(String brandUuid)  throws BrandException {
         try {        	
-            Optional<Brand> entity = brandRepository.findByUuidAndIsDeletedIsFalse(brandUuid);
+            Optional<Brand> entity = brandRepository.findByUuidAndDeletedIsFalse(brandUuid);
             if (entity.isEmpty()) {
                 throw new BrandException(requestContext.getTrackingNumber(), BrandException.BRAND_NOT_FOUND, "Brand not found");
             }
@@ -73,7 +73,7 @@ public class BrandQueryServiceImpl implements BrandQueryService {
     @Override
     public BrandDto findByCode(String brandCode)  throws BrandException {
         try {        	
-            Optional<Brand> entity = brandRepository.findByCodeAndIsDeletedIsFalse(brandCode);
+            Optional<Brand> entity = brandRepository.findByCodeAndDeletedIsFalse(brandCode);
             if (entity.isEmpty()) {
                 throw new BrandException(requestContext.getTrackingNumber(), BrandException.BRAND_NOT_FOUND, "Brand not found");
             }
@@ -104,12 +104,12 @@ public class BrandQueryServiceImpl implements BrandQueryService {
     public Page<BrandDto> list(int page, int pageSize, boolean includeInactive) throws BrandException {
         try {
             if (includeInactive) {
-                return brandRepository.findAllByIsDeletedIsFalse(PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"))
+                return brandRepository.findAllByDeletedIsFalse(PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"))
                         .map(b -> brandMapper.toDto(b));
             }
 
             return brandRepository
-                    .findAllByIsDeletedIsFalseAndIsActiveIsTrue(PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"))
+                    .findAllByDeletedIsFalseAndActiveIsTrue(PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"))
                     .map(b -> brandMapper.toDto(b));
         } catch (Exception e) {
             logger.error("Error - page={}, pageSize={}, includeInactive={}", page, pageSize, includeInactive, e);

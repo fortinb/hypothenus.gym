@@ -65,7 +65,7 @@ public class CourseServiceImpl implements CourseService {
 			brandQueryService.assertExists(course.getBrandUuid());
 
 			Optional<Course> existingCourse = courseRepository
-					.findByBrandUuidAndCodeAndIsDeletedIsFalse(course.getBrandUuid(), course.getCode());
+					.findByBrandUuidAndCodeAndDeletedIsFalse(course.getBrandUuid(), course.getCode());
 			if (existingCourse.isPresent()) {
 				Message message = new Message();
 				message.setCode(CourseException.COURSE_CODE_ALREADY_EXIST);
@@ -220,7 +220,7 @@ public class CourseServiceImpl implements CourseService {
 	}
 	
 	private Course readByCourseUuid(String brandUuid, String courseUuid) throws CourseException {
-        Optional<Course> entity = courseRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, courseUuid);
+        Optional<Course> entity = courseRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brandUuid, courseUuid);
 		if (entity.isEmpty()) {
 			throw new CourseException(requestContext.getTrackingNumber(), CourseException.COURSE_NOT_FOUND, "Course not found");
 		}

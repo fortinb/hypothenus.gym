@@ -82,7 +82,7 @@ public class MemberServiceImpl implements MemberService {
 			brandQueryService.assertExists(member.getBrandUuid());
 
 			// Find Member
-			Optional<Member> existingMember = memberRepository.findByBrandUuidAndPersonEmailAndIsDeletedIsFalse(
+			Optional<Member> existingMember = memberRepository.findByBrandUuidAndPersonEmailAndDeletedIsFalse(
 					member.getBrandUuid(), member.getPerson().getEmail());
 
 			if (existingMember.isPresent()) {
@@ -107,7 +107,7 @@ public class MemberServiceImpl implements MemberService {
 						.userExists(member.getPerson().getEmail());
 
 				Optional<User> existingUser = userRepository
-						.findByEmailAndIsDeletedIsFalse(memberDto.getPerson().getEmail());
+						.findByEmailAndDeletedIsFalse(memberDto.getPerson().getEmail());
 
 				if (existingUser.isPresent() && idpUser.isEmpty()) {
 					Message message = new Message();
@@ -315,7 +315,7 @@ public class MemberServiceImpl implements MemberService {
 			if (memberDto.getPerson().getEmail() != null
 					&& !memberDto.getPerson().getEmail().equals(oldMember.getPerson().getEmail())) {
 				Optional<User> existingMember = userRepository
-						.findByEmailAndIsDeletedIsFalse(memberDto.getPerson().getEmail());
+						.findByEmailAndDeletedIsFalse(memberDto.getPerson().getEmail());
 				if (existingMember.isPresent()) {
 					Message message = new Message();
 					message.setCode(UserException.USER_ALREADY_EXIST);
@@ -360,7 +360,7 @@ public class MemberServiceImpl implements MemberService {
 	}
 
 	private Member readByMemberUuid(String brandUuid, String memberUuid) throws MemberException {
-		Optional<Member> entity = memberRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, memberUuid);
+		Optional<Member> entity = memberRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brandUuid, memberUuid);
 		if (entity.isEmpty()) {
 			throw new MemberException(requestContext.getTrackingNumber(), MemberException.MEMBER_NOT_FOUND,
 					"Member not found");

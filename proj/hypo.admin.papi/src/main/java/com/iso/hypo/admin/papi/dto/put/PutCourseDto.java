@@ -21,7 +21,7 @@ public class PutCourseDto {
 	
 	private String code;
 	
-	private boolean isActive;
+	private boolean active;
 
 	private List<LocalizedStringDto> name;
 

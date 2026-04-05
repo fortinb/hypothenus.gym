@@ -38,7 +38,7 @@ public class MembershipQueryServiceImpl implements MembershipQueryService {
 	@Override
 	public void assertExists(String brandUuid, String membershipUuid) throws MembershipException {
 		try {
-			Optional<Membership> entity = membershipRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid,
+			Optional<Membership> entity = membershipRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brandUuid,
 						membershipUuid);
 			if (entity.isEmpty()) {
 				throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.MEMBERSHIP_NOT_FOUND, "Membership not found");
@@ -56,7 +56,7 @@ public class MembershipQueryServiceImpl implements MembershipQueryService {
 	@Override
 	public MembershipDto find(String brandUuid, String membershipUuid) throws MembershipException {
 		try {
-			Optional<Membership> entity = membershipRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid,
+			Optional<Membership> entity = membershipRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brandUuid,
 						membershipUuid);
 			if (entity.isEmpty()) {
 				throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.MEMBERSHIP_NOT_FOUND, "Membership not found");
@@ -80,13 +80,13 @@ public class MembershipQueryServiceImpl implements MembershipQueryService {
 
 			if (includeInactive) {
 				return membershipRepository
-						.findAllByBrandUuidAndIsDeletedIsFalse(brandUuid,
+						.findAllByBrandUuidAndDeletedIsFalse(brandUuid,
 							PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"))
 						.map(m -> membershipMapper.toDto(m));
 			}
 
 			return membershipRepository
-					.findAllByBrandUuidAndIsDeletedIsFalseAndIsActiveIsTrue(brandUuid,
+					.findAllByBrandUuidAndDeletedIsFalseAndActiveIsTrue(brandUuid,
 						PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"))
 					.map(m -> membershipMapper.toDto(m));
 

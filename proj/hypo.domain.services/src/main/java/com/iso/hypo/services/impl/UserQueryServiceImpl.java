@@ -48,7 +48,7 @@ public class UserQueryServiceImpl implements UserQueryService {
 	@Override
 	public UserDto find(String userUuid) throws UserException {
 		try {
-			Optional<User> entity = userRepository.findByUuidAndIsDeletedIsFalse(userUuid);
+			Optional<User> entity = userRepository.findByUuidAndDeletedIsFalse(userUuid);
 			if (entity.isEmpty()) {
 				throw new UserException(requestContext.getTrackingNumber(), UserException.USER_NOT_FOUND,
 						"User not found");
@@ -91,12 +91,12 @@ public class UserQueryServiceImpl implements UserQueryService {
 		try {
 			if (includeInactive) {
 				return userRepository
-						.findAllByIsDeletedIsFalse(PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"))
+						.findAllByDeletedIsFalse(PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"))
 						.map(m -> userMapper.toDto(m));
 			}
 
 			return userRepository
-					.findAllByIsDeletedIsFalseAndIsActiveIsTrue(
+					.findAllByDeletedIsFalseAndActiveIsTrue(
 							PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"))
 					.map(m -> userMapper.toDto(m));
 		} catch (Exception e) {

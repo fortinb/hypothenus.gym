@@ -56,10 +56,10 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
     public Page<MemberSearchDto> searchAutocomplete(String criteria, Pageable pageable, boolean includeInactive) {
 		MongoCollection<Document> collection = mongoTemplate.getCollection("member");
 
-		ArrayList<Boolean> isActiveValues = new ArrayList<Boolean>();
-		isActiveValues.add(true);
+		ArrayList<Boolean> activeValues = new ArrayList<Boolean>();
+		activeValues.add(true);
 		if (includeInactive) {
-			isActiveValues.add(false);
+			activeValues.add(false);
 		}
 		
 		Document searchStage = new Document().append("$search", new Document()
@@ -70,12 +70,12 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
 										.append("equals",
 											new Document()
 												.append("value", false)
-												.append("path", "isDeleted")),
+												.append("path", "deleted")),
 							  new Document()
 										.append("in",
 											new Document()
-												.append("value", isActiveValues)
-												.append("path", "isActive")
+												.append("value", activeValues)
+												.append("path", "active")
 										)))
 						.append("must",
 							new Document().append("compound", new Document()
@@ -107,7 +107,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
 		// Execute aggregation and defensively map raw Documents to MemberSearchDto so schema mismatches don't drop results
 		AggregateIterable<MemberSearchDto> aggregationResults = collection.aggregate(
 				Arrays.asList(searchStage,
-						project(fields(excludeId(), include("brandUuid","uuid", "person.firstname", "person.lastname", "person.email", "person.dateOfBirth","person.phoneNumbers", "person.address.zipCode", "isActive"),
+						project(fields(excludeId(), include("brandUuid","uuid", "person.firstname", "person.lastname", "person.email", "person.dateOfBirth","person.phoneNumbers", "person.address.zipCode", "active"),
 								metaSearchScore("score"),
 								meta("scoreDetails", "searchScoreDetails"))),
 				sort(Sorts.ascending("lastname", "firstname")),
@@ -123,7 +123,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
 
 			dto.setBrandUuid(getStringSafe(doc, "brandUuid"));
 			dto.setUuid(getStringSafe(doc, "uuid"));
-			dto.setActive((Boolean) doc.get("isActive"));
+			dto.setActive((Boolean) doc.get("active"));
 			
 			Object personObj = doc.get("person");
 				Document personDoc = (Document) personObj;
@@ -162,7 +162,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                           .and("uuid").is(memberUuid));
 
         Update update = new Update()
-                .set("isActive", true)
+                .set("active", true)
                 .set("activatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
                 .set("deactivatedOn", null);
 
@@ -177,7 +177,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                           .and("uuid").is(memberUuid));
 
         Update update = new Update()
-                .set("isActive", false)
+                .set("active", false)
                 .set("deactivatedOn", Instant.now().truncatedTo(ChronoUnit.DAYS));
 
         Member member = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Member.class);
@@ -190,7 +190,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                  Criteria.where("brandUuid").is(brandUuid).and("uuid").is(memberUuid));
 
         Update update = new Update()
-                    .set("isDeleted", true)
+                    .set("deleted", true)
                     .set("deletedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
                     .set("deletedBy", deletedBy);
 
@@ -204,7 +204,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                  Criteria.where("brandUuid").is(brandUuid));
 
         Update update = new Update()
-                    .set("isDeleted", true)
+                    .set("deleted", true)
                     .set("deletedOn", Instant.now().truncatedTo(ChronoUnit.DAYS))
                     .set("deletedBy", deletedBy);
 

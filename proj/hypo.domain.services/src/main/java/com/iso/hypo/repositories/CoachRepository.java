@@ -11,9 +11,9 @@ import com.iso.hypo.domain.aggregate.Coach;
 
 public interface CoachRepository extends PagingAndSortingRepository<Coach, String>, CrudRepository<Coach, String>, CoachRepositoryCustom {
 	
-	Optional<Coach> findByBrandUuidAndUuidAndIsDeletedIsFalse(String brandUuid, String coachUuid);
+	Optional<Coach> findByBrandUuidAndUuidAndDeletedIsFalse(String brandUuid, String coachUuid);
 	
-	Page<Coach> findAllByBrandUuidAndIsDeletedIsFalse(String brandUuid, Pageable pageable);
+	Page<Coach> findAllByBrandUuidAndDeletedIsFalse(String brandUuid, Pageable pageable);
 	
-	Page<Coach> findAllByBrandUuidAndIsDeletedIsFalseAndIsActiveIsTrue(String brandUuid, Pageable pageable);
+	Page<Coach> findAllByBrandUuidAndDeletedIsFalseAndActiveIsTrue(String brandUuid, Pageable pageable);
 }

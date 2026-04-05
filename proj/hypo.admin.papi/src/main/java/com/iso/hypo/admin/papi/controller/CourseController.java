@@ -185,7 +185,7 @@ public class CourseController {
 	public ResponseEntity<Object> updateCourse(
 			@PathVariable String brandUuid,
 			@PathVariable String uuid,
-			@Parameter(description = "activate or deactivate course") @RequestParam(required = false, defaultValue = "true") boolean isActive,
+			@Parameter(description = "activate or deactivate course") @RequestParam(required = false, defaultValue = "true") boolean active,
 			@RequestBody PutCourseDto request) {
 		
 		if (!request.getBrandUuid().equals(brandUuid)) {

@@ -39,7 +39,7 @@ public class GymQueryServiceImpl implements GymQueryService {
 	@Override
 	public void assertExists(String brandUuid, String gymUuid) throws GymException {
 		try {
-			Optional<Gym> entity = gymRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid);
+			Optional<Gym> entity = gymRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brandUuid, gymUuid);
 			if (entity.isEmpty()) {
 				throw new GymException(requestContext.getTrackingNumber(), GymException.GYM_NOT_FOUND, "Gym not found");
 			}
@@ -55,7 +55,7 @@ public class GymQueryServiceImpl implements GymQueryService {
 	@Override
 	public GymDto find(String brandUuid, String gymUuid) throws GymException {
 		try {
-			Optional<Gym> entity = gymRepository.findByBrandUuidAndUuidAndIsDeletedIsFalse(brandUuid, gymUuid);
+			Optional<Gym> entity = gymRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brandUuid, gymUuid);
 			if (entity.isEmpty()) {
 				throw new GymException(requestContext.getTrackingNumber(), GymException.GYM_NOT_FOUND, "Gym not found");
 			}
@@ -86,11 +86,11 @@ public class GymQueryServiceImpl implements GymQueryService {
 	public Page<GymDto> list(String brandUuid, int page, int pageSize, boolean includeInactive) throws GymException {
 		try {
 			if (includeInactive) {
-				return gymRepository.findAllByBrandUuidAndIsDeletedIsFalse(brandUuid, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"))
+				return gymRepository.findAllByBrandUuidAndDeletedIsFalse(brandUuid, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"))
 					.map(g -> gymMapper.toDto(g));
 			}
 
-			return gymRepository.findAllByBrandUuidAndIsDeletedIsFalseAndIsActiveIsTrue(brandUuid, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"))
+			return gymRepository.findAllByBrandUuidAndDeletedIsFalseAndActiveIsTrue(brandUuid, PageRequest.of(page, pageSize, Sort.Direction.ASC, "name"))
 						.map(g -> gymMapper.toDto(g));
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}", brandUuid, e);

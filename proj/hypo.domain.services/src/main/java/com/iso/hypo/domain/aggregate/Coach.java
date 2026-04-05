@@ -36,10 +36,10 @@ public class Coach extends BaseEntity {
 	
 	public Coach(String brandUuid,
 			     Person person, 
-			     boolean isActive, 
+			     boolean active, 
 			     Instant activatedOn, 
 			     Instant deactivatedOn) {
-		super(isActive);
+		super(active);
 		this.brandUuid = brandUuid;
 		this.person = person;
 		this.activatedOn = activatedOn;

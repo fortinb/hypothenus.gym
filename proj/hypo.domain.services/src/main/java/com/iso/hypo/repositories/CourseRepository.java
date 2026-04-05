@@ -11,11 +11,11 @@ import com.iso.hypo.domain.aggregate.Course;
 
 public interface CourseRepository extends PagingAndSortingRepository<Course, String>, CrudRepository<Course, String>, CourseRepositoryCustom {
 	
-	Optional<Course> findByBrandUuidAndUuidAndIsDeletedIsFalse(String brandUuid, String courseUuid);
+	Optional<Course> findByBrandUuidAndUuidAndDeletedIsFalse(String brandUuid, String courseUuid);
 	
-	Optional<Course> findByBrandUuidAndCodeAndIsDeletedIsFalse(String brandUuid, String code);
+	Optional<Course> findByBrandUuidAndCodeAndDeletedIsFalse(String brandUuid, String code);
 	
-	Page<Course> findAllByBrandUuidAndIsDeletedIsFalse(String brandUuid, Pageable pageable);
+	Page<Course> findAllByBrandUuidAndDeletedIsFalse(String brandUuid, Pageable pageable);
 	
-	Page<Course> findAllByBrandUuidAndIsDeletedIsFalseAndIsActiveIsTrue(String brandUuid, Pageable pageable);
+	Page<Course> findAllByBrandUuidAndDeletedIsFalseAndActiveIsTrue(String brandUuid, Pageable pageable);
 }

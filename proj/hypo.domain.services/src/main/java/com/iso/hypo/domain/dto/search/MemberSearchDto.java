@@ -15,5 +15,5 @@ public class MemberSearchDto {
 
 	private Person person;
     
-    private boolean isActive;
+    private boolean active;
 }

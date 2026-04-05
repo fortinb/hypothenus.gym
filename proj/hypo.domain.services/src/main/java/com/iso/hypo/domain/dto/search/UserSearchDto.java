@@ -15,5 +15,5 @@ public class UserSearchDto {
 	
 	private String email;
     
-    private boolean isActive;
+    private boolean active;
 }

@@ -6,5 +6,6 @@ public enum MembershipPlanPeriodEnum {
 	weekly,
 	trial,
 	hours,
+	amount,
 	merchandise
 }

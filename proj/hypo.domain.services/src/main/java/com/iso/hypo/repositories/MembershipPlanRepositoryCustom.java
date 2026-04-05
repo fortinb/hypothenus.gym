@@ -1,6 +1,10 @@
 package com.iso.hypo.repositories;
 
+import java.util.Date;
 import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import com.iso.hypo.domain.aggregate.MembershipPlan;
 
@@ -17,5 +21,7 @@ public interface MembershipPlanRepositoryCustom {
 	long removeGymReferences(String gymId);
 
 	long removeCourseReferences(String courseId);
+	
+	Page<MembershipPlan> findActiveOnDate(String brandUuid, Date currentDate, Pageable pageable);
 }
 

@@ -26,6 +26,8 @@ public class MembershipPlanDto extends BaseEntityDto {
 
     private List<LocalizedString> description;
 
+    private List<LocalizedString> detail;
+
     private int numberOfClasses;
 
     private MembershipPlanPeriodEnum period;
@@ -38,9 +40,9 @@ public class MembershipPlanDto extends BaseEntityDto {
 
     private boolean guestPrivilege;
 
-    private boolean isPromotional;
+    private boolean promotional;
 
-    private boolean isGiftCard;
+    private boolean giftCard;
     
     private Date startDate;
 
