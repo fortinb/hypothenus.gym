@@ -15,4 +15,6 @@ public interface MemberQueryService {
     Page<MemberSearchDto> search(int page, int pageSize, String criteria, boolean includeInactive) throws MemberException;
 
     Page<MemberDto> list(String brandUuid, int page, int pageSize, boolean includeInactive) throws MemberException;
+
+    MemberDto findByUserIdpId(String brandUuid, String idpId) throws MemberException;
 }

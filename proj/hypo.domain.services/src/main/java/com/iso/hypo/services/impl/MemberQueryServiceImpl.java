@@ -12,9 +12,11 @@ import org.springframework.stereotype.Service;
 
 import com.iso.hypo.common.context.RequestContext;
 import com.iso.hypo.domain.aggregate.Member;
+import com.iso.hypo.domain.aggregate.User;
 import com.iso.hypo.domain.dto.MemberDto;
 import com.iso.hypo.domain.dto.search.MemberSearchDto;
 import com.iso.hypo.repositories.MemberRepository;
+import com.iso.hypo.repositories.UserRepository;
 import com.iso.hypo.services.MemberQueryService;
 import com.iso.hypo.services.exception.MemberException;
 import com.iso.hypo.services.mappers.MemberMapper;
@@ -24,15 +26,18 @@ public class MemberQueryServiceImpl implements MemberQueryService {
 
     private final MemberRepository memberRepository;
 
+    private final UserRepository userRepository;
+
     private final MemberMapper memberMapper;
 
     private static final Logger logger = LoggerFactory.getLogger(MemberQueryServiceImpl.class);
 
     private final RequestContext requestContext;
 
-    public MemberQueryServiceImpl(MemberMapper memberMapper, MemberRepository memberRepository, RequestContext requestContext) {
+    public MemberQueryServiceImpl(MemberMapper memberMapper, MemberRepository memberRepository, UserRepository userRepository, RequestContext requestContext) {
         this.memberMapper = memberMapper;
         this.memberRepository = memberRepository;
+        this.userRepository = Objects.requireNonNull(userRepository, "userRepository must not be null");
         this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
     }
 
@@ -93,6 +98,29 @@ public class MemberQueryServiceImpl implements MemberQueryService {
                     .map(m -> memberMapper.toDto(m));
         } catch (Exception e) {
             logger.error("Error - brandUuid={}", brandUuid, e);
+            throw new MemberException(requestContext.getTrackingNumber(), MemberException.FIND_FAILED, e);
+        }
+    }
+
+    @Override
+    public MemberDto findByUserIdpId(String brandUuid, String idpId) throws MemberException {
+        try {
+            Optional<User> user = userRepository.findByIdpIdAndDeletedIsFalse(idpId);
+            if (user.isEmpty()) {
+                throw new MemberException(requestContext.getTrackingNumber(), MemberException.USER_NOT_FOUND, "User not found for idpId: " + idpId);
+            }
+
+            Optional<Member> member = memberRepository.findByBrandUuidAndUserAndDeletedIsFalse(brandUuid, user.get());
+            if (member.isEmpty()) {
+                throw new MemberException(requestContext.getTrackingNumber(), MemberException.MEMBER_NOT_FOUND, "Member not found for user with idpId: " + idpId);
+            }
+
+            return memberMapper.toDto(member.get());
+        } catch (Exception e) {
+            logger.error("Error - brandUuid={}, idpId={}", brandUuid, idpId, e);
+            if (e instanceof MemberException) {
+                throw (MemberException) e;
+            }
             throw new MemberException(requestContext.getTrackingNumber(), MemberException.FIND_FAILED, e);
         }
     }

@@ -10,6 +10,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.AfterAll;
@@ -50,11 +51,14 @@ import com.iso.hypo.admin.papi.dto.put.PutMemberDto;
 import com.iso.hypo.admin.papi.dto.search.MemberSearchDto;
 import com.iso.hypo.domain.BrandBuilder;
 import com.iso.hypo.domain.MemberBuilder;
+import com.iso.hypo.domain.UserBuilder;
 import com.iso.hypo.domain.aggregate.Brand;
 import com.iso.hypo.domain.aggregate.Member;
+import com.iso.hypo.domain.aggregate.User;
 import com.iso.hypo.domain.enumeration.MemberTypeEnum;
 import com.iso.hypo.repositories.BrandRepository;
 import com.iso.hypo.repositories.MemberRepository;
+import com.iso.hypo.repositories.UserRepository;
 import com.iso.hypo.services.exception.MemberException;
 import com.iso.hypo.tests.http.HttpUtils;
 import com.iso.hypo.domain.security.Roles;
@@ -74,6 +78,7 @@ class MemberControllerTests {
     public static final String listURI = "/v1/brands/%s/members";
     public static final String postURI = "/v1/brands/%s/members/register";
     public static final String getURI = "/v1/brands/%s/members/%s";
+    public static final String getByUserIdpIdURI = "/v1/brands/%s/members/users/%s";
     public static final String putURI = "/v1/brands/%s/members/%s";
     public static final String patchURI = "/v1/brands/%s/members/%s";
     public static final String deleteURI = "/v1/brands/%s/members/%s";
@@ -92,10 +97,10 @@ class MemberControllerTests {
     BrandRepository brandRepository;
     @Autowired
     MemberRepository memberRepository;
-
+	@Autowired
+	UserRepository userRepository;
     @Autowired
     ObjectMapper objectMapper;
-
     @Autowired
     ModelMapper modelMapper;
 
@@ -351,6 +356,45 @@ class MemberControllerTests {
         Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(), String.format("Get error: %s", response.getStatusCode()));
     }
 
+    @ParameterizedTest
+    @CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis", "member, Guillaume Fortin" })
+    void testGetByUserIdpIdpSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
+        // Arrange
+		User createdUser = UserBuilder.build();
+		createdUser.setActive(true);
+		createdUser.setIdpId(UUID.randomUUID().toString());
+		createdUser.setUpn(createdUser.getEmail());
+		createdUser = userRepository.save(createdUser);
+	
+		Member userMember = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
+		userMember.setActive(true);
+		userMember.setUser(createdUser);
+		userMember = memberRepository.save(userMember);
+		
+        // Act
+        HttpEntity<MemberDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
+     
+        ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+                HttpUtils.createURL(URI.create(String.format(getByUserIdpIdURI, brand.getUuid(), createdUser.getIdpId())), port,
+                        null), HttpMethod.GET, httpEntity, JsonNode.class);
+
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(), 
+        		String.format("Get error: %s", response.getStatusCode()));
+
+        MemberDto fetchedDto = TestResponseUtils.toDto(response, MemberDto.class, objectMapper);
+        assertMember(modelMapper.map(userMember, MemberDto.class), fetchedDto);
+    }
+
+    @Test
+    void testGetByUserIdpIdFailureNotFound() throws MalformedURLException, JsonProcessingException, Exception {
+        // Arrange
+        HttpEntity<Object> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
+        ResponseEntity<JsonNode> response = testRestTemplate.exchange(
+                HttpUtils.createURL(URI.create(String.format(getByUserIdpIdURI, brand.getUuid(), faker.code().isbn10())), port, null),
+                HttpMethod.GET, httpEntity, JsonNode.class);
+
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(), String.format("Get error: %s", response.getStatusCode()));
+    }
 
     @ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })

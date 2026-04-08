@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iso.hypo.admin.papi.dto.enumeration.RoleEnum;
 import com.iso.hypo.admin.papi.dto.model.BrandDto;
+import com.iso.hypo.admin.papi.dto.model.UserDto;
 import com.iso.hypo.admin.papi.dto.post.PostBrandDto;
 import com.iso.hypo.admin.papi.dto.post.PostUserDto;
 import com.iso.hypo.domain.BrandBuilder;
@@ -110,7 +111,11 @@ class PopulatorTests {
 		courseRepository.deleteAll();
 		memberRepository.deleteAll();
 		membershipPlanRepository.deleteAll();
+		
+		// Admin user is required
+		UserDto adminUserDto = createAdminUser();
 
+		// Brands
 		for (int i = 0; i < 10; i++) {
 			Brand item = BrandBuilder.build(faker.code().isbn10(), faker.company().name());
 			brandRepository.save(item);
@@ -121,8 +126,9 @@ class PopulatorTests {
 			item.setActive(false);
 			brandRepository.save(item);
 		}
-
-		Populator populator = new Populator( gymRepository, coachRepository, courseRepository,	membershipPlanRepository, memberRepository);
+		
+		// Full Brands with all related entities is required for testing
+		Populator populator = new Populator( gymRepository, coachRepository, courseRepository,	membershipPlanRepository, memberRepository, modelMapper, testRestTemplate, port);
 		
 		// Arrange
 		PostBrandDto postBrandDto = modelMapper.map(BrandBuilder.build("crossfitextreme", "Crossfit Extreme"), PostBrandDto.class);
@@ -136,7 +142,7 @@ class PopulatorTests {
 				String.format("Post error: %s", response.getStatusCode()));
 
 		BrandDto createdBrandDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
-		populator.populateFullBrand(createdBrandDto);
+		populator.populateFullBrand(createdBrandDto, adminUserDto);
 		
 		postBrandDto = modelMapper.map(BrandBuilder.build("fitnessboxing", "Fitness Boxing"), PostBrandDto.class);
 		httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postBrandDto);
@@ -149,12 +155,10 @@ class PopulatorTests {
 				String.format("Post error: %s", response.getStatusCode()));
 
 		createdBrandDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
-		populator.populateFullBrand(createdBrandDto);
-		
-		createAdminUser();
+		populator.populateFullBrand(createdBrandDto, adminUserDto);
 	}
-	
-	private void createAdminUser() throws JsonProcessingException, MalformedURLException {
+
+	private UserDto createAdminUser() throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		final String userPostURI = "/v1/users";
 		
@@ -172,5 +176,9 @@ class PopulatorTests {
 
 		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
 				String.format("Post error: %s", response.getStatusCode()));
+		
+		UserDto createdUserDto = TestResponseUtils.toDto(response, UserDto.class, objectMapper);
+		
+		return createdUserDto;
 	}
 }

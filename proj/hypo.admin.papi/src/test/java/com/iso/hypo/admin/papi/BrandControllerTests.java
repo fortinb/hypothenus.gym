@@ -608,8 +608,8 @@ class BrandControllerTests {
 
 		BrandDto createdDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
 
-		Populator populator = new Populator(gymRepository, coachRepository, courseRepository, membershipPlanRepository, memberRepository);
-		BrandDto brandToDelete = populator.populateFullBrand(createdDto);
+		Populator populator = new Populator(gymRepository, coachRepository, courseRepository, membershipPlanRepository, memberRepository, modelMapper, testRestTemplate, port);
+		BrandDto brandToDelete = populator.populateFullBrand(createdDto, null);
 
 		// Act
 		httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);

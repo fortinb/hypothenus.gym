@@ -687,8 +687,8 @@ class GymControllerTests {
 
 		BrandDto createdBrandDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
 
-		Populator populator = new Populator(gymRepository, coachRepository, courseRepository, membershipPlanRepository, memberRepository);
-		populator.populateFullBrand(createdBrandDto);
+		Populator populator = new Populator(gymRepository, coachRepository, courseRepository, membershipPlanRepository, memberRepository, modelMapper, testRestTemplate, port);
+		populator.populateFullBrand(createdBrandDto, null);
 		
 		Gym gymToDelete = gymRepository.findByBrandUuidAndCode(createdBrandDto.getUuid(), "boucherville").get();
 		

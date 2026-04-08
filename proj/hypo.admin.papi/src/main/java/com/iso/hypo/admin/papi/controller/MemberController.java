@@ -153,6 +153,31 @@ public class MemberController {
 
 		return ResponseEntity.ok(modelMapper.map(domainDto, MemberDto.class));
 	}
+	
+	@GetMapping("/brands/{brandUuid}/members/users/{idpId}")
+	@Operation(summary = "Retrieve a specific member by user IdpId")
+	@ApiResponses({ @ApiResponse(responseCode = "200", content = {
+			@Content(schema = @Schema(implementation = MemberDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "404", description = "Not found.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
+			@ApiResponse(responseCode = "500", description = "Unexpected error.", content = {
+					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
+	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "','" + Roles.Coach + "','" + Roles.Member + "')")
+	@ResponseStatus(value = HttpStatus.OK)
+	public ResponseEntity<Object> getMemberByUserIdpId(
+			@PathVariable String brandUuid,
+			@PathVariable String idpId) {
+		com.iso.hypo.domain.dto.MemberDto domainDto = null;
+		try {
+			domainDto = memberQueryService.findByUserIdpId(brandUuid, idpId);
+		} catch (MemberException e) {
+			logger.error(e.getMessage(), e);
+
+			return ControllerErrorHandler.buildErrorResponse(e, requestContext, idpId);
+		}
+
+		return ResponseEntity.ok(modelMapper.map(domainDto, MemberDto.class));
+	}
 
 	@PostMapping("/brands/{brandUuid}/members/register")
 	@Operation(summary = "Create a new member")

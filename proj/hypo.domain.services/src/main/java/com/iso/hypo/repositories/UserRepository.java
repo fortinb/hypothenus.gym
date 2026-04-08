@@ -12,6 +12,8 @@ public interface UserRepository extends CrudRepository<User, String>, UserReposi
 
 	Optional<User> findByEmailAndDeletedIsFalse(String email);
 
+	Optional<User> findByIdpIdAndDeletedIsFalse(String idpId);
+
 	Optional<User> findByUuidAndDeletedIsFalse(String userUuid);
 
 	Page<User> findAllByDeletedIsFalse(Pageable pageable);

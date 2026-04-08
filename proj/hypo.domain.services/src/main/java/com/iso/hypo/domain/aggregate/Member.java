@@ -36,7 +36,7 @@ public class Member extends BaseEntity {
 	
 	private String preferredGymUuid;
 	
-	@DBRef(lazy = false)
+	@DBRef
 	private User user;
 	
 	public Member() {

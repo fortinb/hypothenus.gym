@@ -8,6 +8,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 import com.iso.hypo.domain.aggregate.Member;
+import com.iso.hypo.domain.aggregate.User;
 
 public interface MemberRepository extends PagingAndSortingRepository<Member, String>, CrudRepository<Member, String>, MemberRepositoryCustom {
 
@@ -18,4 +19,6 @@ public interface MemberRepository extends PagingAndSortingRepository<Member, Str
     Page<Member> findAllByBrandUuidAndDeletedIsFalseAndActiveIsTrue(String brandUuid, Pageable pageable);
 
 	Optional<Member> findByBrandUuidAndPersonEmailAndDeletedIsFalse(String brandUuid, String email);
+
+	Optional<Member> findByBrandUuidAndUserAndDeletedIsFalse(String brandUuid, User user);
 }

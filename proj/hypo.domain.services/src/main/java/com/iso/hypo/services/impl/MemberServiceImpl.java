@@ -173,6 +173,11 @@ public class MemberServiceImpl implements MemberService {
 
 					member.setUser(userSaved);
 				} else {
+					if (!existingUser.get().getRoles().contains(RoleEnum.member)) {
+						existingUser.get().getRoles().add(RoleEnum.member);
+					}
+					
+					userRepository.save(existingUser.get());
 					member.setUser(existingUser.get());
 				}
 			} else {
