@@ -61,7 +61,8 @@ public class SecurityConfig {
 					.requestMatchers("/*/api-docs/**").anonymous()
 					.requestMatchers("/*/brands/code/*").permitAll()
 					.requestMatchers("/*/brands/*/gyms").permitAll()
-					.requestMatchers("/*/brands/*/members/register").permitAll()
+					.requestMatchers("/*/brands/*/gyms").permitAll()
+					.requestMatchers("/*/brands/*/membership/plans/active").permitAll()
 					
 					.anyRequest().authenticated()).oauth2ResourceServer((rs) -> rs.jwt((jwt) -> jwt.jwtAuthenticationConverter(jwtAuthConverter)));
 		}
