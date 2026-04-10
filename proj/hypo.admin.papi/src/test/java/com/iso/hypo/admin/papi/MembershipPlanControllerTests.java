@@ -941,20 +941,20 @@ class MembershipPlanControllerTests {
 			Assertions.assertNull(result.getDescription());
 		}
 
-		if (expected.getDetail() != null) {
-			Assertions.assertNotNull(result.getDetail());
+		if (expected.getTermsOfUse() != null) {
+			Assertions.assertNotNull(result.getTermsOfUse());
 
-			Assertions.assertEquals(expected.getDetail().size(), result.getDetail().size());
-			expected.getDetail().forEach(detail -> {
-				Optional<LocalizedStringDto> previous = result.getDetail().stream()
+			Assertions.assertEquals(expected.getTermsOfUse().size(), result.getTermsOfUse().size());
+			expected.getTermsOfUse().forEach(detail -> {
+				Optional<LocalizedStringDto> previous = result.getTermsOfUse().stream()
 						.filter(item -> item.getLanguage().equals(detail.getLanguage())).findFirst();
 				Assertions.assertTrue(previous.isPresent());
 				Assertions.assertEquals(previous.get().getText(), detail.getText());
 			});
 		}
 
-		if (expected.getDetail() == null) {
-			Assertions.assertNull(result.getDetail());
+		if (expected.getTermsOfUse() == null) {
+			Assertions.assertNull(result.getTermsOfUse());
 		}
 		
 		if (expected.getCost() == null) {

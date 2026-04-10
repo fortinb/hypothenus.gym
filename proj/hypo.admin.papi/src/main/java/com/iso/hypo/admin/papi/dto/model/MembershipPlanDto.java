@@ -26,7 +26,7 @@ public class MembershipPlanDto extends BaseDto {
 
 	private List<LocalizedStringDto> description;
 
-	private List<LocalizedStringDto> detail;
+	private List<LocalizedStringDto> termsOfUse;
 
 	private int numberOfClasses;
 	

@@ -191,8 +191,8 @@ public class Populator {
 				buildTitle("PROMOTION HYROX 2026", "HYROX 2026 PROMO"),
 				buildDescription("Prépare toi pour HYROX 2026 !",
 								 "Get ready for HYROX 2026 !"),
-				buildDetail("Réservation requise. Valide dans plusieurs de nos studios. Aucune date d'expiration. Non-transferable.",
-							"Reservation required. Valid in most of our locations. No expiration date. Non-transferable."),
+				buildTermsOfUse("Réservation requise; Valide dans plusieurs de nos studios; Aucune date d'expiration; Non-transferable;",
+							"Reservation required; Valid in most of our locations; No expiration date; Non-transferable;"),
 				25,	MembershipPlanPeriodEnum.trial,	BillingFrequencyEnum.oneTime,
 				BuildCost(34999),0,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),Date.from(Instant.now().plus(30, ChronoUnit.DAYS)),
 				false,false,true,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
@@ -207,8 +207,8 @@ public class Populator {
 				buildTitle("VIENS ESSAYER", "COME AND TRY"),
 				buildDescription("Ton premier cours pour 10$ seulement.",
 								 "Your first class for only $10. "),
-				buildDetail("Réservation requise. Valide dans plusieurs de nos studios. Aucune date d'expiration. Non-transferable. Nouveaux membres seulement.",
-							"Reservation required. Valid in most of our locations. No expiration date. Non-transferable. New members only."),
+				buildTermsOfUse("Réservation requise; Valide dans plusieurs de nos studios; Aucune date d'expiration; Non-transferable; Nouveaux membres seulement;",
+							"Reservation required; Valid in most of our locations; No expiration date; Non-transferable; New members only;"),
 				1,	MembershipPlanPeriodEnum.trial,	BillingFrequencyEnum.oneTime,
 				BuildCost(1000),0,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				false,false,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
@@ -222,8 +222,8 @@ public class Populator {
 				buildTitle("DÉCOUVRE NOS COURS", "DISCOVER OUR CLASSES"),
 				buildDescription("Offre exclusive pour les nouveaux membres.",
 								 "Exclusive offer for new members."),
-				buildDetail("Réservation requise. Valide dans plusieurs de nos studios. Aucune date d'expiration. Non transférable. Nouveaux membres seulement.",
-							"Réservation requise. Valid in most of our locations. No expiration date. Non-transferable. New members only."),
+				buildTermsOfUse("Réservation requise; Valide dans plusieurs de nos studios; Aucune date d'expiration; Non transférable; Nouveaux membres seulement;",
+							"Réservation requise; Valid in most of our locations; No expiration date; Non-transferable; New members only;"),
 				10,	MembershipPlanPeriodEnum.trial,	BillingFrequencyEnum.oneTime,
 				BuildCost(14900),0,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				false,false,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
@@ -238,8 +238,8 @@ public class Populator {
 				buildTitle("POUR TE DONNER LE GOÛT DE REVENIR", "TO GIVE YOU A REASON TO COME BACK"),
 				buildDescription("Utilise ton cour dans tout nos studios.",
 								 "Use your class in all our locations."),
-				buildDetail("Réservation requise. Valide dans plusieurs de nos studios. Aucune date d'expiration. Non transférable.",
-							"Réservation requise. Valid in most of our locations. No expiration date. Non-transferable. "),
+				buildTermsOfUse("Réservation requise; Valide dans plusieurs de nos studios; Aucune date d'expiration; Non transférable;",
+							"Réservation requise; Valid in most of our locations; No expiration date; Non-transferable; "),
 				1,	MembershipPlanPeriodEnum.classes,	BillingFrequencyEnum.oneTime,
 				BuildCost(2400),0,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				false,false,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
@@ -253,8 +253,8 @@ public class Populator {
 				buildTitle("ASSEZ POUR VOIR DES RÉSULTATS", "ENOUGH TO SEE RESULTS"),
 				buildDescription("Utilise tes cours dans tout nos studios.",
 						 		 "Use your classes in all our locations."),
-				buildDetail("Partageable avec un ami. Réservation requise. Valide dans plusieurs de nos studios. Aucune date d'expiration. Non transférable.",
-							"Shareable with a friend. Reservation required. Valid in most of our locations. No expiration date. Non-transferable."),
+				buildTermsOfUse("Partageable avec un ami; Réservation requise; Valide dans plusieurs de nos studios; Aucune date d'expiration; Non transférable;",
+							"Shareable with a friend; Reservation required; Valid in most of our locations; No expiration date; Non-transferable;"),
 				10,	MembershipPlanPeriodEnum.classes,	BillingFrequencyEnum.oneTime,
 				BuildCost(19999),0,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				true,false,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
@@ -268,8 +268,8 @@ public class Populator {
 				buildTitle("TON NOUVEAU RYTHME DE CROISIÈRE", "YOUR NEW CRUISING PACE"),
 				buildDescription("Utilise tes cours dans tout nos studios.",
 				 		 		 "Use your classes in all our locations."),
-				buildDetail("Partageable avec un ami. Réservation requise. Valide dans plusieurs de nos studios. Aucune date d'expiration. Non transférable.",
-							"Shareable with a friend. Reservation required. Valid in most of our locations. No expiration date. Non-transferable."),
+				buildTermsOfUse("Partageable avec un ami; Réservation requise; Valide dans plusieurs de nos studios; Aucune date d'expiration; Non transférable;",
+							"Shareable with a friend; Reservation required; Valid in most of our locations; No expiration date; Non-transferable;"),
 				20,	MembershipPlanPeriodEnum.classes,	BillingFrequencyEnum.oneTime,
 				BuildCost(34999),0,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				true,false,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
@@ -283,8 +283,8 @@ public class Populator {
 				buildTitle("L'INVESTISSEMENT LE PLUS PAYANT", "THE BEST DEAL"),
 				buildDescription("Utilise tes cours dans tout nos studios.",
 				 		 		 "Use your classes in all our locations."),
-				buildDetail("Partageable avec un ami. Réservation requise. Valide dans plusieurs de nos studios. Aucune date d'expiration. Non transférable.",
-							"Shareable with a friend. Reservation required. Valid in most of our locations. No expiration date. Non-transferable."),
+				buildTermsOfUse("Partageable avec un ami; Réservation requise; Valide dans plusieurs de nos studios; Aucune date d'expiration; Non transférable;",
+							"Shareable with a friend; Reservation required; Valid in most of our locations; No expiration date; Non-transferable;"),
 				50,	MembershipPlanPeriodEnum.classes,	BillingFrequencyEnum.oneTime,
 				BuildCost(74999),0,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				true,false,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
@@ -298,8 +298,8 @@ public class Populator {
 				buildTitle("POUR GARDER LE RYTHME", "TO KEEP THE PACE"),
 				buildDescription("Ton prix reste fixe à vie! ",
 								 "Your price is fixed for life!"),
-				buildDetail("Abonnement récurrent. 4 cours tous les 28 jours. Réservation requise. Valide dans plusieurs de nos studios. Non transférable. Aucun frais d'annulation avec 30 jours de préavis. Possibilité de mettre ton abonnement sur pause 2 fois par année.",
-							"Recurring subscription. 4 classes every 28 days. Reservation required. Valid in most of our locations. Non-transferable. No cancellation fee with 30 days notice. Possibility to put your subscription on hold 2 times a year."),
+				buildTermsOfUse("Abonnement récurrent; 4 cours tous les 28 jours; Réservation requise; Valide dans plusieurs de nos studios; Non transférable; Aucun frais d'annulation avec 30 jours de préavis; Possibilité de mettre ton abonnement sur pause 2 fois par année;",
+							"Recurring subscription; 4 classes every 28 days; Reservation required; Valid in most of our locations; Non-transferable; No cancellation fee with 30 days notice; Possibility to put your subscription on hold 2 times a year;"),
 				1,	MembershipPlanPeriodEnum.weekly, BillingFrequencyEnum.monthly,
 				BuildCost(7499),12,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				false,false,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
@@ -313,8 +313,8 @@ public class Populator {
 				buildTitle("POUR VOIR DU PROGRÈS", "TO SEE PROGRESS"),
 				buildDescription("Ton prix reste fixe à vie ! ",
 						 		 "Your price is fixed for life !"),
-				buildDetail("Abonnement récurrent. 8 cours tous les 28 jours. Réservation requise. Valide dans plusieurs de nos studios. Non transférable. Aucun frais d'annulation avec 30 jours de préavis. Possibilité de mettre ton abonnement sur pause 2 fois par année.",
-							"Recurring subscription. 8 classes every 28 days. Reservation required. Valid in most of our locations. Non-transferable. No cancellation fee with 30 days notice. Possibility to put your subscription on hold 2 times a year."),
+				buildTermsOfUse("Abonnement récurrent; 8 cours tous les 28 jours; Réservation requise; Valide dans plusieurs de nos studios; Non transférable; Aucun frais d'annulation avec 30 jours de préavis; Possibilité de mettre ton abonnement sur pause 2 fois par année;",
+							"Recurring subscription; 8 classes every 28 days; Reservation required; Valid in most of our locations; Non-transferable; No cancellation fee with 30 days notice; Possibility to put your subscription on hold 2 times a year;"),
 				2,	MembershipPlanPeriodEnum.weekly, BillingFrequencyEnum.monthly,
 				BuildCost(12499),12,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				false,false,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
@@ -328,8 +328,8 @@ public class Populator {
 				buildTitle("POUR TE DÉPASSER", "TO PUSH YOUR LIMITS"),
 				buildDescription("Ton prix reste fixe à vie ! ",
 				 		 		 "Your price is fixed for life !"),
-				buildDetail("Abonnement récurrent. 12 cours tous les 28 jours. Réservation requise. Valide dans plusieurs de nos studios. Non transférable. Aucun frais d'annulation avec 30 jours de préavis. Possibilité de mettre ton abonnement sur pause 2 fois par année.",
-							"Recurring subscription. 12 classes every 28 days. Reservation required. Valid in most of our locations. Non-transferable. No cancellation fee with 30 days notice. Possibility to put your subscription on hold 2 times a year."),
+				buildTermsOfUse("Abonnement récurrent; 12 cours tous les 28 jours; Réservation requise; Valide dans plusieurs de nos studios; Non transférable; Aucun frais d'annulation avec 30 jours de préavis; Possibilité de mettre ton abonnement sur pause 2 fois par année;",
+							"Recurring subscription; 12 classes every 28 days; Reservation required; Valid in most of our locations; Non-transferable; No cancellation fee with 30 days notice; Possibility to put your subscription on hold 2 times a year;"),
 				3,	MembershipPlanPeriodEnum.weekly, BillingFrequencyEnum.monthly,
 				BuildCost(16499),12,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				false,false,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
@@ -343,8 +343,8 @@ public class Populator {
 				buildTitle("POUR TOUT CASSER", "TO BREAK ALL THE LIMITS"),
 				buildDescription("Ton prix reste fixe à vie ! ",
 		 		 		 		 "Your price is fixed for life !"),
-				buildDetail("Abonnement récurrent. 24 cours tous les 28 jours. Réservation requise. Valide dans plusieurs de nos studios. Non transférable. Aucun frais d'annulation avec 30 jours de préavis. Possibilité de mettre ton abonnement sur pause 2 fois par année.",
-							"Recurring subscription. 24 classes every 28 days. Reservation required. Valid in most of our locations. Non-transferable. No cancellation fee with 30 days notice. Possibility to put your subscription on hold 2 times a year."),
+				buildTermsOfUse("Abonnement récurrent; 24 cours tous les 28 jours; Réservation requise; Valide dans plusieurs de nos studios; Non transférable; Aucun frais d'annulation avec 30 jours de préavis; Possibilité de mettre ton abonnement sur pause 2 fois par année;",
+							"Recurring subscription; 24 classes every 28 days; Reservation required; Valid in most of our locations; Non-transferable; No cancellation fee with 30 days notice; Possibility to put your subscription on hold 2 times a year;"),
 				6,	MembershipPlanPeriodEnum.weekly, BillingFrequencyEnum.monthly,
 				BuildCost(17499),12,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				false,false,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
@@ -359,8 +359,8 @@ public class Populator {
 				buildTitle("CARTE-CADEAU 10 COURS", "GIFT CARD 10 CLASSES"),
 				buildDescription("Fait bouger un ami !",
 								 "Get a friend moving !"),
-				buildDetail("La carte-cadeau est envoyée par courriel dans les 24h. Réservation requise. Valide dans plusieurs de nos studios. Aucune date d'expiration. Non transférable.",
-							"The gift card is sent by email within 24h. Reservation required. Valid in most of our locations. No expiration date. Non-transferable."),
+				buildTermsOfUse("La carte-cadeau est envoyée par courriel dans les 24h; Réservation requise; Valide dans plusieurs de nos studios; Aucune date d'expiration; Non transférable;",
+							"The gift card is sent by email within 24h; Reservation required; Valid in most of our locations; No expiration date; Non-transferable;"),
 				10,	MembershipPlanPeriodEnum.classes, BillingFrequencyEnum.oneTime,
 				BuildCost(19999),0,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				false,true,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
@@ -374,8 +374,8 @@ public class Populator {
 				buildTitle("CARTE-CADEAU 20 COURS", "GIFT CARD 20 CLASSES"),
 				buildDescription("Le meilleur cadeau pour un ami qui veut se remettre en forme !",
 						 		 "The best gift for a friend who wants to get back in shape !"),
-				buildDetail("La carte-cadeau est envoyée par courriel dans les 24h. Valide dans plusieurs de nos studios. Aucune date d'expiration.",
-							"The gift card is sent by email within 24h. Shareable with a friend. Reservation required. Valid in most of our locations. No expiration date. Non-transferable."),
+				buildTermsOfUse("La carte-cadeau est envoyée par courriel dans les 24h; Valide dans plusieurs de nos studios; Aucune date d'expiration;",
+							"The gift card is sent by email within 24h; Shareable with a friend; Reservation required; Valid in most of our locations; No expiration date; Non-transferable;"),
 				10,	MembershipPlanPeriodEnum.classes, BillingFrequencyEnum.oneTime,
 				BuildCost(34999),0,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				false,true,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
@@ -389,8 +389,8 @@ public class Populator {
 				buildTitle("OFFRE EN CADEAU", "GIFT OFFER"),
 				buildDescription("Carte-cadeau d'une valeur de 50$",
 								 "Gift card with a value of 50$"),
-				buildDetail("La carte-cadeau est envoyée par courriel dans les 24h. Utilisable pour tout achat en studio.",
-							"The gift card is sent by email within 24h. Redeemable for any in-studio purchase."),
+				buildTermsOfUse("La carte-cadeau est envoyée par courriel dans les 24h; Utilisable pour tout achat en studio;",
+							"The gift card is sent by email within 24h; Redeemable for any in-studio purchase;"),
 				0,	MembershipPlanPeriodEnum.amount, BillingFrequencyEnum.oneTime,
 				BuildCost(5000),0,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				false,true,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
@@ -430,7 +430,7 @@ public class Populator {
 		return items;
 	}
 
-	public static List<LocalizedString> buildDetail(String fr, String en) {
+	public static List<LocalizedString> buildTermsOfUse(String fr, String en) {
 		ArrayList<LocalizedString> items = new ArrayList<LocalizedString>();
 		items.add(new LocalizedString(fr, LanguageEnum.fr));
 		items.add(new LocalizedString(en, LanguageEnum.en));

@@ -27,7 +27,7 @@ public class PostMembershipPlanDto {
 
 	private List<LocalizedStringDto> description;
 
-	private List<LocalizedStringDto> detail;
+	private List<LocalizedStringDto> termsOfUse;
 
 	private int numberOfClasses;
 	

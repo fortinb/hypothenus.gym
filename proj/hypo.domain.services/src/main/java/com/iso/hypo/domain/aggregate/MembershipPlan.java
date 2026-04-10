@@ -41,7 +41,7 @@ public class MembershipPlan extends BaseEntity {
 
 	private List<LocalizedString> description;
 
-	private List<LocalizedString> detail;
+	private List<LocalizedString> termsOfUse;
 
 	private int numberOfClasses;
 
@@ -79,7 +79,7 @@ public class MembershipPlan extends BaseEntity {
 	}
 
 	public MembershipPlan(String brandUuid, List<LocalizedString> name, List<LocalizedString> title,
-			List<LocalizedString> description, List<LocalizedString> detail, int numberOfClasses, MembershipPlanPeriodEnum period,
+			List<LocalizedString> description, List<LocalizedString> termsOfUse, int numberOfClasses, MembershipPlanPeriodEnum period,
 			BillingFrequencyEnum billingFrequency, Cost cost, int durationInMonths,
 			List<Gym> includedGyms,List<Course> includedCourses, Date startDate, Date endDate, boolean guestPrivilege, boolean giftCard,
 			boolean promotional, boolean active, Instant startedOn, Instant endedOn) {
@@ -88,7 +88,7 @@ public class MembershipPlan extends BaseEntity {
 		this.name = name;
 		this.title = title;
 		this.description = description;
-		this.detail = detail;
+		this.termsOfUse = termsOfUse;
 		this.startDate = startDate;
 		this.endDate = endDate;
 		this.numberOfClasses = numberOfClasses;

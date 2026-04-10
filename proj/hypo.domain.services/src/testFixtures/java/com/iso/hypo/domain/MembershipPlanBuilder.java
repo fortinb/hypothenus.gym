@@ -22,7 +22,7 @@ public class MembershipPlanBuilder {
 	private static Faker faker = new Faker();
 	
 	public static MembershipPlan build(String brandUuid, List<Gym> includedGyms, List<Course> includedCourses) {
-		MembershipPlan entity = new MembershipPlan(brandUuid, buildName(), buildTitle(), buildDescription(), buildDetail(),
+		MembershipPlan entity = new MembershipPlan(brandUuid, buildName(), buildTitle(), buildDescription(), buildTermsOfUse(),
 				faker.number().numberBetween(2, 3), MembershipPlanPeriodEnum.monthly, BillingFrequencyEnum.monthly,
 				BuildCost(), 12, includedGyms, includedCourses, Date.from(Instant.now().truncatedTo(ChronoUnit.DAYS)), null, true, false, false, true, Instant.now(), null);
 		entity.setUuid(UUID.randomUUID().toString());
@@ -51,7 +51,7 @@ public class MembershipPlanBuilder {
 		return items;
 	}
 
-	public static List<LocalizedString> buildDetail() {
+	public static List<LocalizedString> buildTermsOfUse() {
 		ArrayList<LocalizedString> items = new ArrayList<LocalizedString>();
 		items.add(new LocalizedString(faker.lorem().paragraph(), LanguageEnum.fr));
 		items.add(new LocalizedString(faker.lorem().paragraph(), LanguageEnum.en));
