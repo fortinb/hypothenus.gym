@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 import com.iso.hypo.domain.aggregate.Member;
 import com.iso.hypo.domain.contact.Person;
 import com.iso.hypo.domain.contact.PhoneNumber;
-import com.iso.hypo.domain.location.Address;
 import com.iso.hypo.domain.dto.MemberDto;
+import com.iso.hypo.domain.location.Address;
 
 @Component
 public class MemberMapper {
@@ -60,7 +60,7 @@ public class MemberMapper {
             protected void configure() {
             }
         };
-
+        
         mapper.addMappings(memberPropertyMap);
         mapper.addMappings(personPropertyMap);
         mapper.addMappings(addressPropertyMap);

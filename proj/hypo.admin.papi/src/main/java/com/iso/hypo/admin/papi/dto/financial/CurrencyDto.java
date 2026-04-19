@@ -1,4 +1,4 @@
-package com.iso.hypo.admin.papi.dto.pricing;
+package com.iso.hypo.admin.papi.dto.financial;
 
 import lombok.Getter;
 import lombok.Setter;

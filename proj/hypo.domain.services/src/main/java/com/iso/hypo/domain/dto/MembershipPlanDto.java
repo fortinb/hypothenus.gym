@@ -7,7 +7,7 @@ import com.iso.hypo.common.dto.BaseEntityDto;
 import com.iso.hypo.domain.LocalizedString;
 import com.iso.hypo.domain.enumeration.BillingFrequencyEnum;
 import com.iso.hypo.domain.enumeration.MembershipPlanPeriodEnum;
-import com.iso.hypo.domain.pricing.Cost;
+import com.iso.hypo.domain.financial.Cost;
 
 import lombok.Getter;
 import lombok.Setter;

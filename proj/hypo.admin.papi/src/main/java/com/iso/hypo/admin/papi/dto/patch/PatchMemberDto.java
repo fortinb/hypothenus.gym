@@ -22,5 +22,7 @@ public class PatchMemberDto extends BaseDto {
 	
 	private MemberTypeEnum memberType;
 	
-	private String preferredGymUuid;
+	private String preferredGymUuid;	
+	
+	private String preferredFinancialInstrumenUuid;
 }

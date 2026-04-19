@@ -36,6 +36,11 @@ public class Member extends BaseEntity {
 	
 	private String preferredGymUuid;
 	
+	private String preferredFinancialInstrumenUuid;
+	
+	//@DBRef
+	//private List<FinancialInstrument> financialInstruments;
+	
 	@DBRef
 	private User user;
 	

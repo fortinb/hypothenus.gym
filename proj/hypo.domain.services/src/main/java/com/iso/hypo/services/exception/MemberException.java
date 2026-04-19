@@ -12,6 +12,7 @@ public class MemberException extends DomainException {
 	public static final String BRAND_NOT_FOUND = "404";
 	public static final String USER_NOT_FOUND = "404";
 	public static final String INVALID_BRAND = "403";
+	public static final String FINANCIAL_INSTRUMENT_NOT_FOUND = "404";
 	
 	public static final String MEMBER_ALREADY_EXIST = "1001";
 	public static final String USER_NOT_FOUND_IN_IDP = "1002";	

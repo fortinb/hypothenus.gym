@@ -22,4 +22,6 @@ public class PostMemberDto extends BaseDto {
 	private MemberTypeEnum memberType;
 	
 	private String preferredGymUuid;
+	
+	private String preferredFinancialInstrumenUuid;
 }

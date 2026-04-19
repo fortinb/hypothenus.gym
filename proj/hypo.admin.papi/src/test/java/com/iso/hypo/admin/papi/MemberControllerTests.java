@@ -56,12 +56,12 @@ import com.iso.hypo.domain.aggregate.Brand;
 import com.iso.hypo.domain.aggregate.Member;
 import com.iso.hypo.domain.aggregate.User;
 import com.iso.hypo.domain.enumeration.MemberTypeEnum;
+import com.iso.hypo.domain.security.Roles;
 import com.iso.hypo.repositories.BrandRepository;
 import com.iso.hypo.repositories.MemberRepository;
 import com.iso.hypo.repositories.UserRepository;
 import com.iso.hypo.services.exception.MemberException;
 import com.iso.hypo.tests.http.HttpUtils;
-import com.iso.hypo.domain.security.Roles;
 import com.iso.hypo.tests.security.Users;
 import com.iso.hypo.tests.utils.StringUtils;
 import com.iso.hypo.tests.utils.TestResponseUtils;
@@ -84,6 +84,11 @@ class MemberControllerTests {
     public static final String deleteURI = "/v1/brands/%s/members/%s";
     public static final String postActivateURI = "/v1/brands/%s/members/%s/activate";
     public static final String postDeactivateURI = "/v1/brands/%s/members/%s/deactivate";
+    
+    public static final String postFinancialInstrumentURI = "/v1/brands/%s/members/%s/financial/instruments";
+    public static final String putFinancialInstrumentURI = "/v1/brands/%s/members/%s/financial/instruments/%s";
+    public static final String deleteFinancialInstrumentURI = "/v1/brands/%s/members/%s/financial/instruments/%s";
+
     public static final String searchCriteria = "criteria";
     public static final String pageNumber = "page";
     public static final String pageSize = "pageSize";

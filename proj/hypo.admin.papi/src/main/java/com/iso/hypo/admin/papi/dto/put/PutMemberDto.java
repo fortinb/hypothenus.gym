@@ -23,4 +23,6 @@ public class PutMemberDto extends BaseDto {
 	private MemberTypeEnum memberType;
 	
 	private String preferredGymUuid;
+	
+	private String preferredFinancialInstrumenUuid;
 }

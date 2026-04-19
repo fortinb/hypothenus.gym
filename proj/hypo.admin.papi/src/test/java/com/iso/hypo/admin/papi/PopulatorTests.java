@@ -38,6 +38,7 @@ import com.iso.hypo.domain.security.Roles;
 import com.iso.hypo.repositories.BrandRepository;
 import com.iso.hypo.repositories.CoachRepository;
 import com.iso.hypo.repositories.CourseRepository;
+import com.iso.hypo.repositories.FinancialInstrumentRepository;
 import com.iso.hypo.repositories.GymRepository;
 import com.iso.hypo.repositories.MemberRepository;
 import com.iso.hypo.repositories.MembershipPlanRepository;
@@ -75,6 +76,8 @@ class PopulatorTests {
 	@Autowired
 	MemberRepository memberRepository;
 	@Autowired
+	FinancialInstrumentRepository financialInstrumentRepository;
+	@Autowired
 	UserRepository userRepository;
 	@Autowired
 	ObjectMapper objectMapper;
@@ -111,6 +114,7 @@ class PopulatorTests {
 		courseRepository.deleteAll();
 		memberRepository.deleteAll();
 		membershipPlanRepository.deleteAll();
+		financialInstrumentRepository.deleteAll();
 		
 		// Admin user is required
 		UserDto adminUserDto = createAdminUser();

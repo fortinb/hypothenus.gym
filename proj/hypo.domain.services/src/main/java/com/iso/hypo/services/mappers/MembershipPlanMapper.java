@@ -9,7 +9,7 @@ import com.iso.hypo.domain.aggregate.Course;
 import com.iso.hypo.domain.aggregate.Gym;
 import com.iso.hypo.domain.aggregate.MembershipPlan;
 import com.iso.hypo.domain.dto.MembershipPlanDto;
-import com.iso.hypo.domain.pricing.Cost;
+import com.iso.hypo.domain.financial.Cost;
 
 @Component
 public class MembershipPlanMapper {

@@ -7,7 +7,7 @@ import com.iso.hypo.admin.papi.dto.BaseDto;
 import com.iso.hypo.admin.papi.dto.LocalizedStringDto;
 import com.iso.hypo.admin.papi.dto.enumeration.BillingFrequencyEnum;
 import com.iso.hypo.admin.papi.dto.enumeration.MembershipPlanPeriodEnum;
-import com.iso.hypo.admin.papi.dto.pricing.CostDto;
+import com.iso.hypo.admin.papi.dto.financial.CostDto;
 
 import lombok.Getter;
 import lombok.Setter;

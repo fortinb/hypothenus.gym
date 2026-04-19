@@ -20,4 +20,7 @@ public class MemberDto extends BaseDto {
 	private MemberTypeEnum memberType;
 	
 	private String preferredGymUuid;
+	
+	private String preferredFinancialInstrumenUuid;
+
 }

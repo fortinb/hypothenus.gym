@@ -1,4 +1,4 @@
-package com.iso.hypo.domain.pricing;
+package com.iso.hypo.domain.financial;
 
 import lombok.Getter;
 import lombok.Setter;

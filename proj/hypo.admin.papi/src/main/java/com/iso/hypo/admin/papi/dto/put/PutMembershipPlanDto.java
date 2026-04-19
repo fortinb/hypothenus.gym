@@ -6,9 +6,9 @@ import java.util.List;
 import com.iso.hypo.admin.papi.dto.LocalizedStringDto;
 import com.iso.hypo.admin.papi.dto.enumeration.BillingFrequencyEnum;
 import com.iso.hypo.admin.papi.dto.enumeration.MembershipPlanPeriodEnum;
+import com.iso.hypo.admin.papi.dto.financial.CostDto;
 import com.iso.hypo.admin.papi.dto.model.CourseDto;
 import com.iso.hypo.admin.papi.dto.model.GymDto;
-import com.iso.hypo.admin.papi.dto.pricing.CostDto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;

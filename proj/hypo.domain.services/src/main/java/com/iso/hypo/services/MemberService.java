@@ -16,6 +16,6 @@ public interface MemberService {
     MemberDto activate(String brandUuid, String memberUuid) throws MemberException;
 
     MemberDto deactivate(String brandUuid, String memberUuid) throws MemberException;
-    
+
     void deleteAllByBrandUuid(String brandUuid) throws MemberException;
 }

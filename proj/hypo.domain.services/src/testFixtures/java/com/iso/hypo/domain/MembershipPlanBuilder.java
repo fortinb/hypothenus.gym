@@ -13,8 +13,8 @@ import com.iso.hypo.domain.aggregate.MembershipPlan;
 import com.iso.hypo.domain.enumeration.BillingFrequencyEnum;
 import com.iso.hypo.domain.enumeration.LanguageEnum;
 import com.iso.hypo.domain.enumeration.MembershipPlanPeriodEnum;
-import com.iso.hypo.domain.pricing.Cost;
-import com.iso.hypo.domain.pricing.Currency;
+import com.iso.hypo.domain.financial.Cost;
+import com.iso.hypo.domain.financial.Currency;
 
 import net.datafaker.Faker;
 

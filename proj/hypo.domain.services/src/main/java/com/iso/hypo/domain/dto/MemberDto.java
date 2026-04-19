@@ -20,5 +20,6 @@ public class MemberDto extends BaseEntityDto {
 	private MemberTypeEnum memberType;
 	
 	private String preferredGymUuid;
-
+	
+	private String preferredFinancialInstrumenUuid;
 }
