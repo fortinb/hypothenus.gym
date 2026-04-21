@@ -17,7 +17,7 @@ public class MembershipDto extends BaseDto {
 
     private MembershipPlanDto membershipPlan;
 
-    private MemberDto member;
+    private String memberUuid;
 
     private int remainingClasses;
 

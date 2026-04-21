@@ -29,8 +29,7 @@ public class Membership extends BaseEntity {
 
 	private MembershipPlan membershipPlan;
 	
-//	@DBRef
-	private Member member;
+	private String memberUuid;
 	
 	private int remainingClasses;
 	
@@ -44,10 +43,10 @@ public class Membership extends BaseEntity {
 		super();
 	}
 
-	public Membership(String brandUuid, Member member, MembershipPlan membershipPlan, boolean autoRenewal, boolean isCancelled, boolean active, Instant startedOn, Instant endedOn) {
+	public Membership(String brandUuid, String memberUuid, MembershipPlan membershipPlan, boolean autoRenewal, boolean isCancelled, boolean active, Instant startedOn, Instant endedOn) {
 		super(active);
 		this.brandUuid = brandUuid;
-		this.member = member;
+		this.memberUuid = memberUuid;
 		this.membershipPlan = membershipPlan;
 		this.autoRenewal = autoRenewal;
 		this.isCancelled = isCancelled;
