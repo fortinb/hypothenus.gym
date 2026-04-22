@@ -30,11 +30,11 @@ import com.iso.hypo.admin.papi.dto.patch.PatchBrandDto;
 import com.iso.hypo.admin.papi.dto.post.PostBrandDto;
 import com.iso.hypo.admin.papi.dto.put.PutBrandDto;
 import com.iso.hypo.admin.papi.dto.search.BrandSearchDto;
-import com.iso.hypo.common.context.RequestContext;
-import com.iso.hypo.domain.security.Roles;
-import com.iso.hypo.services.BrandQueryService;
-import com.iso.hypo.services.BrandService;
-import com.iso.hypo.services.exception.BrandException;
+import com.iso.hypo.brand.application.usecase.BrandQueryService;
+import com.iso.hypo.brand.application.usecase.BrandService;
+import com.iso.hypo.brand.domain.exception.BrandException;
+import com.iso.hypo.common.application.context.RequestContext;
+import com.iso.hypo.common.application.security.Roles;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -84,7 +84,7 @@ public class BrandController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.domain.dto.search.BrandSearchDto> domainDtos = null;
+		Page<com.iso.hypo.brand.application.dto.search.BrandSearchDto> domainDtos = null;
 		try {
 			domainDtos = brandQueryService.search(page, pageSize, criteria, includeInactive);
 		} catch (BrandException e) {
@@ -116,7 +116,7 @@ public class BrandController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.domain.dto.BrandDto> domainDtos = null;
+		Page<com.iso.hypo.brand.application.dto.BrandDto> domainDtos = null;
 		try {
 			domainDtos = brandQueryService.list(page, pageSize, includeInactive);
 		} catch (BrandException e) {
@@ -146,7 +146,7 @@ public class BrandController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> getBrand(
 			@PathVariable String uuid) {
-		com.iso.hypo.domain.dto.BrandDto entity = null;
+		com.iso.hypo.brand.application.dto.BrandDto entity = null;
 		try {
 			entity = brandQueryService.find(uuid);
 		} catch (BrandException e) {
@@ -174,7 +174,7 @@ public class BrandController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> getBrandByCode(
 			@PathVariable String code) {
-		com.iso.hypo.domain.dto.BrandDto entity = null;
+		com.iso.hypo.brand.application.dto.BrandDto entity = null;
 		try {
 			entity = brandQueryService.findByCode(code);
 		} catch (BrandException e) {
@@ -203,7 +203,7 @@ public class BrandController {
 	@ResponseStatus(value = HttpStatus.CREATED)
 	public ResponseEntity<Object> createBrand(
 			@RequestBody PostBrandDto request) {
-		com.iso.hypo.domain.dto.BrandDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.BrandDto.class);
+		com.iso.hypo.brand.application.dto.BrandDto domainDto = modelMapper.map(request, com.iso.hypo.brand.application.dto.BrandDto.class);
 
 		try {
 			domainDto = brandService.create(domainDto);
@@ -240,7 +240,7 @@ public class BrandController {
 	public ResponseEntity<Object> updateBrand(
 			@PathVariable String uuid, 
 			@RequestBody PutBrandDto request) {
-		com.iso.hypo.domain.dto.BrandDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.BrandDto.class);
+		com.iso.hypo.brand.application.dto.BrandDto domainDto = modelMapper.map(request, com.iso.hypo.brand.application.dto.BrandDto.class);
 		
 		try {
 			domainDto = brandService.update(domainDto);
@@ -271,7 +271,7 @@ public class BrandController {
 	public ResponseEntity<Object> patchBrand(
 			@PathVariable String uuid, 
 			@RequestBody PatchBrandDto request) {
-		com.iso.hypo.domain.dto.BrandDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.BrandDto.class);
+		com.iso.hypo.brand.application.dto.BrandDto domainDto = modelMapper.map(request, com.iso.hypo.brand.application.dto.BrandDto.class);
 		
 		try {
 			domainDto = brandService.patch(domainDto);
@@ -302,7 +302,7 @@ public class BrandController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> activateBrand(
 			@PathVariable String uuid) {
-		com.iso.hypo.domain.dto.BrandDto entity;
+		com.iso.hypo.brand.application.dto.BrandDto entity;
 		
 		try {
 			entity = brandService.activate(uuid);
@@ -333,7 +333,7 @@ public class BrandController {
 	public ResponseEntity<Object> deactivateBrand(
 			@PathVariable String uuid) {
 		
-		com.iso.hypo.domain.dto.BrandDto entity;
+		com.iso.hypo.brand.application.dto.BrandDto entity;
 		
 		try {
 			entity = brandService.deactivate(uuid);

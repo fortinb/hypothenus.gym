@@ -1,0 +1,354 @@
+package com.iso.hypo.brand.application.usecase.impl;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.modelmapper.ModelMapper;
+import org.modelmapper.PropertyMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
+
+import com.iso.hypo.brand.application.dto.GymDto;
+import com.iso.hypo.brand.application.event.GymEvent;
+import com.iso.hypo.brand.application.mapper.GymMapper;
+import com.iso.hypo.brand.application.usecase.BrandQueryService;
+import com.iso.hypo.brand.application.usecase.GymService;
+import com.iso.hypo.brand.domain.exception.BrandException;
+import com.iso.hypo.brand.domain.exception.GymException;
+import com.iso.hypo.brand.domain.model.Coach;
+import com.iso.hypo.brand.domain.model.Gym;
+import com.iso.hypo.brand.domain.repository.CoachRepository;
+import com.iso.hypo.brand.domain.repository.GymRepository;
+import com.iso.hypo.common.application.context.RequestContext;
+import com.iso.hypo.common.domain.model.Message;
+import com.iso.hypo.common.domain.model.enumeration.MessageSeverityEnum;
+import com.iso.hypo.events.event.OperationEnum;
+
+@Service
+public class GymServiceImpl implements GymService {
+
+	private final BrandQueryService brandQueryService;
+
+	private final CoachRepository coachRepository;
+
+	private final GymRepository gymRepository;
+
+	private final GymMapper gymMapper;
+
+	private final ApplicationEventPublisher eventPublisher;
+
+	private static final Logger logger = LoggerFactory.getLogger(GymServiceImpl.class);
+
+	private final RequestContext requestContext;
+
+	public GymServiceImpl(GymMapper gymMapper, BrandQueryService brandQueryService, CoachRepository coachRepository,
+			GymRepository gymRepository, ApplicationEventPublisher eventPublisher, RequestContext requestContext) {
+		this.gymMapper = gymMapper;
+		this.brandQueryService = brandQueryService;
+		this.coachRepository = coachRepository;
+		this.gymRepository = gymRepository;
+		this.eventPublisher = eventPublisher;
+		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
+	}
+
+	@Override
+	@Transactional
+	public GymDto create(GymDto gymDto) throws GymException {
+		try {
+			Assert.notNull(gymDto, "gymDto must not be null");
+
+			Gym gym = gymMapper.toEntity(gymDto);
+
+			brandQueryService.assertExists(gym.getBrandUuid());
+
+			gym.setCoachs(this.resolveCoachReferences(gym.getCoachs()));
+
+			Optional<Gym> existingGym = gymRepository.findByBrandUuidAndCode(gym.getBrandUuid(), gym.getCode());
+			if (existingGym.isPresent()) {
+				Message message = new Message();
+				message.setCode(GymException.GYM_CODE_ALREADY_EXIST);
+				message.setDescription("Duplicate gym code");
+				message.setSeverity(MessageSeverityEnum.warning);
+				existingGym.get().getMessages().add(message);
+
+				throw new GymException(requestContext.getTrackingNumber(), GymException.GYM_CODE_ALREADY_EXIST,
+						"Duplicate gym code", gymMapper.toDto(existingGym.get()));
+			}
+
+			gym.setCreatedOn(Instant.now());
+			gym.setCreatedBy(requestContext.getUsername());
+			gym.setUuid(UUID.randomUUID().toString());
+
+			Gym saved = gymRepository.save(gym);
+			return gymMapper.toDto(saved);
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}", gymDto != null ? gymDto.getBrandUuid() : null, e);
+
+			if (e instanceof BrandException) {
+				throw new GymException(requestContext.getTrackingNumber(), GymException.GYM_NOT_FOUND, "Gym not found");
+			}
+			if (e instanceof GymException) {
+				throw (GymException) e;
+			}
+			throw new GymException(requestContext.getTrackingNumber(), GymException.CREATION_FAILED, e);
+		}
+	}
+
+	@Override
+	@Transactional
+	public GymDto update(GymDto gymDto) throws GymException {
+		try {
+			return updateGym(gymDto, false);
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, gymUuid={}", gymDto.getBrandUuid(), gymDto.getUuid(), e);
+
+			if (e instanceof GymException) {
+				throw (GymException) e;
+			}
+			throw new GymException(requestContext.getTrackingNumber(), GymException.UPDATE_FAILED, e);
+		}
+	}
+
+	@Override
+	@Transactional
+	public GymDto patch(GymDto gymDto) throws GymException {
+		try {
+			return updateGym(gymDto, true);
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, gymUuid={}", gymDto.getBrandUuid(), gymDto.getUuid(), e);
+
+			if (e instanceof GymException) {
+				throw (GymException) e;
+			}
+			throw new GymException(requestContext.getTrackingNumber(), GymException.UPDATE_FAILED, e);
+		}
+	}
+
+	@Override
+	@Transactional
+	public GymDto activate(String brandUuid, String gymUuid) throws GymException {
+		try {
+			Optional<Gym> entity = gymRepository.activate(brandUuid, gymUuid);
+			if (entity.isEmpty()) {
+				throw new GymException(requestContext.getTrackingNumber(), GymException.GYM_NOT_FOUND, "Gym not found");
+			}
+
+			return gymMapper.toDto(entity.get());
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, gymUuid={}", brandUuid, gymUuid, e);
+
+			if (e instanceof GymException) {
+				throw (GymException) e;
+			}
+			throw new GymException(requestContext.getTrackingNumber(), GymException.ACTIVATION_FAILED, e);
+		}
+	}
+
+	@Override
+	@Transactional
+	public GymDto deactivate(String brandUuid, String gymUuid) throws GymException {
+		try {
+			Optional<Gym> entity = gymRepository.deactivate(brandUuid, gymUuid);
+			if (entity.isEmpty()) {
+				throw new GymException(requestContext.getTrackingNumber(), GymException.GYM_NOT_FOUND, "Gym not found");
+			}
+
+			return gymMapper.toDto(entity.get());
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, gymUuid={}", brandUuid, gymUuid, e);
+
+			if (e instanceof GymException) {
+				throw (GymException) e;
+			}
+			throw new GymException(requestContext.getTrackingNumber(), GymException.DEACTIVATION_FAILED, e);
+		}
+	}
+
+	@Override
+	@Transactional
+	public void delete(String brandUuid, String gymUuid) throws GymException {
+		try {
+			Gym entity = this.readByGymUuid(brandUuid, gymUuid);
+
+			gymRepository.delete(entity.getBrandUuid(), entity.getUuid(), requestContext.getUsername());
+
+			eventPublisher.publishEvent(new GymEvent(this, entity, OperationEnum.delete));
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, gymUuid={}", brandUuid, gymUuid, e);
+
+			if (e instanceof GymException) {
+				throw (GymException) e;
+			}
+			throw new GymException(requestContext.getTrackingNumber(), GymException.DELETE_FAILED, e);
+		}
+	}
+
+	@Override
+	public void deleteAllByBrandUuid(String brandUuid) throws GymException {
+		try {
+			long deletedCount = gymRepository.deleteAllByBrandUuid(brandUuid, requestContext.getUsername());
+
+			logger.info("Gym deleted for brand - brandUuid={} deletedCount={} ", brandUuid, deletedCount);
+		} catch (Exception e) {
+			logger.error("Error - brandId={}", brandUuid, e);
+
+			throw new GymException(requestContext.getTrackingNumber(), GymException.DELETE_FAILED, e);
+		}
+	}
+
+	public GymDto updateGym(GymDto gymDto, boolean skipNull) throws GymException {
+		try {
+			Assert.notNull(gymDto, "gymDto must not be null");
+			Gym gym = gymMapper.toEntity(gymDto);
+
+			Gym oldGym = this.readByGymUuid(gym.getBrandUuid(), gym.getUuid());
+
+			gym.setCoachs(this.resolveCoachReferences(gym.getCoachs()));
+
+			ModelMapper mapper = new ModelMapper();
+			mapper.getConfiguration().setSkipNullEnabled(skipNull).setCollectionsMergeEnabled(false);
+
+			PropertyMap<Gym, Gym> gymPropertyMap = new PropertyMap<Gym, Gym>() {
+				protected void configure() {
+					skip().setId(null);
+					skip().setActive(false);
+				}
+			};
+			
+			mapper.addMappings(gymPropertyMap);
+			mapper = gymMapper.initGymMappings(mapper);
+			mapper.map(gym, oldGym);
+
+			oldGym.setModifiedOn(Instant.now());
+			oldGym.setModifiedBy(requestContext.getUsername());
+
+			Gym saved = gymRepository.save(oldGym);
+			return gymMapper.toDto(saved);
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, gymUuid={}", gymDto.getBrandUuid(), gymDto.getUuid(), e);
+
+			if (e instanceof GymException) {
+				throw (GymException) e;
+			}
+			throw new GymException(requestContext.getTrackingNumber(), GymException.UPDATE_FAILED, e);
+		}
+	}
+
+	private Gym readByGymUuid(String brandUuid, String gymUuid) throws GymException {
+		Optional<Gym> entity = gymRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brandUuid, gymUuid);
+		if (entity.isEmpty()) {
+			throw new GymException(requestContext.getTrackingNumber(), GymException.GYM_NOT_FOUND, "Gym not found");
+		}
+
+		return entity.get();
+	}
+
+	private List<Coach> resolveCoachReferences(List<Coach> coachs) throws GymException {
+		if (coachs == null || coachs.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		List<Coach> resolvedCoachs = new ArrayList<>();
+		for (Coach coach : coachs) {
+			Optional<Coach> entity = coachRepository.findByBrandUuidAndUuidAndDeletedIsFalse(coach.getBrandUuid(),
+					coach.getUuid());
+			if (entity.isEmpty()) {
+				throw new GymException(requestContext.getTrackingNumber(), GymException.COACH_NOT_FOUND,
+						"Coach not found - coachUuid=" + coach.getUuid());
+			}
+			resolvedCoachs.add(entity.get());
+		}
+
+		return resolvedCoachs;
+	}
+
+	@Override
+	public void removeAllCoachReferencesByCoachId(String coachId) throws GymException {
+		try {
+			long modifiedCount = gymRepository.removeCoachReferences(coachId);
+			logger.info("Coach references removed from gym - coachId={} modifiedCount={}", coachId, modifiedCount);
+		} catch (Exception e) {
+			logger.error("Error removing coach references - coachId={}", coachId, e);
+			throw new GymException(requestContext.getTrackingNumber(), GymException.DELETE_FAILED, e);
+		}
+	}
+
+	@Override
+	public GymDto assignCoach(String brandUuid, String gymUuid, String coachUuid) throws GymException {
+		try {
+			Optional<Coach> coach = coachRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brandUuid, coachUuid);
+			if (coach.isEmpty()) {
+				throw new GymException(requestContext.getTrackingNumber(), GymException.COACH_NOT_FOUND, "Coach not found");
+			}
+			
+			Gym oldGym = this.readByGymUuid(brandUuid, gymUuid);
+			
+			if (oldGym.getCoachs() != null && oldGym.getCoachs().stream().anyMatch(c -> c.getUuid().equals(coachUuid))) {
+				Message message = new Message();
+				message.setCode(GymException.COACH_ALREADY_ASSIGNED);
+				message.setDescription("Coach already assigned to gym");
+				message.setSeverity(MessageSeverityEnum.warning);
+				oldGym.getMessages().add(message);
+
+				throw new GymException(requestContext.getTrackingNumber(), GymException.COACH_ALREADY_ASSIGNED,
+						"Coach already assigned to gym", gymMapper.toDto(oldGym));
+			}
+
+			oldGym.getCoachs().add(coach.get());
+			Gym saved = gymRepository.save(oldGym);
+			
+			return gymMapper.toDto(saved);
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, gymUuid={}", brandUuid, gymUuid, e);
+
+			if (e instanceof GymException) {
+				throw (GymException) e;
+			}
+			throw new GymException(requestContext.getTrackingNumber(), GymException.COACH_ASSIGNATION_FAILED, e);
+		}
+	}
+
+	@Override
+	public GymDto unassignCoach(String brandUuid, String gymUuid, String coachUuid) throws GymException {
+		try {
+			Optional<Coach> coach = coachRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brandUuid, coachUuid);
+			if (coach.isEmpty()) {
+				throw new GymException(requestContext.getTrackingNumber(), GymException.COACH_NOT_FOUND, "Coach not found");
+			}
+			
+			Gym oldGym = this.readByGymUuid(brandUuid, gymUuid);
+			
+			if (oldGym.getCoachs() == null || oldGym.getCoachs().stream().noneMatch(c -> c.getUuid().equals(coachUuid))) {
+				Message message = new Message();
+				message.setCode(GymException.COACH_NOT_ASSIGNED);
+				message.setDescription("Coach not assigned to gym");
+				message.setSeverity(MessageSeverityEnum.warning);
+				oldGym.getMessages().add(message);
+
+				throw new GymException(requestContext.getTrackingNumber(), GymException.COACH_NOT_ASSIGNED,
+						"Coach not assigned to gym", gymMapper.toDto(oldGym));
+			}
+
+			oldGym.getCoachs().removeIf(c -> c.getUuid().equals(coachUuid));
+			Gym saved = gymRepository.save(oldGym);
+	
+			return gymMapper.toDto(saved);
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, gymUuid={}, coachUuid={}", brandUuid, gymUuid, coachUuid, e);
+
+			if (e instanceof GymException) {
+				throw (GymException) e;
+			}
+			throw new GymException(requestContext.getTrackingNumber(), GymException.COACH_UNASSIGNATION_FAILED, e);
+		}
+	}
+}

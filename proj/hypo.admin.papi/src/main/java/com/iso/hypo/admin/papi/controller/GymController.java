@@ -30,11 +30,11 @@ import com.iso.hypo.admin.papi.dto.patch.PatchGymDto;
 import com.iso.hypo.admin.papi.dto.post.PostGymDto;
 import com.iso.hypo.admin.papi.dto.put.PutGymDto;
 import com.iso.hypo.admin.papi.dto.search.GymSearchDto;
-import com.iso.hypo.common.context.RequestContext;
-import com.iso.hypo.domain.security.Roles;
-import com.iso.hypo.services.GymQueryService;
-import com.iso.hypo.services.GymService;
-import com.iso.hypo.services.exception.GymException;
+import com.iso.hypo.brand.application.usecase.GymQueryService;
+import com.iso.hypo.brand.application.usecase.GymService;
+import com.iso.hypo.brand.domain.exception.GymException;
+import com.iso.hypo.common.application.context.RequestContext;
+import com.iso.hypo.common.application.security.Roles;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -85,7 +85,7 @@ public class GymController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.domain.dto.search.GymSearchDto> domainDtos = null;
+		Page<com.iso.hypo.brand.application.dto.search.GymSearchDto> domainDtos = null;
 		try {
 			domainDtos = gymQueryService.search(page, pageSize, criteria, includeInactive);
 		} catch (GymException e) {
@@ -117,7 +117,7 @@ public class GymController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.domain.dto.GymDto> domainDtos = null;
+		Page<com.iso.hypo.brand.application.dto.GymDto> domainDtos = null;
 		try {
 			domainDtos = gymQueryService.list(brandUuid, page, pageSize, includeInactive);
 		} catch (GymException e) {
@@ -146,7 +146,7 @@ public class GymController {
 	public ResponseEntity<Object> getGym(
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.domain.dto.GymDto domainDto = null;
+		com.iso.hypo.brand.application.dto.GymDto domainDto = null;
 		try {
 			domainDto = gymQueryService.find(brandUuid, uuid);
 		} catch (GymException e) {
@@ -175,7 +175,7 @@ public class GymController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
-		com.iso.hypo.domain.dto.GymDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.GymDto.class);
+		com.iso.hypo.brand.application.dto.GymDto domainDto = modelMapper.map(request, com.iso.hypo.brand.application.dto.GymDto.class);
 		
 		try {
 			domainDto = gymService.create(domainDto);
@@ -219,7 +219,7 @@ public class GymController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
-		com.iso.hypo.domain.dto.GymDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.GymDto.class);
+		com.iso.hypo.brand.application.dto.GymDto domainDto = modelMapper.map(request, com.iso.hypo.brand.application.dto.GymDto.class);
 
 		try {
 			domainDto = gymService.update(domainDto);
@@ -258,7 +258,7 @@ public class GymController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
-		com.iso.hypo.domain.dto.GymDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.GymDto.class);
+		com.iso.hypo.brand.application.dto.GymDto domainDto = modelMapper.map(request, com.iso.hypo.brand.application.dto.GymDto.class);
 
 		try {
 			domainDto = gymService.patch(domainDto);
@@ -287,7 +287,7 @@ public class GymController {
 	public ResponseEntity<Object> activateGym(
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.domain.dto.GymDto domainDto;
+		com.iso.hypo.brand.application.dto.GymDto domainDto;
 
 		try {
 			domainDto = gymService.activate(brandUuid, uuid);
@@ -317,7 +317,7 @@ public class GymController {
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
 
-		com.iso.hypo.domain.dto.GymDto domainDto;
+		com.iso.hypo.brand.application.dto.GymDto domainDto;
 
 		try {
 			domainDto = gymService.deactivate(brandUuid, uuid);
@@ -372,7 +372,7 @@ public class GymController {
 			@PathVariable String brandUuid,
 			@PathVariable String uuid,
 			@PathVariable String coachUuid) {
-		com.iso.hypo.domain.dto.GymDto domainDto;
+		com.iso.hypo.brand.application.dto.GymDto domainDto;
 
 		try {
 			domainDto = gymService.assignCoach(brandUuid, uuid, coachUuid);
@@ -406,7 +406,7 @@ public class GymController {
 			@PathVariable String brandUuid,
 			@PathVariable String uuid,
 			@PathVariable String coachUuid) {
-		com.iso.hypo.domain.dto.GymDto domainDto;
+		com.iso.hypo.brand.application.dto.GymDto domainDto;
 
 		try {
 			domainDto = gymService.unassignCoach(brandUuid, uuid, coachUuid);

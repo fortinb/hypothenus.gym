@@ -30,11 +30,11 @@ import com.iso.hypo.admin.papi.dto.patch.PatchMemberDto;
 import com.iso.hypo.admin.papi.dto.post.PostMemberDto;
 import com.iso.hypo.admin.papi.dto.put.PutMemberDto;
 import com.iso.hypo.admin.papi.dto.search.MemberSearchDto;
-import com.iso.hypo.common.context.RequestContext;
-import com.iso.hypo.domain.security.Roles;
-import com.iso.hypo.services.MemberQueryService;
-import com.iso.hypo.services.MemberService;
-import com.iso.hypo.services.exception.MemberException;
+import com.iso.hypo.common.application.context.RequestContext;
+import com.iso.hypo.common.application.security.Roles;
+import com.iso.hypo.membership.application.usecase.MemberQueryService;
+import com.iso.hypo.membership.application.usecase.MemberService;
+import com.iso.hypo.membership.domain.exception.MemberException;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -84,7 +84,7 @@ public class MemberController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.domain.dto.search.MemberSearchDto> domainDtos = null;
+		Page<com.iso.hypo.membership.application.dto.search.MemberSearchDto> domainDtos = null;
 		try {
 			domainDtos = memberQueryService.search(page, pageSize, criteria, includeInactive);
 		} catch (MemberException e) {
@@ -117,7 +117,7 @@ public class MemberController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.domain.dto.MemberDto> domainDtos = null;
+		Page<com.iso.hypo.membership.application.dto.MemberDto> domainDtos = null;
 		try {
 			domainDtos = memberQueryService.list(brandUuid, page, pageSize, includeInactive);
 		} catch (MemberException e) {
@@ -142,7 +142,7 @@ public class MemberController {
 	public ResponseEntity<Object> getMember(
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.domain.dto.MemberDto domainDto = null;
+		com.iso.hypo.membership.application.dto.MemberDto domainDto = null;
 		try {
 			domainDto = memberQueryService.find(brandUuid, uuid);
 		} catch (MemberException e) {
@@ -167,7 +167,7 @@ public class MemberController {
 	public ResponseEntity<Object> getMemberByUserIdpId(
 			@PathVariable String brandUuid,
 			@PathVariable String idpId) {
-		com.iso.hypo.domain.dto.MemberDto domainDto = null;
+		com.iso.hypo.membership.application.dto.MemberDto domainDto = null;
 		try {
 			domainDto = memberQueryService.findByUserIdpId(brandUuid, idpId);
 		} catch (MemberException e) {
@@ -194,7 +194,7 @@ public class MemberController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
-		com.iso.hypo.domain.dto.MemberDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.MemberDto.class);
+		com.iso.hypo.membership.application.dto.MemberDto domainDto = modelMapper.map(request, com.iso.hypo.membership.application.dto.MemberDto.class);
 
 		try {
 			domainDto = memberService.create(domainDto, request.getPassword());
@@ -238,7 +238,7 @@ public class MemberController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
-		com.iso.hypo.domain.dto.MemberDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.MemberDto.class);
+		com.iso.hypo.membership.application.dto.MemberDto domainDto = modelMapper.map(request, com.iso.hypo.membership.application.dto.MemberDto.class);
 
 		try {
 			domainDto = memberService.update(domainDto);
@@ -265,7 +265,7 @@ public class MemberController {
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
 		
-		com.iso.hypo.domain.dto.MemberDto domainDto;
+		com.iso.hypo.membership.application.dto.MemberDto domainDto;
 
 		try {
 			domainDto = memberService.activate(brandUuid, uuid);
@@ -292,7 +292,7 @@ public class MemberController {
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
 		
-		com.iso.hypo.domain.dto.MemberDto domainDto;
+		com.iso.hypo.membership.application.dto.MemberDto domainDto;
 
 		try {
 			domainDto = memberService.deactivate(brandUuid, uuid);
@@ -328,7 +328,7 @@ public class MemberController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
-		com.iso.hypo.domain.dto.MemberDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.MemberDto.class);
+		com.iso.hypo.membership.application.dto.MemberDto domainDto = modelMapper.map(request, com.iso.hypo.membership.application.dto.MemberDto.class);
 
 		try {
 			domainDto = memberService.patch(domainDto);

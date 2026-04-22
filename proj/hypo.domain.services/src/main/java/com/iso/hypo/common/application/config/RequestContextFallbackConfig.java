@@ -1,0 +1,18 @@
+package com.iso.hypo.common.application.config;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import com.iso.hypo.common.application.context.RequestContext;
+
+@Configuration
+public class RequestContextFallbackConfig {
+
+    @Bean
+    @ConditionalOnMissingBean(RequestContext.class)
+    RequestContext requestContext() {
+        // Return an empty RequestContext for non-web contexts (unit tests)
+        return new RequestContext();
+    }
+}

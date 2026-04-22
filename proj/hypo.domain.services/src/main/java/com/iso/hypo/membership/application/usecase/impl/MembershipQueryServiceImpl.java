@@ -1,0 +1,102 @@
+package com.iso.hypo.membership.application.usecase.impl;
+
+import java.util.Objects;
+import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+
+import com.iso.hypo.common.application.context.RequestContext;
+import com.iso.hypo.membership.application.dto.MembershipDto;
+import com.iso.hypo.membership.application.mapper.MembershipMapper;
+import com.iso.hypo.membership.application.usecase.MembershipQueryService;
+import com.iso.hypo.membership.domain.exception.MembershipException;
+import com.iso.hypo.membership.domain.model.Membership;
+import com.iso.hypo.membership.domain.repository.MembershipRepository;
+
+@Service
+public class MembershipQueryServiceImpl implements MembershipQueryService {
+
+	private final MembershipRepository membershipRepository;
+
+	private final MembershipMapper membershipMapper;
+
+	private final RequestContext requestContext;
+
+	private static final Logger logger = LoggerFactory.getLogger(MembershipQueryServiceImpl.class);
+
+	public MembershipQueryServiceImpl(MembershipMapper membershipMapper, MembershipRepository membershipRepository, RequestContext requestContext) {
+		this.membershipMapper = membershipMapper;
+		this.membershipRepository = membershipRepository;
+		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
+	}
+
+	@Override
+	public void assertExists(String brandUuid, String membershipUuid) throws MembershipException {
+		try {
+			Optional<Membership> entity = membershipRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brandUuid,
+						membershipUuid);
+			if (entity.isEmpty()) {
+				throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.MEMBERSHIP_NOT_FOUND, "Membership not found");
+			}
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, membershipUuid={}", brandUuid, membershipUuid, e);
+
+			if (e instanceof MembershipException) {
+				throw (MembershipException) e;
+			}
+			throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.FIND_FAILED, e);
+		}
+	}
+
+	@Override
+	public MembershipDto find(String brandUuid, String membershipUuid) throws MembershipException {
+		try {
+			Optional<Membership> entity = membershipRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brandUuid,
+						membershipUuid);
+			if (entity.isEmpty()) {
+				throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.MEMBERSHIP_NOT_FOUND, "Membership not found");
+			}
+
+			return membershipMapper.toDto(entity.get());
+		} catch (Exception e) {
+			// Single generic logger call for all exception types
+			logger.error("Error - brandUuid={}, membershipUuid={}", brandUuid, membershipUuid, e);
+			
+			if (e instanceof MembershipException) {
+				throw (MembershipException) e;
+			}
+			throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.FIND_FAILED, e);
+		}
+	}
+
+	@Override
+	public Page<MembershipDto> list(String brandUuid, int page, int pageSize, boolean includeInactive) throws MembershipException {
+		try {
+
+			if (includeInactive) {
+				return membershipRepository
+						.findAllByBrandUuidAndDeletedIsFalse(brandUuid,
+							PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"))
+						.map(m -> membershipMapper.toDto(m));
+			}
+
+			return membershipRepository
+					.findAllByBrandUuidAndDeletedIsFalseAndActiveIsTrue(brandUuid,
+						PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"))
+					.map(m -> membershipMapper.toDto(m));
+
+		} catch (Exception e) {
+			// Single generic logger call for all exception types
+			logger.error("Error - brandUuid={}", brandUuid, e);
+			if (e instanceof MembershipException) {
+				throw (MembershipException) e;
+			}
+			throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.FIND_FAILED, e);
+		}
+	}
+}

@@ -29,11 +29,11 @@ import com.iso.hypo.admin.papi.dto.model.CourseDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchCourseDto;
 import com.iso.hypo.admin.papi.dto.post.PostCourseDto;
 import com.iso.hypo.admin.papi.dto.put.PutCourseDto;
-import com.iso.hypo.common.context.RequestContext;
-import com.iso.hypo.domain.security.Roles;
-import com.iso.hypo.services.CourseQueryService;
-import com.iso.hypo.services.CourseService;
-import com.iso.hypo.services.exception.CourseException;
+import com.iso.hypo.brand.application.usecase.CourseQueryService;
+import com.iso.hypo.brand.application.usecase.CourseService;
+import com.iso.hypo.brand.domain.exception.CourseException;
+import com.iso.hypo.common.application.context.RequestContext;
+import com.iso.hypo.common.application.security.Roles;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -83,7 +83,7 @@ public class CourseController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.domain.dto.CourseDto> domainDtos = null;
+		Page<com.iso.hypo.brand.application.dto.CourseDto> domainDtos = null;
 		try {
 			domainDtos = courseQueryService.list(brandUuid, page, pageSize, includeInactive);
 		} catch (CourseException e) {
@@ -113,7 +113,7 @@ public class CourseController {
 	public ResponseEntity<Object> getCourse(
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.domain.dto.CourseDto domainDto = null;
+		com.iso.hypo.brand.application.dto.CourseDto domainDto = null;
 		try {
 			domainDto = courseQueryService.find(brandUuid, uuid);
 		} catch (CourseException e) {
@@ -148,7 +148,7 @@ public class CourseController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
-		com.iso.hypo.domain.dto.CourseDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.CourseDto.class);
+		com.iso.hypo.brand.application.dto.CourseDto domainDto = modelMapper.map(request, com.iso.hypo.brand.application.dto.CourseDto.class);
 
 		try {
 			domainDto = courseService.create(domainDto);
@@ -196,7 +196,7 @@ public class CourseController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
-		com.iso.hypo.domain.dto.CourseDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.CourseDto.class);
+		com.iso.hypo.brand.application.dto.CourseDto domainDto = modelMapper.map(request, com.iso.hypo.brand.application.dto.CourseDto.class);
 
 		try {
 			domainDto = courseService.update(domainDto);
@@ -227,7 +227,7 @@ public class CourseController {
 	public ResponseEntity<Object> activateCourse(
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.domain.dto.CourseDto domainDto;
+		com.iso.hypo.brand.application.dto.CourseDto domainDto;
 
 		try {
 			domainDto = courseService.activate(brandUuid, uuid);
@@ -258,7 +258,7 @@ public class CourseController {
 	public ResponseEntity<Object> deactivateCourse(
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.domain.dto.CourseDto domainDto;
+		com.iso.hypo.brand.application.dto.CourseDto domainDto;
 
 		try {
 			domainDto = courseService.deactivate(brandUuid, uuid);
@@ -299,7 +299,7 @@ public class CourseController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
-		com.iso.hypo.domain.dto.CourseDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.CourseDto.class);
+		com.iso.hypo.brand.application.dto.CourseDto domainDto = modelMapper.map(request, com.iso.hypo.brand.application.dto.CourseDto.class);
 
 		try {
 			domainDto = courseService.patch(domainDto);

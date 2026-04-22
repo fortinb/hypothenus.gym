@@ -3,7 +3,7 @@ package com.iso.hypo.domain;
 import java.time.Instant;
 import java.util.UUID;
 
-import com.iso.hypo.domain.aggregate.User;
+import com.iso.hypo.brand.domain.model.User;
 
 import net.datafaker.Faker;
 

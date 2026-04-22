@@ -5,8 +5,9 @@ import java.util.Objects;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.iso.hypo.common.context.RequestContext;
-import com.iso.hypo.domain.security.Roles;
+
+import com.iso.hypo.common.application.context.RequestContext;
+import com.iso.hypo.common.application.security.Roles;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -31,9 +32,9 @@ import com.iso.hypo.admin.papi.dto.model.CoachDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchCoachDto;
 import com.iso.hypo.admin.papi.dto.post.PostCoachDto;
 import com.iso.hypo.admin.papi.dto.put.PutCoachDto;
-import com.iso.hypo.services.exception.CoachException;
-import com.iso.hypo.services.CoachQueryService;
-import com.iso.hypo.services.CoachService;
+import com.iso.hypo.brand.application.usecase.CoachQueryService;
+import com.iso.hypo.brand.application.usecase.CoachService;
+import com.iso.hypo.brand.domain.exception.CoachException;
 import com.iso.hypo.admin.papi.controller.util.ControllerErrorHandler;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -84,7 +85,7 @@ public class CoachController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue="false") boolean includeInactive) {
 
-		Page<com.iso.hypo.domain.dto.CoachDto> domainDtos = null;
+		Page<com.iso.hypo.brand.application.dto.CoachDto> domainDtos = null;
 		try {
 			domainDtos = coachQueryService.list(brandUuid, page, pageSize, includeInactive);
 		} catch (CoachException e) {
@@ -115,7 +116,7 @@ public class CoachController {
 	public ResponseEntity<Object> getCoach(
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.domain.dto.CoachDto domainDto = null;
+		com.iso.hypo.brand.application.dto.CoachDto domainDto = null;
 		try {
 			domainDto = coachQueryService.find(brandUuid, uuid);
 		} catch (CoachException e) {
@@ -150,7 +151,7 @@ public class CoachController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
-		com.iso.hypo.domain.dto.CoachDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.CoachDto.class);
+		com.iso.hypo.brand.application.dto.CoachDto domainDto = modelMapper.map(request, com.iso.hypo.brand.application.dto.CoachDto.class);
 
 		try {
 			domainDto = coachService.create(domainDto);
@@ -195,7 +196,7 @@ public class CoachController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
-		com.iso.hypo.domain.dto.CoachDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.CoachDto.class);
+		com.iso.hypo.brand.application.dto.CoachDto domainDto = modelMapper.map(request, com.iso.hypo.brand.application.dto.CoachDto.class);
 		
 		try {
 			domainDto = coachService.update(domainDto);
@@ -226,7 +227,7 @@ public class CoachController {
 	public ResponseEntity<Object> activateCoach(
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.domain.dto.CoachDto domainDto;
+		com.iso.hypo.brand.application.dto.CoachDto domainDto;
 		
 		try {
 			domainDto = coachService.activate(brandUuid, uuid);
@@ -257,7 +258,7 @@ public class CoachController {
 	public ResponseEntity<Object> deactivateCoach(
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.domain.dto.CoachDto domainDto;
+		com.iso.hypo.brand.application.dto.CoachDto domainDto;
 		
 		try {
 			domainDto = coachService.deactivate(brandUuid, uuid);
@@ -298,7 +299,7 @@ public class CoachController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
-		com.iso.hypo.domain.dto.CoachDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.CoachDto.class);
+		com.iso.hypo.brand.application.dto.CoachDto domainDto = modelMapper.map(request, com.iso.hypo.brand.application.dto.CoachDto.class);
 		
 		try {
 			domainDto = coachService.patch(domainDto);

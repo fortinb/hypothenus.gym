@@ -7,12 +7,12 @@ import java.util.UUID;
 
 import net.datafaker.Faker;
 
-import com.iso.hypo.domain.aggregate.Coach;
-import com.iso.hypo.domain.aggregate.Gym;
-import com.iso.hypo.domain.contact.Contact;
-import com.iso.hypo.domain.contact.PhoneNumber;
-import com.iso.hypo.domain.enumeration.PhoneNumberTypeEnum;
-import com.iso.hypo.domain.location.Address;
+import com.iso.hypo.brand.domain.model.Coach;
+import com.iso.hypo.brand.domain.model.Gym;
+import com.iso.hypo.common.domain.model.contact.Contact;
+import com.iso.hypo.common.domain.model.contact.PhoneNumber;
+import com.iso.hypo.common.domain.model.enumeration.PhoneNumberTypeEnum;
+import com.iso.hypo.common.domain.model.location.Address;
 
 public class GymBuilder {
 	private static Faker faker = new Faker();

@@ -3,8 +3,8 @@ package com.iso.hypo.domain;
 import java.time.Instant;
 import java.util.UUID;
 
-import com.iso.hypo.domain.aggregate.Member;
-import com.iso.hypo.domain.enumeration.MemberTypeEnum;
+import com.iso.hypo.membership.domain.model.Member;
+import com.iso.hypo.membership.domain.model.enumeration.MemberTypeEnum;
 
 public class MemberBuilder {
 	

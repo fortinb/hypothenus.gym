@@ -5,11 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.iso.hypo.domain.aggregate.Brand;
-import com.iso.hypo.domain.contact.Contact;
-import com.iso.hypo.domain.contact.PhoneNumber;
-import com.iso.hypo.domain.enumeration.PhoneNumberTypeEnum;
-import com.iso.hypo.domain.location.Address;
+import com.iso.hypo.brand.domain.model.Brand;
+import com.iso.hypo.common.domain.model.contact.Contact;
+import com.iso.hypo.common.domain.model.contact.PhoneNumber;
+import com.iso.hypo.common.domain.model.enumeration.PhoneNumberTypeEnum;
+import com.iso.hypo.common.domain.model.location.Address;
 
 import net.datafaker.Faker;
 

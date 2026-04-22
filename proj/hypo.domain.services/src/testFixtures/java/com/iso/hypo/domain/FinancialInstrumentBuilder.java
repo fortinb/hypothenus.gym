@@ -2,10 +2,10 @@ package com.iso.hypo.domain;
 
 import java.util.UUID;
 
-import com.iso.hypo.domain.aggregate.FinancialInstrument;
-import com.iso.hypo.domain.aggregate.Member;
-import com.iso.hypo.domain.enumeration.FinancialInstrumentTypeEnum;
-import com.iso.hypo.domain.financial.CreditCard;
+import com.iso.hypo.finance.domain.model.CreditCard;
+import com.iso.hypo.finance.domain.model.FinancialInstrument;
+import com.iso.hypo.finance.domain.model.enumeration.FinancialInstrumentTypeEnum;
+import com.iso.hypo.membership.domain.model.Member;
 
 public class FinancialInstrumentBuilder {
 	

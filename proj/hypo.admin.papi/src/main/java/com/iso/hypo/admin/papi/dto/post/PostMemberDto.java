@@ -2,7 +2,7 @@ package com.iso.hypo.admin.papi.dto.post;
 
 import com.iso.hypo.admin.papi.dto.BaseDto;
 import com.iso.hypo.admin.papi.dto.contact.PersonDto;
-import com.iso.hypo.domain.enumeration.MemberTypeEnum;
+import com.iso.hypo.membership.domain.model.enumeration.MemberTypeEnum;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;

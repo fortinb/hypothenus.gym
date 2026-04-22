@@ -4,8 +4,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.iso.hypo.services.clients.AzureGraphClientService;
-import com.iso.hypo.services.clients.impl.AzureGraphClientServiceImpl;
+import com.iso.hypo.common.infrastructure.services.clients.AzureGraphClientService;
+import com.iso.hypo.common.infrastructure.services.clients.impl.AzureGraphClientServiceImpl;
 
 @Configuration
 public class AzureGraphClientConfig {

@@ -6,8 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.iso.hypo.domain.aggregate.Course;
-import com.iso.hypo.domain.enumeration.LanguageEnum;
+import com.iso.hypo.brand.domain.model.Course;
+import com.iso.hypo.common.domain.model.LocalizedString;
+import com.iso.hypo.common.domain.model.enumeration.LanguageEnum;
 
 import net.datafaker.Faker;
 

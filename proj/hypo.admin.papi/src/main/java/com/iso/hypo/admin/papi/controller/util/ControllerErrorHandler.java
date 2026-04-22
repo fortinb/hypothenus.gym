@@ -4,7 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.iso.hypo.admin.papi.dto.ErrorDto;
-import com.iso.hypo.common.exception.DomainException;
+import com.iso.hypo.common.domain.exception.DomainException;
 
 public final class ControllerErrorHandler {
 
@@ -12,7 +12,7 @@ public final class ControllerErrorHandler {
         // utility
     }
 
-    public static ResponseEntity<Object> buildErrorResponse(DomainException e, com.iso.hypo.common.context.RequestContext requestContext, String context) {
+    public static ResponseEntity<Object> buildErrorResponse(DomainException e, com.iso.hypo.common.application.context.RequestContext requestContext, String context) {
         String tracking = requestContext != null ? requestContext.getTrackingNumber() : null;
         ErrorDto error = new ErrorDto(tracking, e.getCode(), e.getMessage(), context);
 

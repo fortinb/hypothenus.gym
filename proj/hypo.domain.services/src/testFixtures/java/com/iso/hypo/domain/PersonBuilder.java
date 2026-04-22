@@ -4,12 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.datafaker.Faker;
-import com.iso.hypo.domain.contact.Contact;
-import com.iso.hypo.domain.contact.Person;
-import com.iso.hypo.domain.contact.PhoneNumber;
-import com.iso.hypo.domain.enumeration.LanguageEnum;
-import com.iso.hypo.domain.enumeration.PhoneNumberTypeEnum;
-import com.iso.hypo.domain.location.Address;
+
+import com.iso.hypo.common.domain.model.contact.Contact;
+import com.iso.hypo.common.domain.model.contact.Person;
+import com.iso.hypo.common.domain.model.contact.PhoneNumber;
+import com.iso.hypo.common.domain.model.enumeration.LanguageEnum;
+import com.iso.hypo.common.domain.model.enumeration.PhoneNumberTypeEnum;
+import com.iso.hypo.common.domain.model.location.Address;
 
 public class PersonBuilder {
 	private static Faker faker = new Faker();

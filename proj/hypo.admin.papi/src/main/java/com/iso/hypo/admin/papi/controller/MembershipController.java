@@ -20,10 +20,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.iso.hypo.admin.papi.controller.util.ControllerErrorHandler;
 import com.iso.hypo.admin.papi.dto.ErrorDto;
 import com.iso.hypo.admin.papi.dto.model.MembershipDto;
-import com.iso.hypo.common.context.RequestContext;
-import com.iso.hypo.domain.security.Roles;
-import com.iso.hypo.services.MembershipQueryService;
-import com.iso.hypo.services.exception.MembershipException;
+import com.iso.hypo.common.application.context.RequestContext;
+import com.iso.hypo.common.application.security.Roles;
+import com.iso.hypo.membership.application.usecase.MembershipQueryService;
+import com.iso.hypo.membership.domain.exception.MembershipException;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -71,7 +71,7 @@ public class MembershipController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.domain.dto.MembershipDto> domainDtos = null;
+		Page<com.iso.hypo.membership.application.dto.MembershipDto> domainDtos = null;
 		try {
 			domainDtos = membershipQueryService.list(brandUuid, page, pageSize, includeInactive);
 		} catch (MembershipException e) {
@@ -96,7 +96,7 @@ public class MembershipController {
 	public ResponseEntity<Object> getMembership(
 			@PathVariable String brandUuid,
 			@PathVariable String uuid) {
-		com.iso.hypo.domain.dto.MembershipDto domainDto = null;
+		com.iso.hypo.membership.application.dto.MembershipDto domainDto = null;
 		try {
 			domainDto = membershipQueryService.find(brandUuid, uuid);
 		} catch (MembershipException e) {

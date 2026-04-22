@@ -25,11 +25,11 @@ import com.iso.hypo.admin.papi.controller.util.ControllerErrorHandler;
 import com.iso.hypo.admin.papi.dto.ErrorDto;
 import com.iso.hypo.admin.papi.dto.model.FinancialInstrumentDto;
 import com.iso.hypo.admin.papi.dto.post.PostFinancialInstrumentDto;
-import com.iso.hypo.common.context.RequestContext;
-import com.iso.hypo.domain.security.Roles;
-import com.iso.hypo.services.FinancialInstrumentQueryService;
-import com.iso.hypo.services.FinancialInstrumentService;
-import com.iso.hypo.services.exception.FinancialInstrumentException;
+import com.iso.hypo.common.application.context.RequestContext;
+import com.iso.hypo.common.application.security.Roles;
+import com.iso.hypo.finance.application.exception.FinancialInstrumentException;
+import com.iso.hypo.finance.application.usecase.FinancialInstrumentQueryService;
+import com.iso.hypo.finance.application.usecase.FinancialInstrumentService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -83,7 +83,7 @@ public class FinancialController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.domain.dto.FinancialInstrumentDto> domainDtos = null;
+		Page<com.iso.hypo.finance.application.dto.FinancialInstrumentDto> domainDtos = null;
 		try {
 			domainDtos = financialInstrumentQueryService.list(brandUuid, memberUuid, page, pageSize, includeInactive);
 		} catch (FinancialInstrumentException e) {
@@ -117,8 +117,8 @@ public class FinancialController {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
 		}
 		
-		com.iso.hypo.domain.dto.FinancialInstrumentDto domainDto = modelMapper.map(request,
-				com.iso.hypo.domain.dto.FinancialInstrumentDto.class);
+		com.iso.hypo.finance.application.dto.FinancialInstrumentDto domainDto = modelMapper.map(request,
+				com.iso.hypo.finance.application.dto.FinancialInstrumentDto.class);
 
 		try {
 			domainDto = financialInstrumentService.create(domainDto);
@@ -149,7 +149,7 @@ public class FinancialController {
 			@PathVariable String memberUuid, 
 			@PathVariable String uuid) {
 		
-		com.iso.hypo.domain.dto.FinancialInstrumentDto domainDto;
+		com.iso.hypo.finance.application.dto.FinancialInstrumentDto domainDto;
 
 		try {
 			domainDto = financialInstrumentService.activate(brandUuid, memberUuid, uuid);
@@ -177,7 +177,7 @@ public class FinancialController {
 			@PathVariable String memberUuid, 
 			@PathVariable String uuid) {
 		
-		com.iso.hypo.domain.dto.FinancialInstrumentDto domainDto;
+		com.iso.hypo.finance.application.dto.FinancialInstrumentDto domainDto;
 
 		try {
 			domainDto = financialInstrumentService.deactivate(brandUuid, memberUuid, uuid);

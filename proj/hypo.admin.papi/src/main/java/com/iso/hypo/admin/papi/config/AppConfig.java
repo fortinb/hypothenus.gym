@@ -25,8 +25,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.iso.hypo.common.context.RequestContext;
-import com.iso.hypo.domain.security.RoleEnum;
+import com.iso.hypo.common.application.context.RequestContext;
+import com.iso.hypo.common.application.security.RoleEnum;
 
 import jakarta.servlet.http.HttpServletRequest;
 

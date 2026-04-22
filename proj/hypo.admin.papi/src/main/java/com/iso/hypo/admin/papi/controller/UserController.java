@@ -30,11 +30,11 @@ import com.iso.hypo.admin.papi.dto.patch.PatchUserDto;
 import com.iso.hypo.admin.papi.dto.post.PostUserDto;
 import com.iso.hypo.admin.papi.dto.put.PutUserDto;
 import com.iso.hypo.admin.papi.dto.search.UserSearchDto;
-import com.iso.hypo.common.context.RequestContext;
-import com.iso.hypo.domain.security.Roles;
-import com.iso.hypo.services.UserQueryService;
-import com.iso.hypo.services.UserService;
-import com.iso.hypo.services.exception.UserException;
+import com.iso.hypo.brand.application.usecase.UserQueryService;
+import com.iso.hypo.brand.application.usecase.UserService;
+import com.iso.hypo.brand.domain.exception.UserException;
+import com.iso.hypo.common.application.context.RequestContext;
+import com.iso.hypo.common.application.security.Roles;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -84,7 +84,7 @@ public class UserController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.domain.dto.search.UserSearchDto> domainDtos = null;
+		Page<com.iso.hypo.brand.application.dto.search.UserSearchDto> domainDtos = null;
 		try {
 			domainDtos = userQueryService.search(page, pageSize, criteria, includeInactive);
 		} catch (UserException e) {
@@ -115,7 +115,7 @@ public class UserController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.domain.dto.UserDto> domainDtos = null;
+		Page<com.iso.hypo.brand.application.dto.UserDto> domainDtos = null;
 		try {
 			domainDtos = userQueryService.list(page, pageSize, includeInactive);
 		} catch (UserException e) {
@@ -142,7 +142,7 @@ public class UserController {
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> getUser(@PathVariable String uuid) {
-		com.iso.hypo.domain.dto.UserDto entity = null;
+		com.iso.hypo.brand.application.dto.UserDto entity = null;
 		try {
 			entity = userQueryService.find(uuid);
 		} catch (UserException e) {
@@ -169,7 +169,7 @@ public class UserController {
 	@PreAuthorize("hasRole('" + Roles.Admin + "')")
 	@ResponseStatus(value = HttpStatus.CREATED)
 	public ResponseEntity<Object> createUser(@RequestBody PostUserDto request) {
-		com.iso.hypo.domain.dto.UserDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.UserDto.class);
+		com.iso.hypo.brand.application.dto.UserDto domainDto = modelMapper.map(request, com.iso.hypo.brand.application.dto.UserDto.class);
 
 		try {
 			domainDto = userService.create(domainDto);
@@ -208,7 +208,7 @@ public class UserController {
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> updateUser(@PathVariable String uuid, @RequestBody PutUserDto request) {
-		com.iso.hypo.domain.dto.UserDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.UserDto.class);
+		com.iso.hypo.brand.application.dto.UserDto domainDto = modelMapper.map(request, com.iso.hypo.brand.application.dto.UserDto.class);
 
 		try {
 			domainDto = userService.update(domainDto);
@@ -245,7 +245,7 @@ public class UserController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> patchUser(@PathVariable String uuid, @RequestBody PatchUserDto request) {
-		com.iso.hypo.domain.dto.UserDto domainDto = modelMapper.map(request, com.iso.hypo.domain.dto.UserDto.class);
+		com.iso.hypo.brand.application.dto.UserDto domainDto = modelMapper.map(request, com.iso.hypo.brand.application.dto.UserDto.class);
 
 		try {
 			domainDto = userService.patch(domainDto);
@@ -282,7 +282,7 @@ public class UserController {
 	@PreAuthorize("hasRole('" + Roles.Admin + "')")
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> activateUser(@PathVariable String uuid) {
-		com.iso.hypo.domain.dto.UserDto entity;
+		com.iso.hypo.brand.application.dto.UserDto entity;
 
 		try {
 			entity = userService.activate(uuid);
@@ -316,7 +316,7 @@ public class UserController {
 	@ResponseStatus(value = HttpStatus.OK)
 	public ResponseEntity<Object> deactivateUser(@PathVariable String uuid) {
 
-		com.iso.hypo.domain.dto.UserDto entity;
+		com.iso.hypo.brand.application.dto.UserDto entity;
 
 		try {
 			entity = userService.deactivate(uuid);
