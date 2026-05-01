@@ -4,41 +4,26 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.data.annotation.Id;
-
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.mapping.Document;
-
 import com.iso.hypo.common.domain.model.BaseEntity;
 import com.iso.hypo.common.domain.model.contact.Contact;
 import com.iso.hypo.common.domain.model.contact.PhoneNumber;
 import com.iso.hypo.common.domain.model.location.Address;
-import com.mongodb.lang.NonNull;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-@Document ("gym")
 public class Gym extends BaseEntity {
 	
-	@Id
 	private String id;
-	
-	@Indexed
-	@NonNull
+
 	private String brandUuid;
-	
-	@Indexed
+
 	private String uuid;
 	
-	@Indexed (unique = true)
-	@NonNull
 	private String code;
-	
-	@NonNull
+
 	private String name;
 	
 	private Address address;
@@ -53,7 +38,6 @@ public class Gym extends BaseEntity {
 	
 	private List<PhoneNumber> phoneNumbers;
 	
-	@DBRef
 	private List<Coach> coachs = new ArrayList<>();
 	
 	public Gym() {

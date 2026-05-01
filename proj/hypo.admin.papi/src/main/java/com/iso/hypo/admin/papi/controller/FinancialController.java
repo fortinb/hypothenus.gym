@@ -26,6 +26,7 @@ import com.iso.hypo.admin.papi.dto.ErrorDto;
 import com.iso.hypo.admin.papi.dto.model.FinancialInstrumentDto;
 import com.iso.hypo.admin.papi.dto.post.PostFinancialInstrumentDto;
 import com.iso.hypo.common.application.context.RequestContext;
+import com.iso.hypo.common.application.dto.PageResultDto;
 import com.iso.hypo.common.application.security.Roles;
 import com.iso.hypo.finance.application.exception.FinancialInstrumentException;
 import com.iso.hypo.finance.application.usecase.FinancialInstrumentQueryService;
@@ -83,7 +84,7 @@ public class FinancialController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.finance.application.dto.FinancialInstrumentDto> domainDtos = null;
+		PageResultDto<com.iso.hypo.finance.application.dto.FinancialInstrumentDto> domainDtos = null;
 		try {
 			domainDtos = financialInstrumentQueryService.list(brandUuid, memberUuid, page, pageSize, includeInactive);
 		} catch (FinancialInstrumentException e) {
@@ -144,7 +145,7 @@ public class FinancialController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "','" + Roles.Member + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> activateMember(
+	public ResponseEntity<Object> activateFinancialInstrument(
 			@PathVariable String brandUuid,
 			@PathVariable String memberUuid, 
 			@PathVariable String uuid) {
@@ -172,7 +173,7 @@ public class FinancialController {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }) })
 	@PreAuthorize("hasAnyRole('" + Roles.Admin + "','" + Roles.Manager + "','" + Roles.Member + "')")
 	@ResponseStatus(value = HttpStatus.OK)
-	public ResponseEntity<Object> deactivateMember(
+	public ResponseEntity<Object> deactivateFinancialInstrument(
 			@PathVariable String brandUuid,
 			@PathVariable String memberUuid, 
 			@PathVariable String uuid) {

@@ -2,13 +2,11 @@ package com.iso.hypo.brand.domain.repository;
 
 import java.util.Optional;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.repository.CrudRepository;
-
 import com.iso.hypo.brand.domain.model.User;
+import com.iso.hypo.common.domain.model.pagination.PageRequest;
+import com.iso.hypo.common.domain.model.pagination.PageResult;
 
-public interface UserRepository extends CrudRepository<User, String>, UserRepositoryCustom {
+public interface UserRepository {
 
 	Optional<User> findByEmailAndDeletedIsFalse(String email);
 
@@ -16,8 +14,14 @@ public interface UserRepository extends CrudRepository<User, String>, UserReposi
 
 	Optional<User> findByUuidAndDeletedIsFalse(String userUuid);
 
-	Page<User> findAllByDeletedIsFalse(Pageable pageable);
+	PageResult<User> findAllByDeletedIsFalse(PageRequest pageRequest);
 	
-	Page<User> findAllByDeletedIsFalseAndActiveIsTrue(Pageable pageable);
+	PageResult<User> findAllByDeletedIsFalseAndActiveIsTrue(PageRequest pageRequest);
+	
+	User save(User user);
+
+    void delete(User user);
+
+    void deleteAll();
 }
 

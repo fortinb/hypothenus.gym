@@ -18,7 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.data.domain.Page;
+import com.iso.hypo.common.application.dto.PageResultDto;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -47,7 +47,7 @@ import com.iso.hypo.finance.application.dto.FinancialInstrumentDto;
 import com.iso.hypo.finance.domain.model.FinancialInstrument;
 import com.iso.hypo.finance.domain.model.enumeration.FinancialInstrumentTypeEnum;
 import com.iso.hypo.finance.domain.repository.FinancialInstrumentRepository;
-import com.iso.hypo.membership.domain.exception.MemberException;
+import com.iso.hypo.membership.application.exception.MemberException;
 import com.iso.hypo.membership.domain.model.Member;
 import com.iso.hypo.membership.domain.model.enumeration.MemberTypeEnum;
 import com.iso.hypo.membership.domain.repository.MemberRepository;
@@ -142,12 +142,12 @@ class FinancialInstrumentControllerTests {
 				String.format("List error: %s", response.getStatusCode()));
 
 		// Assert
-		Page<MemberDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<MemberDto>>() {
+		PageResultDto<MemberDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<MemberDto>>() {
 		}, objectMapper);
-		Assertions.assertEquals(0, page.getPageable().getPageNumber(), String
-				.format("Financial Instrument list first page number invalid: %d", page.getPageable().getPageNumber()));
-		Assertions.assertEquals(2, page.getNumberOfElements(), String.format(
-				"Financial Instrument list first page number of elements invalid: %d", page.getNumberOfElements()));
+		Assertions.assertEquals(0, page.getPageNumber(), String
+				.format("Financial Instrument list first page number invalid: %d", page.getPageNumber()));
+		Assertions.assertEquals(2, page.getTotalElements(), String.format(
+				"Financial Instrument list first page number of elements invalid: %d", page.getTotalElements()));
 	}
 
 	@ParameterizedTest

@@ -26,7 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -53,11 +52,12 @@ import com.iso.hypo.brand.domain.model.Brand;
 import com.iso.hypo.brand.domain.model.User;
 import com.iso.hypo.brand.domain.repository.BrandRepository;
 import com.iso.hypo.brand.domain.repository.UserRepository;
+import com.iso.hypo.common.application.dto.PageResultDto;
 import com.iso.hypo.common.application.security.Roles;
 import com.iso.hypo.domain.BrandBuilder;
 import com.iso.hypo.domain.MemberBuilder;
 import com.iso.hypo.domain.UserBuilder;
-import com.iso.hypo.membership.domain.exception.MemberException;
+import com.iso.hypo.membership.application.exception.MemberException;
 import com.iso.hypo.membership.domain.model.Member;
 import com.iso.hypo.membership.domain.model.enumeration.MemberTypeEnum;
 import com.iso.hypo.membership.domain.repository.MemberRepository;
@@ -228,11 +228,11 @@ class MemberControllerTests {
 				String.format("List error: %s", response.getStatusCode()));
 
 		// Assert
-		Page<MemberDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<MemberDto>>() {}, objectMapper);
-		Assertions.assertEquals(0, page.getPageable().getPageNumber(),
-				String.format("Member list first page number invalid: %d", page.getPageable().getPageNumber()));
-		Assertions.assertEquals(4, page.getNumberOfElements(),
-				String.format("Member list first page number of elements invalid: %d", page.getNumberOfElements()));
+		PageResultDto<MemberDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<MemberDto>>() {}, objectMapper);
+		Assertions.assertEquals(0, page.getPageNumber(),
+				String.format("Member list first page number invalid: %d", page.getPageNumber()));
+		Assertions.assertEquals(4, page.getContent().size(),
+				String.format("Member list first page number of elements invalid: %d", page.getContent().size()));
 	}
 
 	@Test
@@ -252,13 +252,13 @@ class MemberControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 
-		Page<MemberDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<MemberDto>>() {}, objectMapper);
+		PageResultDto<MemberDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<MemberDto>>() {}, objectMapper);
 
 		// Assert
-		Assertions.assertEquals(1, page.getPageable().getPageNumber(),
-				String.format("Member list second page number invalid: %d", page.getPageable().getPageNumber()));
-		Assertions.assertEquals(4, page.getNumberOfElements(),
-				String.format("Member list second page number of elements invalid: %d", page.getNumberOfElements()));
+		Assertions.assertEquals(1, page.getPageNumber(),
+				String.format("Member list second page number invalid: %d", page.getPageNumber()));
+		Assertions.assertEquals(4, page.getContent().size(),
+				String.format("Member list second page number of elements invalid: %d", page.getContent().size()));
 	}
 
 	@Test
@@ -363,7 +363,7 @@ class MemberControllerTests {
 
     @ParameterizedTest
     @CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis", "member, Guillaume Fortin" })
-    void testGetByUserIdpIdpSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
+    void testGetByUserIdpSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
         // Arrange
 		User createdUser = UserBuilder.build();
 		createdUser.setActive(true);
@@ -373,7 +373,7 @@ class MemberControllerTests {
 	
 		Member userMember = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
 		userMember.setActive(true);
-		userMember.setUser(createdUser);
+		userMember.setUserUuid(createdUser.getUuid());
 		userMember = memberRepository.save(userMember);
 		
         // Act
@@ -722,11 +722,11 @@ class MemberControllerTests {
     		Assertions.assertEquals(response.getStatusCode(), HttpStatus.OK,
     				String.format("Search error: %s", response.getStatusCode()));
     		
-    		Page<MemberSearchDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<MemberSearchDto>>() {}, objectMapper);
-				Assertions.assertTrue(page.getNumberOfElements() >= minimumNumberOfElements &&
-						page.getNumberOfElements() <= maximumNumberOfElements,
+    		PageResultDto<MemberSearchDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<MemberSearchDto>>() {}, objectMapper);
+				Assertions.assertTrue(page.getContent().size() >= minimumNumberOfElements &&
+									  page.getContent().size() <= maximumNumberOfElements,
 						String.format("Member search return invalid number of results [%s]: %d",
-							criteria, page.getNumberOfElements()));
+							criteria, page.getContent().size()));
 			});
 	}
 

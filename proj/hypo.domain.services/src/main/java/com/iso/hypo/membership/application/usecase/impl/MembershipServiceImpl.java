@@ -11,34 +11,34 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import com.iso.hypo.brand.application.usecase.BrandQueryService;
-import com.iso.hypo.brand.domain.exception.BrandException;
 import com.iso.hypo.common.application.context.RequestContext;
 import com.iso.hypo.membership.application.dto.MembershipDto;
-import com.iso.hypo.membership.application.mapper.MembershipMapper;
+import com.iso.hypo.membership.application.exception.MembershipException;
+import com.iso.hypo.membership.application.mapper.MembershipDtoMapper;
+import com.iso.hypo.membership.application.port.BrandServicePort;
 import com.iso.hypo.membership.application.usecase.MembershipService;
-import com.iso.hypo.membership.domain.exception.MembershipException;
 import com.iso.hypo.membership.domain.model.Membership;
 import com.iso.hypo.membership.domain.repository.MembershipRepository;
 
 @Service
 public class MembershipServiceImpl implements MembershipService {
 
-	private final BrandQueryService brandQueryService;;
+	private final BrandServicePort brandValidationPort;
 	
 	private final MembershipRepository membershipRepository;
 
-	private final MembershipMapper membershipMapper;
+	private final MembershipDtoMapper membershipMapper;
 
 	// replace field-injected logger with static logger
 	private static final Logger logger = LoggerFactory.getLogger(MembershipServiceImpl.class);
 
 	private final RequestContext requestContext;
 	
-	public MembershipServiceImpl(MembershipMapper membershipMapper, MembershipRepository membershipRepository, BrandQueryService brandQueryService, RequestContext requestContext) {
+	public MembershipServiceImpl(MembershipDtoMapper membershipMapper, MembershipRepository membershipRepository,
+			BrandServicePort brandValidationPort, RequestContext requestContext) {
 		this.membershipMapper = membershipMapper;
 		this.membershipRepository = membershipRepository;
-		this.brandQueryService = brandQueryService;
+		this.brandValidationPort = brandValidationPort;
 		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
 
@@ -49,7 +49,9 @@ public class MembershipServiceImpl implements MembershipService {
 			Assert.notNull(membershipDto, "membershipDto must not be null");
 			Membership membership = membershipMapper.toEntity(membershipDto);
 
-			brandQueryService.assertExists(membership.getBrandUuid());
+			if (!brandValidationPort.brandExists(membership.getBrandUuid())) {
+				throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.BRAND_NOT_FOUND, "Brand not found");
+			}
 			
 			membership.setCreatedOn(Instant.now());
 			membership.setCreatedBy(requestContext.getUsername());
@@ -59,9 +61,6 @@ public class MembershipServiceImpl implements MembershipService {
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}", membershipDto != null ? membershipDto.getBrandUuid() : null, e);
 			
-			if (e instanceof BrandException) {
-				throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.BRAND_NOT_FOUND, "Brand not found");
-			}
 			if (e instanceof MembershipException) {
 				throw (MembershipException) e;
 			}
@@ -103,12 +102,11 @@ public class MembershipServiceImpl implements MembershipService {
 	@Transactional
 	public MembershipDto activate(String brandUuid, String membershipUuid) throws MembershipException {
 		try {
-			Optional<Membership> entity = membershipRepository.activate(brandUuid, membershipUuid);
-			if (entity.isEmpty()) {
-				throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.MEMBERSHIP_NOT_FOUND, "Membership not found");
-			}
+			Membership entity = this.readByMembershipUuid(brandUuid, membershipUuid);
+			entity.activate(requestContext.getUsername());
+			membershipRepository.save(entity);
 			
-			return membershipMapper.toDto(entity.get());
+			return membershipMapper.toDto(entity);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, membershipUuid={}", brandUuid, membershipUuid, e);
 			
@@ -123,12 +121,11 @@ public class MembershipServiceImpl implements MembershipService {
 	@Transactional
 	public MembershipDto deactivate(String brandUuid, String membershipUuid) throws MembershipException {
 		try {
-			Optional<Membership> entity = membershipRepository.deactivate(brandUuid, membershipUuid);
-			if (entity.isEmpty()) {
-				throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.MEMBERSHIP_NOT_FOUND, "Membership not found");
-			}
+			Membership entity = this.readByMembershipUuid(brandUuid, membershipUuid);
+			entity.deactivate(requestContext.getUsername());
+			membershipRepository.save(entity);
 			
-			return membershipMapper.toDto(entity.get());
+			return membershipMapper.toDto(entity);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, membershipUuid={}", brandUuid, membershipUuid, e);
 			
@@ -144,7 +141,9 @@ public class MembershipServiceImpl implements MembershipService {
 	public void delete(String brandUuid, String membershipUuid) throws MembershipException {
 		try {
 			Membership entity = this.readByMembershipUuid(brandUuid, membershipUuid);
-			membershipRepository.delete(entity.getBrandUuid(), entity.getUuid(), requestContext.getUsername());
+			entity.delete(requestContext.getUsername());
+			membershipRepository.save(entity);
+			
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, membershipUuid={}", brandUuid, membershipUuid, e);
 			

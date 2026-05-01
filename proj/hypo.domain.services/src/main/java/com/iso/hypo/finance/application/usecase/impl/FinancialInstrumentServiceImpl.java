@@ -12,12 +12,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import com.iso.hypo.brand.application.usecase.BrandQueryService;
-import com.iso.hypo.brand.domain.exception.BrandException;
 import com.iso.hypo.common.application.context.RequestContext;
 import com.iso.hypo.finance.application.dto.FinancialInstrumentDto;
 import com.iso.hypo.finance.application.exception.FinancialInstrumentException;
-import com.iso.hypo.finance.application.mapper.FinancialInstrumentMapper;
+import com.iso.hypo.finance.application.mapper.FinancialInstrumentDtoMapper;
+import com.iso.hypo.finance.application.port.BrandServicePort;
 import com.iso.hypo.finance.application.usecase.FinancialInstrumentService;
 import com.iso.hypo.finance.domain.model.FinancialInstrument;
 import com.iso.hypo.finance.domain.repository.FinancialInstrumentRepository;
@@ -25,9 +24,9 @@ import com.iso.hypo.finance.domain.repository.FinancialInstrumentRepository;
 @Service
 public class FinancialInstrumentServiceImpl implements FinancialInstrumentService {
 
-	private final BrandQueryService brandQueryService;;
+	private final BrandServicePort brandValidationPort;
 
-	private final FinancialInstrumentMapper financialInstrumentMapper;
+	private final FinancialInstrumentDtoMapper financialInstrumentMapper;
 
 	private final FinancialInstrumentRepository financialInstrumentRepository;
 
@@ -40,12 +39,12 @@ public class FinancialInstrumentServiceImpl implements FinancialInstrumentServic
 
 	public FinancialInstrumentServiceImpl(
 			FinancialInstrumentRepository financialInstrumentRepository,
-			BrandQueryService brandQueryService,
-			FinancialInstrumentMapper financialInstrumentMapper,
+			BrandServicePort brandValidationPort,
+			FinancialInstrumentDtoMapper financialInstrumentMapper,
 			RequestContext requestContext) {
 	
 		this.financialInstrumentRepository = financialInstrumentRepository;
-		this.brandQueryService = brandQueryService;
+		this.brandValidationPort = brandValidationPort;
 		this.financialInstrumentMapper = financialInstrumentMapper;
 		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
 	}
@@ -58,7 +57,10 @@ public class FinancialInstrumentServiceImpl implements FinancialInstrumentServic
 
 			FinancialInstrument financialInstrument = financialInstrumentMapper.toEntity(financialInstrumentDto);
 			
-			brandQueryService.assertExists(financialInstrument.getBrandUuid());
+			if (!brandValidationPort.brandExists(financialInstrument.getBrandUuid())) {
+				throw new FinancialInstrumentException(requestContext.getTrackingNumber(),
+						FinancialInstrumentException.BRAND_NOT_FOUND, "Brand not found");
+			}
 
 			// TODO: Call CreditCard provider service to get permanent token and set it to credit card entity. This is to avoid storing actual card number in database and use permanent token for future reference.
 			financialInstrument.setUuid(UUID.randomUUID().toString());
@@ -74,10 +76,6 @@ public class FinancialInstrumentServiceImpl implements FinancialInstrumentServic
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}", financialInstrumentDto != null ? financialInstrumentDto.getBrandUuid() : null, e);
 
-			if (e instanceof BrandException) {
-				throw new FinancialInstrumentException(requestContext.getTrackingNumber(), FinancialInstrumentException.BRAND_NOT_FOUND,
-						"Brand not found");
-			}
 			if (e instanceof FinancialInstrumentException) {
 				throw (FinancialInstrumentException) e;
 			}
@@ -89,13 +87,11 @@ public class FinancialInstrumentServiceImpl implements FinancialInstrumentServic
 	@Transactional
 	public FinancialInstrumentDto activate(String brandUuid, String memberUuid, String financialInstrumentUuid) throws FinancialInstrumentException {
 		try {
-			Optional<FinancialInstrument> financialInstrumentOpt = financialInstrumentRepository.activate(brandUuid, memberUuid, financialInstrumentUuid);
-			if (financialInstrumentOpt.isEmpty()) {
-				throw new FinancialInstrumentException(requestContext.getTrackingNumber(), FinancialInstrumentException.FINANCIAL_INSTRUMENT_NOT_FOUND,
-						"FinancialInstrument not found");
-			}
-
-			return financialInstrumentMapper.toDto(financialInstrumentOpt.get());
+			FinancialInstrument entity = this.readByFinancialInstrumentUuid(brandUuid, memberUuid, financialInstrumentUuid);
+			entity.activate(requestContext.getUsername());
+			financialInstrumentRepository.save(entity);
+			
+			return financialInstrumentMapper.toDto(entity);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, financialInstrumentUuid={}", brandUuid, financialInstrumentUuid, e);
 
@@ -110,13 +106,11 @@ public class FinancialInstrumentServiceImpl implements FinancialInstrumentServic
 	@Transactional
 	public FinancialInstrumentDto deactivate(String brandUuid, String memberUuid, String financialInstrumentUuid) throws FinancialInstrumentException {
 		try {
-			Optional<FinancialInstrument> financialInstrumentOpt = financialInstrumentRepository.deactivate(brandUuid, memberUuid, financialInstrumentUuid);
-			if (financialInstrumentOpt.isEmpty()) {
-				throw new FinancialInstrumentException(requestContext.getTrackingNumber(), FinancialInstrumentException.FINANCIAL_INSTRUMENT_NOT_FOUND,
-						"FinancialInstrument not found");
-			}
-
-			return financialInstrumentMapper.toDto(financialInstrumentOpt.get());
+			FinancialInstrument entity = this.readByFinancialInstrumentUuid(brandUuid, memberUuid, financialInstrumentUuid);
+			entity.deactivate(requestContext.getUsername());
+			financialInstrumentRepository.save(entity);
+			
+			return financialInstrumentMapper.toDto(entity);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, financialInstrumentUuid={}", brandUuid, financialInstrumentUuid, e);
 
@@ -131,16 +125,16 @@ public class FinancialInstrumentServiceImpl implements FinancialInstrumentServic
 	@Transactional
 	public void delete(String brandUuid, String memberUuid, String financialInstrumentUuid) throws FinancialInstrumentException {
 		try {
-			brandQueryService.assertExists(brandUuid);
+			if (!brandValidationPort.brandExists(brandUuid)) {
+				throw new FinancialInstrumentException(requestContext.getTrackingNumber(),
+						FinancialInstrumentException.BRAND_NOT_FOUND, "Brand not found");
+			}
+			FinancialInstrument entity = this.readByFinancialInstrumentUuid(brandUuid, memberUuid, financialInstrumentUuid);
+			entity.delete(requestContext.getUsername());
 			
-			FinancialInstrument financialInstrument = this.readByFinancialInstrumentUuid(brandUuid, memberUuid, financialInstrumentUuid);
-
 			// TODO: Call CreditCard provider service to delete permanent token
-			financialInstrument.setDeleted(true);			
-			financialInstrument.setDeletedOn(Instant.now());
-			financialInstrument.setDeletedBy(requestContext.getUsername());
 
-			financialInstrumentRepository.save(financialInstrument);
+			financialInstrumentRepository.save(entity);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, financialInstrumentUuid={}, uuid={}", brandUuid, financialInstrumentUuid, financialInstrumentUuid, e);
 

@@ -31,10 +31,11 @@ import com.iso.hypo.admin.papi.dto.post.PostMemberDto;
 import com.iso.hypo.admin.papi.dto.put.PutMemberDto;
 import com.iso.hypo.admin.papi.dto.search.MemberSearchDto;
 import com.iso.hypo.common.application.context.RequestContext;
+import com.iso.hypo.common.application.dto.PageResultDto;
 import com.iso.hypo.common.application.security.Roles;
+import com.iso.hypo.membership.application.exception.MemberException;
 import com.iso.hypo.membership.application.usecase.MemberQueryService;
 import com.iso.hypo.membership.application.usecase.MemberService;
-import com.iso.hypo.membership.domain.exception.MemberException;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -84,7 +85,7 @@ public class MemberController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.membership.application.dto.search.MemberSearchDto> domainDtos = null;
+		PageResultDto<com.iso.hypo.membership.application.dto.search.MemberSearchDto> domainDtos = null;
 		try {
 			domainDtos = memberQueryService.search(page, pageSize, criteria, includeInactive);
 		} catch (MemberException e) {
@@ -117,7 +118,7 @@ public class MemberController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.membership.application.dto.MemberDto> domainDtos = null;
+		PageResultDto<com.iso.hypo.membership.application.dto.MemberDto> domainDtos = null;
 		try {
 			domainDtos = memberQueryService.list(brandUuid, page, pageSize, includeInactive);
 		} catch (MemberException e) {

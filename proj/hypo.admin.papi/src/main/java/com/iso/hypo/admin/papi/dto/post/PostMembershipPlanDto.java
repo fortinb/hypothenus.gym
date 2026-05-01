@@ -7,8 +7,6 @@ import com.iso.hypo.admin.papi.dto.LocalizedStringDto;
 import com.iso.hypo.admin.papi.dto.enumeration.BillingFrequencyEnum;
 import com.iso.hypo.admin.papi.dto.enumeration.MembershipPlanPeriodEnum;
 import com.iso.hypo.admin.papi.dto.financial.CostDto;
-import com.iso.hypo.admin.papi.dto.model.CourseDto;
-import com.iso.hypo.admin.papi.dto.model.GymDto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -49,7 +47,7 @@ public class PostMembershipPlanDto {
 	
 	private Date endDate;
 	
-	private List<CourseDto> includedCourses;
+	private List<String> includedCourseUuids;
 	
-	private List<GymDto> includedGyms;
+	private List<String> includedGymUuids;
 }

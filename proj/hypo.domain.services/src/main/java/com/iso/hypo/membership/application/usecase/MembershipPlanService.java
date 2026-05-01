@@ -1,7 +1,7 @@
 package com.iso.hypo.membership.application.usecase;
 
 import com.iso.hypo.membership.application.dto.MembershipPlanDto;
-import com.iso.hypo.membership.domain.exception.MembershipPlanException;
+import com.iso.hypo.membership.application.exception.MembershipPlanException;
 
 public interface MembershipPlanService {
 
@@ -19,7 +19,7 @@ public interface MembershipPlanService {
     
     void deleteAllByBrandUuid(String brandUuid) throws MembershipPlanException;
 
-	void removeAllGymReferencesByGymId(String gymId) throws MembershipPlanException;
+	void removeAllGymReferencesByGymUuid(String brandUuid, String gymUuid) throws MembershipPlanException;
 	
-	void removeAllCourseReferencesByCourseId(String courseId) throws MembershipPlanException;
+	void removeAllCourseReferencesByCourseUuid(String brandUuid, String courseUuid) throws MembershipPlanException;
 }

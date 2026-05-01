@@ -1,15 +1,33 @@
 package com.iso.hypo.membership.application.event;
 
-import com.iso.hypo.events.event.HypothenusEvent;
-import com.iso.hypo.events.event.OperationEnum;
-import com.iso.hypo.membership.domain.model.Member;
+import java.net.URI;
 
-public class MemberEvent extends HypothenusEvent<Member> {
+import com.iso.hypo.common.application.event.HypothenusEvent;
+import com.iso.hypo.common.application.event.enumeration.OperationEnum;
+import com.iso.hypo.membership.application.dto.MemberDto;
+
+public class MemberEvent extends HypothenusEvent<MemberDto> {
 
     private static final long serialVersionUID = 1L;
 
-    public MemberEvent(Object source, Member entity, OperationEnum operation) {
+    private static final String EVENT_SOURCE = "/hypo/gym/member";
+
+    public MemberEvent(Object source, MemberDto entity, OperationEnum operation) {
         super(source, entity, operation);
     }
 
+    @Override
+    protected String resolveId() {
+        return getEntity().getUuid();
+    }
+
+    @Override
+    protected String resolveType() {
+        return "hypo.gym.member." + getOperation().name().toLowerCase();
+    }
+
+    @Override
+    protected URI resolveSource() {
+        return URI.create(EVENT_SOURCE);
+    }
 }

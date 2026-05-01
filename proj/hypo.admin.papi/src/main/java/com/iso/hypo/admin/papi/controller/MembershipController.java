@@ -5,7 +5,6 @@ import java.util.Objects;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,9 +20,10 @@ import com.iso.hypo.admin.papi.controller.util.ControllerErrorHandler;
 import com.iso.hypo.admin.papi.dto.ErrorDto;
 import com.iso.hypo.admin.papi.dto.model.MembershipDto;
 import com.iso.hypo.common.application.context.RequestContext;
+import com.iso.hypo.common.application.dto.PageResultDto;
 import com.iso.hypo.common.application.security.Roles;
+import com.iso.hypo.membership.application.exception.MembershipException;
 import com.iso.hypo.membership.application.usecase.MembershipQueryService;
-import com.iso.hypo.membership.domain.exception.MembershipException;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -54,7 +54,7 @@ public class MembershipController {
 	@Operation(summary = "Retrieve a list of memberships")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
-					@Content(schema = @Schema(implementation = Page.class), mediaType = "application/json") }),
+					@Content(schema = @Schema(implementation = PageResultDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "400", description = "Bad request. The request is invalid or missing required data.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "403", description = "Forbidden. The client does not have permission to access this resource.", content = {
@@ -71,7 +71,7 @@ public class MembershipController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.membership.application.dto.MembershipDto> domainDtos = null;
+		PageResultDto<com.iso.hypo.membership.application.dto.MembershipDto> domainDtos = null;
 		try {
 			domainDtos = membershipQueryService.list(brandUuid, page, pageSize, includeInactive);
 		} catch (MembershipException e) {

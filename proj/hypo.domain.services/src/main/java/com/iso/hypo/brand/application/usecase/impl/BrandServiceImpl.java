@@ -1,12 +1,12 @@
 package com.iso.hypo.brand.application.usecase.impl;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
-import org.modelmapper.PropertyMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,23 +17,23 @@ import org.springframework.util.Assert;
 
 import com.iso.hypo.brand.application.dto.BrandDto;
 import com.iso.hypo.brand.application.event.BrandEvent;
-import com.iso.hypo.brand.application.mapper.BrandMapper;
+import com.iso.hypo.brand.application.exception.BrandException;
+import com.iso.hypo.brand.application.mapper.BrandDtoMapper;
 import com.iso.hypo.brand.application.usecase.BrandService;
-import com.iso.hypo.brand.domain.exception.BrandException;
 import com.iso.hypo.brand.domain.model.Brand;
 import com.iso.hypo.brand.domain.repository.BrandRepository;
 import com.iso.hypo.common.application.context.RequestContext;
+import com.iso.hypo.common.application.event.enumeration.OperationEnum;
+import com.iso.hypo.common.application.usecase.AzureGraphClientService;
 import com.iso.hypo.common.domain.model.Message;
 import com.iso.hypo.common.domain.model.enumeration.MessageSeverityEnum;
-import com.iso.hypo.common.infrastructure.services.clients.AzureGraphClientService;
-import com.iso.hypo.events.event.OperationEnum;
 
 @Service
 public class BrandServiceImpl implements BrandService {
 
 	private final BrandRepository brandRepository;
 
-	private final BrandMapper brandMapper;
+	private final BrandDtoMapper brandMapper;
 
 	private final RequestContext requestContext;
 	
@@ -46,7 +46,7 @@ public class BrandServiceImpl implements BrandService {
 	
 	private static final Logger logger = LoggerFactory.getLogger(BrandServiceImpl.class);
 
-	public BrandServiceImpl(BrandMapper brandMapper, 
+	public BrandServiceImpl(BrandDtoMapper brandMapper, 
 							BrandRepository brandRepository, 
 							ApplicationEventPublisher eventPublisher,
 							AzureGraphClientService azureGraphClientService,
@@ -71,7 +71,7 @@ public class BrandServiceImpl implements BrandService {
 				message.setCode(BrandException.BRAND_CODE_ALREADY_EXIST);
 				message.setDescription("Duplicate brand code");
 				message.setSeverity(MessageSeverityEnum.warning);
-				existingBrand.get().getMessages().add(message);
+				existingBrand.get().setMessages(List.of(message));
 				
 				throw new BrandException(requestContext.getTrackingNumber(), BrandException.BRAND_CODE_ALREADY_EXIST, "Duplicate brand code", brandMapper.toDto(existingBrand.get()));
 			}
@@ -133,12 +133,11 @@ public class BrandServiceImpl implements BrandService {
 	@Transactional
 	public BrandDto activate(String brandUuid) throws BrandException {
 		try {
-			Optional<Brand> entity = brandRepository.activate(brandUuid);
-			if (entity.isEmpty()) {
-				throw new BrandException(requestContext.getTrackingNumber(), BrandException.BRAND_NOT_FOUND, "Brand not found");
-			}
+			Brand entity = this.readByBrandUuid(brandUuid);
+			entity.activate(requestContext.getUsername());
+			brandRepository.save(entity);
 
-			return brandMapper.toDto(entity.get());
+			return brandMapper.toDto(entity);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}", brandUuid, e);
 			if (e instanceof BrandException) {
@@ -152,12 +151,11 @@ public class BrandServiceImpl implements BrandService {
 	@Transactional
 	public BrandDto deactivate(String brandUuid) throws BrandException {
 		try {
-			Optional<Brand> entity = brandRepository.deactivate(brandUuid);
-			if (entity.isEmpty()) {
-				throw new BrandException(requestContext.getTrackingNumber(), BrandException.BRAND_NOT_FOUND, "Brand not found");
-			}
+			Brand entity = this.readByBrandUuid(brandUuid);
+			entity.deactivate(requestContext.getUsername());
+			brandRepository.save(entity);
 
-			return brandMapper.toDto(entity.get());
+			return brandMapper.toDto(entity);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}", brandUuid, e);
 			if (e instanceof BrandException) {
@@ -172,10 +170,10 @@ public class BrandServiceImpl implements BrandService {
 	public void delete(String brandUuid) throws BrandException {
 		try {
 			Brand entity = this.readByBrandUuid(brandUuid);
-
-			brandRepository.delete(entity.getUuid(), requestContext.getUsername());
+			entity.delete(requestContext.getUsername());
+			brandRepository.save(entity);
 			
-			eventPublisher.publishEvent(new BrandEvent(this, entity, OperationEnum.delete));
+			eventPublisher.publishEvent(new BrandEvent(this, brandMapper.toDto(entity), OperationEnum.delete));
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}", brandUuid, e);
 			
@@ -198,14 +196,14 @@ public class BrandServiceImpl implements BrandService {
 				.setSkipNullEnabled(skipNull)
 				.setCollectionsMergeEnabled(false);
 			
-			PropertyMap<Brand, Brand> brandPropertyMap = new PropertyMap<Brand, Brand>() {
+		/*	PropertyMap<Brand, Brand> brandPropertyMap = new PropertyMap<Brand, Brand>() {
 				protected void configure() {
 					skip().setId(null);
 					skip().setActive(false);
 				}
 			};
 			
-			mapper.addMappings(brandPropertyMap);
+			mapper.addMappings(brandPropertyMap);*/
 			mapper = brandMapper.initBrandMappings(mapper);
 			
 			mapper.map(brand, oldBrand);

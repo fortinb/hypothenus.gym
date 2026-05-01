@@ -2,17 +2,25 @@ package com.iso.hypo.finance.domain.repository;
 
 import java.util.Optional;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.repository.CrudRepository;
-
+import com.iso.hypo.common.domain.model.pagination.PageRequest;
+import com.iso.hypo.common.domain.model.pagination.PageResult;
 import com.iso.hypo.finance.domain.model.FinancialInstrument;
 
-public interface FinancialInstrumentRepository extends CrudRepository<FinancialInstrument, String>, FinancialInstrumentRepositoryCustom {
+public interface FinancialInstrumentRepository {
 
 	Optional<FinancialInstrument> findByBrandUuidAndMemberUuidAndUuidAndDeletedIsFalse(String brandUuid, String memberUuid, String financialInstrumentUuid);
 
-	Page<FinancialInstrument> findAllByBrandUuidAndMemberUuidAndDeletedIsFalse(String brandUuid, String memberUuid, Pageable pageable);
+	PageResult<FinancialInstrument> findAllByBrandUuidAndMemberUuidAndDeletedIsFalse(String brandUuid, String memberUuid, PageRequest pageRequest);
 	
-	Page<FinancialInstrument> findAllByBrandUuidAndMemberUuidAndDeletedIsFalseAndActiveIsTrue(String brandUuid, String memberUuid, Pageable pageable);
+	PageResult<FinancialInstrument> findAllByBrandUuidAndMemberUuidAndDeletedIsFalseAndActiveIsTrue(String brandUuid, String memberUuid, PageRequest pageRequest);
+	
+	FinancialInstrument save(FinancialInstrument financialInstrument);
+
+    void delete(FinancialInstrument financialInstrument);
+
+    void deleteAll();
+    
+    long deleteAllByBrandUuid(String brandUuid, String deletedBy);
+    
+    long deleteAllByMemberUuid(String brandUuid, String memberUuid, String deletedBy);
 }

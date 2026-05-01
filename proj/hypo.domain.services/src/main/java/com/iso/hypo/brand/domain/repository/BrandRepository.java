@@ -2,23 +2,25 @@ package com.iso.hypo.brand.domain.repository;
 
 import java.util.Optional;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.PagingAndSortingRepository;
-
 import com.iso.hypo.brand.domain.model.Brand;
+import com.iso.hypo.common.domain.model.pagination.PageRequest;
+import com.iso.hypo.common.domain.model.pagination.PageResult;
 
-public interface BrandRepository extends PagingAndSortingRepository<Brand, String>, CrudRepository<Brand, String>, BrandRepositoryCustom {
-	
-	Optional<Brand> findByUuidAndDeletedIsFalse(String brandUuid);
-	
-	Optional<Brand> findByCode(String code);
-	
-	Optional<Brand> findByCodeAndDeletedIsFalse(String code);
-	
-	Page<Brand> findAllByDeletedIsFalse(Pageable pageable);
-	
-	Page<Brand> findAllByDeletedIsFalseAndActiveIsTrue(Pageable pageable);
+public interface BrandRepository {
+
+    Optional<Brand> findByUuidAndDeletedIsFalse(String brandUuid);
+
+    Optional<Brand> findByCode(String code);
+
+    Optional<Brand> findByCodeAndDeletedIsFalse(String code);
+
+    PageResult<Brand> findAllByDeletedIsFalse(PageRequest pageRequest);
+
+    PageResult<Brand> findAllByDeletedIsFalseAndActiveIsTrue(PageRequest pageRequest);
+
+    Brand save(Brand brand);
+
+    void delete(Brand brand);
+
+    void deleteAll();
 }
-

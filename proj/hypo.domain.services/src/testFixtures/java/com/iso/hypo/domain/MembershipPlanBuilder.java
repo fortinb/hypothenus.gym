@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.iso.hypo.brand.domain.model.Course;
-import com.iso.hypo.brand.domain.model.Gym;
 import com.iso.hypo.common.domain.model.LocalizedString;
 import com.iso.hypo.common.domain.model.enumeration.LanguageEnum;
 import com.iso.hypo.common.domain.model.finance.Cost;
@@ -22,10 +20,10 @@ import net.datafaker.Faker;
 public class MembershipPlanBuilder {
 	private static Faker faker = new Faker();
 	
-	public static MembershipPlan build(String brandUuid, List<Gym> includedGyms, List<Course> includedCourses) {
+	public static MembershipPlan build(String brandUuid, List<String> includedGymUuids, List<String> includedCourseUuids) {
 		MembershipPlan entity = new MembershipPlan(brandUuid, buildName(), buildTitle(), buildDescription(), buildTermsOfUse(),
 				faker.number().numberBetween(2, 3), MembershipPlanPeriodEnum.monthly, BillingFrequencyEnum.monthly,
-				BuildCost(), 12, includedGyms, includedCourses, Date.from(Instant.now().truncatedTo(ChronoUnit.DAYS)), null, true, false, false, true, Instant.now(), null);
+				BuildCost(), 12, includedGymUuids, includedCourseUuids, Date.from(Instant.now().truncatedTo(ChronoUnit.DAYS)), null, true, false, false, true, Instant.now(), null);
 		entity.setUuid(UUID.randomUUID().toString());
 		return entity;
 	}

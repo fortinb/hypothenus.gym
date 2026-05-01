@@ -40,9 +40,9 @@ import com.iso.hypo.admin.papi.dto.post.PostMemberDto;
 import com.iso.hypo.admin.papi.dto.post.PostUserDto;
 import com.iso.hypo.admin.papi.dto.put.PutMemberDto;
 import com.iso.hypo.admin.papi.dto.put.PutUserDto;
-import com.iso.hypo.brand.application.mapper.UserMapper;
+import com.iso.hypo.brand.application.exception.UserException;
+import com.iso.hypo.brand.application.mapper.UserDtoMapper;
 import com.iso.hypo.brand.application.usecase.UserService;
-import com.iso.hypo.brand.domain.exception.UserException;
 import com.iso.hypo.brand.domain.model.Brand;
 import com.iso.hypo.brand.domain.repository.BrandRepository;
 import com.iso.hypo.brand.domain.repository.UserRepository;
@@ -66,7 +66,7 @@ class IdpTests {
 
 	public static final String postBrandURI = "/v1/brands";
 	
-	public static final String userPostURI = "/v1/users";
+	public static final String userPostURI = "/v1/users/admin";
 	public static final String userGetURI = "/v1/users/%s";
 	public static final String userPutURI = "/v1/users/%s";
 	public static final String userPatchURI = "/v1/users/%s";
@@ -90,7 +90,7 @@ class IdpTests {
 	@Autowired
 	UserService userService;
 	@Autowired
-	UserMapper userMapper;
+	UserDtoMapper userMapper;
 	@Autowired
 	ObjectMapper objectMapper;
 	@Autowired

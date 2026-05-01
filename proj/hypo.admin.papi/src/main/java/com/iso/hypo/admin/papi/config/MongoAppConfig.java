@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
@@ -17,6 +18,13 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoClientSettings.Builder;
 
 @Configuration
+@EnableMongoRepositories(basePackages = {
+		"com.iso.hypo.admin",
+		"com.iso.hypo.brand",
+		"com.iso.hypo.common",
+		"com.iso.hypo.finance",
+		"com.iso.hypo.membership"
+})
 @EnableTransactionManagement
 public class MongoAppConfig extends AbstractMongoClientConfiguration {
 

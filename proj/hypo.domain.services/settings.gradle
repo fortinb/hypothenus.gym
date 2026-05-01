@@ -11,5 +11,3 @@
 }*/
 
 rootProject.name = 'hypo-domain-services'
-
-includeBuild("../../../hypothenus.common/proj/hypo.common.events")

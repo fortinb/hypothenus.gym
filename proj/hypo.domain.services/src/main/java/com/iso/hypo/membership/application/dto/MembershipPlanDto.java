@@ -3,13 +3,11 @@ package com.iso.hypo.membership.application.dto;
 import java.util.Date;
 import java.util.List;
 
-import com.iso.hypo.brand.application.dto.CourseDto;
-import com.iso.hypo.brand.application.dto.GymDto;
 import com.iso.hypo.common.application.dto.BaseEntityDto;
-import com.iso.hypo.common.domain.model.LocalizedString;
-import com.iso.hypo.common.domain.model.finance.Cost;
-import com.iso.hypo.membership.domain.model.enumeration.BillingFrequencyEnum;
-import com.iso.hypo.membership.domain.model.enumeration.MembershipPlanPeriodEnum;
+import com.iso.hypo.common.application.dto.LocalizedStringDto;
+import com.iso.hypo.common.application.dto.finance.CostDto;
+import com.iso.hypo.membership.application.dto.enumeration.BillingFrequencyEnumDto;
+import com.iso.hypo.membership.application.dto.enumeration.MembershipPlanPeriodEnumDto;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -22,21 +20,21 @@ public class MembershipPlanDto extends BaseEntityDto {
 
     private String brandUuid;
 
-    private List<LocalizedString> name;
+    private List<LocalizedStringDto> name;
 
-    private List<LocalizedString> title;
+    private List<LocalizedStringDto> title;
 
-    private List<LocalizedString> description;
+    private List<LocalizedStringDto> description;
 
-    private List<LocalizedString> termsOfUse;
+    private List<LocalizedStringDto> termsOfUse;
 
     private int numberOfClasses;
 
-    private MembershipPlanPeriodEnum period;
+    private MembershipPlanPeriodEnumDto period;
 
-    private BillingFrequencyEnum billingFrequency;
+    private BillingFrequencyEnumDto billingFrequency;
 
-    private Cost cost;
+    private CostDto cost;
 
     private int durationInMonths;
 
@@ -50,8 +48,8 @@ public class MembershipPlanDto extends BaseEntityDto {
 
     private Date endDate;
 
-    private List<CourseDto> includedCourses;
-
-    private List<GymDto> includedGyms;
+    private List<String> includedCourseUuids;
+	
+	private List<String> includedGymUuids;
 
 }

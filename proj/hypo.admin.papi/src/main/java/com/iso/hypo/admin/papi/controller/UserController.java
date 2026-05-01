@@ -30,10 +30,11 @@ import com.iso.hypo.admin.papi.dto.patch.PatchUserDto;
 import com.iso.hypo.admin.papi.dto.post.PostUserDto;
 import com.iso.hypo.admin.papi.dto.put.PutUserDto;
 import com.iso.hypo.admin.papi.dto.search.UserSearchDto;
+import com.iso.hypo.brand.application.exception.UserException;
 import com.iso.hypo.brand.application.usecase.UserQueryService;
 import com.iso.hypo.brand.application.usecase.UserService;
-import com.iso.hypo.brand.domain.exception.UserException;
 import com.iso.hypo.common.application.context.RequestContext;
+import com.iso.hypo.common.application.dto.PageResultDto;
 import com.iso.hypo.common.application.security.Roles;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -84,7 +85,7 @@ public class UserController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.brand.application.dto.search.UserSearchDto> domainDtos = null;
+		PageResultDto<com.iso.hypo.brand.application.dto.search.UserSearchDto> domainDtos = null;
 		try {
 			domainDtos = userQueryService.search(page, pageSize, criteria, includeInactive);
 		} catch (UserException e) {
@@ -115,7 +116,7 @@ public class UserController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.brand.application.dto.UserDto> domainDtos = null;
+		PageResultDto<com.iso.hypo.brand.application.dto.UserDto> domainDtos = null;
 		try {
 			domainDtos = userQueryService.list(page, pageSize, includeInactive);
 		} catch (UserException e) {
@@ -153,7 +154,7 @@ public class UserController {
 		return ResponseEntity.ok(modelMapper.map(entity, UserDto.class));
 	}
 
-	@PostMapping("/users")
+	@PostMapping("/users/admin")
 	@Operation(summary = "Create a new user")
 	@ApiResponses({
 			@ApiResponse(responseCode = "201", content = {
@@ -172,7 +173,7 @@ public class UserController {
 		com.iso.hypo.brand.application.dto.UserDto domainDto = modelMapper.map(request, com.iso.hypo.brand.application.dto.UserDto.class);
 
 		try {
-			domainDto = userService.create(domainDto);
+			domainDto = userService.createAdmin(domainDto);
 		} catch (UserException e) {
 			logger.error(e.getMessage(), e);
 

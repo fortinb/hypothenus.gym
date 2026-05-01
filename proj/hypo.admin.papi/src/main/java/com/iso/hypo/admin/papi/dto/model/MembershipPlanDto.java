@@ -48,7 +48,7 @@ public class MembershipPlanDto extends BaseDto {
 	
 	private Date endDate;
 	
-	private List<CourseDto> includedCourses;
+	private List<String> includedCourseUuids;
 	
-	private List<GymDto> includedGyms;
+	private List<String> includedGymUuids;
 }

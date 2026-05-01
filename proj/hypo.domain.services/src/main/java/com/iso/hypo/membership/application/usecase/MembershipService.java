@@ -1,7 +1,7 @@
 package com.iso.hypo.membership.application.usecase;
 
 import com.iso.hypo.membership.application.dto.MembershipDto;
-import com.iso.hypo.membership.domain.exception.MembershipException;
+import com.iso.hypo.membership.application.exception.MembershipException;
 
 public interface MembershipService {
 

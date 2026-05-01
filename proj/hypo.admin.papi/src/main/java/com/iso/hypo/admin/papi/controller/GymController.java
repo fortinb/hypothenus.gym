@@ -30,10 +30,11 @@ import com.iso.hypo.admin.papi.dto.patch.PatchGymDto;
 import com.iso.hypo.admin.papi.dto.post.PostGymDto;
 import com.iso.hypo.admin.papi.dto.put.PutGymDto;
 import com.iso.hypo.admin.papi.dto.search.GymSearchDto;
+import com.iso.hypo.brand.application.exception.GymException;
 import com.iso.hypo.brand.application.usecase.GymQueryService;
 import com.iso.hypo.brand.application.usecase.GymService;
-import com.iso.hypo.brand.domain.exception.GymException;
 import com.iso.hypo.common.application.context.RequestContext;
+import com.iso.hypo.common.application.dto.PageResultDto;
 import com.iso.hypo.common.application.security.Roles;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -85,7 +86,7 @@ public class GymController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.brand.application.dto.search.GymSearchDto> domainDtos = null;
+		PageResultDto<com.iso.hypo.brand.application.dto.search.GymSearchDto> domainDtos = null;
 		try {
 			domainDtos = gymQueryService.search(page, pageSize, criteria, includeInactive);
 		} catch (GymException e) {
@@ -117,7 +118,7 @@ public class GymController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.brand.application.dto.GymDto> domainDtos = null;
+		PageResultDto<com.iso.hypo.brand.application.dto.GymDto> domainDtos = null;
 		try {
 			domainDtos = gymQueryService.list(brandUuid, page, pageSize, includeInactive);
 		} catch (GymException e) {

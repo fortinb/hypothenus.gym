@@ -53,6 +53,4 @@ dependencies {
 	testFixturesImplementation 'net.datafaker:datafaker:1.8.0'
 	testFixturesCompileOnly 'org.projectlombok:lombok:1.18.32'
 	testFixturesAnnotationProcessor 'org.projectlombok:lombok:1.18.32'
-    	implementation "com.hypo:hypo-common-events:0.0.1"
-
 }

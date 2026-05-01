@@ -3,40 +3,28 @@ package com.iso.hypo.brand.domain.model;
 import java.time.Instant;
 import java.util.List;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-
-import com.iso.hypo.common.application.security.RoleEnum;
 import com.iso.hypo.common.domain.model.BaseEntity;
-import com.mongodb.lang.NonNull;
+import com.iso.hypo.common.domain.model.enumeration.RoleEnum;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-@Document("user")
 public class User extends BaseEntity {
 
-	@Id
 	private String id;
 	
 	private String uuid;
 	
 	private String idpId;
-	
-	@Indexed (unique = true)
-	@NonNull
+
 	private String upn;
 	
-	@NonNull
 	private String firstname;
 
-	@NonNull
 	private String lastname;
 	
-	@NonNull
 	private String email;
 	
 	private List<RoleEnum> roles;

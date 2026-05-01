@@ -4,33 +4,22 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-
 import com.iso.hypo.common.domain.model.BaseEntity;
 import com.iso.hypo.common.domain.model.LocalizedString;
-import com.mongodb.lang.NonNull;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-@Document("course")
 public class Course extends BaseEntity {
 
-	@Id
 	private String id;
 	
-	@Indexed
-	@NonNull
 	private String brandUuid;
 	
-	@Indexed
 	private String uuid;
 
-	@NonNull
 	private String code;
 
 	private List<LocalizedString> name;

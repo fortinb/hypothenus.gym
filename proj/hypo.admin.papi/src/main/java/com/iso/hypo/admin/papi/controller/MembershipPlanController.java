@@ -6,7 +6,6 @@ import java.util.Objects;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,10 +31,11 @@ import com.iso.hypo.admin.papi.dto.patch.PatchMembershipPlanDto;
 import com.iso.hypo.admin.papi.dto.post.PostMembershipPlanDto;
 import com.iso.hypo.admin.papi.dto.put.PutMembershipPlanDto;
 import com.iso.hypo.common.application.context.RequestContext;
+import com.iso.hypo.common.application.dto.PageResultDto;
 import com.iso.hypo.common.application.security.Roles;
+import com.iso.hypo.membership.application.exception.MembershipPlanException;
 import com.iso.hypo.membership.application.usecase.MembershipPlanQueryService;
 import com.iso.hypo.membership.application.usecase.MembershipPlanService;
-import com.iso.hypo.membership.domain.exception.MembershipPlanException;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -68,7 +68,7 @@ public class MembershipPlanController {
 	@Operation(summary = "Retrieve a list of membership plans")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
-					@Content(schema = @Schema(implementation = Page.class), mediaType = "application/json") }),
+					@Content(schema = @Schema(implementation = PageResultDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "400", description = "Bad request. The request is invalid or missing required data.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "403", description = "Forbidden. The client does not have permission to access this resource.", content = {
@@ -85,7 +85,7 @@ public class MembershipPlanController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.membership.application.dto.MembershipPlanDto> domainDtos = null;
+		PageResultDto<com.iso.hypo.membership.application.dto.MembershipPlanDto> domainDtos = null;
 		try {
 			domainDtos = membershipPlanQueryService.list(brandUuid, null, page, pageSize, includeInactive);
 		} catch (MembershipPlanException e) {
@@ -101,7 +101,7 @@ public class MembershipPlanController {
 	@Operation(summary = "Retrieve a list of membership plans that are active for the current date")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", content = {
-					@Content(schema = @Schema(implementation = Page.class), mediaType = "application/json") }),
+					@Content(schema = @Schema(implementation = PageResultDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "400", description = "Bad request. The request is invalid or missing required data.", content = {
 					@Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") }),
 			@ApiResponse(responseCode = "403", description = "Forbidden. The client does not have permission to access this resource.", content = {
@@ -117,7 +117,7 @@ public class MembershipPlanController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "current date") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date currentDate) {
 
-		Page<com.iso.hypo.membership.application.dto.MembershipPlanDto> domainDtos = null;
+		PageResultDto<com.iso.hypo.membership.application.dto.MembershipPlanDto> domainDtos = null;
 		try {
 			domainDtos = membershipPlanQueryService.list(brandUuid, currentDate, page, pageSize, false);
 		} catch (MembershipPlanException e) {

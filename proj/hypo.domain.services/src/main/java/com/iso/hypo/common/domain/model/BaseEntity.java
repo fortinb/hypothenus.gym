@@ -1,7 +1,7 @@
 package com.iso.hypo.common.domain.model;
 
 import java.time.Instant;
-
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.CreatedBy;
@@ -32,7 +32,9 @@ public abstract class BaseEntity {
 	protected Instant modifiedOn;
 	
 	protected Instant activatedOn;
+	protected String activatedBy;
 	protected Instant deactivatedOn;
+	protected String deactivatedBy;
 	
 	public BaseEntity() {
 		this.messages = new java.util.ArrayList<Message>();
@@ -40,5 +42,23 @@ public abstract class BaseEntity {
 	
 	public BaseEntity(boolean active) {
 		this.active = active;
+	}
+	
+	public void activate(String activatedBy) {
+		this.active = true;
+		this.activatedOn = Instant.now().truncatedTo(ChronoUnit.SECONDS);
+		this.activatedBy = activatedBy;
+	}
+	
+	public void deactivate(String deactivatedBy) {
+		this.active = false;
+		this.deactivatedOn = Instant.now().truncatedTo(ChronoUnit.SECONDS);
+		this.deactivatedBy = deactivatedBy;
+	}
+	
+	public void delete(String deletedBy) {
+		this.deleted = true;
+		this.deletedOn = Instant.now().truncatedTo(ChronoUnit.SECONDS);
+		this.deletedBy = deletedBy;
 	}
 }

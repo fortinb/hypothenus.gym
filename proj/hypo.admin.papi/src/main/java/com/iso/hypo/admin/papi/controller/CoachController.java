@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.iso.hypo.common.application.context.RequestContext;
+import com.iso.hypo.common.application.dto.PageResultDto;
 import com.iso.hypo.common.application.security.Roles;
 
 import org.springframework.data.domain.Page;
@@ -32,9 +33,9 @@ import com.iso.hypo.admin.papi.dto.model.CoachDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchCoachDto;
 import com.iso.hypo.admin.papi.dto.post.PostCoachDto;
 import com.iso.hypo.admin.papi.dto.put.PutCoachDto;
+import com.iso.hypo.brand.application.exception.CoachException;
 import com.iso.hypo.brand.application.usecase.CoachQueryService;
 import com.iso.hypo.brand.application.usecase.CoachService;
-import com.iso.hypo.brand.domain.exception.CoachException;
 import com.iso.hypo.admin.papi.controller.util.ControllerErrorHandler;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -85,7 +86,7 @@ public class CoachController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue="false") boolean includeInactive) {
 
-		Page<com.iso.hypo.brand.application.dto.CoachDto> domainDtos = null;
+		PageResultDto<com.iso.hypo.brand.application.dto.CoachDto> domainDtos = null;
 		try {
 			domainDtos = coachQueryService.list(brandUuid, page, pageSize, includeInactive);
 		} catch (CoachException e) {

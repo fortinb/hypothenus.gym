@@ -25,9 +25,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -54,9 +51,9 @@ import com.iso.hypo.admin.papi.dto.post.PostGymDto;
 import com.iso.hypo.admin.papi.dto.put.PutCoachDto;
 import com.iso.hypo.admin.papi.dto.put.PutGymDto;
 import com.iso.hypo.admin.papi.dto.search.GymSearchDto;
-import com.iso.hypo.brand.application.mapper.BrandMapper;
+import com.iso.hypo.brand.application.exception.GymException;
+import com.iso.hypo.brand.application.mapper.BrandDtoMapper;
 import com.iso.hypo.brand.application.usecase.BrandService;
-import com.iso.hypo.brand.domain.exception.GymException;
 import com.iso.hypo.brand.domain.model.Brand;
 import com.iso.hypo.brand.domain.model.Coach;
 import com.iso.hypo.brand.domain.model.Gym;
@@ -64,7 +61,10 @@ import com.iso.hypo.brand.domain.repository.BrandRepository;
 import com.iso.hypo.brand.domain.repository.CoachRepository;
 import com.iso.hypo.brand.domain.repository.CourseRepository;
 import com.iso.hypo.brand.domain.repository.GymRepository;
+import com.iso.hypo.common.application.dto.PageResultDto;
 import com.iso.hypo.common.application.security.Roles;
+import com.iso.hypo.common.domain.model.pagination.PageRequest;
+import com.iso.hypo.common.domain.model.pagination.PageResult;
 import com.iso.hypo.domain.BrandBuilder;
 import com.iso.hypo.domain.CoachBuilder;
 import com.iso.hypo.domain.GymBuilder;
@@ -126,7 +126,7 @@ class GymControllerTests {
 	@Autowired
 	BrandService brandService;
 	@Autowired
-	BrandMapper brandMapper;
+	BrandDtoMapper brandMapper;
 	@Autowired
 	ObjectMapper objectMapper;
 
@@ -261,11 +261,11 @@ class GymControllerTests {
 				String.format("List error: %s", response.getStatusCode()));
 
 		// Assert
-		Page<GymDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<GymDto>>() {}, objectMapper);
-		Assertions.assertEquals(0, page.getPageable().getPageNumber(),
-				String.format("Gym list first page number invalid: %d", page.getPageable().getPageNumber()));
-		Assertions.assertEquals(4, page.getNumberOfElements(),
-				String.format("Gym list first page number of elements invalid: %d", page.getNumberOfElements()));
+		PageResultDto<GymDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<GymDto>>() {}, objectMapper);
+		Assertions.assertEquals(0, page.getPageNumber(),
+				String.format("Gym list first page number invalid: %d", page.getPageNumber()));
+		Assertions.assertEquals(4, page.getContent().size(),
+				String.format("Gym list first page number of elements invalid: %d", page.getContent().size()));
 	}
 
 	@Test
@@ -285,13 +285,13 @@ class GymControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 
-		Page<GymDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<GymDto>>() {}, objectMapper);
+		PageResultDto<GymDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<GymDto>>() {}, objectMapper);
 
 		// Assert
-		Assertions.assertEquals(1, page.getPageable().getPageNumber(),
-				String.format("Gym list second page number invalid: %d", page.getPageable().getPageNumber()));
-		Assertions.assertEquals(4, page.getNumberOfElements(),
-				String.format("Gym list second page number of elements invalid: %d", page.getNumberOfElements()));
+		Assertions.assertEquals(1, page.getPageNumber(),
+				String.format("Gym list second page number invalid: %d", page.getPageNumber()));
+		Assertions.assertEquals(4, page.getContent().size(),
+				String.format("Gym list second page number of elements invalid: %d", page.getContent().size()));
 	}
 
 	@Test
@@ -743,7 +743,7 @@ class GymControllerTests {
 				String.format("Gym delete error: %s", response.getStatusCode()));
 		
 		
-		Page<Gym> pageGym = gymRepository.findAllByBrandUuidAndDeletedIsFalse(brand.getUuid(),  PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
+		PageResult<Gym> pageGym = gymRepository.findAllByBrandUuidAndDeletedIsFalse(brand.getUuid(),  PageRequest.of(0, 1000));
 		
 		pageGym.getContent().forEach(gym -> {
 			Assertions.assertFalse(gym.getCoachs().stream().filter(coach -> coach.getUuid().equals(coachs.getFirst().getUuid())).findFirst().isPresent(),
@@ -923,11 +923,11 @@ class GymControllerTests {
     		Assertions.assertEquals(response.getStatusCode(), HttpStatus.OK,
     				String.format("Search error: %s", response.getStatusCode()));
     		
-    		Page<GymSearchDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<GymSearchDto>>() {}, objectMapper);
-				Assertions.assertTrue(page.getNumberOfElements() >= minimumNumberOfElements &&
-						page.getNumberOfElements() <= maximumNumberOfElements,
+    		PageResultDto<GymSearchDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<GymSearchDto>>() {}, objectMapper);
+				Assertions.assertTrue(page.getTotalElements() >= minimumNumberOfElements &&
+						page.getTotalElements() <= maximumNumberOfElements,
 						String.format("Brand search return invalid number of results [%s]: %d",
-							criteria, page.getNumberOfElements()));
+							criteria, page.getTotalElements()));
 			});
 	}
 

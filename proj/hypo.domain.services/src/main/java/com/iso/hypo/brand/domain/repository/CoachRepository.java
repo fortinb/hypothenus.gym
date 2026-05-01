@@ -2,18 +2,23 @@ package com.iso.hypo.brand.domain.repository;
 
 import java.util.Optional;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.PagingAndSortingRepository;
-
 import com.iso.hypo.brand.domain.model.Coach;
+import com.iso.hypo.common.domain.model.pagination.PageRequest;
+import com.iso.hypo.common.domain.model.pagination.PageResult;
 
-public interface CoachRepository extends PagingAndSortingRepository<Coach, String>, CrudRepository<Coach, String>, CoachRepositoryCustom {
+public interface CoachRepository {
 	
 	Optional<Coach> findByBrandUuidAndUuidAndDeletedIsFalse(String brandUuid, String coachUuid);
 	
-	Page<Coach> findAllByBrandUuidAndDeletedIsFalse(String brandUuid, Pageable pageable);
+	PageResult<Coach> findAllByBrandUuidAndDeletedIsFalse(String brandUuid, PageRequest pageRequest);
 	
-	Page<Coach> findAllByBrandUuidAndDeletedIsFalseAndActiveIsTrue(String brandUuid, Pageable pageable);
+	PageResult<Coach> findAllByBrandUuidAndDeletedIsFalseAndActiveIsTrue(String brandUuid, PageRequest pageRequest);
+	
+	Coach save(Coach coach);
+
+    void delete(Coach coach);
+    
+    void deleteAll();
+    
+	long deleteAllByBrandUuid(String brandUuid, String deletedBy);
 }

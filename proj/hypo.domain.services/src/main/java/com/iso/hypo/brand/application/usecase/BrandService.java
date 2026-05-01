@@ -1,7 +1,7 @@
 package com.iso.hypo.brand.application.usecase;
 
 import com.iso.hypo.brand.application.dto.BrandDto;
-import com.iso.hypo.brand.domain.exception.BrandException;
+import com.iso.hypo.brand.application.exception.BrandException;
 
 public interface BrandService {
 

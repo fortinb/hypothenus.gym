@@ -1,19 +1,31 @@
 package com.iso.hypo.membership.domain.repository;
 
+import java.util.Date;
 import java.util.Optional;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.PagingAndSortingRepository;
-
+import com.iso.hypo.common.domain.model.pagination.PageRequest;
+import com.iso.hypo.common.domain.model.pagination.PageResult;
 import com.iso.hypo.membership.domain.model.MembershipPlan;
 
-public interface MembershipPlanRepository extends PagingAndSortingRepository<MembershipPlan, String>, CrudRepository<MembershipPlan, String>, MembershipPlanRepositoryCustom {
+public interface MembershipPlanRepository {
 	
 	Optional<MembershipPlan> findByBrandUuidAndUuidAndDeletedIsFalse(String brandUuid, String membershipPlanUuid);
 	
-	Page<MembershipPlan> findAllByBrandUuidAndDeletedIsFalse(String brandUuid, Pageable pageable);
+	PageResult<MembershipPlan> findAllByBrandUuidAndDeletedIsFalse(String brandUuid, PageRequest pageRequest);
 	
-	Page<MembershipPlan> findAllByBrandUuidAndDeletedIsFalseAndActiveIsTrue(String brandUuid, Pageable pageable);
+	PageResult<MembershipPlan> findAllByBrandUuidAndDeletedIsFalseAndActiveIsTrue(String brandUuid, PageRequest pageRequest);
+	
+	MembershipPlan save(MembershipPlan membershipPlan);
+
+    void delete(MembershipPlan membershipPlan);
+
+    void deleteAll();
+    
+	long deleteAllByBrandUuid(String brandUuid, String deletedBy);
+
+	long removeGymReferences(String brandUuid, String gymUuid);
+
+	long removeCourseReferences(String brandUuid, String courseUuid);
+	
+	PageResult<MembershipPlan> findActiveOnDate(String brandUuid, Date currentDate, PageRequest pageRequest);
 }

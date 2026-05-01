@@ -3,8 +3,6 @@ package com.iso.hypo.common.application.dto;
 import java.time.Instant;
 import java.util.List;
 
-import com.iso.hypo.common.domain.model.Message;
-
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,7 +10,7 @@ import lombok.Setter;
 @Setter
 public class BaseEntityDto {
 
-    private List<Message> messages = new java.util.ArrayList<Message>();
+    private List<MessageDto> messages = new java.util.ArrayList<MessageDto>();
 
     private boolean deleted = false;
     private boolean active = true;

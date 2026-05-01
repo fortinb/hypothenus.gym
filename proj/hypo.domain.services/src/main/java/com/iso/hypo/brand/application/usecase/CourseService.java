@@ -1,7 +1,7 @@
 package com.iso.hypo.brand.application.usecase;
 
 import com.iso.hypo.brand.application.dto.CourseDto;
-import com.iso.hypo.brand.domain.exception.CourseException;
+import com.iso.hypo.brand.application.exception.CourseException;
 
 public interface CourseService {
 

@@ -6,10 +6,10 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.iso.hypo.brand.application.event.BrandEvent;
+import com.iso.hypo.brand.application.exception.CourseException;
 import com.iso.hypo.brand.application.usecase.CourseService;
-import com.iso.hypo.brand.domain.exception.CourseException;
 import com.iso.hypo.common.domain.exception.DomainException;
-import com.iso.hypo.events.event.OperationEnum;
+import com.iso.hypo.common.application.event.enumeration.OperationEnum;
 
 @Component
 public class CourseListener {

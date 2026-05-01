@@ -5,16 +5,16 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.iso.hypo.common.application.context.RequestContext;
+import com.iso.hypo.common.application.dto.PageResultDto;
+import com.iso.hypo.common.domain.model.pagination.PageRequest;
+import com.iso.hypo.common.domain.model.pagination.PageResult;
 import com.iso.hypo.membership.application.dto.MembershipDto;
-import com.iso.hypo.membership.application.mapper.MembershipMapper;
+import com.iso.hypo.membership.application.exception.MembershipException;
+import com.iso.hypo.membership.application.mapper.MembershipDtoMapper;
 import com.iso.hypo.membership.application.usecase.MembershipQueryService;
-import com.iso.hypo.membership.domain.exception.MembershipException;
 import com.iso.hypo.membership.domain.model.Membership;
 import com.iso.hypo.membership.domain.repository.MembershipRepository;
 
@@ -23,13 +23,13 @@ public class MembershipQueryServiceImpl implements MembershipQueryService {
 
 	private final MembershipRepository membershipRepository;
 
-	private final MembershipMapper membershipMapper;
+	private final MembershipDtoMapper membershipMapper;
 
 	private final RequestContext requestContext;
 
 	private static final Logger logger = LoggerFactory.getLogger(MembershipQueryServiceImpl.class);
 
-	public MembershipQueryServiceImpl(MembershipMapper membershipMapper, MembershipRepository membershipRepository, RequestContext requestContext) {
+	public MembershipQueryServiceImpl(MembershipDtoMapper membershipMapper, MembershipRepository membershipRepository, RequestContext requestContext) {
 		this.membershipMapper = membershipMapper;
 		this.membershipRepository = membershipRepository;
 		this.requestContext = Objects.requireNonNull(requestContext, "requestContext must not be null");
@@ -75,21 +75,15 @@ public class MembershipQueryServiceImpl implements MembershipQueryService {
 	}
 
 	@Override
-	public Page<MembershipDto> list(String brandUuid, int page, int pageSize, boolean includeInactive) throws MembershipException {
+	public PageResultDto<MembershipDto> list(String brandUuid, int page, int pageSize, boolean includeInactive) throws MembershipException {
 		try {
-
-			if (includeInactive) {
-				return membershipRepository
-						.findAllByBrandUuidAndDeletedIsFalse(brandUuid,
-							PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"))
-						.map(m -> membershipMapper.toDto(m));
-			}
-
-			return membershipRepository
-					.findAllByBrandUuidAndDeletedIsFalseAndActiveIsTrue(brandUuid,
-						PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"))
-					.map(m -> membershipMapper.toDto(m));
-
+			PageRequest pageRequest = PageRequest.of(page, pageSize);
+			PageResult<MembershipDto> result = includeInactive
+					? membershipRepository.findAllByBrandUuidAndDeletedIsFalse(brandUuid, pageRequest)
+							.map(membershipMapper::toDto)
+					: membershipRepository.findAllByBrandUuidAndDeletedIsFalseAndActiveIsTrue(brandUuid, pageRequest)
+							.map(membershipMapper::toDto);
+			return PageResultDto.from(result);
 		} catch (Exception e) {
 			// Single generic logger call for all exception types
 			logger.error("Error - brandUuid={}", brandUuid, e);

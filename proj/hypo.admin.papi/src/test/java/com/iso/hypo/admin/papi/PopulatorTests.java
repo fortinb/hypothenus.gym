@@ -3,6 +3,7 @@ package com.iso.hypo.admin.papi;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
@@ -31,7 +32,7 @@ import com.iso.hypo.admin.papi.dto.model.BrandDto;
 import com.iso.hypo.admin.papi.dto.model.UserDto;
 import com.iso.hypo.admin.papi.dto.post.PostBrandDto;
 import com.iso.hypo.admin.papi.dto.post.PostUserDto;
-import com.iso.hypo.brand.application.mapper.BrandMapper;
+import com.iso.hypo.brand.application.mapper.BrandDtoMapper;
 import com.iso.hypo.brand.application.usecase.BrandService;
 import com.iso.hypo.brand.domain.model.Brand;
 import com.iso.hypo.brand.domain.repository.BrandRepository;
@@ -40,7 +41,7 @@ import com.iso.hypo.brand.domain.repository.CourseRepository;
 import com.iso.hypo.brand.domain.repository.GymRepository;
 import com.iso.hypo.brand.domain.repository.UserRepository;
 import com.iso.hypo.common.application.security.Roles;
-import com.iso.hypo.common.infrastructure.services.clients.AzureGraphClientService;
+import com.iso.hypo.common.application.usecase.AzureGraphClientService;
 import com.iso.hypo.domain.BrandBuilder;
 import com.iso.hypo.domain.UserBuilder;
 import com.iso.hypo.finance.domain.repository.FinancialInstrumentRepository;
@@ -49,7 +50,9 @@ import com.iso.hypo.membership.domain.repository.MembershipPlanRepository;
 import com.iso.hypo.tests.data.Populator;
 import com.iso.hypo.tests.http.HttpUtils;
 import com.iso.hypo.tests.security.Users;
+import com.iso.hypo.tests.utils.RetryUtils;
 import com.iso.hypo.tests.utils.TestResponseUtils;
+import com.microsoft.graph.models.User;
 
 import net.datafaker.Faker;
 
@@ -84,7 +87,7 @@ class PopulatorTests {
 	@Autowired
 	BrandService brandService;
 	@Autowired
-	BrandMapper brandMapper;
+	BrandDtoMapper brandMapper;
 	@Autowired
 	AzureGraphClientService azureGraphClientService;
 	@Autowired
@@ -163,8 +166,27 @@ class PopulatorTests {
 	}
 
 	private UserDto createAdminUser() throws JsonProcessingException, MalformedURLException {
+		// Wait for user deletion to propagate in Azure AD before attempting to create the user again.
+		try {
+			RetryUtils.retryUntil(10, 1,
+					() -> {
+						Optional<User> idpUser;
+						try {
+							idpUser = azureGraphClientService.userExists("fortinb@videotron.ca");
+							return idpUser.isEmpty();
+						} catch (Exception e) {
+							e.printStackTrace();
+							return false;
+						}
+					},
+					null);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		// Arrange
-		final String userPostURI = "/v1/users";
+		final String userPostURI = "/v1/users/admin";
 		
 		PostUserDto postDto = modelMapper.map(UserBuilder.build(), PostUserDto.class);
 		postDto.setFirstname("Bruno");

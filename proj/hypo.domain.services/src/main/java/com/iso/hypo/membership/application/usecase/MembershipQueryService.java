@@ -1,9 +1,8 @@
 package com.iso.hypo.membership.application.usecase;
 
-import org.springframework.data.domain.Page;
-
+import com.iso.hypo.common.application.dto.PageResultDto;
 import com.iso.hypo.membership.application.dto.MembershipDto;
-import com.iso.hypo.membership.domain.exception.MembershipException;
+import com.iso.hypo.membership.application.exception.MembershipException;
 
 public interface MembershipQueryService {
 
@@ -11,7 +10,7 @@ public interface MembershipQueryService {
 	
     MembershipDto find(String brandUuid, String membershipUuid) throws MembershipException;
 
-    Page<MembershipDto> list(String brandUuid, int page, int pageSize, boolean includeInactive) throws MembershipException;
+    PageResultDto<MembershipDto> list(String brandUuid, int page, int pageSize, boolean includeInactive) throws MembershipException;
 }
 
 

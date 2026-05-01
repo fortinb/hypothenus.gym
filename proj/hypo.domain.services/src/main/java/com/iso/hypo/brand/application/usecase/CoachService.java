@@ -1,7 +1,7 @@
 package com.iso.hypo.brand.application.usecase;
 
 import com.iso.hypo.brand.application.dto.CoachDto;
-import com.iso.hypo.brand.domain.exception.CoachException;
+import com.iso.hypo.brand.application.exception.CoachException;
 
 public interface CoachService {
 

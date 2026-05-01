@@ -23,7 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.data.domain.Page;
+import com.iso.hypo.common.application.dto.PageResultDto;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -45,7 +45,7 @@ import com.iso.hypo.admin.papi.dto.model.CoachDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchCoachDto;
 import com.iso.hypo.admin.papi.dto.post.PostCoachDto;
 import com.iso.hypo.admin.papi.dto.put.PutCoachDto;
-import com.iso.hypo.brand.domain.exception.CoachException;
+import com.iso.hypo.brand.application.exception.CoachException;
 import com.iso.hypo.brand.domain.model.Brand;
 import com.iso.hypo.brand.domain.model.Coach;
 import com.iso.hypo.brand.domain.repository.BrandRepository;
@@ -169,18 +169,18 @@ class CoachControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 
-		Page<CoachDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<CoachDto>>() {}, objectMapper);
+		PageResultDto<CoachDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<CoachDto>>() {}, objectMapper);
 
 		// Assert
-		Assertions.assertEquals(0, page.getPageable().getPageNumber(),
-				String.format("Coach list first page number invalid: %d", page.getPageable().getPageNumber()));
-		Assertions.assertEquals(4, page.getNumberOfElements(),
-				String.format("Coach list first page number of elements invalid: %d", page.getNumberOfElements()));
+		Assertions.assertEquals(0, page.getPageNumber(),
+				String.format("Coach list first page number invalid: %d", page.getPageNumber()));
+		Assertions.assertEquals(4, page.getContent().size(),
+				String.format("Coach list first page number of elements invalid: %d", page.getContent().size()));
 		Assertions.assertEquals(4, page.getTotalElements(),
 				String.format("Coach total number of elements invalid: %d", page.getTotalElements()));
 		
-		page.get().forEach(coach ->Assertions.assertTrue(coach.isActive()));
-		page.get().forEach(coach ->Assertions.assertTrue(coach.isDeleted() == false));
+		page.getContent().forEach(coach ->Assertions.assertTrue(coach.isActive()));
+		page.getContent().forEach(coach ->Assertions.assertTrue(coach.isDeleted() == false));
 	}
 	
 	@ParameterizedTest
@@ -202,17 +202,17 @@ class CoachControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 
-		Page<CoachDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<CoachDto>>() {}, objectMapper);
+		PageResultDto<CoachDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<CoachDto>>() {}, objectMapper);
 
 		// Assert
-		Assertions.assertEquals(0, page.getPageable().getPageNumber(),
-				String.format("Coach list first page number invalid: %d", page.getPageable().getPageNumber()));
-		Assertions.assertEquals(5, page.getNumberOfElements(),
-				String.format("Coach list first page number of elements invalid: %d", page.getNumberOfElements()));
+		Assertions.assertEquals(0, page.getPageNumber(),
+				String.format("Coach list first page number invalid: %d", page.getPageNumber()));
+		Assertions.assertEquals(5, page.getContent().size(),
+				String.format("Coach list first page number of elements invalid: %d", page.getContent().size()));
 		Assertions.assertEquals(5, page.getTotalElements(),
 				String.format("Coach total number of elements invalid: %d", page.getTotalElements()));
 		
-		page.get().forEach(coach ->Assertions.assertTrue(coach.isDeleted() == false));
+		page.getContent().forEach(coach ->Assertions.assertTrue(coach.isDeleted() == false));
 	}
 
 	@ParameterizedTest
@@ -232,16 +232,16 @@ class CoachControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 
-		Page<CoachDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<CoachDto>>() {}, objectMapper);
+		PageResultDto<CoachDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<CoachDto>>() {}, objectMapper);
 
 		// Assert
-		Assertions.assertEquals(1, page.getPageable().getPageNumber(),
-				String.format("Coach list second page number invalid: %d", page.getPageable().getPageNumber()));
-		Assertions.assertEquals(2, page.getNumberOfElements(),
-				String.format("Coach list second page number of elements invalid: %d", page.getNumberOfElements()));
+		Assertions.assertEquals(1, page.getPageNumber(),
+				String.format("Coach list second page number invalid: %d", page.getPageNumber()));
+		Assertions.assertEquals(2, page.getContent().size(),
+				String.format("Coach list second page number of elements invalid: %d", page.getContent().size()));
 		
-		page.get().forEach(coach ->Assertions.assertTrue(coach.isActive()));
-		page.get().forEach(coach ->Assertions.assertTrue(coach.isDeleted() == false));
+		page.getContent().forEach(coach ->Assertions.assertTrue(coach.isActive()));
+		page.getContent().forEach(coach ->Assertions.assertTrue(coach.isDeleted() == false));
 	}
 
 	@ParameterizedTest

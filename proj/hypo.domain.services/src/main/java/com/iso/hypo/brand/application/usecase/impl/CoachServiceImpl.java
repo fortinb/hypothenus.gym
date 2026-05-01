@@ -15,14 +15,14 @@ import org.springframework.util.Assert;
 
 import com.iso.hypo.brand.application.dto.CoachDto;
 import com.iso.hypo.brand.application.event.CoachEvent;
-import com.iso.hypo.brand.application.mapper.CoachMapper;
+import com.iso.hypo.brand.application.exception.CoachException;
+import com.iso.hypo.brand.application.mapper.CoachDtoMapper;
 import com.iso.hypo.brand.application.usecase.BrandQueryService;
 import com.iso.hypo.brand.application.usecase.CoachService;
-import com.iso.hypo.brand.domain.exception.CoachException;
 import com.iso.hypo.brand.domain.model.Coach;
 import com.iso.hypo.brand.domain.repository.CoachRepository;
 import com.iso.hypo.common.application.context.RequestContext;
-import com.iso.hypo.events.event.OperationEnum;
+import com.iso.hypo.common.application.event.enumeration.OperationEnum;
 
 @Service
 public class CoachServiceImpl implements CoachService {
@@ -33,13 +33,13 @@ public class CoachServiceImpl implements CoachService {
 	
 	private final ApplicationEventPublisher eventPublisher;
 
-	private final CoachMapper coachMapper;
+	private final CoachDtoMapper coachMapper;
 
 	private static final Logger logger = LoggerFactory.getLogger(CoachServiceImpl.class);
 
 	private final RequestContext requestContext;
 
-	public CoachServiceImpl(CoachMapper coachMapper, 
+	public CoachServiceImpl(CoachDtoMapper coachMapper, 
 			CoachRepository coachRepository,
 			BrandQueryService brandQueryService, 
 			ApplicationEventPublisher eventPublisher,
@@ -111,12 +111,11 @@ public class CoachServiceImpl implements CoachService {
 	@Transactional
 	public CoachDto activate(String brandUuid, String coachUuid) throws CoachException {
 		try {
-			Optional<Coach> entity = coachRepository.activate(brandUuid, coachUuid);
-			if (entity.isEmpty()) {
-				throw new CoachException(requestContext.getTrackingNumber(), CoachException.COACH_NOT_FOUND, "Coach not found");
-			}
-
-			return coachMapper.toDto(entity.get());
+			Coach entity = this.readByCoachUuid(brandUuid, coachUuid);
+			entity.activate(requestContext.getUsername());
+			coachRepository.save(entity);
+			
+			return coachMapper.toDto(entity);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, coachUuid={}", brandUuid, coachUuid, e);
 			
@@ -131,12 +130,11 @@ public class CoachServiceImpl implements CoachService {
 	@Transactional
 	public CoachDto deactivate(String brandUuid, String coachUuid) throws CoachException {
 		try {
-			Optional<Coach> entity = coachRepository.deactivate(brandUuid, coachUuid);
-			if (entity.isEmpty()) {
-				throw new CoachException(requestContext.getTrackingNumber(), CoachException.COACH_NOT_FOUND, "Coach not found");
-			}
-		
-			return coachMapper.toDto(entity.get());
+			Coach entity = this.readByCoachUuid(brandUuid, coachUuid);
+			entity.deactivate(requestContext.getUsername());
+			coachRepository.save(entity);
+			
+			return coachMapper.toDto(entity);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, coachUuid={}", brandUuid, coachUuid, e);
 			
@@ -152,10 +150,10 @@ public class CoachServiceImpl implements CoachService {
 	public void delete(String brandUuid, String coachUuid) throws CoachException {
 		try {
 			Coach entity = this.readByCoachUuid(brandUuid, coachUuid);
+			entity.delete(requestContext.getUsername());
+			coachRepository.save(entity);
 			
-			coachRepository.delete(entity.getBrandUuid(), entity.getUuid(), requestContext.getUsername());
-			
-			eventPublisher.publishEvent(new CoachEvent(this, entity, OperationEnum.delete));
+			eventPublisher.publishEvent(new CoachEvent(this, coachMapper.toDto(entity), OperationEnum.delete));
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, coachUuid={}", brandUuid, coachUuid, e);
 			

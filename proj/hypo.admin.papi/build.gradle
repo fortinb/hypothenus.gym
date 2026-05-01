@@ -55,7 +55,6 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testImplementation 'org.awaitility:awaitility:4.2.0'
 	implementation "com.hypo:hypo-domain-services:0.0.1"
-	implementation "com.hypo:hypo-common-events:0.0.1"
 	implementation "com.hypo:hypo-common-tests:0.0.1"
 	
 	// Use coordinates for test fixtures so composite build substitution (includeBuild) can provide the project

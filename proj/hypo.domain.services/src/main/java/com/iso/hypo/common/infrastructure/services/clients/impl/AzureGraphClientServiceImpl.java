@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.azure.identity.ClientSecretCredential;
 import com.azure.identity.ClientSecretCredentialBuilder;
-import com.iso.hypo.common.infrastructure.services.clients.AzureGraphClientService;
+import com.iso.hypo.common.application.usecase.AzureGraphClientService;
 import com.microsoft.graph.models.AppRole;
 import com.microsoft.graph.models.AppRoleAssignment;
 import com.microsoft.graph.models.Application;
@@ -339,6 +339,31 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 		}
 
 		// 2) Add user to group: POST /groups/{groupId}/members/$ref
+		
+		attempt = 0;
+		while (attempt < maxAttempts) {
+			try {
+				Optional<User> user = findUser(userId);
+				if (user.isPresent()) {
+					break;
+				}
+			} catch (Exception e) {
+				throw new IllegalStateException("User not found: " + userId);
+			}
+			
+			attempt++;
+			if (attempt >= maxAttempts) {
+				break;
+			}
+			
+			try {
+				TimeUnit.SECONDS.sleep(1);
+			} catch (InterruptedException ie) {
+				Thread.currentThread().interrupt();
+				throw new IllegalStateException("Interrupted while waiting for group lookup", ie);
+			}
+		}
+
 		ReferenceCreate ref = new ReferenceCreate();
 		ref.setOdataId("https://graph.microsoft.com/v1.0/directoryObjects/" + userId);
 

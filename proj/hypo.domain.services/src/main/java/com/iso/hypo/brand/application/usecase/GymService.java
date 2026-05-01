@@ -1,7 +1,7 @@
 package com.iso.hypo.brand.application.usecase;
 
 import com.iso.hypo.brand.application.dto.GymDto;
-import com.iso.hypo.brand.domain.exception.GymException;
+import com.iso.hypo.brand.application.exception.GymException;
 
 public interface GymService {
 
@@ -19,7 +19,7 @@ public interface GymService {
     
     void deleteAllByBrandUuid(String brandUuid) throws GymException;
 
-	void removeAllCoachReferencesByCoachId(String coachId) throws GymException;
+	void removeAllCoachReferencesByCoachUuid(String brandUuid, String coachUuid) throws GymException;
 
 	GymDto assignCoach(String brandUuid, String gymUuid, String coachUuid) throws GymException;
 	

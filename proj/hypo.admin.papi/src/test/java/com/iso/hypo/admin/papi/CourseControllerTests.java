@@ -24,7 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.data.domain.Page;
+import com.iso.hypo.common.application.dto.PageResultDto;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -45,7 +45,7 @@ import com.iso.hypo.admin.papi.dto.model.CourseDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchCourseDto;
 import com.iso.hypo.admin.papi.dto.post.PostCourseDto;
 import com.iso.hypo.admin.papi.dto.put.PutCourseDto;
-import com.iso.hypo.brand.domain.exception.CourseException;
+import com.iso.hypo.brand.application.exception.CourseException;
 import com.iso.hypo.brand.domain.model.Brand;
 import com.iso.hypo.brand.domain.model.Course;
 import com.iso.hypo.brand.domain.repository.BrandRepository;
@@ -168,18 +168,18 @@ class CourseControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 
-		Page<CourseDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<CourseDto>>() {}, objectMapper);
+		PageResultDto<CourseDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<CourseDto>>() {}, objectMapper);
 
 		// Assert
-		Assertions.assertEquals(0, page.getPageable().getPageNumber(),
-				String.format("Course list first page number invalid: %d", page.getPageable().getPageNumber()));
-		Assertions.assertEquals(5, page.getNumberOfElements(),
-				String.format("Course list first page number of elements invalid: %d", page.getNumberOfElements()));
+		Assertions.assertEquals(0, page.getPageNumber(),
+				String.format("Course list first page number invalid: %d", page.getPageNumber()));
+		Assertions.assertEquals(5, page.getContent().size(),
+				String.format("Course list first page number of elements invalid: %d", page.getContent().size()));
 		Assertions.assertEquals(14, page.getTotalElements(),
 				String.format("Course total number of elements invalid: %d", page.getTotalElements()));
 
-		page.get().forEach(course -> Assertions.assertTrue(course.isActive()));
-		page.get().forEach(course -> Assertions.assertTrue(course.isDeleted() == false));
+		page.getContent().forEach(course -> Assertions.assertTrue(course.isActive()));
+		page.getContent().forEach(course -> Assertions.assertTrue(course.isDeleted() == false));
 	}
 
 	@ParameterizedTest
@@ -203,17 +203,17 @@ class CourseControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 
-		Page<CourseDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<CourseDto>>() {}, objectMapper);
+		PageResultDto<CourseDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<CourseDto>>() {}, objectMapper);
 
 		// Assert
-		Assertions.assertEquals(0, page.getPageable().getPageNumber(),
-				String.format("Course list first page number invalid: %d", page.getPageable().getPageNumber()));
-		Assertions.assertEquals(5, page.getNumberOfElements(),
-				String.format("Course list first page number of elements invalid: %d", page.getNumberOfElements()));
+		Assertions.assertEquals(0, page.getPageNumber(),
+				String.format("Course list first page number invalid: %d", page.getPageNumber()));
+		Assertions.assertEquals(5, page.getContent().size(),
+				String.format("Course list first page number of elements invalid: %d", page.getContent().size()));
 		Assertions.assertEquals(15, page.getTotalElements(),
 				String.format("Course total number of elements invalid: %d", page.getTotalElements()));
 
-		page.get().forEach(course -> Assertions.assertTrue(course.isDeleted() == false));
+		page.getContent().forEach(course -> Assertions.assertTrue(course.isDeleted() == false));
 	}
 
 	@ParameterizedTest
@@ -235,16 +235,16 @@ class CourseControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 
-		Page<CourseDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<CourseDto>>() {}, objectMapper);
+		PageResultDto<CourseDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<CourseDto>>() {}, objectMapper);
 
 		// Assert
-		Assertions.assertEquals(1, page.getPageable().getPageNumber(),
-				String.format("Course list second page number invalid: %d", page.getPageable().getPageNumber()));
-		Assertions.assertEquals(2, page.getNumberOfElements(),
-				String.format("Course list second page number of elements invalid: %d", page.getNumberOfElements()));
+		Assertions.assertEquals(1, page.getPageNumber(),
+				String.format("Course list second page number invalid: %d", page.getPageNumber()));
+		Assertions.assertEquals(2, page.getContent().size(),
+				String.format("Course list second page number of elements invalid: %d", page.getContent().size()));
 		
-		page.get().forEach(course -> Assertions.assertTrue(course.isActive()));
-		page.get().forEach(course -> Assertions.assertTrue(course.isDeleted() == false));
+		page.getContent().forEach(course -> Assertions.assertTrue(course.isActive()));
+		page.getContent().forEach(course -> Assertions.assertTrue(course.isDeleted() == false));
 	}
 
 	@ParameterizedTest

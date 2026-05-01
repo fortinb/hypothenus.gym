@@ -1,11 +1,13 @@
 package com.iso.hypo.brand.application.usecase;
 
 import com.iso.hypo.brand.application.dto.UserDto;
-import com.iso.hypo.brand.domain.exception.UserException;
+import com.iso.hypo.brand.application.exception.UserException;
 
 public interface UserService {
 	
-	UserDto create(UserDto userDto) throws UserException;
+	UserDto createAdmin(UserDto userDto) throws UserException;
+	
+	UserDto create(UserDto userDto, String password, String groupName) throws UserException;
 
 	void delete(String userUuid) throws UserException;
 

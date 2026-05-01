@@ -22,7 +22,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -43,11 +42,12 @@ import com.iso.hypo.admin.papi.dto.model.UserDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchUserDto;
 import com.iso.hypo.admin.papi.dto.post.PostUserDto;
 import com.iso.hypo.admin.papi.dto.put.PutUserDto;
-import com.iso.hypo.brand.application.mapper.UserMapper;
+import com.iso.hypo.brand.application.exception.UserException;
+import com.iso.hypo.brand.application.mapper.UserDtoMapper;
 import com.iso.hypo.brand.application.usecase.UserService;
-import com.iso.hypo.brand.domain.exception.UserException;
 import com.iso.hypo.brand.domain.model.User;
 import com.iso.hypo.brand.domain.repository.UserRepository;
+import com.iso.hypo.common.application.dto.PageResultDto;
 import com.iso.hypo.common.application.security.Roles;
 import com.iso.hypo.domain.UserBuilder;
 import com.iso.hypo.tests.http.HttpUtils;
@@ -64,7 +64,7 @@ class UserControllerTests {
 
 	public static final String searchURI = "/v1/users/search";
 	public static final String listURI = "/v1/users";
-	public static final String postURI = "/v1/users";
+	public static final String postURI = "/v1/users/admin";
 	public static final String getURI = "/v1/users/%s";
 	public static final String putURI = "/v1/users/%s";
 	public static final String patchURI = "/v1/users/%s";
@@ -85,7 +85,7 @@ class UserControllerTests {
 	@Autowired
 	UserService userService;
 	@Autowired
-	UserMapper userMapper;
+	UserDtoMapper userMapper;
 	@Autowired
 	ObjectMapper objectMapper;
 	@Autowired
@@ -177,14 +177,14 @@ class UserControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 
-		Page<UserDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<UserDto>>() {
+		PageResultDto<UserDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<UserDto>>() {
 		}, objectMapper);
 
 		// Assert
-		Assertions.assertEquals(0, page.getPageable().getPageNumber(),
-				String.format("User list first page number invalid: %d", page.getPageable().getPageNumber()));
-		Assertions.assertEquals(4, page.getNumberOfElements(),
-				String.format("User list first page number of elements invalid: %d", page.getNumberOfElements()));
+		Assertions.assertEquals(0, page.getPageNumber(),
+				String.format("User list first page number invalid: %d", page.getPageNumber()));
+		Assertions.assertEquals(4, page.getContent().size(),
+				String.format("User list first page number of elements invalid: %d", page.getContent().size()));
 	}
 
 	@Test
@@ -203,14 +203,14 @@ class UserControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 
-		Page<UserDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<UserDto>>() {
+		PageResultDto<UserDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<UserDto>>() {
 		}, objectMapper);
 
 		// Assert
-		Assertions.assertEquals(1, page.getPageable().getPageNumber(),
-				String.format("User list second page number invalid: %d", page.getPageable().getPageNumber()));
-		Assertions.assertEquals(4, page.getNumberOfElements(),
-				String.format("User list second page number of elements invalid: %d", page.getNumberOfElements()));
+		Assertions.assertEquals(1, page.getPageNumber(),
+				String.format("User list second page number invalid: %d", page.getPageNumber()));
+		Assertions.assertEquals(4, page.getContent().size(),
+				String.format("User list second page number of elements invalid: %d", page.getContent().size()));
 	}
 
 	@Test
@@ -580,13 +580,13 @@ class UserControllerTests {
 	 * Assertions.assertEquals(response.getStatusCode(), HttpStatus.OK,
 	 * String.format("Search error: %s", response.getStatusCode()));
 	 * 
-	 * Page<UserSearchDto> page = TestResponseUtils.toPage(response, new
-	 * TypeReference<Page<UserSearchDto>>() { }, objectMapper);
+	 * PageResultDto<UserSearchDto> page = TestResponseUtils.toPage(response, new
+	 * TypeReference<PageResultDto<UserSearchDto>>() { }, objectMapper);
 	 * 
-	 * Assertions.assertTrue( page.getNumberOfElements() >= minimumNumberOfElements
-	 * && page.getNumberOfElements() <= maximumNumberOfElements,
+	 * Assertions.assertTrue( page.getTotalElements() >= minimumNumberOfElements
+	 * && page.getTotalElements() <= maximumNumberOfElements,
 	 * String.format("User search return invalid number of results [%s]: %d",
-	 * criteria, page.getNumberOfElements())); }); }
+	 * criteria, page.getTotalElements())); }); }
 	 */
 
 	public static final void assertUser(UserDto expected, UserDto result) {

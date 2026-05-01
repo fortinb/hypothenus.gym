@@ -7,9 +7,9 @@ import org.springframework.stereotype.Component;
 
 import com.iso.hypo.brand.application.event.BrandEvent;
 import com.iso.hypo.common.domain.exception.DomainException;
-import com.iso.hypo.events.event.OperationEnum;
+import com.iso.hypo.common.application.event.enumeration.OperationEnum;
+import com.iso.hypo.membership.application.exception.MemberException;
 import com.iso.hypo.membership.application.usecase.MemberService;
-import com.iso.hypo.membership.domain.exception.MemberException;
 
 @Component
 public class MemberListener {

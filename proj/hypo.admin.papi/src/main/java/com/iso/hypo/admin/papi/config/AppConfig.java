@@ -15,7 +15,6 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.core.env.Environment;
-import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -26,12 +25,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.iso.hypo.common.application.context.RequestContext;
-import com.iso.hypo.common.application.security.RoleEnum;
+import com.iso.hypo.common.domain.model.enumeration.RoleEnum;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 @Configuration
-@EnableMongoRepositories(basePackages = { "com.iso.hypo.repositories" })
 public class AppConfig {
 
 	private static final Pattern BRAND_UUID_PATTERN = Pattern.compile("/brands/(?!code)([^/]+)(?:/|$)");

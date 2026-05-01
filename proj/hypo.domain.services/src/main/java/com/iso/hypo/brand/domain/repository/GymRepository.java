@@ -2,21 +2,28 @@ package com.iso.hypo.brand.domain.repository;
 
 import java.util.Optional;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.PagingAndSortingRepository;
-
 import com.iso.hypo.brand.domain.model.Gym;
+import com.iso.hypo.common.domain.model.pagination.PageRequest;
+import com.iso.hypo.common.domain.model.pagination.PageResult;
 
-public interface GymRepository extends PagingAndSortingRepository<Gym, String>, CrudRepository<Gym, String>, GymRepositoryCustom {
+public interface GymRepository {
 	
 	Optional<Gym> findByBrandUuidAndUuidAndDeletedIsFalse(String brandUuid, String gymUuid);
 	
 	Optional<Gym> findByBrandUuidAndCode(String brandUuid, String code);
 	
-	Page<Gym> findAllByBrandUuidAndDeletedIsFalse(String brandUuid, Pageable pageable);
+	PageResult<Gym> findAllByBrandUuidAndDeletedIsFalse(String brandUuid, PageRequest pageRequest);
 	
-	Page<Gym> findAllByBrandUuidAndDeletedIsFalseAndActiveIsTrue(String brandUuid, Pageable pageable);
+	PageResult<Gym> findAllByBrandUuidAndDeletedIsFalseAndActiveIsTrue(String brandUuid, PageRequest pageRequest);
+	
+	Gym save(Gym gym);
+
+    void delete(Gym gym);
+
+    void deleteAll();
+    
+	long deleteAllByBrandUuid(String brandUuid, String deletedBy);
+	
+	long removeCoachReferences(String brandUuid, String coachUuid);
 }
 

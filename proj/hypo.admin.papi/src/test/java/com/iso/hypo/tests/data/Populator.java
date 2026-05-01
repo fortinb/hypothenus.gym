@@ -93,7 +93,7 @@ public class Populator {
 		for (int i = 0; i < 10; i++) {
 			Coach item = CoachBuilder.build(brand.getUuid());
 			item.setActive(true);
-			coachRepository.save(item);
+			item = coachRepository.save(item);
 			coachs.add(item);
 		}
 
@@ -119,7 +119,7 @@ public class Populator {
 		for (int i = 0; i < 10; i++) {
 			Gym item = GymBuilder.build(brand.getUuid(), faker.code().isbn10(), faker.company().name(),
 					coachs.subList(0, 2));
-			gymRepository.save(item);
+			item = gymRepository.save(item);
 			gyms.add(item);
 		}
 
@@ -142,7 +142,9 @@ public class Populator {
 			item = courseRepository.save(item);
 		}
 
-		buildMembershipPlan(brand.getUuid(), gyms, courses);
+		buildMembershipPlan(brand.getUuid(),
+				gyms.stream().map(item -> item.getUuid()).collect(java.util.stream.Collectors.toList()),
+				courses.stream().map(item -> item.getUuid()).collect(java.util.stream.Collectors.toList()));
 
 		// Members
 		if (user != null) {
@@ -181,7 +183,7 @@ public class Populator {
 		return brand;
 	}
 
-	public List<MembershipPlan> buildMembershipPlan(String brandUuid, List<Gym> includedGyms, List<Course> includedCourses) {
+	public List<MembershipPlan> buildMembershipPlan(String brandUuid, List<String> includedGymUuids, List<String> includedCourseUuids) {
 		List<MembershipPlan> membershipPlans = new ArrayList<>();
 
 		// Promotional Membership plans
@@ -194,7 +196,7 @@ public class Populator {
 				buildTermsOfUse("Réservation requise.; Valide dans plusieurs de nos studios.; Aucune date d'expiration.; Non-transferable.;",
 							"Reservation required.; Valid in most of our locations.; No expiration date.; Non-transferable.;"),
 				25,	MembershipPlanPeriodEnum.trial,	BillingFrequencyEnum.oneTime,
-				BuildCost(34999),0,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),Date.from(Instant.now().plus(30, ChronoUnit.DAYS)),
+				BuildCost(34999),0,includedGymUuids,includedCourseUuids,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),Date.from(Instant.now().plus(30, ChronoUnit.DAYS)),
 				false,false,true,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
 		membershipPlan.setUuid(java.util.UUID.randomUUID().toString());
 		membershipPlanRepository.save(membershipPlan);
@@ -210,7 +212,7 @@ public class Populator {
 				buildTermsOfUse("Réservation requise.; Valide dans plusieurs de nos studios.; Aucune date d'expiration.; Non-transferable.; Nouveaux membres seulement.;",
 							"Reservation required.; Valid in most of our locations.; No expiration date.; Non-transferable.; New members only.;"),
 				1,	MembershipPlanPeriodEnum.trial,	BillingFrequencyEnum.oneTime,
-				BuildCost(1000),0,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
+				BuildCost(1000),0,includedGymUuids,includedCourseUuids,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				false,false,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
 		membershipPlan.setUuid(java.util.UUID.randomUUID().toString());
 		membershipPlanRepository.save(membershipPlan);
@@ -225,7 +227,7 @@ public class Populator {
 				buildTermsOfUse("Réservation requise.; Valide dans plusieurs de nos studios.; Aucune date d'expiration.; Non transférable.; Nouveaux membres seulement.;",
 							"Réservation requise.; Valid in most of our locations.; No expiration date.; Non-transferable.; New members only.;"),
 				10,	MembershipPlanPeriodEnum.trial,	BillingFrequencyEnum.oneTime,
-				BuildCost(14900),0,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
+				BuildCost(14900),0,includedGymUuids,includedCourseUuids,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				false,false,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
 		membershipPlan.setUuid(java.util.UUID.randomUUID().toString());
 		membershipPlanRepository.save(membershipPlan);
@@ -241,7 +243,7 @@ public class Populator {
 				buildTermsOfUse("Réservation requise.; Valide dans plusieurs de nos studios.; Aucune date d'expiration.; Non transférable.;",
 							"Réservation requise.; Valid in most of our locations.; No expiration date.; Non-transferable.; "),
 				1,	MembershipPlanPeriodEnum.classes,	BillingFrequencyEnum.oneTime,
-				BuildCost(2400),0,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
+				BuildCost(2400),0,includedGymUuids,includedCourseUuids,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				false,false,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
 		membershipPlan.setUuid(java.util.UUID.randomUUID().toString());
 		membershipPlanRepository.save(membershipPlan);
@@ -256,7 +258,7 @@ public class Populator {
 				buildTermsOfUse("Partageable avec un ami.; Réservation requise.; Valide dans plusieurs de nos studios.; Aucune date d'expiration.; Non transférable.;",
 							"Shareable with a friend.; Reservation required.; Valid in most of our locations.; No expiration date.; Non-transferable.;"),
 				10,	MembershipPlanPeriodEnum.classes,	BillingFrequencyEnum.oneTime,
-				BuildCost(19999),0,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
+				BuildCost(19999),0,includedGymUuids,includedCourseUuids,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				true,false,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
 		membershipPlan.setUuid(java.util.UUID.randomUUID().toString());
 		membershipPlanRepository.save(membershipPlan);
@@ -271,7 +273,7 @@ public class Populator {
 				buildTermsOfUse("Partageable avec un ami.; Réservation requise.; Valide dans plusieurs de nos studios.; Aucune date d'expiration.; Non transférable.;",
 							"Shareable with a friend.; Reservation required.; Valid in most of our locations.; No expiration date.; Non-transferable.;"),
 				20,	MembershipPlanPeriodEnum.classes,	BillingFrequencyEnum.oneTime,
-				BuildCost(34999),0,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
+				BuildCost(34999),0,includedGymUuids,includedCourseUuids,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				true,false,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
 		membershipPlan.setUuid(java.util.UUID.randomUUID().toString());
 		membershipPlanRepository.save(membershipPlan);
@@ -286,7 +288,7 @@ public class Populator {
 				buildTermsOfUse("Partageable avec un ami.; Réservation requise.; Valide dans plusieurs de nos studios.; Aucune date d'expiration.; Non transférable.;",
 							"Shareable with a friend.; Reservation required.; Valid in most of our locations.; No expiration date.; Non-transferable.;"),
 				50,	MembershipPlanPeriodEnum.classes,	BillingFrequencyEnum.oneTime,
-				BuildCost(74999),0,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
+				BuildCost(74999),0,includedGymUuids,includedCourseUuids,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				true,false,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
 		membershipPlan.setUuid(java.util.UUID.randomUUID().toString());
 		membershipPlanRepository.save(membershipPlan);
@@ -301,7 +303,7 @@ public class Populator {
 				buildTermsOfUse("Abonnement récurrent.; 4 cours tous les 28 jours.; Réservation requise.; Valide dans plusieurs de nos studios.; Non transférable.; Aucun frais d'annulation avec 30 jours de préavis.; Possibilité de mettre ton abonnement sur pause 2 fois par année.;",
 							"Recurring subscription.; 4 classes every 28 days.; Reservation required.; Valid in most of our locations.; Non-transferable.; No cancellation fee with 30 days notice.; Possibility to put your subscription on hold 2 times a year.;"),
 				1,	MembershipPlanPeriodEnum.weekly, BillingFrequencyEnum.monthly,
-				BuildCost(7499),12,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
+				BuildCost(7499),12,includedGymUuids,includedCourseUuids,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				false,false,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
 		membershipPlan.setUuid(java.util.UUID.randomUUID().toString());
 		membershipPlanRepository.save(membershipPlan);
@@ -316,7 +318,7 @@ public class Populator {
 				buildTermsOfUse("Abonnement récurrent.; 8 cours tous les 28 jours.; Réservation requise.; Valide dans plusieurs de nos studios.; Non transférable.; Aucun frais d'annulation avec 30 jours de préavis.; Possibilité de mettre ton abonnement sur pause 2 fois par année.;",
 							"Recurring subscription.; 8 classes every 28 days.; Reservation required.; Valid in most of our locations.; Non-transferable.; No cancellation fee with 30 days notice.; Possibility to put your subscription on hold 2 times a year.;"),
 				2,	MembershipPlanPeriodEnum.weekly, BillingFrequencyEnum.monthly,
-				BuildCost(12499),12,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
+				BuildCost(12499),12,includedGymUuids,includedCourseUuids,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				false,false,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
 		membershipPlan.setUuid(java.util.UUID.randomUUID().toString());
 		membershipPlanRepository.save(membershipPlan);
@@ -331,7 +333,7 @@ public class Populator {
 				buildTermsOfUse("Abonnement récurrent.; 12 cours tous les 28 jours.; Réservation requise.; Valide dans plusieurs de nos studios.; Non transférable.; Aucun frais d'annulation avec 30 jours de préavis.; Possibilité de mettre ton abonnement sur pause 2 fois par année.;",
 							"Recurring subscription.; 12 classes every 28 days.; Reservation required.; Valid in most of our locations.; Non-transferable.; No cancellation fee with 30 days notice.; Possibility to put your subscription on hold 2 times a year.;"),
 				3,	MembershipPlanPeriodEnum.weekly, BillingFrequencyEnum.monthly,
-				BuildCost(16499),12,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
+				BuildCost(16499),12,includedGymUuids,includedCourseUuids,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				false,false,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
 		membershipPlan.setUuid(java.util.UUID.randomUUID().toString());
 		membershipPlanRepository.save(membershipPlan);
@@ -346,7 +348,7 @@ public class Populator {
 				buildTermsOfUse("Abonnement récurrent.; 24 cours tous les 28 jours.; Réservation requise.; Valide dans plusieurs de nos studios.; Non transférable.; Aucun frais d'annulation avec 30 jours de préavis.; Possibilité de mettre ton abonnement sur pause 2 fois par année.;",
 							"Recurring subscription.; 24 classes every 28 days.; Reservation required.; Valid in most of our locations.; Non-transferable.; No cancellation fee with 30 days notice.; Possibility to put your subscription on hold 2 times a year.;"),
 				6,	MembershipPlanPeriodEnum.weekly, BillingFrequencyEnum.monthly,
-				BuildCost(17499),12,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
+				BuildCost(17499),12,includedGymUuids,includedCourseUuids,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				false,false,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
 		membershipPlan.setUuid(java.util.UUID.randomUUID().toString());
 		membershipPlanRepository.save(membershipPlan);
@@ -362,7 +364,7 @@ public class Populator {
 				buildTermsOfUse("La carte-cadeau est envoyée par courriel dans les 24h; Réservation requise; Valide dans plusieurs de nos studios; Aucune date d'expiration; Non transférable;",
 							"The gift card is sent by email within 24h; Reservation required; Valid in most of our locations; No expiration date; Non-transferable;"),
 				10,	MembershipPlanPeriodEnum.classes, BillingFrequencyEnum.oneTime,
-				BuildCost(19999),0,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
+				BuildCost(19999),0,includedGymUuids,includedCourseUuids,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				false,true,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
 		membershipPlan.setUuid(java.util.UUID.randomUUID().toString());
 		membershipPlanRepository.save(membershipPlan);
@@ -377,7 +379,7 @@ public class Populator {
 				buildTermsOfUse("La carte-cadeau est envoyée par courriel dans les 24h.; Valide dans plusieurs de nos studios.; Aucune date d'expiration.; Non transférable;",
 							"The gift card is sent by email within 24h.; Valid in most of our locations.; No expiration date.; Non-transferable;"),
 				10,	MembershipPlanPeriodEnum.classes, BillingFrequencyEnum.oneTime,
-				BuildCost(34999),0,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
+				BuildCost(34999),0,includedGymUuids,includedCourseUuids,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				false,true,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
 		membershipPlan.setUuid(java.util.UUID.randomUUID().toString());
 		membershipPlanRepository.save(membershipPlan);
@@ -392,7 +394,7 @@ public class Populator {
 				buildTermsOfUse("La carte-cadeau est envoyée par courriel dans les 24h.; Utilisable pour tout achat en studio.;",
 							"The gift card is sent by email within 24h.; Redeemable for any in-studio purchase.;"),
 				0,	MembershipPlanPeriodEnum.amount, BillingFrequencyEnum.oneTime,
-				BuildCost(5000),0,includedGyms,includedCourses,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
+				BuildCost(5000),0,includedGymUuids,includedCourseUuids,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				false,true,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
 		membershipPlan.setUuid(java.util.UUID.randomUUID().toString());
 		membershipPlanRepository.save(membershipPlan);

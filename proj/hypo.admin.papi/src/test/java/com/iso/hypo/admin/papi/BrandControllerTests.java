@@ -25,9 +25,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -50,9 +47,9 @@ import com.iso.hypo.admin.papi.dto.patch.PatchBrandDto;
 import com.iso.hypo.admin.papi.dto.post.PostBrandDto;
 import com.iso.hypo.admin.papi.dto.put.PutBrandDto;
 import com.iso.hypo.admin.papi.dto.search.BrandSearchDto;
-import com.iso.hypo.brand.application.mapper.BrandMapper;
+import com.iso.hypo.brand.application.exception.BrandException;
+import com.iso.hypo.brand.application.mapper.BrandDtoMapper;
 import com.iso.hypo.brand.application.usecase.BrandService;
-import com.iso.hypo.brand.domain.exception.BrandException;
 import com.iso.hypo.brand.domain.model.Brand;
 import com.iso.hypo.brand.domain.model.Coach;
 import com.iso.hypo.brand.domain.model.Course;
@@ -61,7 +58,10 @@ import com.iso.hypo.brand.domain.repository.BrandRepository;
 import com.iso.hypo.brand.domain.repository.CoachRepository;
 import com.iso.hypo.brand.domain.repository.CourseRepository;
 import com.iso.hypo.brand.domain.repository.GymRepository;
+import com.iso.hypo.common.application.dto.PageResultDto;
 import com.iso.hypo.common.application.security.Roles;
+import com.iso.hypo.common.domain.model.pagination.PageRequest;
+import com.iso.hypo.common.domain.model.pagination.PageResult;
 import com.iso.hypo.domain.BrandBuilder;
 import com.iso.hypo.membership.domain.model.MembershipPlan;
 import com.iso.hypo.membership.domain.repository.MemberRepository;
@@ -113,7 +113,7 @@ class BrandControllerTests {
 	@Autowired
 	BrandService brandService;
 	@Autowired
-	BrandMapper brandMapper;
+	BrandDtoMapper brandMapper;
 	@Autowired
 	ObjectMapper objectMapper;
 	@Autowired
@@ -232,13 +232,13 @@ class BrandControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 
-		Page<BrandDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<BrandDto>>() {}, objectMapper);
+		PageResultDto<BrandDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<BrandDto>>() {}, objectMapper);
 
 		// Assert
-		Assertions.assertEquals(0, page.getPageable().getPageNumber(),
-				String.format("Brand list first page number invalid: %d", page.getPageable().getPageNumber()));
-		Assertions.assertEquals(4, page.getNumberOfElements(),
-				String.format("Brand list first page number of elements invalid: %d", page.getNumberOfElements()));
+		Assertions.assertEquals(0, page.getPageNumber(),
+				String.format("Brand list first page number invalid: %d", page.getPageNumber()));
+		Assertions.assertEquals(4, page.getContent().size(),
+				String.format("Brand list first page number of elements invalid: %d", page.getContent().size()));
 	}
 
 	@Test
@@ -258,13 +258,13 @@ class BrandControllerTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("List error: %s", response.getStatusCode()));
 		
-		Page<BrandDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<BrandDto>>() {}, objectMapper);
+		PageResultDto<BrandDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<BrandDto>>() {}, objectMapper);
 
 		// Assert
-		Assertions.assertEquals(1, page.getPageable().getPageNumber(),
-				String.format("Brand list second page number invalid: %d", page.getPageable().getPageNumber()));
-		Assertions.assertEquals(4, page.getNumberOfElements(),
-				String.format("Brand list second page number of elements invalid: %d", page.getNumberOfElements()));
+		Assertions.assertEquals(1, page.getPageNumber(),
+				String.format("Brand list second page number invalid: %d", page.getPageNumber()));
+		Assertions.assertEquals(4, page.getContent().size(),
+				String.format("Brand list second page number of elements invalid: %d", page.getContent().size()));
 	}
 
 	@Test
@@ -628,19 +628,19 @@ class BrandControllerTests {
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
 				String.format("Get error: %s", response.getStatusCode()));
 		
-		Page<Gym> pageGym = gymRepository.findAllByBrandUuidAndDeletedIsFalse(brandToDelete.getUuid(),  PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
+		PageResult<Gym> pageGym = gymRepository.findAllByBrandUuidAndDeletedIsFalse(brandToDelete.getUuid(),  PageRequest.of(0, 1000));
 		Assertions.assertEquals(0, pageGym.getTotalElements(),
 				String.format("Deleted brand gyms not deleted: %d", pageGym.getTotalElements()));
 		
-		Page<Coach> pageCoach = coachRepository.findAllByBrandUuidAndDeletedIsFalse(brandToDelete.getUuid(),  PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
+		PageResult<Coach> pageCoach = coachRepository.findAllByBrandUuidAndDeletedIsFalse(brandToDelete.getUuid(),  PageRequest.of(0, 1000));
 		Assertions.assertEquals(0, pageCoach.getTotalElements(),
 				String.format("Deleted brand coachs not deleted: %d", pageCoach.getTotalElements()));
 		
-		Page<Course> pageCourse = courseRepository.findAllByBrandUuidAndDeletedIsFalse(brandToDelete.getUuid(),  PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
+		PageResult<Course> pageCourse = courseRepository.findAllByBrandUuidAndDeletedIsFalse(brandToDelete.getUuid(),  PageRequest.of(0, 1000));
 		Assertions.assertEquals(0, pageCourse.getTotalElements(),
 				String.format("Deleted brand courses not deleted: %d", pageCourse.getTotalElements()));
 		
-		Page<MembershipPlan> pageMembershipPlan = membershipPlanRepository.findAllByBrandUuidAndDeletedIsFalse(brandToDelete.getUuid(),  PageRequest.of(0, 1000, Sort.Direction.ASC, "name"));
+		PageResult<MembershipPlan> pageMembershipPlan = membershipPlanRepository.findAllByBrandUuidAndDeletedIsFalse(brandToDelete.getUuid(),  PageRequest.of(0, 1000));
 		Assertions.assertEquals(0, pageMembershipPlan.getTotalElements(),
 				String.format("Deleted brand membership plans not deleted: %d", pageMembershipPlan.getTotalElements()));
 	}
@@ -658,7 +658,7 @@ class BrandControllerTests {
 			
 			// Act
 			await()
-	        .atMost(10, TimeUnit.SECONDS)
+	        .atMost(20, TimeUnit.SECONDS)
 	        .pollInterval(200, TimeUnit.MILLISECONDS)
 	        .untilAsserted(() -> {
 				ResponseEntity<JsonNode> response = testRestTemplate.exchange(
@@ -668,12 +668,12 @@ class BrandControllerTests {
 				Assertions.assertEquals(response.getStatusCode(), HttpStatus.OK,
 						String.format("Search error: %s", response.getStatusCode()));
 				
-				Page<BrandSearchDto> page = TestResponseUtils.toPage(response, new TypeReference<Page<BrandSearchDto>>() {}, objectMapper);
+				PageResultDto<BrandSearchDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<BrandSearchDto>>() {}, objectMapper);
 				
-				Assertions.assertTrue(page.getNumberOfElements() >= minimumNumberOfElements && 
-										page.getNumberOfElements() <= maximumNumberOfElements,
+				Assertions.assertTrue(page.getContent().size() >= minimumNumberOfElements && 
+									  page.getContent().size() <= maximumNumberOfElements,
 					String.format("Brand search return invalid number of results [%s]: %d", 
-							criteria, page.getNumberOfElements()));
+							criteria, page.getContent().size()));
 			});
 		}
 

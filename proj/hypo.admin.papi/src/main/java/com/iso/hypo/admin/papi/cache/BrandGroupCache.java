@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.iso.hypo.common.infrastructure.services.clients.AzureGraphClientService;
+import com.iso.hypo.common.application.usecase.AzureGraphClientService;
 import com.microsoft.graph.models.Group;
 
 /**

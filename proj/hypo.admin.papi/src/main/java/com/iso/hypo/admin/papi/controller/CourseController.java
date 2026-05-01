@@ -29,10 +29,11 @@ import com.iso.hypo.admin.papi.dto.model.CourseDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchCourseDto;
 import com.iso.hypo.admin.papi.dto.post.PostCourseDto;
 import com.iso.hypo.admin.papi.dto.put.PutCourseDto;
+import com.iso.hypo.brand.application.exception.CourseException;
 import com.iso.hypo.brand.application.usecase.CourseQueryService;
 import com.iso.hypo.brand.application.usecase.CourseService;
-import com.iso.hypo.brand.domain.exception.CourseException;
 import com.iso.hypo.common.application.context.RequestContext;
+import com.iso.hypo.common.application.dto.PageResultDto;
 import com.iso.hypo.common.application.security.Roles;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -83,7 +84,7 @@ public class CourseController {
 			@Parameter(description = "page size") @RequestParam int pageSize,
 			@Parameter(description = "includeInactive") @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
 
-		Page<com.iso.hypo.brand.application.dto.CourseDto> domainDtos = null;
+		PageResultDto<com.iso.hypo.brand.application.dto.CourseDto> domainDtos = null;
 		try {
 			domainDtos = courseQueryService.list(brandUuid, page, pageSize, includeInactive);
 		} catch (CourseException e) {

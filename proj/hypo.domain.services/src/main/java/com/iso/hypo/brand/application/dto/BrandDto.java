@@ -3,9 +3,9 @@ package com.iso.hypo.brand.application.dto;
 import java.util.List;
 
 import com.iso.hypo.common.application.dto.BaseEntityDto;
-import com.iso.hypo.common.domain.model.contact.Contact;
-import com.iso.hypo.common.domain.model.contact.PhoneNumber;
-import com.iso.hypo.common.domain.model.location.Address;
+import com.iso.hypo.common.application.dto.contact.ContactDto;
+import com.iso.hypo.common.application.dto.contact.PhoneNumberDto;
+import com.iso.hypo.common.application.dto.location.AddressDto;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -20,7 +20,7 @@ public class BrandDto extends BaseEntityDto {
 
     private String name;
 
-    private Address address;
+    private AddressDto address;
 
     private String email;
 
@@ -28,8 +28,8 @@ public class BrandDto extends BaseEntityDto {
 
     private String logoUri;
 
-    private List<Contact> contacts;
+    private List<ContactDto> contacts;
 
-    private List<PhoneNumber> phoneNumbers;
+    private List<PhoneNumberDto> phoneNumbers;
 
 }

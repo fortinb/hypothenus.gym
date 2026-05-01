@@ -1,21 +1,21 @@
 package com.iso.hypo.tests.utils;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.data.domain.Page;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iso.hypo.admin.papi.dto.ErrorDto;
+import com.iso.hypo.common.application.dto.PageResultDto;
 
 /**
  * Small test helper to centralize conversion of ResponseEntity<JsonNode>
- * into DTOs, Page objects or ErrorDto.
+ * into DTOs, PageResultDto objects or ErrorDto.
  *
  * Usage examples:
  *  - MyDto d = TestResponseUtils.toDto(response, MyDto.class, objectMapper);
  *  - ErrorDto err = TestResponseUtils.toError(response, objectMapper);
- *  - MyPage = TestResponseUtils.toPage(response, new TypeReference<Page<MyDto>>() {}, objectMapper);
+ *  - PageResultDto<MyDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<MyDto>>() {}, objectMapper);
  *  - MyDto d = TestResponseUtils.parseOrThrow(response, MyDto.class, objectMapper);
  */
 public final class TestResponseUtils {
@@ -36,7 +36,7 @@ public final class TestResponseUtils {
         return mapper.convertValue(body, ErrorDto.class);
     }
 
-    public static <T> Page<T> toPage(ResponseEntity<JsonNode> response, TypeReference<Page<T>> typeRef, ObjectMapper mapper) {
+    public static <T> PageResultDto<T> toPage(ResponseEntity<JsonNode> response, TypeReference<PageResultDto<T>> typeRef, ObjectMapper mapper) {
         if (response == null) return null;
         JsonNode body = response.getBody();
         if (body == null || body.isEmpty()) return null;

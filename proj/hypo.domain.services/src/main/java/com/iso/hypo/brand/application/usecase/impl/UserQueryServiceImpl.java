@@ -6,20 +6,21 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.iso.hypo.brand.application.dto.UserDto;
 import com.iso.hypo.brand.application.dto.search.UserSearchDto;
-import com.iso.hypo.brand.application.mapper.UserMapper;
+import com.iso.hypo.brand.application.exception.UserException;
+import com.iso.hypo.brand.application.mapper.UserDtoMapper;
+import com.iso.hypo.brand.application.repository.UserQueryRepository;
 import com.iso.hypo.brand.application.usecase.UserQueryService;
-import com.iso.hypo.brand.domain.exception.UserException;
 import com.iso.hypo.brand.domain.model.User;
 import com.iso.hypo.brand.domain.repository.UserRepository;
 import com.iso.hypo.common.application.context.RequestContext;
-import com.iso.hypo.common.infrastructure.services.clients.AzureGraphClientService;
+import com.iso.hypo.common.application.dto.PageResultDto;
+import com.iso.hypo.common.domain.model.pagination.PageRequest;
+import com.iso.hypo.common.domain.model.pagination.PageResult;
+import com.iso.hypo.common.application.usecase.AzureGraphClientService;
 
 @Service
 public class UserQueryServiceImpl implements UserQueryService {
@@ -28,8 +29,8 @@ public class UserQueryServiceImpl implements UserQueryService {
 	private boolean testRun;
 
 	private final UserRepository userRepository;
-
-	private final UserMapper userMapper;
+	private final UserQueryRepository userQueryRepository;
+	private final UserDtoMapper userMapper;
 
 	private final AzureGraphClientService azureGraphClientService;
 
@@ -37,8 +38,13 @@ public class UserQueryServiceImpl implements UserQueryService {
 
 	private final RequestContext requestContext;
 
-	public UserQueryServiceImpl(UserMapper userMapper, UserRepository userRepository,
-			AzureGraphClientService azureGraphClientService, RequestContext requestContext) {
+	public UserQueryServiceImpl(
+			UserDtoMapper userMapper, 
+			UserRepository userRepository,
+			UserQueryRepository userQueryRepository,
+			AzureGraphClientService azureGraphClientService, 
+			RequestContext requestContext) {
+		this.userQueryRepository = userQueryRepository;
 		this.userMapper = userMapper;
 		this.userRepository = userRepository;
 		this.azureGraphClientService = azureGraphClientService;
@@ -75,11 +81,32 @@ public class UserQueryServiceImpl implements UserQueryService {
 	}
 
 	@Override
-	public Page<UserSearchDto> search(int page, int pageSize, String criteria, boolean includeInactive)
+	public Optional<UserDto> findByEmail(String email) throws UserException {
+		try {
+			return userRepository.findByEmailAndDeletedIsFalse(email).map(userMapper::toDto);
+		} catch (Exception e) {
+			logger.error("Error - email={}", email, e);
+			throw new UserException(requestContext.getTrackingNumber(), UserException.FIND_FAILED, e);
+		}
+	}
+
+	@Override
+	public Optional<UserDto> findByIdpId(String idpId) throws UserException {
+		try {
+			return userRepository.findByIdpIdAndDeletedIsFalse(idpId).map(userMapper::toDto);
+		} catch (Exception e) {
+			logger.error("Error - idpId={}", idpId, e);
+			throw new UserException(requestContext.getTrackingNumber(), UserException.FIND_FAILED, e);
+		}
+	}
+
+	@Override
+	public PageResultDto<UserSearchDto> search(int page, int pageSize, String criteria, boolean includeInactive)
 			throws UserException {
 		try {
-			return userRepository.searchAutocomplete(criteria,
-					PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"), includeInactive);
+			PageResult<UserSearchDto> result = userQueryRepository.searchAutocomplete(criteria,
+					PageRequest.of(page, pageSize), includeInactive);
+			return PageResultDto.from(result);
 		} catch (Exception e) {
 			logger.error("Error - criteria={}", criteria, e);
 			throw new UserException(requestContext.getTrackingNumber(), UserException.FIND_FAILED, e);
@@ -87,18 +114,15 @@ public class UserQueryServiceImpl implements UserQueryService {
 	}
 
 	@Override
-	public Page<UserDto> list(int page, int pageSize, boolean includeInactive) throws UserException {
+	public PageResultDto<UserDto> list(int page, int pageSize, boolean includeInactive) throws UserException {
 		try {
-			if (includeInactive) {
-				return userRepository
-						.findAllByDeletedIsFalse(PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"))
-						.map(m -> userMapper.toDto(m));
-			}
-
-			return userRepository
-					.findAllByDeletedIsFalseAndActiveIsTrue(
-							PageRequest.of(page, pageSize, Sort.Direction.ASC, "lastname"))
-					.map(m -> userMapper.toDto(m));
+			PageRequest pageRequest = PageRequest.of(page, pageSize);
+			PageResult<UserDto> result = includeInactive
+					? userRepository.findAllByDeletedIsFalse(pageRequest)
+							.map(userMapper::toDto)
+					: userRepository.findAllByDeletedIsFalseAndActiveIsTrue(pageRequest)
+							.map(userMapper::toDto);
+			return PageResultDto.from(result);
 		} catch (Exception e) {
 			logger.error("Error", e);
 			throw new UserException(requestContext.getTrackingNumber(), UserException.FIND_FAILED, e);

@@ -4,7 +4,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.iso.hypo.common.application.dto.BaseEntityDto;
-import com.iso.hypo.common.domain.model.LocalizedString;
+import com.iso.hypo.common.application.dto.LocalizedStringDto;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -19,9 +19,9 @@ public class CourseDto extends BaseEntityDto {
 
     private String code;
 
-    private List<LocalizedString> name;
+    private List<LocalizedStringDto> name;
 
-    private List<LocalizedString> description;
+    private List<LocalizedStringDto> description;
 
     private Date startDate;
 

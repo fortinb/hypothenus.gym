@@ -1,6 +1,6 @@
 package com.iso.hypo.brand.application.dto.search;
 
-import com.iso.hypo.common.domain.model.location.Address;
+import com.iso.hypo.common.application.dto.location.AddressDto;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -19,7 +19,7 @@ public class GymSearchDto {
 	
 	private String email;
 	
-	private Address address;
+	private AddressDto address;
 	
 	private boolean active;
 }

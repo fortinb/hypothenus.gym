@@ -6,8 +6,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.iso.hypo.brand.application.event.BrandEvent;
+import com.iso.hypo.common.application.event.enumeration.OperationEnum;
 import com.iso.hypo.common.domain.exception.DomainException;
-import com.iso.hypo.events.event.OperationEnum;
 import com.iso.hypo.finance.application.exception.FinancialInstrumentException;
 import com.iso.hypo.finance.application.usecase.FinancialInstrumentService;
 import com.iso.hypo.membership.application.event.MemberEvent;

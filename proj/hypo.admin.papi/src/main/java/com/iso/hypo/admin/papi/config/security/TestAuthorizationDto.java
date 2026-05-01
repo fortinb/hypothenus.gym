@@ -2,7 +2,7 @@ package com.iso.hypo.admin.papi.config.security;
 
 import java.util.List;
 
-import com.iso.hypo.common.application.security.RoleEnum;
+import com.iso.hypo.common.domain.model.enumeration.RoleEnum;
 
 import lombok.Getter;
 import lombok.Setter;

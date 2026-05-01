@@ -5,36 +5,23 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.mapping.Document;
-
-import com.iso.hypo.brand.domain.model.Course;
-import com.iso.hypo.brand.domain.model.Gym;
 import com.iso.hypo.common.domain.model.BaseEntity;
 import com.iso.hypo.common.domain.model.LocalizedString;
 import com.iso.hypo.common.domain.model.finance.Cost;
 import com.iso.hypo.membership.domain.model.enumeration.BillingFrequencyEnum;
 import com.iso.hypo.membership.domain.model.enumeration.MembershipPlanPeriodEnum;
-import com.mongodb.lang.NonNull;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-@Document("membershipplan")
 public class MembershipPlan extends BaseEntity {
 
-	@Id
 	private String id;
-	
-	@Indexed
+
 	private String uuid;
-	
-	@Indexed
-	@NonNull
+
 	private String brandUuid;
 
 	private List<LocalizedString> name;
@@ -70,11 +57,9 @@ public class MembershipPlan extends BaseEntity {
 	
 	private Date endDate;
 
-	@DBRef
-	private List<Course> includedCourses = new ArrayList<>();
+	private List<String> includedCourseUuids = new ArrayList<>();
 
-	@DBRef
-	private List<Gym> includedGyms = new ArrayList<>();
+	private List<String> includedGymUuids = new ArrayList<>();
 
 	public MembershipPlan() {
 		super();
@@ -83,7 +68,7 @@ public class MembershipPlan extends BaseEntity {
 	public MembershipPlan(String brandUuid, List<LocalizedString> name, List<LocalizedString> title,
 			List<LocalizedString> description, List<LocalizedString> termsOfUse, int numberOfClasses, MembershipPlanPeriodEnum period,
 			BillingFrequencyEnum billingFrequency, Cost cost, int durationInMonths,
-			List<Gym> includedGyms,List<Course> includedCourses, Date startDate, Date endDate, boolean guestPrivilege, boolean giftCard,
+			List<String> includedGymUuids, List<String> includedCourseUuids, Date startDate, Date endDate, boolean guestPrivilege, boolean giftCard,
 			boolean promotional, boolean active, Instant startedOn, Instant endedOn) {
 		super(active);
 		this.brandUuid = brandUuid;
@@ -101,8 +86,8 @@ public class MembershipPlan extends BaseEntity {
 		this.promotional = promotional;
 		this.cost = cost;
 		this.durationInMonths = durationInMonths;
-		this.includedCourses = includedCourses;
-		this.includedGyms = includedGyms;
+		this.includedCourseUuids = includedCourseUuids;
+		this.includedGymUuids = includedGymUuids;
 		this.activatedOn = startedOn;
 		this.deactivatedOn = endedOn;
 	}

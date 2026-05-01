@@ -2,29 +2,19 @@ package com.iso.hypo.membership.domain.model;
 
 import java.time.Instant;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-
 import com.iso.hypo.common.domain.model.BaseEntity;
-import com.mongodb.lang.NonNull;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-@Document("membership")
 public class Membership extends BaseEntity {
 
-	@Id
 	private String id;
 	
-	@Indexed
 	private String uuid;
 
-	@Indexed
-	@NonNull
 	private String brandUuid;
 
 	private MembershipPlan membershipPlan;

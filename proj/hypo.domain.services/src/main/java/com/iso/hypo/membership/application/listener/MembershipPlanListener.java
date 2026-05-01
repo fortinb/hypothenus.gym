@@ -8,10 +8,10 @@ import org.springframework.stereotype.Component;
 import com.iso.hypo.brand.application.event.BrandEvent;
 import com.iso.hypo.brand.application.event.CourseEvent;
 import com.iso.hypo.brand.application.event.GymEvent;
+import com.iso.hypo.common.application.event.enumeration.OperationEnum;
 import com.iso.hypo.common.domain.exception.DomainException;
-import com.iso.hypo.events.event.OperationEnum;
+import com.iso.hypo.membership.application.exception.MembershipPlanException;
 import com.iso.hypo.membership.application.usecase.MembershipPlanService;
-import com.iso.hypo.membership.domain.exception.MembershipPlanException;
 
 @Component
 public class MembershipPlanListener {
@@ -49,7 +49,7 @@ public class MembershipPlanListener {
     
     private void handleDeleteGym(GymEvent event) throws DomainException {
     	try {
-			membershipPlanService.removeAllGymReferencesByGymId(event.getEntity().getId());
+			membershipPlanService.removeAllGymReferencesByGymUuid(event.getEntity().getBrandUuid(), event.getEntity().getUuid());
 		} catch (MembershipPlanException e) {
 			logger.error("Error - brandUuid={}", event.getEntity().getUuid(), e);
 			throw e;
@@ -65,7 +65,7 @@ public class MembershipPlanListener {
     
     private void handleDeleteCourse(CourseEvent event) throws DomainException {
     	try {
-    		membershipPlanService.removeAllCourseReferencesByCourseId(event.getEntity().getId());
+    		membershipPlanService.removeAllCourseReferencesByCourseUuid(event.getEntity().getBrandUuid(), event.getEntity().getUuid());
 		} catch (MembershipPlanException e) {
 			logger.error("Error - courseUuid={}", event.getEntity().getUuid(), e);
 			throw e;

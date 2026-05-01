@@ -9,7 +9,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
-import org.modelmapper.PropertyMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -19,19 +18,19 @@ import org.springframework.util.Assert;
 
 import com.iso.hypo.brand.application.dto.GymDto;
 import com.iso.hypo.brand.application.event.GymEvent;
-import com.iso.hypo.brand.application.mapper.GymMapper;
+import com.iso.hypo.brand.application.exception.BrandException;
+import com.iso.hypo.brand.application.exception.GymException;
+import com.iso.hypo.brand.application.mapper.GymDtoMapper;
 import com.iso.hypo.brand.application.usecase.BrandQueryService;
 import com.iso.hypo.brand.application.usecase.GymService;
-import com.iso.hypo.brand.domain.exception.BrandException;
-import com.iso.hypo.brand.domain.exception.GymException;
 import com.iso.hypo.brand.domain.model.Coach;
 import com.iso.hypo.brand.domain.model.Gym;
 import com.iso.hypo.brand.domain.repository.CoachRepository;
 import com.iso.hypo.brand.domain.repository.GymRepository;
 import com.iso.hypo.common.application.context.RequestContext;
+import com.iso.hypo.common.application.event.enumeration.OperationEnum;
 import com.iso.hypo.common.domain.model.Message;
 import com.iso.hypo.common.domain.model.enumeration.MessageSeverityEnum;
-import com.iso.hypo.events.event.OperationEnum;
 
 @Service
 public class GymServiceImpl implements GymService {
@@ -42,7 +41,7 @@ public class GymServiceImpl implements GymService {
 
 	private final GymRepository gymRepository;
 
-	private final GymMapper gymMapper;
+	private final GymDtoMapper gymMapper;
 
 	private final ApplicationEventPublisher eventPublisher;
 
@@ -50,7 +49,7 @@ public class GymServiceImpl implements GymService {
 
 	private final RequestContext requestContext;
 
-	public GymServiceImpl(GymMapper gymMapper, BrandQueryService brandQueryService, CoachRepository coachRepository,
+	public GymServiceImpl(GymDtoMapper gymMapper, BrandQueryService brandQueryService, CoachRepository coachRepository,
 			GymRepository gymRepository, ApplicationEventPublisher eventPublisher, RequestContext requestContext) {
 		this.gymMapper = gymMapper;
 		this.brandQueryService = brandQueryService;
@@ -78,7 +77,7 @@ public class GymServiceImpl implements GymService {
 				message.setCode(GymException.GYM_CODE_ALREADY_EXIST);
 				message.setDescription("Duplicate gym code");
 				message.setSeverity(MessageSeverityEnum.warning);
-				existingGym.get().getMessages().add(message);
+				existingGym.get().setMessages(List.of(message));
 
 				throw new GymException(requestContext.getTrackingNumber(), GymException.GYM_CODE_ALREADY_EXIST,
 						"Duplicate gym code", gymMapper.toDto(existingGym.get()));
@@ -137,12 +136,11 @@ public class GymServiceImpl implements GymService {
 	@Transactional
 	public GymDto activate(String brandUuid, String gymUuid) throws GymException {
 		try {
-			Optional<Gym> entity = gymRepository.activate(brandUuid, gymUuid);
-			if (entity.isEmpty()) {
-				throw new GymException(requestContext.getTrackingNumber(), GymException.GYM_NOT_FOUND, "Gym not found");
-			}
-
-			return gymMapper.toDto(entity.get());
+			Gym entity = this.readByGymUuid(brandUuid, gymUuid);
+			entity.activate(requestContext.getUsername());
+			gymRepository.save(entity);
+			
+			return gymMapper.toDto(entity);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, gymUuid={}", brandUuid, gymUuid, e);
 
@@ -157,12 +155,11 @@ public class GymServiceImpl implements GymService {
 	@Transactional
 	public GymDto deactivate(String brandUuid, String gymUuid) throws GymException {
 		try {
-			Optional<Gym> entity = gymRepository.deactivate(brandUuid, gymUuid);
-			if (entity.isEmpty()) {
-				throw new GymException(requestContext.getTrackingNumber(), GymException.GYM_NOT_FOUND, "Gym not found");
-			}
-
-			return gymMapper.toDto(entity.get());
+			Gym entity = this.readByGymUuid(brandUuid, gymUuid);
+			entity.deactivate(requestContext.getUsername());
+			gymRepository.save(entity);
+			
+			return gymMapper.toDto(entity);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, gymUuid={}", brandUuid, gymUuid, e);
 
@@ -178,10 +175,10 @@ public class GymServiceImpl implements GymService {
 	public void delete(String brandUuid, String gymUuid) throws GymException {
 		try {
 			Gym entity = this.readByGymUuid(brandUuid, gymUuid);
+			entity.delete(requestContext.getUsername());
+			gymRepository.save(entity);
 
-			gymRepository.delete(entity.getBrandUuid(), entity.getUuid(), requestContext.getUsername());
-
-			eventPublisher.publishEvent(new GymEvent(this, entity, OperationEnum.delete));
+			eventPublisher.publishEvent(new GymEvent(this,  gymMapper.toDto(entity), OperationEnum.delete));
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, gymUuid={}", brandUuid, gymUuid, e);
 
@@ -217,14 +214,14 @@ public class GymServiceImpl implements GymService {
 			ModelMapper mapper = new ModelMapper();
 			mapper.getConfiguration().setSkipNullEnabled(skipNull).setCollectionsMergeEnabled(false);
 
-			PropertyMap<Gym, Gym> gymPropertyMap = new PropertyMap<Gym, Gym>() {
+	/*		PropertyMap<Gym, Gym> gymPropertyMap = new PropertyMap<Gym, Gym>() {
 				protected void configure() {
 					skip().setId(null);
 					skip().setActive(false);
 				}
 			};
 			
-			mapper.addMappings(gymPropertyMap);
+			mapper.addMappings(gymPropertyMap);*/
 			mapper = gymMapper.initGymMappings(mapper);
 			mapper.map(gym, oldGym);
 
@@ -272,12 +269,13 @@ public class GymServiceImpl implements GymService {
 	}
 
 	@Override
-	public void removeAllCoachReferencesByCoachId(String coachId) throws GymException {
+	public void removeAllCoachReferencesByCoachUuid(String brandUuid, String coachUuid) throws GymException {
 		try {
-			long modifiedCount = gymRepository.removeCoachReferences(coachId);
-			logger.info("Coach references removed from gym - coachId={} modifiedCount={}", coachId, modifiedCount);
+	
+			long modifiedCount = gymRepository.removeCoachReferences(brandUuid, coachUuid);
+			logger.info("Coach references removed from gym - coachUuid={} modifiedCount={}", coachUuid, modifiedCount);
 		} catch (Exception e) {
-			logger.error("Error removing coach references - coachId={}", coachId, e);
+			logger.error("Error removing coach references - coachUuid={}", coachUuid, e);
 			throw new GymException(requestContext.getTrackingNumber(), GymException.DELETE_FAILED, e);
 		}
 	}

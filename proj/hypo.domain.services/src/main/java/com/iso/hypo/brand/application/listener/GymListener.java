@@ -7,10 +7,10 @@ import org.springframework.stereotype.Component;
 
 import com.iso.hypo.brand.application.event.BrandEvent;
 import com.iso.hypo.brand.application.event.CoachEvent;
+import com.iso.hypo.brand.application.exception.GymException;
 import com.iso.hypo.brand.application.usecase.GymService;
-import com.iso.hypo.brand.domain.exception.GymException;
 import com.iso.hypo.common.domain.exception.DomainException;
-import com.iso.hypo.events.event.OperationEnum;
+import com.iso.hypo.common.application.event.enumeration.OperationEnum;
 
 @Component
 public class GymListener {
@@ -48,7 +48,7 @@ public class GymListener {
     
     private void handleDeleteCoach(CoachEvent event) throws DomainException {
     	try {
-    		gymService.removeAllCoachReferencesByCoachId(event.getEntity().getId());
+    		gymService.removeAllCoachReferencesByCoachUuid(event.getEntity().getBrandUuid(), event.getEntity().getUuid());
 		} catch (GymException e) {
 			logger.error("Error - coachUuid={}", event.getEntity().getUuid(), e);
 			throw e;

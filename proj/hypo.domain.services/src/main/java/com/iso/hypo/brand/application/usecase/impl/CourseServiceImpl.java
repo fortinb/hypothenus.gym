@@ -1,6 +1,7 @@
 package com.iso.hypo.brand.application.usecase.impl;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -15,17 +16,17 @@ import org.springframework.util.Assert;
 
 import com.iso.hypo.brand.application.dto.CourseDto;
 import com.iso.hypo.brand.application.event.CourseEvent;
-import com.iso.hypo.brand.application.mapper.CourseMapper;
+import com.iso.hypo.brand.application.exception.BrandException;
+import com.iso.hypo.brand.application.exception.CourseException;
+import com.iso.hypo.brand.application.mapper.CourseDtoMapper;
 import com.iso.hypo.brand.application.usecase.BrandQueryService;
 import com.iso.hypo.brand.application.usecase.CourseService;
-import com.iso.hypo.brand.domain.exception.BrandException;
-import com.iso.hypo.brand.domain.exception.CourseException;
 import com.iso.hypo.brand.domain.model.Course;
 import com.iso.hypo.brand.domain.repository.CourseRepository;
 import com.iso.hypo.common.application.context.RequestContext;
+import com.iso.hypo.common.application.event.enumeration.OperationEnum;
 import com.iso.hypo.common.domain.model.Message;
 import com.iso.hypo.common.domain.model.enumeration.MessageSeverityEnum;
-import com.iso.hypo.events.event.OperationEnum;
 
 @Service
 public class CourseServiceImpl implements CourseService {
@@ -36,14 +37,14 @@ public class CourseServiceImpl implements CourseService {
 
 	private final ApplicationEventPublisher eventPublisher;
 	
-	private final CourseMapper courseMapper;
+	private final CourseDtoMapper courseMapper;
 
 	private static final Logger logger = LoggerFactory.getLogger(CourseServiceImpl.class);
 	
 	private final RequestContext requestContext;
 
 	public CourseServiceImpl(
-			CourseMapper courseMapper, 
+			CourseDtoMapper courseMapper, 
 			CourseRepository courseRepository, 
 			BrandQueryService brandQueryService, 
 			ApplicationEventPublisher eventPublisher,
@@ -71,7 +72,7 @@ public class CourseServiceImpl implements CourseService {
 				message.setCode(CourseException.COURSE_CODE_ALREADY_EXIST);
 				message.setDescription("Duplicate course code");
 				message.setSeverity(MessageSeverityEnum.warning);
-				existingCourse.get().getMessages().add(message);
+				existingCourse.get().setMessages(List.of(message));
 
 				throw new CourseException(requestContext.getTrackingNumber(), CourseException.COURSE_CODE_ALREADY_EXIST, "Duplicate course code", courseMapper.toDto(existingCourse.get()));
 			}
@@ -127,11 +128,11 @@ public class CourseServiceImpl implements CourseService {
 	@Transactional
 	public CourseDto activate(String brandUuid, String courseUuid) throws CourseException {
 		try {
-			Optional<Course> entity = courseRepository.activate(brandUuid, courseUuid);
-			if (entity.isEmpty()) {
-				throw new CourseException(requestContext.getTrackingNumber(), CourseException.COURSE_NOT_FOUND, "Course not found");
-			}
-			return courseMapper.toDto(entity.get());
+			Course entity = this.readByCourseUuid(brandUuid, courseUuid);
+			entity.activate(requestContext.getUsername());
+			courseRepository.save(entity);
+			
+			return courseMapper.toDto(entity);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, courseUuid={}", brandUuid, courseUuid, e);
 			if (e instanceof CourseException) {
@@ -145,11 +146,11 @@ public class CourseServiceImpl implements CourseService {
 	@Transactional
 	public CourseDto deactivate(String brandUuid, String courseUuid) throws CourseException {
 		try {
-			Optional<Course> entity = courseRepository.deactivate(brandUuid, courseUuid);
-			if (entity.isEmpty()) {
-				throw new CourseException(requestContext.getTrackingNumber(), CourseException.COURSE_NOT_FOUND, "Course not found");
-			}
-			return courseMapper.toDto(entity.get());
+			Course entity = this.readByCourseUuid(brandUuid, courseUuid);
+			entity.deactivate(requestContext.getUsername());
+			courseRepository.save(entity);
+			
+			return courseMapper.toDto(entity);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, courseUuid={}", brandUuid, courseUuid, e);
 			if (e instanceof CourseException) {
@@ -164,10 +165,10 @@ public class CourseServiceImpl implements CourseService {
 	public void delete(String brandUuid, String courseUuid) throws CourseException {
 		try {
 			Course entity = this.readByCourseUuid(brandUuid, courseUuid);
+			entity.delete(requestContext.getUsername());
+			courseRepository.save(entity);
 			
-			courseRepository.delete(entity.getBrandUuid(), entity.getUuid(), requestContext.getUsername());
-			
-			eventPublisher.publishEvent(new CourseEvent(this, entity, OperationEnum.delete));
+			eventPublisher.publishEvent(new CourseEvent(this, courseMapper.toDto(entity), OperationEnum.delete));
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, courseUuid={}", brandUuid, courseUuid, e);
 			if (e instanceof CourseException) {
