@@ -9,6 +9,8 @@ import com.iso.hypo.common.domain.model.pagination.PageResult;
 public interface BrandRepository {
 
     Optional<Brand> findByUuidAndDeletedIsFalse(String brandUuid);
+    
+    Optional<Brand> findByUuid(String brandUuid);
 
     Optional<Brand> findByCode(String code);
 

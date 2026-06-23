@@ -18,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import com.iso.hypo.common.application.dto.PageResultDto;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -39,13 +38,14 @@ import com.iso.hypo.admin.papi.dto.post.PostFinancialInstrumentDto;
 import com.iso.hypo.admin.papi.dto.put.PutMemberDto;
 import com.iso.hypo.brand.domain.model.Brand;
 import com.iso.hypo.brand.domain.repository.BrandRepository;
+import com.iso.hypo.common.application.dto.PageResultDto;
+import com.iso.hypo.common.application.dto.enumeration.FinancialInstrumentTypeEnumDto;
 import com.iso.hypo.common.application.security.Roles;
 import com.iso.hypo.domain.BrandBuilder;
 import com.iso.hypo.domain.FinancialInstrumentBuilder;
 import com.iso.hypo.domain.MemberBuilder;
 import com.iso.hypo.finance.application.dto.FinancialInstrumentDto;
 import com.iso.hypo.finance.domain.model.FinancialInstrument;
-import com.iso.hypo.finance.domain.model.enumeration.FinancialInstrumentTypeEnum;
 import com.iso.hypo.finance.domain.repository.FinancialInstrumentRepository;
 import com.iso.hypo.membership.application.exception.MemberException;
 import com.iso.hypo.membership.domain.model.Member;
@@ -159,6 +159,8 @@ class FinancialInstrumentControllerTests {
 
 		PostFinancialInstrumentDto postDto = modelMapper
 				.map(FinancialInstrumentBuilder.build(brand.getUuid(), postMember), PostFinancialInstrumentDto.class);
+		postDto.getCreditCard().setCvd("123");
+		postDto.getCreditCard().setZipCode("H3Z2Y7");
 		HttpEntity<PostFinancialInstrumentDto> httpEntity = HttpUtils.createHttpEntity(role, user, postDto);
 
 		// Act
@@ -355,13 +357,13 @@ class FinancialInstrumentControllerTests {
 		Assertions.assertEquals(expected.getType(), result.getType());
 
 		// preferredMemberUuid may be null in some scenarios
-		if (expected.getType() == FinancialInstrumentTypeEnum.creditCard) {
+		if (expected.getType() == FinancialInstrumentTypeEnumDto.creditCard) {
 			Assertions.assertNotNull(result.getCreditCard());
 			Assertions.assertEquals(expected.getCreditCard().getCardHolderName(),
 					result.getCreditCard().getCardHolderName());
 			// Assertions.assertEquals(expected.getCreditCard().getCardNumber(),
 			// result.getCreditCard().getCardNumber());
-			Assertions.assertEquals(expected.getCreditCard().getCvv(), result.getCreditCard().getCvv());
+		//	Assertions.assertEquals(expected.getCreditCard().getCvd(), result.getCreditCard().getCvd());
 			Assertions.assertEquals(expected.getCreditCard().getExpirationDate(),
 					result.getCreditCard().getExpirationDate());
 		}

@@ -192,9 +192,12 @@ public class GymServiceImpl implements GymService {
 	@Override
 	public void deleteAllByBrandUuid(String brandUuid) throws GymException {
 		try {
-			long deletedCount = gymRepository.deleteAllByBrandUuid(brandUuid, requestContext.getUsername());
+			if (brandQueryService.assertDeleted(brandUuid)) {
+				
+				long deletedCount = gymRepository.deleteAllByBrandUuid(brandUuid, requestContext.getUsername());
 
-			logger.info("Gym deleted for brand - brandUuid={} deletedCount={} ", brandUuid, deletedCount);
+				logger.info("Gym deleted for brand - brandUuid={} deletedCount={} ", brandUuid, deletedCount);
+			}
 		} catch (Exception e) {
 			logger.error("Error - brandId={}", brandUuid, e);
 

@@ -6,6 +6,7 @@ import com.iso.hypo.admin.papi.dto.BaseDto;
 import com.iso.hypo.admin.papi.dto.contact.ContactDto;
 import com.iso.hypo.admin.papi.dto.contact.PhoneNumberDto;
 import com.iso.hypo.admin.papi.dto.location.AddressDto;
+import com.iso.hypo.common.domain.model.finance.Currency;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -21,6 +22,8 @@ public class BrandDto extends BaseDto {
 	private String name;
 	
 	private AddressDto address;
+	
+	private Currency currency;
 	
 	private String email;
 	

@@ -12,7 +12,7 @@ import com.iso.hypo.brand.application.usecase.GymQueryService;
 import com.iso.hypo.common.application.context.RequestContext;
 import com.iso.hypo.membership.application.port.GymServicePort;
 import com.iso.hypo.membership.application.port.dto.GymRef;
-import com.iso.hypo.membership.infrastructure.port.mapper.GymRefMapper;
+import com.iso.hypo.membership.infrastructure.port.mapper.MembershipGymRefMapper;
 
 /**
  * Infrastructure adapter that satisfies {@link GymServicePort} by delegating
@@ -26,14 +26,14 @@ public class MembershipGymServicePortAdapter implements GymServicePort {
     private static final Logger logger = LoggerFactory.getLogger(MembershipGymServicePortAdapter.class);
 
     private final GymQueryService gymQueryService;
-    private final GymRefMapper gymRefMapper;
+    private final MembershipGymRefMapper gymRefMapper;
 
 	@SuppressWarnings("unused")
 	private final RequestContext requestContext;
 	
     public MembershipGymServicePortAdapter(
     		GymQueryService gymQueryService, 
-    		GymRefMapper gymRefMapper, 
+    		MembershipGymRefMapper gymRefMapper, 
     		RequestContext requestContext) {
         this.gymQueryService = gymQueryService;
 		this.gymRefMapper = gymRefMapper;

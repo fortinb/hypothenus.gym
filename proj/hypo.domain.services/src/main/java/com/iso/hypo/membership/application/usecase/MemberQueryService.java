@@ -8,6 +8,8 @@ import com.iso.hypo.membership.application.exception.MemberException;
 public interface MemberQueryService {
 
     void assertExists(String brandUuid, String memberUuid) throws MemberException;
+    
+    boolean assertDeleted(String brandUuid, String memberUuid) throws MemberException;
 
     MemberDto find(String brandUuid, String memberUuid) throws MemberException;
 

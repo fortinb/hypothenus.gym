@@ -279,6 +279,27 @@ class MemberControllerTests {
 	}
 	
 	@Test
+	void testPostAddressNullSuccess() throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		PostMemberDto postDto = modelMapper.map(MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular), PostMemberDto.class);
+		postDto.getPerson().setAddress(null);
+		HttpEntity<PostMemberDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
+
+		// Act
+		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(postURI, brand.getUuid())), port, null),
+				HttpMethod.POST, httpEntity, JsonNode.class);
+
+		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
+				String.format("Post error: %s", response.getStatusCode()));
+
+		MemberDto createdDto = TestResponseUtils.toDto(response, MemberDto.class, objectMapper);
+		assertMember(modelMapper.map(postDto, MemberDto.class), createdDto);
+		
+		Assertions.assertEquals(createdDto.getPerson().getAddress().getCountry(), brand.getAddress().getCountry());
+		Assertions.assertEquals(createdDto.getPerson().getAddress().getState(),	brand.getAddress().getState());
+	}
+	
+	@Test
 	void testPostDuplicateFailure() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PostMemberDto postDto = modelMapper.map(MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular), PostMemberDto.class);
@@ -782,14 +803,18 @@ class MemberControllerTests {
 					result.getPerson().getAddress().getAppartment());
 			Assertions.assertEquals(expected.getPerson().getAddress().getCity(),
 					result.getPerson().getAddress().getCity());
+			Assertions.assertEquals(expected.getPerson().getAddress().getCountry(),
+					result.getPerson().getAddress().getCountry());
 			Assertions.assertEquals(expected.getPerson().getAddress().getState(),
-					result.getPerson().getAddress().getState());
+					result.getPerson().getAddress().getState());			
 			Assertions.assertEquals(expected.getPerson().getAddress().getZipCode(),
 					result.getPerson().getAddress().getZipCode());
 		}
 
 		if (expected.getPerson().getAddress() == null) {
-			Assertions.assertNull(result.getPerson().getAddress());
+			Assertions.assertNotNull(result.getPerson().getAddress());
+			Assertions.assertTrue(result.getPerson().getAddress().getCountry().length() > 0);
+			Assertions.assertTrue(result.getPerson().getAddress().getState().length() > 0);
 		}
 
 		if (expected.getPerson().getPhoneNumbers() != null) {

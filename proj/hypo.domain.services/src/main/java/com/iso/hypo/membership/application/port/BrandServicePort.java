@@ -1,5 +1,10 @@
 package com.iso.hypo.membership.application.port;
 
+import java.util.Optional;
+
+import com.iso.hypo.membership.application.port.dto.BrandRef;
+
+
 /**
  * Anti-corruption port: allows membership use cases to verify brand existence
  * without importing any type from the brand application layer.
@@ -13,4 +18,8 @@ public interface BrandServicePort {
      * and has not been deleted; {@code false} otherwise.
      */
     boolean brandExists(String brandUuid);
+    
+    boolean brandDeleted(String brandUuid);
+    
+    Optional<BrandRef> find(String brandUuid);
 }

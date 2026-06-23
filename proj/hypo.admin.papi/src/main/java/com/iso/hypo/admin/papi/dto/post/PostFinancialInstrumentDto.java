@@ -1,8 +1,8 @@
 package com.iso.hypo.admin.papi.dto.post;
 
-import com.iso.hypo.admin.papi.dto.enumeration.FinancialInstrumentTypeEnum;
-import com.iso.hypo.admin.papi.dto.financial.BankAccountDto;
-import com.iso.hypo.admin.papi.dto.financial.CreditCardDto;
+import com.iso.hypo.admin.papi.dto.finance.BankAccountDto;
+import com.iso.hypo.admin.papi.dto.finance.CreditCardDto;
+import com.iso.hypo.common.application.dto.enumeration.FinancialInstrumentTypeEnumDto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -20,7 +20,7 @@ public class PostFinancialInstrumentDto {
 	
 	private boolean preferredInstrument;
 
-	private FinancialInstrumentTypeEnum type;
+	private FinancialInstrumentTypeEnumDto type;
 
 	private CreditCardDto creditCard;
 

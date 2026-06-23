@@ -27,7 +27,6 @@ import org.springframework.test.context.TestPropertySource;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.iso.hypo.admin.papi.dto.enumeration.RoleEnum;
 import com.iso.hypo.admin.papi.dto.model.BrandDto;
 import com.iso.hypo.admin.papi.dto.model.UserDto;
 import com.iso.hypo.admin.papi.dto.post.PostBrandDto;
@@ -40,6 +39,7 @@ import com.iso.hypo.brand.domain.repository.CoachRepository;
 import com.iso.hypo.brand.domain.repository.CourseRepository;
 import com.iso.hypo.brand.domain.repository.GymRepository;
 import com.iso.hypo.brand.domain.repository.UserRepository;
+import com.iso.hypo.common.application.security.RoleEnum;
 import com.iso.hypo.common.application.security.Roles;
 import com.iso.hypo.common.application.usecase.AzureGraphClientService;
 import com.iso.hypo.domain.BrandBuilder;
@@ -47,6 +47,7 @@ import com.iso.hypo.domain.UserBuilder;
 import com.iso.hypo.finance.domain.repository.FinancialInstrumentRepository;
 import com.iso.hypo.membership.domain.repository.MemberRepository;
 import com.iso.hypo.membership.domain.repository.MembershipPlanRepository;
+import com.iso.hypo.sale.domain.repository.OrderRepository;
 import com.iso.hypo.tests.data.Populator;
 import com.iso.hypo.tests.http.HttpUtils;
 import com.iso.hypo.tests.security.Users;
@@ -80,6 +81,8 @@ class PopulatorTests {
 	MemberRepository memberRepository;
 	@Autowired
 	FinancialInstrumentRepository financialInstrumentRepository;
+	@Autowired
+	OrderRepository orderRepository;
 	@Autowired
 	UserRepository userRepository;
 	@Autowired
@@ -118,6 +121,7 @@ class PopulatorTests {
 		memberRepository.deleteAll();
 		membershipPlanRepository.deleteAll();
 		financialInstrumentRepository.deleteAll();
+		orderRepository.deleteAll();
 		
 		// Admin user is required
 		UserDto adminUserDto = createAdminUser();
@@ -194,6 +198,7 @@ class PopulatorTests {
 		postDto.setEmail("fortinb@videotron.ca");
 		postDto.setRoles(new ArrayList<RoleEnum>());
 		postDto.getRoles().add(RoleEnum.admin);
+		postDto.getRoles().add(RoleEnum.manager);
 		HttpEntity<PostUserDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
 
 		// Act

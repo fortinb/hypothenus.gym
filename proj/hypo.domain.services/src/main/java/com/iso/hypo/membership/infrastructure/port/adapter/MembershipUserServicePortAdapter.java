@@ -12,7 +12,7 @@ import com.iso.hypo.brand.application.usecase.UserService;
 import com.iso.hypo.common.application.context.RequestContext;
 import com.iso.hypo.membership.application.port.UserServicePort;
 import com.iso.hypo.membership.application.port.dto.UserRef;
-import com.iso.hypo.membership.infrastructure.port.mapper.UserRefMapper;
+import com.iso.hypo.membership.infrastructure.port.mapper.MembershipUserRefMapper;
 
 /**
  * Infrastructure adapter that satisfies {@link UserServicePort} by delegating
@@ -28,13 +28,13 @@ public class MembershipUserServicePortAdapter implements UserServicePort {
 
 	private final UserQueryService userQueryService;
 	private final UserService userService;
-	private final UserRefMapper userRefMapper;
+	private final MembershipUserRefMapper userRefMapper;
 
 	@SuppressWarnings("unused")
 	private final RequestContext requestContext;
 
 	public MembershipUserServicePortAdapter(UserQueryService userQueryService, UserService userService,
-			UserRefMapper userRefMapper, RequestContext requestContext) {
+			MembershipUserRefMapper userRefMapper, RequestContext requestContext) {
 		this.userQueryService = userQueryService;
 		this.userService = userService;
 		this.userRefMapper = userRefMapper;
@@ -75,7 +75,7 @@ public class MembershipUserServicePortAdapter implements UserServicePort {
 	@Override
 	public UserRef create(UserRef userRef, String password, String groupName) {
 		try {
-			UserDto created = userService.create(userRefMapper.toEntity(userRef), password, groupName);
+			UserDto created = userService.create(userRefMapper.toDto(userRef), password, groupName);
 			return userRefMapper.toRef(created);
 		} catch (Exception e) {
 			logger.debug("Create user error - exception={}", e.getMessage());
@@ -86,7 +86,7 @@ public class MembershipUserServicePortAdapter implements UserServicePort {
 	@Override
 	public UserRef patch(UserRef userRef) {
 		try {
-			UserDto updated = userService.patch(userRefMapper.toEntity(userRef));
+			UserDto updated = userService.patch(userRefMapper.toDto(userRef));
 			return userRefMapper.toRef(updated);
 		} catch (Exception e) {
 			logger.debug("Create user error - exception={}", e.getMessage());

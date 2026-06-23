@@ -16,6 +16,7 @@ import com.iso.hypo.membership.application.exception.MembershipException;
 import com.iso.hypo.membership.application.mapper.MembershipDtoMapper;
 import com.iso.hypo.membership.application.usecase.MembershipQueryService;
 import com.iso.hypo.membership.domain.model.Membership;
+import com.iso.hypo.membership.domain.model.enumeration.MembershipPlanPeriodEnum;
 import com.iso.hypo.membership.domain.repository.MembershipRepository;
 
 @Service
@@ -87,6 +88,42 @@ public class MembershipQueryServiceImpl implements MembershipQueryService {
 		} catch (Exception e) {
 			// Single generic logger call for all exception types
 			logger.error("Error - brandUuid={}", brandUuid, e);
+			if (e instanceof MembershipException) {
+				throw (MembershipException) e;
+			}
+			throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.FIND_FAILED, e);
+		}
+	}
+	
+	@Override
+	public boolean isNewMember(String brandUuid, String memberUuid) throws MembershipException {
+		try {
+			PageRequest pageRequest = PageRequest.of(0, 10);
+			PageResult<Membership> result = membershipRepository.findAllByBrandUuidAndMemberUuidAndDeletedIsFalse(brandUuid, memberUuid, pageRequest);
+			return result.getContent().isEmpty() ? true : !result.getContent().stream().anyMatch(item -> item.getMembershipPlan().getPeriod() != MembershipPlanPeriodEnum.trial);
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}, memberUuid={}", brandUuid, memberUuid, e);
+			if (e instanceof MembershipException) {
+				throw (MembershipException) e;
+			}
+			throw new MembershipException(requestContext.getTrackingNumber(), MembershipException.FIND_FAILED, e);
+		}
+	}
+
+	@Override
+	public Optional<MembershipDto> findByMembershipPlanUuid(String brandUuid, String memberUuid, String membershipPlanUuid)
+			throws MembershipException {
+		try {
+			Optional<Membership> entity = membershipRepository.findByMembershipPlanUuid(brandUuid, memberUuid, membershipPlanUuid);
+			if (entity.isEmpty()) {
+				return Optional.empty();
+			}
+
+			return Optional.of(membershipMapper.toDto(entity.get()));
+		} catch (Exception e) {
+			// Single generic logger call for all exception types
+			logger.error("Error - brandUuid={}, memberUuid={} membershipPlanUuid={}", brandUuid, memberUuid, membershipPlanUuid, e);
+			
 			if (e instanceof MembershipException) {
 				throw (MembershipException) e;
 			}

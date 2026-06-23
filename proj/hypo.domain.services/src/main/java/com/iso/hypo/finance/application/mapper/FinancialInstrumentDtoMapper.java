@@ -34,7 +34,20 @@ public class FinancialInstrumentDtoMapper {
     public ModelMapper initFinancialInstrumentMappings(ModelMapper mapper) {
         PropertyMap<FinancialInstrument, FinancialInstrument> financialInstrumentPropertyMap = new PropertyMap<FinancialInstrument, FinancialInstrument>() {
             protected void configure() {
-            	
+    			skip().setId(null);
+				skip().setUuid(null);
+				skip().setCreatedOn(null);
+				skip().setCreatedBy(null);
+				skip().setModifiedOn(null);
+				skip().setModifiedBy(null);
+				skip().setDeleted(false);
+				skip().setDeletedOn(null);
+				skip().setDeletedBy(null);
+				skip().setActive(false);
+				skip().setActivatedOn(null);
+				skip().setDeactivatedOn(null);
+				skip().setActivatedBy(null);
+				skip().setDeactivatedBy(null);
             }
         };
 		

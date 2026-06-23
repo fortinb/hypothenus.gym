@@ -1,0 +1,62 @@
+{
+	"taxes": [
+		{
+			"country": "CA",
+			"state": "QC",
+			"code": [
+				{
+					"text": "GST",
+					"language": "en"
+				},
+				{
+					"text": "TPS",
+					"language": "fr"
+				}
+			],
+			"name": [
+				{
+					"text": "Goods and Services Tax",
+					"language": "en"
+				},
+				{
+					"text": "Taxe sur les produits et services",
+					"language": "fr"
+				}
+			],
+			"authority": "Canada Revenue Agency",
+			"jurisdiction": "Federal",
+			"registrationNumber": "",
+			"rate": 0.05,
+			"isIncludedInPrice": false
+		},
+		{
+			"country": "CA",
+			"state": "QC",
+			"code": [
+				{
+					"text": "QST",
+					"language": "en"
+				},
+				{
+					"text": "TVQ",
+					"language": "fr"
+				}
+			],
+			"name": [
+				{
+					"text": "Quebec Sales Tax",
+					"language": "en"
+				},
+				{
+					"text": "Taxe de vente du Québec",
+					"language": "fr"
+				}
+			],
+			"authority": "Revenu Québec",
+			"jurisdiction": "Provincial",
+			"registrationNumber": "",
+			"rate": 0.09975,
+			"isIncludedInPrice": false
+		}
+	]
+}

@@ -8,6 +8,8 @@ import com.iso.hypo.common.application.dto.PageResultDto;
 public interface BrandQueryService {
 
     void assertExists(String brandUuid) throws BrandException;
+    
+    boolean assertDeleted(String brandUuid) throws BrandException;
 
     BrandDto find(String brandUuid) throws BrandException;
 

@@ -221,6 +221,7 @@ public class BrandServiceImpl implements BrandService {
 			throw new BrandException(requestContext.getTrackingNumber(), BrandException.UPDATE_FAILED, e);
 		}
 	}
+	
 	private Brand readByBrandUuid(String brandUuid) throws BrandException {
 		Optional<Brand> entity = brandRepository.findByUuidAndDeletedIsFalse(brandUuid);
 		if (entity.isEmpty()) {

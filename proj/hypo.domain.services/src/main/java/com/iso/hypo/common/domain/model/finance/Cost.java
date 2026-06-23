@@ -19,4 +19,15 @@ public class Cost {
 		this.amount = amount;
 		this.currency = currency;
 	}
+
+	public Cost add(Cost addend) {
+		this.amount +=  addend.amount;
+		return this;
+	}
+
+	public Cost subtract(Cost minuend) {
+		this.amount -=  minuend.amount;
+		return this;
+	}
+	
 }

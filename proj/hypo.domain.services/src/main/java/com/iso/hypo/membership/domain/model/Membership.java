@@ -16,6 +16,8 @@ public class Membership extends BaseEntity {
 	private String uuid;
 
 	private String brandUuid;
+	
+	private String orderUuid;
 
 	private MembershipPlan membershipPlan;
 	
@@ -23,9 +25,9 @@ public class Membership extends BaseEntity {
 	
 	private int remainingClasses;
 	
-	private boolean autoRenewal = true;
+	private boolean autoRenewal = false;
 	
-	private boolean isCancelled = false;
+	private boolean cancelled = false;
 	
 	private Instant cancelledOn;
 	
@@ -39,7 +41,7 @@ public class Membership extends BaseEntity {
 		this.memberUuid = memberUuid;
 		this.membershipPlan = membershipPlan;
 		this.autoRenewal = autoRenewal;
-		this.isCancelled = isCancelled;
+		this.cancelled = isCancelled;
 		this.activatedOn = startedOn;
 		this.deactivatedOn = endedOn;
 	}

@@ -21,11 +21,13 @@ import com.iso.hypo.membership.application.mapper.MembershipPlanDtoMapper;
 import com.iso.hypo.membership.application.port.BrandServicePort;
 import com.iso.hypo.membership.application.port.CourseServicePort;
 import com.iso.hypo.membership.application.port.GymServicePort;
+import com.iso.hypo.membership.application.port.dto.BrandRef;
 import com.iso.hypo.membership.application.port.dto.CourseRef;
 import com.iso.hypo.membership.application.port.dto.GymRef;
 import com.iso.hypo.membership.application.usecase.MembershipPlanService;
 import com.iso.hypo.membership.domain.model.MembershipPlan;
 import com.iso.hypo.membership.domain.repository.MembershipPlanRepository;
+import com.iso.hypo.sale.application.exception.OrderException;
 
 @Service
 public class MembershipPlanServiceImpl implements MembershipPlanService {
@@ -62,16 +64,14 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 			Assert.notNull(membershipPlanDto, "membershipPlanDto must not be null");
 			MembershipPlan membershipPlan = membershipPlanMapper.toEntity(membershipPlanDto);
 
-			if (!brandServicePort.brandExists(membershipPlan.getBrandUuid())) {
-				throw new MembershipPlanException(requestContext.getTrackingNumber(),
-						MembershipPlanException.BRAND_NOT_FOUND, "Brand not found");
-			}
+			BrandRef brand = resolveBrand(membershipPlanDto.getBrandUuid());
 
 			membershipPlan.setIncludedGymUuids(
-					this.resolveGymReferences(membershipPlan.getBrandUuid(), membershipPlan.getIncludedGymUuids()));
-			membershipPlan.setIncludedCourseUuids(this.resolveCourseReferences(membershipPlan.getBrandUuid(),
+					this.resolveGymReferences(brand.getUuid(), membershipPlan.getIncludedGymUuids()));
+			membershipPlan.setIncludedCourseUuids(this.resolveCourseReferences(brand.getUuid(),
 					membershipPlan.getIncludedCourseUuids()));
-
+			
+			membershipPlan.setBrandUuid(brand.getUuid());
 			membershipPlan.setCreatedOn(Instant.now());
 			membershipPlan.setCreatedBy(requestContext.getUsername());
 			membershipPlan.setUuid(UUID.randomUUID().toString());
@@ -125,7 +125,9 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 	@Transactional
 	public MembershipPlanDto activate(String brandUuid, String membershipPlanUuid) throws MembershipPlanException {
 		try {
-			MembershipPlan entity = this.readByMembershipPlanUuid(brandUuid, membershipPlanUuid);
+			BrandRef brand = resolveBrand(brandUuid);
+			
+			MembershipPlan entity = this.readByMembershipPlanUuid(brand.getUuid(), membershipPlanUuid);
 			entity.activate(requestContext.getUsername());
 			membershipPlanRepository.save(entity);
 
@@ -144,7 +146,9 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 	@Transactional
 	public MembershipPlanDto deactivate(String brandUuid, String membershipPlanUuid) throws MembershipPlanException {
 		try {
-			MembershipPlan entity = this.readByMembershipPlanUuid(brandUuid, membershipPlanUuid);
+			BrandRef brand = resolveBrand(brandUuid);
+			
+			MembershipPlan entity = this.readByMembershipPlanUuid(brand.getUuid(), membershipPlanUuid);
 			entity.deactivate(requestContext.getUsername());
 			membershipPlanRepository.save(entity);
 
@@ -163,7 +167,9 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 	@Transactional
 	public void delete(String brandUuid, String membershipPlanUuid) throws MembershipPlanException {
 		try {
-			MembershipPlan entity = this.readByMembershipPlanUuid(brandUuid, membershipPlanUuid);
+			BrandRef brand = resolveBrand(brandUuid);
+			
+			MembershipPlan entity = this.readByMembershipPlanUuid(brand.getUuid(), membershipPlanUuid);
 			entity.delete(requestContext.getUsername());
 			membershipPlanRepository.save(entity);
 		} catch (Exception e) {
@@ -180,9 +186,12 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 	@Override
 	public void deleteAllByBrandUuid(String brandUuid) throws MembershipPlanException {
 		try {
-			long deletedCount = membershipPlanRepository.deleteAllByBrandUuid(brandUuid, requestContext.getUsername());
+			if (brandServicePort.brandDeleted(brandUuid)) {
+				long deletedCount = membershipPlanRepository.deleteAllByBrandUuid(brandUuid, requestContext.getUsername());
 
-			logger.info("MembershipPlan deleted for brand - brandUuid={} deletedCount={} ", brandUuid, deletedCount);
+				logger.info("MembershipPlan deleted for brand - brandUuid={} deletedCount={} ", brandUuid, deletedCount);
+
+			}
 		} catch (Exception e) {
 			logger.error("Error - brandId={}", brandUuid, e);
 
@@ -194,11 +203,12 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 	private MembershipPlanDto updateMembershipPlan(MembershipPlanDto membershipPlanDto, boolean skipNull)
 			throws MembershipPlanException {
 		try {
+			BrandRef brand = resolveBrand(membershipPlanDto.getBrandUuid());
+			
 			Assert.notNull(membershipPlanDto, "membershipPlanDto must not be null");
 			MembershipPlan membershipPlan = membershipPlanMapper.toEntity(membershipPlanDto);
 
-			MembershipPlan oldMembershipPlan = this.readByMembershipPlanUuid(membershipPlan.getBrandUuid(),
-					membershipPlan.getUuid());
+			MembershipPlan oldMembershipPlan = this.readByMembershipPlanUuid(brand.getUuid(),	membershipPlan.getUuid());
 
 			membershipPlan.setIncludedGymUuids(
 					this.resolveGymReferences(membershipPlan.getBrandUuid(), membershipPlan.getIncludedGymUuids()));
@@ -274,7 +284,9 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 	@Override
 	public void removeAllGymReferencesByGymUuid(String brandUuid, String gymUuid) throws MembershipPlanException {
 		try {
-			long modifiedCount = membershipPlanRepository.removeGymReferences(brandUuid, gymUuid);
+			BrandRef brand = resolveBrand(brandUuid);
+			
+			long modifiedCount = membershipPlanRepository.removeGymReferences(brand.getUuid(), gymUuid);
 			logger.info("Gym references removed from membership plans - gymUuid={} modifiedCount={}", gymUuid,
 					modifiedCount);
 		} catch (Exception e) {
@@ -288,7 +300,9 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 	public void removeAllCourseReferencesByCourseUuid(String brandUuid, String courseUuid)
 			throws MembershipPlanException {
 		try {
-			long modifiedCount = membershipPlanRepository.removeCourseReferences(brandUuid, courseUuid);
+			BrandRef brand = resolveBrand(brandUuid);
+			
+			long modifiedCount = membershipPlanRepository.removeCourseReferences(brand.getUuid(), courseUuid);
 			logger.info("Course references removed from membership plans - courseUuid={} modifiedCount={}", courseUuid,
 					modifiedCount);
 		} catch (Exception e) {
@@ -296,5 +310,11 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 			throw new MembershipPlanException(requestContext.getTrackingNumber(), MembershipPlanException.DELETE_FAILED,
 					e);
 		}
+	}
+	
+	private BrandRef resolveBrand(String brandUuid) throws OrderException {
+		return brandServicePort.find(brandUuid)
+				.orElseThrow(() -> new OrderException(requestContext.getTrackingNumber(), OrderException.BRAND_NOT_FOUND,
+				"Brand not found - brandUuid=" + brandUuid));
 	}
 }

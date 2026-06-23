@@ -34,9 +34,9 @@ public class MembershipDocument extends BaseEntity {
 	
 	private int remainingClasses;
 	
-	private boolean autoRenewal = true;
+	private boolean autoRenewal;
 	
-	private boolean isCancelled = false;
+	private boolean cancelled;
 	
 	private Instant cancelledOn;
 	
@@ -50,7 +50,7 @@ public class MembershipDocument extends BaseEntity {
 		this.memberUuid = memberUuid;
 		this.membershipPlan = membershipPlan;
 		this.autoRenewal = autoRenewal;
-		this.isCancelled = isCancelled;
+		this.cancelled = isCancelled;
 		this.activatedOn = startedOn;
 		this.deactivatedOn = endedOn;
 	}

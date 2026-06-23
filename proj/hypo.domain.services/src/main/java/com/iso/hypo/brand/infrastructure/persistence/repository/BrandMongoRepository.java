@@ -11,6 +11,8 @@ import com.iso.hypo.brand.infrastructure.persistence.entity.BrandDocument;
 public interface BrandMongoRepository extends MongoRepository<BrandDocument, String>, BrandMongoRepositoryCustom {
 
     Optional<BrandDocument> findByUuidAndDeletedIsFalse(String brandUuid);
+    
+    Optional<BrandDocument> findByUuid(String brandUuid);
 
     Optional<BrandDocument> findByCode(String code);
 

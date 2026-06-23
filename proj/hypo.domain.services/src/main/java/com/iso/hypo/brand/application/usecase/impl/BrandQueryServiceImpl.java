@@ -53,6 +53,24 @@ public class BrandQueryServiceImpl implements BrandQueryService {
 			throw new BrandException(requestContext.getTrackingNumber(), BrandException.FIND_FAILED, e);
 		}
 	}
+	
+	@Override
+	public boolean assertDeleted(String brandUuid) throws BrandException {
+		try {
+			Optional<Brand> entity = brandRepository.findByUuid(brandUuid);
+			if (entity.isEmpty()) {
+				throw new BrandException(requestContext.getTrackingNumber(), BrandException.BRAND_NOT_FOUND,
+						"Brand not found");
+			}
+			
+			return entity.get().isDeleted();
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}", brandUuid, e);
+			if (e instanceof BrandException)
+				throw (BrandException) e;
+			throw new BrandException(requestContext.getTrackingNumber(), BrandException.FIND_FAILED, e);
+		}
+	}
 
 	@Override
 	public BrandDto find(String brandUuid) throws BrandException {

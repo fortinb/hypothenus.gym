@@ -12,7 +12,7 @@ import com.iso.hypo.brand.application.usecase.CourseQueryService;
 import com.iso.hypo.common.application.context.RequestContext;
 import com.iso.hypo.membership.application.port.CourseServicePort;
 import com.iso.hypo.membership.application.port.dto.CourseRef;
-import com.iso.hypo.membership.infrastructure.port.mapper.CourseRefMapper;
+import com.iso.hypo.membership.infrastructure.port.mapper.MembershipCourseRefMapper;
 
 /**
  * Infrastructure adapter that satisfies {@link CourseServicePort} by delegating
@@ -26,14 +26,14 @@ public class MembershipCourseServicePortAdapter implements CourseServicePort {
     private static final Logger logger = LoggerFactory.getLogger(MembershipCourseServicePortAdapter.class);
 
     private final CourseQueryService courseQueryService;
-    private final CourseRefMapper courseRefMapper;
+    private final MembershipCourseRefMapper courseRefMapper;
     
 	@SuppressWarnings("unused")
 	private final RequestContext requestContext;
 	
     public MembershipCourseServicePortAdapter(
     		CourseQueryService courseQueryService,
-    		CourseRefMapper courseRefMapper, 
+    		MembershipCourseRefMapper courseRefMapper, 
     		RequestContext requestContext) {
         this.courseQueryService = courseQueryService;
 		this.courseRefMapper = courseRefMapper;

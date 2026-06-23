@@ -24,11 +24,11 @@ import com.iso.hypo.brand.domain.model.User;
 import com.iso.hypo.brand.domain.repository.UserRepository;
 import com.iso.hypo.common.application.context.RequestContext;
 import com.iso.hypo.common.application.event.enumeration.OperationEnum;
+import com.iso.hypo.common.application.security.RoleEnum;
 import com.iso.hypo.common.application.security.Roles;
 import com.iso.hypo.common.application.usecase.AzureGraphClientService;
 import com.iso.hypo.common.domain.model.Message;
 import com.iso.hypo.common.domain.model.enumeration.MessageSeverityEnum;
-import com.iso.hypo.common.domain.model.enumeration.RoleEnum;
 import com.microsoft.graph.models.AppRoleAssignment;
 import com.microsoft.graph.models.PasswordProfile;
 
@@ -344,9 +344,7 @@ public class UserServiceImpl implements UserService {
 	public void delete(String userUuid) throws UserException {
 		try {
 			User entity = this.readByUserUuid(userUuid);
-			entity.delete(requestContext.getUsername());
-			userRepository.save(entity);
-
+			
 			if (!testRun) {
 				// Find user in identity provider with same email
 				Optional<com.microsoft.graph.models.User> idpUser = azureGraphClientService.findUser(entity.getIdpId());
@@ -355,6 +353,9 @@ public class UserServiceImpl implements UserService {
 					azureGraphClientService.deleteUser(idpUser.get().getId());
 				}
 			}
+			
+			entity.delete(requestContext.getUsername());
+			userRepository.save(entity);
 
 			eventPublisher.publishEvent(new UserEvent(this, userMapper.toDto(entity), OperationEnum.delete));
 		} catch (Exception e) {

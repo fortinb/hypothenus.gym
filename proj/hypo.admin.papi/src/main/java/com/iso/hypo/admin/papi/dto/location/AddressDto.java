@@ -22,6 +22,8 @@ public class AddressDto {
 	@NotBlank
 	private String state;
 	
+	private String country;
+	
 	@NotBlank
 	private String zipCode;
 	

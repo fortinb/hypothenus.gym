@@ -10,9 +10,11 @@ public class BrandException extends DomainException {
 
 	public static final String BRAND_NOT_FOUND = "404";
 	public static final String BRAND_CODE_ALREADY_EXIST = "2001";
+	public static final String BRAND_NOT_DELETED  = "1001";
 	
 	private BrandDto brandDto;
 	private static final long serialVersionUID = 1L;
+
 
 	public BrandException(String trackingNumber, String code, String message, BrandDto brandDto) {
 		super(trackingNumber, code, message);

@@ -27,7 +27,7 @@ public class GymBuilder {
 
 	public static Address buildAddress() {
 		return new Address(faker.address().buildingNumber(), faker.address().streetName(), "35",
-				faker.address().cityName(), faker.address().stateAbbr(), faker.address().zipCode());
+				faker.address().cityName(), faker.address().countryCode(), faker.address().stateAbbr(), faker.address().zipCode());
 	}
 
 	public static List<PhoneNumber> buildPhoneNumbers() {

@@ -98,5 +98,15 @@
     "name": "azure.entra.app.policy",
     "type": "java.lang.String",
     "description": "A description for 'azure.entra.app.policy'"
+  },
+  {
+    "name": "app.payment.provider.test",
+    "type": "java.lang.Boolean",
+    "description": "A description for 'app.payment.provider.test'"
+  },
+  {
+    "name": "moneris.url",
+    "type": "java.lang.String",
+    "description": "A description for 'moneris.url'"
   }
 ]}

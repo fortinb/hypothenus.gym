@@ -9,6 +9,7 @@ import com.iso.hypo.brand.domain.model.Brand;
 import com.iso.hypo.common.domain.model.contact.Contact;
 import com.iso.hypo.common.domain.model.contact.PhoneNumber;
 import com.iso.hypo.common.domain.model.enumeration.PhoneNumberTypeEnum;
+import com.iso.hypo.common.domain.model.finance.Currency;
 import com.iso.hypo.common.domain.model.location.Address;
 
 import net.datafaker.Faker;
@@ -17,16 +18,20 @@ public class BrandBuilder {
 	private static Faker faker = new Faker();
 	
 	public static Brand build(String code, String companyName) {
-		Brand entity = new Brand(code, companyName, buildAddress(),
+		Brand entity = new Brand(code, companyName, buildAddress(), buildCurrency(),
 				faker.internet().emailAddress(), faker.internet().image(), true, buildPhoneNumbers(), 
 				buildContacts(), Instant.now(), null);
 		entity.setUuid(UUID.randomUUID().toString());
 		return entity;
 	}
 
+	private static Currency buildCurrency() {
+		return new Currency("Canadian dollar","CAD","$");
+	}
+
 	public static Address buildAddress() {
 		return new Address(faker.address().buildingNumber(), faker.address().streetName(), "35",
-				faker.address().cityName(), faker.address().stateAbbr(), faker.address().zipCode());
+				faker.address().cityName(), faker.address().countryCode(), faker.address().stateAbbr(), faker.address().zipCode());
 	}
 
 	public static List<PhoneNumber> buildPhoneNumbers() {

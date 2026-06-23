@@ -3,7 +3,7 @@ package com.iso.hypo.admin.papi.dto.put;
 import java.util.List;
 
 import com.iso.hypo.admin.papi.dto.BaseDto;
-import com.iso.hypo.admin.papi.dto.enumeration.RoleEnum;
+import com.iso.hypo.common.application.security.RoleEnum;
 
 import lombok.Getter;
 import lombok.Setter;

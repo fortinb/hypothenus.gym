@@ -182,8 +182,10 @@ public class CourseServiceImpl implements CourseService {
 	@Transactional
 	public void deleteAllByBrandUuid(String brandUuid) throws CourseException {
 		try {
-			long deletedCount = courseRepository.deleteAllByBrandUuid(brandUuid, requestContext.getUsername());
-			logger.info("Course deleted for brand - brandUuid={} deletedCount={} ", brandUuid, deletedCount);
+			if (brandQueryService.assertDeleted(brandUuid)) {
+				long deletedCount = courseRepository.deleteAllByBrandUuid(brandUuid, requestContext.getUsername());
+				logger.info("Course deleted for brand - brandUuid={} deletedCount={} ", brandUuid, deletedCount);
+			}
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}", brandUuid, e);
 			if (e instanceof CourseException) {

@@ -65,6 +65,23 @@ public class MemberQueryServiceImpl implements MemberQueryService {
         }
     }
 
+	@Override
+	public boolean assertDeleted(String brandUuid, String memberUuid) throws MemberException {
+		try {
+			Optional<Member> entity = memberRepository.findByBrandUuidAndUuid(brandUuid, memberUuid);
+			if (entity.isEmpty()) {
+	               throw new MemberException(requestContext.getTrackingNumber(), MemberException.MEMBER_NOT_FOUND, "Member not found");
+			}
+			
+			return entity.get().isDeleted();
+		} catch (Exception e) {
+			logger.error("Error - brandUuid={}", brandUuid, e);
+			if (e instanceof MemberException)
+				throw (MemberException) e;
+			throw new MemberException(requestContext.getTrackingNumber(), MemberException.FIND_FAILED, e);
+		}
+	}
+	
     @Override
     public MemberDto find(String brandUuid, String memberUuid) throws MemberException {
         try {

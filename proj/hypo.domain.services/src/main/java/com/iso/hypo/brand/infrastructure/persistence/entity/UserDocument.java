@@ -7,7 +7,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.iso.hypo.common.domain.model.enumeration.RoleEnum;
+import com.iso.hypo.common.application.security.RoleEnum;
 import com.iso.hypo.common.infrastructure.persistence.entity.BaseDocument;
 import com.mongodb.lang.NonNull;
 

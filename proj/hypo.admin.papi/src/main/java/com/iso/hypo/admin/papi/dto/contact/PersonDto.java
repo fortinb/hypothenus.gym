@@ -3,8 +3,8 @@ package com.iso.hypo.admin.papi.dto.contact;
 import java.util.Date;
 import java.util.List;
 
-import com.iso.hypo.admin.papi.dto.enumeration.LanguageEnum;
 import com.iso.hypo.admin.papi.dto.location.AddressDto;
+import com.iso.hypo.common.application.dto.enumeration.LanguageEnumDto;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -29,7 +29,7 @@ public class PersonDto  {
 	
 	private String photoUri;
 	
-	private LanguageEnum communicationLanguage;
+	private LanguageEnumDto communicationLanguage;
 	
 	private String note;
 }

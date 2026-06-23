@@ -1,6 +1,7 @@
 package com.iso.hypo.admin.papi.dto;
 
-import com.iso.hypo.admin.papi.dto.enumeration.MessageSeverityEnum;
+
+import com.iso.hypo.common.application.dto.enumeration.MessageSeverityEnumDto;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -12,5 +13,5 @@ public class MessageDto {
 	
 	private String Description;
 	
-	private MessageSeverityEnum severity;
+	private MessageSeverityEnumDto severity;
 }

@@ -1,0 +1,37 @@
+{
+	"moneris": [
+		{
+			"brandCode": "default",
+			"provider": "moneris",
+			"storeId": "store5",
+			"merchandId": "0030137009966",
+			"subscriptionId": "hypothenus",
+			"apiKey": "yesguy",
+			"clientId": "",
+			"clientSecret": "",
+			"testMode": true
+		},
+		{
+			"brandCode": "crossfitextreme",
+			"provider": "moneris",
+				"storeId": "store5",
+			"merchandId": "0030137009966",
+			"subscriptionId": "hypothenus",
+			"apiKey": "yesguy",
+			"clientId": "",
+			"clientSecret": "",
+			"testMode": true
+		},
+		{
+			"brandCode": "fitnessboxing",
+			"provider": "moneris",
+			"storeId": "store5",
+			"merchandId": "0030137009966",
+			"subscriptionId": "hypothenus",
+			"apiKey": "yesguy",
+			"clientId": "",
+			"clientSecret": "",
+			"testMode": true
+		}
+	]
+}

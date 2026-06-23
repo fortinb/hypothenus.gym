@@ -5,6 +5,7 @@ import java.util.List;
 import com.iso.hypo.admin.papi.dto.contact.ContactDto;
 import com.iso.hypo.admin.papi.dto.contact.PhoneNumberDto;
 import com.iso.hypo.admin.papi.dto.location.AddressDto;
+import com.iso.hypo.common.domain.model.finance.Currency;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -23,6 +24,8 @@ public class PatchBrandDto {
 	private String name;
 	
 	private AddressDto address;
+	
+	private Currency currency;
 	
 	private String email;
 	

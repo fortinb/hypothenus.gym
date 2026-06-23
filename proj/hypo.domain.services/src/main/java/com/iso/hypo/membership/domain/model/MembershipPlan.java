@@ -38,12 +38,15 @@ public class MembershipPlan extends BaseEntity {
 	// weekly,# classes per week - Monday to Sunday
 	// monthly # classes per month - 1 to 31
 	// days, # classes for x days
+	// trial, only 1 
 	// hours, # hours
 	// classes, # classes
-
+	// amount, # amount
+	// merchandise, # merchandise
+	
 	private BillingFrequencyEnum billingFrequency;
 
-	private Cost cost;
+	private Cost price;
 
 	private int durationInMonths;
 
@@ -84,7 +87,7 @@ public class MembershipPlan extends BaseEntity {
 		this.guestPrivilege = guestPrivilege;
 		this.giftCard = giftCard;
 		this.promotional = promotional;
-		this.cost = cost;
+		this.price = cost;
 		this.durationInMonths = durationInMonths;
 		this.includedCourseUuids = includedCourseUuids;
 		this.includedGymUuids = includedGymUuids;

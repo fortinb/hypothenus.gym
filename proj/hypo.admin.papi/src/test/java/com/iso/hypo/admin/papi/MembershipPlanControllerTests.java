@@ -1020,25 +1020,25 @@ class MembershipPlanControllerTests {
 			Assertions.assertNull(result.getTermsOfUse());
 		}
 
-		if (expected.getCost() == null) {
-			Assertions.assertNull(result.getCost());
+		if (expected.getPrice() == null) {
+			Assertions.assertNull(result.getPrice());
 		}
 
-		if (expected.getCost() != null) {
-			Assertions.assertNotNull(result.getCost());
+		if (expected.getPrice() != null) {
+			Assertions.assertNotNull(result.getPrice());
 
-			Assertions.assertEquals(expected.getCost().getAmount(), result.getCost().getAmount());
-			Assertions.assertNotNull(result.getCost().getCurrency());
-			Assertions.assertEquals(expected.getCost().getCurrency().getCode(),
-					result.getCost().getCurrency().getCode());
-			Assertions.assertEquals(expected.getCost().getCurrency().getName(),
-					result.getCost().getCurrency().getName());
-			Assertions.assertEquals(expected.getCost().getCurrency().getSymbol(),
-					result.getCost().getCurrency().getSymbol());
+			Assertions.assertEquals(expected.getPrice().getAmount(), result.getPrice().getAmount());
+			Assertions.assertNotNull(result.getPrice().getCurrency());
+			Assertions.assertEquals(expected.getPrice().getCurrency().getCode(),
+					result.getPrice().getCurrency().getCode());
+			Assertions.assertEquals(expected.getPrice().getCurrency().getName(),
+					result.getPrice().getCurrency().getName());
+			Assertions.assertEquals(expected.getPrice().getCurrency().getSymbol(),
+					result.getPrice().getCurrency().getSymbol());
 		}
 
-		if (expected.getCost() == null) {
-			Assertions.assertNull(result.getCost());
+		if (expected.getPrice() == null) {
+			Assertions.assertNull(result.getPrice());
 		}
 
 		if (expected.getStartDate() != null) {

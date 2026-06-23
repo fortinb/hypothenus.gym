@@ -5,9 +5,9 @@ import java.util.List;
 
 import com.iso.hypo.common.application.dto.BaseEntityDto;
 import com.iso.hypo.common.application.dto.LocalizedStringDto;
+import com.iso.hypo.common.application.dto.enumeration.BillingFrequencyEnumDto;
+import com.iso.hypo.common.application.dto.enumeration.MembershipPlanPeriodEnumDto;
 import com.iso.hypo.common.application.dto.finance.CostDto;
-import com.iso.hypo.membership.application.dto.enumeration.BillingFrequencyEnumDto;
-import com.iso.hypo.membership.application.dto.enumeration.MembershipPlanPeriodEnumDto;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -34,7 +34,7 @@ public class MembershipPlanDto extends BaseEntityDto {
 
     private BillingFrequencyEnumDto billingFrequency;
 
-    private CostDto cost;
+    private CostDto price;
 
     private int durationInMonths;
 

@@ -225,7 +225,7 @@ public class Populator {
 				buildDescription("Offre exclusive pour les nouveaux membres.",
 								 "Exclusive offer for new members."),
 				buildTermsOfUse("Réservation requise.; Valide dans plusieurs de nos studios.; Aucune date d'expiration.; Non transférable.; Nouveaux membres seulement.;",
-							"Réservation requise.; Valid in most of our locations.; No expiration date.; Non-transferable.; New members only.;"),
+							"Reservation required.; Valid in most of our locations.; No expiration date.; Non-transferable.; New members only.;"),
 				10,	MembershipPlanPeriodEnum.trial,	BillingFrequencyEnum.oneTime,
 				BuildCost(14900),0,includedGymUuids,includedCourseUuids,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				false,false,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
@@ -241,7 +241,7 @@ public class Populator {
 				buildDescription("Utilise ton cour dans tout nos studios.",
 								 "Use your class in all our locations."),
 				buildTermsOfUse("Réservation requise.; Valide dans plusieurs de nos studios.; Aucune date d'expiration.; Non transférable.;",
-							"Réservation requise.; Valid in most of our locations.; No expiration date.; Non-transferable.; "),
+							"Reservation required.; Valid in most of our locations.; No expiration date.; Non-transferable.; "),
 				1,	MembershipPlanPeriodEnum.classes,	BillingFrequencyEnum.oneTime,
 				BuildCost(2400),0,includedGymUuids,includedCourseUuids,Date.from(Instant.now().minus(7, ChronoUnit.DAYS)),null,
 				false,false,false,true,	Instant.now().minus(7, ChronoUnit.DAYS),null);
@@ -357,7 +357,7 @@ public class Populator {
 		// Gift card Membership plans
 		membershipPlan = new MembershipPlan(
 				brandUuid,
-				buildName("10 cours", "10 classes"),
+				buildName("Carte cadeau 10 cours", "Gift card 10 classes"),
 				buildTitle("CARTE-CADEAU 10 COURS", "GIFT CARD 10 CLASSES"),
 				buildDescription("Fait bouger un ami !",
 								 "Get a friend moving !"),
@@ -372,7 +372,7 @@ public class Populator {
 		
 		membershipPlan = new MembershipPlan(
 				brandUuid,
-				buildName("20 cours", "20 classes"),
+				buildName("Carte cadeau 20 cours", "Gift card 20 classes"),
 				buildTitle("CARTE-CADEAU 20 COURS", "GIFT CARD 20 CLASSES"),
 				buildDescription("Le meilleur cadeau pour un ami qui veut se remettre en forme !",
 						 		 "The best gift for a friend who wants to get back in shape !"),

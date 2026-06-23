@@ -35,4 +35,8 @@ public class PersonDto {
 
     public PersonDto() {
     }
+    
+    public String getFullName() {
+		return firstname + " " + lastname;
+	}	
 }

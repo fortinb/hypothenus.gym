@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.iso.hypo.common.domain.model.contact.Contact;
 import com.iso.hypo.common.domain.model.contact.PhoneNumber;
+import com.iso.hypo.common.domain.model.finance.Currency;
 import com.iso.hypo.common.domain.model.location.Address;
 import com.iso.hypo.common.infrastructure.persistence.entity.BaseDocument;
 import com.mongodb.lang.NonNull;
@@ -35,6 +36,8 @@ public class BrandDocument extends BaseDocument {
 	private String name;
 
 	private Address address;
+	
+	private Currency currency;
 
 	private String email;
 
@@ -50,12 +53,13 @@ public class BrandDocument extends BaseDocument {
 		super();
 	}
 
-	public BrandDocument(String code, String name, Address address, String email, String logoUri, boolean active,
+	public BrandDocument(String code, String name, Address address, Currency currency, String email, String logoUri, boolean active,
 			List<PhoneNumber> phoneNumbers, List<Contact> contacts, Instant activatedOn, Instant deactivatedOn) {
 		super(active);
 		this.code = code;
 		this.name = name;
 		this.address = address;
+		this.currency = currency;
 		this.email = email;
 		this.logoUri = logoUri;
 		this.phoneNumbers = phoneNumbers;

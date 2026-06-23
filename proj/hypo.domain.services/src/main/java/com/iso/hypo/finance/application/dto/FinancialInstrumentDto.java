@@ -1,7 +1,7 @@
 package com.iso.hypo.finance.application.dto;
 
 import com.iso.hypo.common.application.dto.BaseEntityDto;
-import com.iso.hypo.finance.domain.model.enumeration.FinancialInstrumentTypeEnum;
+import com.iso.hypo.common.application.dto.enumeration.FinancialInstrumentTypeEnumDto;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -16,7 +16,7 @@ public class FinancialInstrumentDto extends BaseEntityDto {
 	
 	private String memberUuid;
 	
-	private FinancialInstrumentTypeEnum type;
+	private FinancialInstrumentTypeEnumDto type;
 
 	private CreditCardDto creditCard;
 
@@ -25,7 +25,7 @@ public class FinancialInstrumentDto extends BaseEntityDto {
 	public FinancialInstrumentDto() {
 	}
 
-	public FinancialInstrumentDto(String brandUuid, String memberUuid, String uuid, FinancialInstrumentTypeEnum type,
+	public FinancialInstrumentDto(String brandUuid, String memberUuid, String uuid, FinancialInstrumentTypeEnumDto type,
 			CreditCardDto creditCard, BankAccountDto bankAccount) {
 		this.brandUuid = brandUuid;
 		this.memberUuid = memberUuid;

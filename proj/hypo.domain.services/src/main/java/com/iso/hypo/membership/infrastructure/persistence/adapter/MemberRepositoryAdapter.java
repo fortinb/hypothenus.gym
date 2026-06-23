@@ -36,6 +36,12 @@ public class MemberRepositoryAdapter extends BaseAdapter implements MemberReposi
         return mongoRepository.findByBrandUuidAndUuidAndDeletedIsFalse(brandUuid, memberUuid)
                 .map(memberMapper::toEntity);
     }
+    
+    @Override
+    public Optional<Member> findByBrandUuidAndUuid(String brandUuid, String memberUuid) {
+        return mongoRepository.findByBrandUuidAndUuid(brandUuid, memberUuid)
+                .map(memberMapper::toEntity);
+    }
 
     @Override
     public PageResult<Member> findAllByBrandUuidAndDeletedIsFalse(String brandUuid, PageRequest pageRequest) {

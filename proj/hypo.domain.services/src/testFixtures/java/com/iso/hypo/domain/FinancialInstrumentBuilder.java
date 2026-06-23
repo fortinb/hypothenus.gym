@@ -16,6 +16,6 @@ public class FinancialInstrumentBuilder {
 	}
 	
 	private static CreditCard buildCreditCard(Member member) {
-		return new CreditCard("1234567890123456", member.getPerson().getLastname(), "12/25", "123", null);
+		return new CreditCard("4761739012345728", "John Doe", "1227",  null);
 	}
 }

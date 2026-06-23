@@ -5,8 +5,12 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.azure.identity.ClientSecretCredential;
 import com.azure.identity.ClientSecretCredentialBuilder;
+import com.iso.hypo.brand.application.usecase.impl.UserServiceImpl;
 import com.iso.hypo.common.application.usecase.AzureGraphClientService;
 import com.microsoft.graph.models.AppRole;
 import com.microsoft.graph.models.AppRoleAssignment;
@@ -25,11 +29,13 @@ import com.microsoft.graph.users.item.checkmembergroups.CheckMemberGroupsPostRes
 public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 	
 	private final GraphServiceClient graphClient;
-
+	
 	String clientId;
 	String clientSecret;
 	String tenantId;
 	private String domainName;
+	
+	private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
 	public AzureGraphClientServiceImpl(String clientId, String clientSecret, String tenantId, String domainName) {
 		this.clientId = clientId;
@@ -88,7 +94,9 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 			user.setMail(upn);
 		}
 
-		return graphClient.users().post(user);
+		User createdUser =  graphClient.users().post(user);
+		awaitUserExist(createdUser.getId());
+		return createdUser;
 	}
 
 	@Override
@@ -298,6 +306,7 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 	@Override
 	public void deleteUser(String userId) throws Exception {
 		graphClient.users().byUserId(userId).delete();
+		awaitUserDeleted(userId);
 	}
 
 	@Override
@@ -338,31 +347,7 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 			throw new IllegalStateException("Group not found: " + groupName);
 		}
 
-		// 2) Add user to group: POST /groups/{groupId}/members/$ref
-		
-		attempt = 0;
-		while (attempt < maxAttempts) {
-			try {
-				Optional<User> user = findUser(userId);
-				if (user.isPresent()) {
-					break;
-				}
-			} catch (Exception e) {
-				throw new IllegalStateException("User not found: " + userId);
-			}
-			
-			attempt++;
-			if (attempt >= maxAttempts) {
-				break;
-			}
-			
-			try {
-				TimeUnit.SECONDS.sleep(1);
-			} catch (InterruptedException ie) {
-				Thread.currentThread().interrupt();
-				throw new IllegalStateException("Interrupted while waiting for group lookup", ie);
-			}
-		}
+		// 2) Add user to group: POST /groups/{groupId}/members/$ref with body { "@odata.id": "https://graph.microsoft.com/v1.0/directoryObjects/{userId}" }
 
 		ReferenceCreate ref = new ReferenceCreate();
 		ref.setOdataId("https://graph.microsoft.com/v1.0/directoryObjects/" + userId);
@@ -452,7 +437,7 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 			return;
 		}
 
-		// 2) Delete each user except Microsoft Account owners (issuer contains 'live.com')
+		// 2) Delete each user except Microsoft Account owners
 		for (User user : usersPage.getValue()) {
 			if (user == null || user.getId() == null) {
 				continue;
@@ -478,9 +463,52 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 			}
 
 			graphClient.users().byUserId(user.getId()).delete();
+			awaitUserDeleted(user.getId());
 		}
 	}
 
+	/**
+	 * Polls the Graph API until the user no longer appears in the directory or the
+	 * maximum number of attempts is reached. Azure Entra ID deletion is asynchronous
+	 * and the user object may still be returned for a few seconds after the DELETE call.
+	 *
+	 * @param userId   the object ID of the deleted user
+	 */
+	private void awaitUserDeleted(String userId) {
+		final int maxAttempts = 20;
+		final int delaySeconds = 1;
+
+		for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+			try {
+				if (findUser(userId).isEmpty()) {
+						return; // User no longer found, deletion is complete
+				}	// User still exists — wait and retry
+				TimeUnit.SECONDS.sleep(delaySeconds);
+			} catch (Exception ie) {
+				// Log and ignore exceptions during polling, as transient errors may occur
+				logger.warn("Attempt " + attempt + " to verify user deletion failed: " + ie.getMessage());
+			}
+		}
+	}
+	
+
+	private void awaitUserExist(String userId) {
+		final int maxAttempts = 20;
+		final int delaySeconds = 1;
+
+		for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+			try {
+				if (findUser(userId).isPresent()) {
+						return; // User no longer found, deletion is complete
+				}	// User still exists — wait and retry
+				TimeUnit.SECONDS.sleep(delaySeconds);
+			} catch (Exception ie) {
+				// Log and ignore exceptions during polling, as transient errors may occur
+				logger.warn("Attempt " + attempt + " to verify user deletion failed: " + ie.getMessage());
+			}
+		}
+	}
+	
 	/**
 	 * Returns true if the user is a member of the tenant's Global Administrator
 	 * role (Company Administrator - roleTemplateId 62e90394-69f5-4237-9190-012177145e10).

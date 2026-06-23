@@ -14,6 +14,8 @@ public class MembershipDto extends BaseEntityDto {
     private String uuid;
 
     private String brandUuid;
+    
+	private String orderUuid;
 
     private MembershipPlanDto membershipPlan;
 
@@ -23,7 +25,7 @@ public class MembershipDto extends BaseEntityDto {
 
     private boolean autoRenewal = true;
 
-    private boolean isCancelled = false;
+    private boolean cancelled = false;
 
     private Instant cancelledOn;
 

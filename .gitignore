@@ -24,3 +24,4 @@ bin/
 .vscode/
 /proj/*/bin
 /proj/hypo.admin.papi/src/main/resources/application.properties
+/proj/hypo.domain.services/src/main/resources/payment-provider-config_openapi.json

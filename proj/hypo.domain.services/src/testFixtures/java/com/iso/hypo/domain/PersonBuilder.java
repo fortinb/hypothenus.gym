@@ -32,7 +32,7 @@ public class PersonBuilder {
 
 	public static Address buildAddress() {
 		return new Address(faker.address().buildingNumber(), faker.address().streetName(), "35",
-				faker.address().cityName(), faker.address().stateAbbr(), faker.address().zipCode());
+				faker.address().cityName(), "CA", "QC", faker.address().zipCode());
 	}
 	
 	public static List<PhoneNumber> buildPhoneNumbers() {

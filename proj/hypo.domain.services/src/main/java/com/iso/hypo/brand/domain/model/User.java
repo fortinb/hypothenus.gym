@@ -3,8 +3,8 @@ package com.iso.hypo.brand.domain.model;
 import java.time.Instant;
 import java.util.List;
 
+import com.iso.hypo.common.application.security.RoleEnum;
 import com.iso.hypo.common.domain.model.BaseEntity;
-import com.iso.hypo.common.domain.model.enumeration.RoleEnum;
 
 import lombok.Getter;
 import lombok.Setter;

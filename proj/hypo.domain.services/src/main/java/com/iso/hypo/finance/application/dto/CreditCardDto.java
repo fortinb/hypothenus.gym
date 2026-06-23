@@ -7,21 +7,28 @@ import lombok.Setter;
 @Setter
 public class CreditCardDto {
 
+	private String cardType;
+	
+	private String cardHolderName;
+	
 	private String cardNumber;
 
-	private String cardHolderName;
-
+	// Expire date in MMYY format
 	private String expirationDate;
 
-	private String cvv;
+	// Card verification digits (CVD)
+	private String cvd;
+	
+	private String zipCode;
 
 	public CreditCardDto() {
 	}
 
-	public CreditCardDto(String cardNumber, String cardHolderName, String expirationDate, String cvv) {
+	public CreditCardDto(String cardType, String cardNumber, String cardHolderName, String expirationDate, String cvd) {
+		this.cardType = cardType;
 		this.cardNumber = cardNumber;
 		this.cardHolderName = cardHolderName;
 		this.expirationDate = expirationDate;
-		this.cvv = cvv;
+		this.cvd = cvd;
 	}
 }

@@ -6,6 +6,7 @@ import java.util.List;
 import com.iso.hypo.common.domain.model.BaseEntity;
 import com.iso.hypo.common.domain.model.contact.Contact;
 import com.iso.hypo.common.domain.model.contact.PhoneNumber;
+import com.iso.hypo.common.domain.model.finance.Currency;
 import com.iso.hypo.common.domain.model.location.Address;
 
 import lombok.Getter;
@@ -25,6 +26,8 @@ public class Brand extends BaseEntity {
 	
 	private Address address;
 	
+	private Currency currency;
+	
 	private String email;
 	
 	private String note;
@@ -39,12 +42,13 @@ public class Brand extends BaseEntity {
 		super();
 	}
 	
-	public Brand(String code, String name, Address address, String email, String logoUri, boolean active,
+	public Brand(String code, String name, Address address, Currency currency, String email, String logoUri, boolean active,
 			List<PhoneNumber> phoneNumbers, List<Contact> contacts, Instant activatedOn, Instant deactivatedOn) {
 		super(active);
 		this.code = code;
 		this.name = name;
 		this.address = address;
+		this.currency = currency;
 		this.email = email;
 		this.logoUri = logoUri;
 		this.phoneNumbers = phoneNumbers;

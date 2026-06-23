@@ -9,6 +9,8 @@ import com.iso.hypo.membership.domain.model.Member;
 public interface MemberRepository {
 
     Optional<Member> findByBrandUuidAndUuidAndDeletedIsFalse(String brandUuid, String memberUuid);
+    
+    Optional<Member> findByBrandUuidAndUuid(String brandUuid, String memberUuid);
 
     PageResult<Member> findAllByBrandUuidAndDeletedIsFalse(String brandUuid, PageRequest pageRequest);
 

@@ -2,8 +2,6 @@ package com.iso.hypo.common.application.security;
 
 import java.util.List;
 
-import com.iso.hypo.common.domain.model.enumeration.RoleEnum;
-
 public class Roles {
 	public static final String Admin = "admin";
 	public static final String Manager = "manager";

@@ -11,6 +11,8 @@ import com.iso.hypo.membership.infrastructure.persistence.entity.MemberDocument;
 public interface MemberMongoRepository extends MongoRepository<MemberDocument, String>, MemberMongoRepositoryCustom {
 
 	Optional<MemberDocument> findByBrandUuidAndUuidAndDeletedIsFalse(String brandUuid, String memberUuid);
+	
+	Optional<MemberDocument> findByBrandUuidAndUuid(String brandUuid, String memberUuid);
 
 	Page<MemberDocument> findAllByBrandUuidAndDeletedIsFalse(String brandUuid, Pageable pageable);
 

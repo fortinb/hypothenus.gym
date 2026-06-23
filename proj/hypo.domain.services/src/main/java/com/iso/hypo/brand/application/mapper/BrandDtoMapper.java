@@ -8,6 +8,7 @@ import com.iso.hypo.brand.application.dto.BrandDto;
 import com.iso.hypo.brand.domain.model.Brand;
 import com.iso.hypo.common.domain.model.contact.Contact;
 import com.iso.hypo.common.domain.model.contact.PhoneNumber;
+import com.iso.hypo.common.domain.model.finance.Currency;
 import com.iso.hypo.common.domain.model.location.Address;
 
 @Component
@@ -70,7 +71,14 @@ public class BrandDtoMapper {
 			}
 		};
 		
+		PropertyMap<Currency, Currency> currencyPropertyMap = new PropertyMap<Currency, Currency>() {
+			@Override
+			protected void configure() {
+			}
+		};
+		
 		mapper.addMappings(brandPropertyMap);
+		mapper.addMappings(currencyPropertyMap);
 		mapper.addMappings(addressPropertyMap);
 		mapper.addMappings(phoneNumberPropertyMap);
 		mapper.addMappings(contactPropertyMap);

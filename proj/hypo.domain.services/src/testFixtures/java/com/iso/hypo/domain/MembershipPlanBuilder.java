@@ -23,7 +23,7 @@ public class MembershipPlanBuilder {
 	public static MembershipPlan build(String brandUuid, List<String> includedGymUuids, List<String> includedCourseUuids) {
 		MembershipPlan entity = new MembershipPlan(brandUuid, buildName(), buildTitle(), buildDescription(), buildTermsOfUse(),
 				faker.number().numberBetween(2, 3), MembershipPlanPeriodEnum.monthly, BillingFrequencyEnum.monthly,
-				BuildCost(), 12, includedGymUuids, includedCourseUuids, Date.from(Instant.now().truncatedTo(ChronoUnit.DAYS)), null, true, false, false, true, Instant.now(), null);
+				BuildPrice(), 12, includedGymUuids, includedCourseUuids, Date.from(Instant.now().truncatedTo(ChronoUnit.DAYS)), null, true, false, false, true, Instant.now(), null);
 		entity.setUuid(UUID.randomUUID().toString());
 		return entity;
 	}
@@ -58,8 +58,8 @@ public class MembershipPlanBuilder {
 		return items;
 	}
 	
-	public static Cost BuildCost() {
-		Cost item = new Cost(122,new Currency("Canadian dollar","CAD","$"));
+	public static Cost BuildPrice() {
+		Cost item = new Cost(15000,new Currency("Canadian dollar","CAD","$"));
 
 		return item;
 	}

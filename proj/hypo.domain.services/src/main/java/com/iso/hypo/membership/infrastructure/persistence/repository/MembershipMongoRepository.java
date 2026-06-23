@@ -16,4 +16,5 @@ public interface MembershipMongoRepository extends MongoRepository<MembershipDoc
 	
 	Page<MembershipDocument> findAllByBrandUuidAndDeletedIsFalseAndActiveIsTrue(String brandUuid, Pageable pageable);
 	
+	Page<MembershipDocument> findAllByBrandUuidAndMemberUuidAndDeletedIsFalse(String brandUuid, String memberUuid, Pageable pageable);
 }

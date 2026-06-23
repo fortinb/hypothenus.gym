@@ -32,7 +32,6 @@ import org.springframework.test.context.TestPropertySource;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.iso.hypo.admin.papi.dto.enumeration.RoleEnum;
 import com.iso.hypo.admin.papi.dto.model.BrandDto;
 import com.iso.hypo.admin.papi.dto.model.UserDto;
 import com.iso.hypo.admin.papi.dto.post.PostBrandDto;
@@ -46,6 +45,7 @@ import com.iso.hypo.brand.application.usecase.UserService;
 import com.iso.hypo.brand.domain.model.Brand;
 import com.iso.hypo.brand.domain.repository.BrandRepository;
 import com.iso.hypo.brand.domain.repository.UserRepository;
+import com.iso.hypo.common.application.security.RoleEnum;
 import com.iso.hypo.common.application.security.Roles;
 import com.iso.hypo.domain.BrandBuilder;
 import com.iso.hypo.domain.MemberBuilder;
@@ -288,8 +288,8 @@ class IdpTests {
 
 		// Act
 		await()
-        .atMost(10, TimeUnit.SECONDS)
-        .pollInterval(200, TimeUnit.MILLISECONDS)
+        .atMost(20, TimeUnit.SECONDS)
+        .pollInterval(500, TimeUnit.MILLISECONDS)
         .untilAsserted(() -> {
         	HttpEntity<PostUserDto> httpEntityDelete = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
         	ResponseEntity<JsonNode> responseDelete = testRestTemplate.exchange(

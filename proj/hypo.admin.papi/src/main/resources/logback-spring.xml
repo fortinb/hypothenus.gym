@@ -11,4 +11,9 @@
         <appender-ref ref="CONSOLE" />
     </root>
 
+    <!-- Enable DEBUG for the Moneris port adapter so debugReceipt() output is visible -->
+    <logger name="com.iso.hypo.finance.infrastructure.port.adapter" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
 </configuration>

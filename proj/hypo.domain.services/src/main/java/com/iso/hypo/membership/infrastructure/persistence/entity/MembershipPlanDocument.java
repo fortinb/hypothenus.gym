@@ -52,7 +52,7 @@ public class MembershipPlanDocument extends BaseEntity {
 
 	private BillingFrequencyEnum billingFrequency;
 
-	private Cost cost;
+	private Cost price;
 
 	private int durationInMonths;
 
@@ -93,7 +93,7 @@ public class MembershipPlanDocument extends BaseEntity {
 		this.guestPrivilege = guestPrivilege;
 		this.giftCard = giftCard;
 		this.promotional = promotional;
-		this.cost = cost;
+		this.price = cost;
 		this.durationInMonths = durationInMonths;
 		this.includedCourseUuids = includedCourseUuids;
 		this.includedGymUuids = includedGymUuids;

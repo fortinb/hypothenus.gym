@@ -168,9 +168,11 @@ public class CoachServiceImpl implements CoachService {
 	@Transactional
 	public void deleteAllByBrandUuid(String brandUuid) throws CoachException {
 		try {
-			long deletedCount = coachRepository.deleteAllByBrandUuid(brandUuid, requestContext.getUsername());
-			
-			logger.info("Coach deleted for brand - brandUuid={} deletedCount={} ", brandUuid, deletedCount);
+			if (brandQueryService.assertDeleted(brandUuid)) {
+				long deletedCount = coachRepository.deleteAllByBrandUuid(brandUuid, requestContext.getUsername());
+				
+				logger.info("Coach deleted for brand - brandUuid={} deletedCount={} ", brandUuid, deletedCount);
+			}
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}", brandUuid, e);
 			

@@ -1,9 +1,9 @@
 package com.iso.hypo.admin.papi.dto.model;
 
 import com.iso.hypo.admin.papi.dto.BaseDto;
-import com.iso.hypo.admin.papi.dto.enumeration.FinancialInstrumentTypeEnum;
-import com.iso.hypo.admin.papi.dto.financial.BankAccountDto;
-import com.iso.hypo.admin.papi.dto.financial.CreditCardDto;
+import com.iso.hypo.admin.papi.dto.finance.BankAccountDto;
+import com.iso.hypo.admin.papi.dto.finance.CreditCardDto;
+import com.iso.hypo.common.application.dto.enumeration.FinancialInstrumentTypeEnumDto;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -20,7 +20,7 @@ public class FinancialInstrumentDto extends BaseDto {
 
 	private boolean preferredInstrument;
 
-	private FinancialInstrumentTypeEnum type;
+	private FinancialInstrumentTypeEnumDto type;
 
 	private CreditCardDto creditCard;
 
@@ -29,7 +29,7 @@ public class FinancialInstrumentDto extends BaseDto {
 	public FinancialInstrumentDto() {
 	}
 
-	public FinancialInstrumentDto(String uuid, boolean preferredInstrument, FinancialInstrumentTypeEnum type,
+	public FinancialInstrumentDto(String uuid, boolean preferredInstrument, FinancialInstrumentTypeEnumDto type,
 			CreditCardDto creditCard, BankAccountDto bankAccount) {
 		this.uuid = uuid;
 		this.preferredInstrument = preferredInstrument;

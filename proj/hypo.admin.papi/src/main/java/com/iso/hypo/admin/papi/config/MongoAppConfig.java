@@ -22,6 +22,7 @@ import com.mongodb.MongoClientSettings.Builder;
 		"com.iso.hypo.admin",
 		"com.iso.hypo.brand",
 		"com.iso.hypo.common",
+		"com.iso.hypo.sale",
 		"com.iso.hypo.finance",
 		"com.iso.hypo.membership"
 })

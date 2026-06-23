@@ -2,6 +2,7 @@ package com.iso.hypo.membership.infrastructure.persistence.repository.impl;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -37,6 +38,19 @@ public class MembershipMongoRepositoryCustomImpl implements MembershipMongoRepos
 	@Override
 	public void deleteAll() {
 		mongoTemplate.remove(new Query(), MembershipDocument.class);
+	}
+
+	@Override
+	public Optional<MembershipDocument> findByMembershipPlanUuid(String brandUuid, String memberUuid, String membershipPlanUuid) {
+		Query query = new Query(
+				 Criteria.where("brandUuid").is(brandUuid)
+					.and("memberUuid").is(memberUuid)
+					.and("membershipPlan.uuid").is(membershipPlanUuid)
+					.and("deleted").is(false));
+		
+		MembershipDocument result = mongoTemplate.findOne(query, MembershipDocument.class);
+
+		return result != null ? Optional.of(result) : Optional.empty();
 	}
 }
 

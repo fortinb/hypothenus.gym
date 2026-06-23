@@ -33,6 +33,12 @@ public class BrandRepositoryAdapter extends BaseAdapter implements BrandReposito
     }
 
     @Override
+    public Optional<Brand> findByUuid(String brandUuid) {
+        return mongoRepository.findByUuid(brandUuid)
+                .map(brandMapper::toEntity);
+    }
+    
+    @Override
     public Optional<Brand> findByCode(String code) {
         return mongoRepository.findByCode(code)
                 .map(brandMapper::toEntity);

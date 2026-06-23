@@ -14,6 +14,10 @@ public interface MembershipRepository  {
 	
 	PageResult<Membership> findAllByBrandUuidAndDeletedIsFalseAndActiveIsTrue(String brandUuid, PageRequest pageRequest);
 	
+	PageResult<Membership> findAllByBrandUuidAndMemberUuidAndDeletedIsFalse(String brandUuid, String memberUuid, PageRequest pageRequest);
+	
+	Optional<Membership> findByMembershipPlanUuid(String brandUuid, String memberUuid, String membershipPlanUuid);
+	
 	Membership save(Membership membership);
 
     void delete(Membership membership);

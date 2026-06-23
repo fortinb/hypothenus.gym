@@ -66,4 +66,16 @@ public class MembershipRepositoryAdapter extends BaseAdapter implements Membersh
         mongoRepository.deleteAll();
     }
 
+	@Override
+	public PageResult<Membership> findAllByBrandUuidAndMemberUuidAndDeletedIsFalse(String brandUuid, String memberUuid,	PageRequest pageRequest) {
+        Page<MembershipDocument> page = mongoRepository.findAllByBrandUuidAndMemberUuidAndDeletedIsFalse(brandUuid, memberUuid, toSpringPageable(pageRequest, Sort.by("activatedOn").ascending()));
+        return toPageResult(page, pageRequest).map(membershipMapper::toEntity);
+	}
+
+	@Override
+	public Optional<Membership> findByMembershipPlanUuid(String brandUuid, String memberUuid, String membershipPlanUuid) {
+		   return mongoRepository.findByMembershipPlanUuid(brandUuid, memberUuid, membershipPlanUuid)
+	                .map(membershipMapper::toEntity);
+	}
+
 }

@@ -1,0 +1,26 @@
+Context:
+- Feature/task: [what you want to implement]
+- Layer: [e.g., controller, service, repository, DTO, test]
+- Related to: [existing class/entity, e.g., Member, Brand, User]
+
+Reference files (paste or name them):
+- Use [ClassName] as the model for structure
+- Follow the same pattern as [ExistingTest / ExistingService / etc.]
+
+Requirements:
+- [specific behavior]
+- [specific behavior]
+
+Do NOT:
+- Invent new patterns not present in the codebase
+- Add libraries not already in build.gradle
+- Change naming conventions
+
+Follow:
+- Follow strictly the structure and conventions of `[ReferenceFile.java]`, do not introduce patterns or utilities not already present in the codebase.
+
+1. "Follow the same pattern as `IdpTests.java`" — I'll match test structure, annotations, URI constants, HttpUtils, TestResponseUtils, builders, etc.
+	2. "Use `MemberBuilder` / `UserBuilder` / `BrandBuilder` for test data" — I'll use your existing builders instead of inventing inline data.
+	3. "Use `HttpUtils.createHttpEntity` and `TestResponseUtils.toDto`" — I'll use your HTTP/assertion utilities.
+	4. "The new endpoint follows the same REST convention as `/v1/brands/%s/members/%s`" — I'll match your URI patterns.
+	5. "Add to `IdpTests.java`" (or name the target file) — I'll add to the right place

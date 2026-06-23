@@ -1,7 +1,6 @@
 package com.iso.hypo.admin.papi.dto.contact;
 
-
-import com.iso.hypo.admin.papi.dto.enumeration.PhoneNumberTypeEnum;
+import com.iso.hypo.common.application.dto.enumeration.PhoneNumberTypeEnumDto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -16,5 +15,5 @@ public class PhoneNumberDto {
 	private String number;
 	
 	@NotNull
-	private PhoneNumberTypeEnum type;
+	private PhoneNumberTypeEnumDto type;
 }

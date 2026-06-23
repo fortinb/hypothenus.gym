@@ -695,6 +695,12 @@ class BrandControllerTests {
 			Assertions.assertNull(result.getAddress());
 		}
 		
+		if (expected.getCurrency() != null) {
+			Assertions.assertEquals(expected.getCurrency().getCode(), result.getCurrency().getCode());
+			Assertions.assertEquals(expected.getCurrency().getName(), result.getCurrency().getName());
+			Assertions.assertEquals(expected.getCurrency().getSymbol(), result.getCurrency().getSymbol());
+		}		
+
 		if (expected.getPhoneNumbers() != null) {
 			Assertions.assertNotNull(result.getPhoneNumbers());
 
