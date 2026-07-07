@@ -53,6 +53,8 @@ public class PaymentDocument extends BaseDocument {
 	private String refundReason;
 	private Instant refundedOn;
 	
+	private Object paymentServiceProviderRawResponse;
+	
 	public PaymentDocument() {
 	}
 

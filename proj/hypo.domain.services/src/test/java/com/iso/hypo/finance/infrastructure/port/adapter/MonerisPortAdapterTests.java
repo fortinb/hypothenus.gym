@@ -5,10 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.UUID;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.iso.hypo.common.application.context.RequestContext;
 import com.iso.hypo.common.application.port.PaymentProviderConfigurationEntry;
 import com.iso.hypo.finance.application.port.dto.paymentprovider.CreditCardRef;
 import com.iso.hypo.finance.application.port.dto.paymentprovider.ReceiptRef;
@@ -34,13 +37,14 @@ class MonerisPortAdapterTests {
     private static final String COUNTRY_CODE         = "CA";
     private static final String CARD_HOLDER_NAME     = "John Doe";
 
-    private FinanceMonerisPortAdapter adapter;
+    private FinanceMonerisOldPortAdapter adapter;
     private PaymentProviderConfigurationEntry config;
     private CreditCardRef approvedCard;
+    private RequestContext requestContext;
 
     @BeforeEach
     void setUp() {
-        adapter = new FinanceMonerisPortAdapter();
+        adapter = new FinanceMonerisOldPortAdapter();
    
         config = new PaymentProviderConfigurationEntry(
         		TEST_BRAND, TEST_PROVIDER, TEST_STORE_ID, "MerchandId", "SubscriptionId",
@@ -53,6 +57,9 @@ class MonerisPortAdapterTests {
         approvedCard.setZipCode(ZIP_CODE);
         approvedCard.setCountryCode(COUNTRY_CODE);
         approvedCard.setCardHolderName(CARD_HOLDER_NAME);
+        
+        requestContext = new RequestContext();
+        requestContext.setTrackingNumber(UUID.randomUUID().toString());
     }
 
     // =========================================================================
@@ -66,7 +73,7 @@ class MonerisPortAdapterTests {
         void verify_VISA_success() {
             assertDoesNotThrow(() -> { 
             	CreditCardRef creditCard = buildCard(VISA_APPROVED_PAN);
-            	ReceiptRef receipt =  adapter.verify(config, creditCard);
+            	ReceiptRef receipt =  adapter.verify(config, requestContext, creditCard);
             	assertNotNull(receipt);	
 				assertTrue(receipt.isApproved());
             });
@@ -76,21 +83,21 @@ class MonerisPortAdapterTests {
         void verify_VISA_CVD_AVS_success() {
         	assertDoesNotThrow(() -> { 
             	CreditCardRef creditCard = buildCard(VISA_CVD_AVS_APPROVED_PAN);
-            	ReceiptRef receipt =  adapter.verify(config, creditCard);
+            	ReceiptRef receipt =  adapter.verify(config, requestContext, creditCard);
             	assertNotNull(receipt);	
 				assertTrue(receipt.isApproved());
 				assertTrue(receipt.isAvsResultCode()); // M = Match (AVS)
 				assertTrue(receipt.isCvdResultCode()); // M = Match (CVD)
             });
         	
-            assertDoesNotThrow(() -> adapter.verify(config, buildCard(VISA_CVD_AVS_APPROVED_PAN)));
+            assertDoesNotThrow(() -> adapter.verify(config, requestContext, buildCard(VISA_CVD_AVS_APPROVED_PAN)));
         }
         
         @Test
         void verify_MASTERCARD_success() {
             assertDoesNotThrow(() -> { 
             	CreditCardRef creditCard = buildCard(MASTERCARD_APPROVED_PAN);
-            	ReceiptRef receipt =  adapter.verify(config, creditCard);
+            	ReceiptRef receipt =  adapter.verify(config, requestContext, creditCard);
             	assertNotNull(receipt);	
 				assertTrue(receipt.isApproved());
             });
@@ -100,7 +107,7 @@ class MonerisPortAdapterTests {
          void verify_withDeclinedTestCard_declined() {
         	assertDoesNotThrow(() -> { 
             	CreditCardRef creditCard = buildCard(VISA_DECLINED_PAN);
-            	ReceiptRef receipt =  adapter.verify(config, creditCard);
+            	ReceiptRef receipt =  adapter.verify(config, requestContext, creditCard);
             	assertNotNull(receipt);	
 				assertFalse(receipt.isApproved());
             });
@@ -118,11 +125,11 @@ class MonerisPortAdapterTests {
         void register_success() {
         	assertDoesNotThrow(() -> { 
             	CreditCardRef creditCard = buildCard(VISA_CVD_AVS_APPROVED_PAN);
-            	ReceiptRef receipt =  adapter.verify(config, creditCard);
+            	ReceiptRef receipt =  adapter.verify(config, requestContext, creditCard);
             	
             	creditCard.setCardType(receipt.getCardType());
             	creditCard.setIssuerId(receipt.getIssuerId());
-            	receipt =  adapter.register(config, creditCard);
+            	receipt =  adapter.register(config, requestContext, creditCard);
 				assertNotNull(receipt);	
 				assertTrue(receipt.isApproved());
 				assertNotNull(receipt.getPermanentToken());
@@ -142,10 +149,10 @@ class MonerisPortAdapterTests {
          	assertDoesNotThrow(() -> { 
              	CreditCardRef creditCard = buildCard(VISA_CVD_AVS_APPROVED_PAN);
              	
-             	ReceiptRef receipt =  adapter.verify(config, creditCard);
+             	ReceiptRef receipt =  adapter.verify(config, requestContext, creditCard);
              	creditCard.setCardType(receipt.getCardType());
              	creditCard.setIssuerId(receipt.getIssuerId());
-             	receipt =  adapter.register(config, creditCard);
+             	receipt =  adapter.register(config, requestContext, creditCard);
              	
  				assertNotNull(receipt);	
  				assertTrue(receipt.isApproved());
@@ -153,7 +160,7 @@ class MonerisPortAdapterTests {
  				
  				creditCard.setPermanentToken(receipt.getPermanentToken());
  				
-             	receipt =  adapter.purchase(config, creditCard, "ORDER-001", "CUSTOMER-001", "10.01");
+             	receipt =  adapter.purchase(config, requestContext, creditCard, "ORDER-001", "CUSTOMER-001", "10.01");
             	
              });
          }
@@ -172,20 +179,20 @@ class MonerisPortAdapterTests {
           	assertDoesNotThrow(() -> { 
               	CreditCardRef creditCard = buildCard(VISA_CVD_AVS_APPROVED_PAN);
               	
-              	ReceiptRef receipt =  adapter.verify(config, creditCard);
+              	ReceiptRef receipt =  adapter.verify(config, requestContext, creditCard);
               	creditCard.setCardType(receipt.getCardType());
               	creditCard.setIssuerId(receipt.getIssuerId());
-              	receipt =  adapter.register(config, creditCard);
+              	receipt =  adapter.register(config, requestContext, creditCard);
               	
   				assertNotNull(receipt);	
   				assertNotNull(receipt.getPermanentToken());
   				
   				creditCard.setPermanentToken(receipt.getPermanentToken());
   				
-              	receipt =  adapter.purchase(config, creditCard, "ORDER-002", "CUSTOMER-002", "10.01");
+              	receipt =  adapter.purchase(config, requestContext, creditCard, "ORDER-002", "CUSTOMER-002", "10.01");
               	assertNotNull(receipt);
               	
-              	receipt =  adapter.refund(config, creditCard, "ORDER-002", "CUSTOMER-002", receipt.getTxnNumber(), receipt.getTransAmount());
+              	receipt =  adapter.refund(config, requestContext, creditCard, "ORDER-002", "CUSTOMER-002", receipt.getTxnNumber(), receipt.getTransAmount());
              	
               });
           }
@@ -199,17 +206,17 @@ class MonerisPortAdapterTests {
           	assertDoesNotThrow(() -> { 
               	CreditCardRef creditCard = buildCard(VISA_APPROVED_PAN);
               	
-              	ReceiptRef receipt =  adapter.verify(config, creditCard);
+              	ReceiptRef receipt =  adapter.verify(config, requestContext, creditCard);
               	creditCard.setCardType(receipt.getCardType());
               	creditCard.setIssuerId(receipt.getIssuerId());
-              	receipt =  adapter.register(config, creditCard);
+              	receipt =  adapter.register(config, requestContext, creditCard);
               	
   				assertNotNull(receipt);	
   				assertNotNull(receipt.getPermanentToken());
   				
   				creditCard.setPermanentToken(receipt.getPermanentToken());
   				
-              	receipt =  adapter.delete(config, creditCard);
+              	receipt =  adapter.delete(config, requestContext, creditCard);
               	assertNotNull(receipt);             	
               });
           }

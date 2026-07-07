@@ -108,5 +108,10 @@
     "name": "moneris.url",
     "type": "java.lang.String",
     "description": "A description for 'moneris.url'"
+  },
+  {
+    "name": "moneris.api.version",
+    "type": "java.lang.String",
+    "description": "A description for 'moneris.api.version'"
   }
 ]}

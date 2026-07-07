@@ -29,10 +29,10 @@ import com.mongodb.MongoClientSettings.Builder;
 @EnableTransactionManagement
 public class MongoAppConfig extends AbstractMongoClientConfiguration {
 
-	@Value("${spring.data.mongodb.database}")
+	@Value("${spring.mongodb.database}")
 	private String databaseName;
 
-	@Value("${spring.data.mongodb.uri}")
+	@Value("${spring.mongodb.uri}")
 	private String connectionString;
 
 	@Override

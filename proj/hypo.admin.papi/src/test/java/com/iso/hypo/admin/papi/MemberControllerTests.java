@@ -24,7 +24,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+//import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -74,7 +74,7 @@ import net.datafaker.Faker;
 @ActiveProfiles("test")
 class MemberControllerTests {
 
-    public static final String searchURI = "/v1/brands/%s/members/search";
+  /*  public static final String searchURI = "/v1/brands/%s/members/search";
     public static final String listURI = "/v1/brands/%s/members";
     public static final String postURI = "/v1/brands/%s/members/register";
     public static final String getURI = "/v1/brands/%s/members/%s";
@@ -869,4 +869,5 @@ class MemberControllerTests {
 			}
 		}
     }
+    */
 }

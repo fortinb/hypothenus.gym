@@ -1,5 +1,7 @@
 package com.iso.hypo.finance.domain.model;
 
+import java.util.List;
+
 import com.iso.hypo.common.domain.model.BaseEntity;
 import com.iso.hypo.finance.domain.model.enumeration.FinancialInstrumentTypeEnum;
 
@@ -23,6 +25,8 @@ public class FinancialInstrument extends BaseEntity  {
 	private CreditCard creditCard;
 	
 	private BankAccount bankAccount;
+	
+	private List<Object> paymentServiceProviderRawResponse;
 	
 	public FinancialInstrument() {
 	}

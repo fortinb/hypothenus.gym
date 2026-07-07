@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.iso.hypo.common.domain.model.pagination.PageResult;
 
 import lombok.Getter;
@@ -29,14 +31,19 @@ public class PageResultDto<T> {
 		this.hasPrevious = false;
     }
     
-    public PageResultDto(List<T> content, int page, int size, long totalElements) {
+    @JsonCreator
+    public PageResultDto(
+            @JsonProperty("content") List<T> content,
+            @JsonProperty("pageNumber") int pageNumber,
+            @JsonProperty("size") int size,
+            @JsonProperty("totalElements") long totalElements) {
         this.content = content;
-        this.pageNumber = page;
+        this.pageNumber = pageNumber;
         this.size = size;
         this.totalElements = totalElements;
         this.totalPages = size == 0 ? 0 : (int) Math.ceil((double) totalElements / size);
-        this.hasNext = page < totalPages - 1;
-        this.hasPrevious = page > 0;
+        this.hasNext = pageNumber < totalPages - 1;
+        this.hasPrevious = pageNumber > 0;
     }
 
     public static <T> PageResultDto<T> from(PageResult<T> pageResult) {

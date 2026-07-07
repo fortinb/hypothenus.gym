@@ -22,24 +22,16 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.client.RestTestClient;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.iso.hypo.admin.papi.dto.ErrorDto;
 import com.iso.hypo.admin.papi.dto.contact.ContactDto;
 import com.iso.hypo.admin.papi.dto.contact.PhoneNumberDto;
 import com.iso.hypo.admin.papi.dto.model.BrandDto;
@@ -70,9 +62,10 @@ import com.iso.hypo.tests.data.Populator;
 import com.iso.hypo.tests.http.HttpUtils;
 import com.iso.hypo.tests.security.Users;
 import com.iso.hypo.tests.utils.StringUtils;
-import com.iso.hypo.tests.utils.TestResponseUtils;
 
 import net.datafaker.Faker;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.json.JsonMapper.Builder;
 
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = "app.test.run=true")
@@ -115,27 +108,30 @@ class BrandControllerTests {
 	@Autowired
 	BrandDtoMapper brandMapper;
 	@Autowired
-	ObjectMapper objectMapper;
+	Builder objectMapper;
 	@Autowired
 	ModelMapper modelMapper;
 
 	private Faker faker = new Faker();
 	
-	private RestTemplateBuilder restTemplateBuilder;
-	private TestRestTemplate testRestTemplate;
+	private RestTestClient restClient;
+	
 	private Brand brand;
 	private Brand brandDeleted;
 	private List<Brand> brands = new ArrayList<Brand>();
 
 	@BeforeAll
 	void arrange() {
-		restTemplateBuilder = new RestTemplateBuilder()
-					.additionalMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper));
-					//.requestFactory(new HttpComponentsClientHttpRequestFactory());
-				    //.build();
-		
-		testRestTemplate = new TestRestTemplate(restTemplateBuilder);
-		//testRestTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory());
+		restClient = RestTestClient.bindToServer()
+		        .baseUrl("http://localhost:" + port)
+		        .configureMessageConverters(converters -> 
+		        	converters.addCustomConverter(
+		        			new JacksonJsonHttpMessageConverter(
+		        			objectMapper
+		        			.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+		        			.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false))))
+		        .build();
+
 		brandRepository.deleteAll();
 
 		brand = BrandBuilder.build(codeBrand_1, faker.company().name());
@@ -146,17 +142,17 @@ class BrandControllerTests {
 		brandDeleted = brandRepository.save(brandDeleted);
 
 		for (int i = 0; i < 10; i++) {
-			Brand item = BrandBuilder.build(faker.code().isbn10(), faker.company().name());
+			Brand active_brand = BrandBuilder.build(faker.code().isbn10(), faker.company().name());
 			
-			brandRepository.save(item);
-			brands.add(item);
+			brandRepository.save(active_brand);
+			brands.add(active_brand);
 		}
 		
 		for (int i = 0; i < 5; i++) {
-			Brand item = BrandBuilder.build(faker.code().isbn10(),faker.company().name());
-			item.setActive(false);
-			brandRepository.save(item);
-			brands.add(item);
+			Brand inactive_brand = BrandBuilder.build(faker.code().isbn10(),faker.company().name());
+			inactive_brand.setActive(false);
+			brandRepository.save(inactive_brand);
+			brands.add(inactive_brand);
 		}
 	}
 
@@ -218,22 +214,22 @@ class BrandControllerTests {
 	@Test
 	void testListFirstPageSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		HttpEntity<String> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
 		params.add(pageNumber, "0");
 		params.add(pageSize, "4");
-
+		
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(listURI), port, params),
-				HttpMethod.GET, httpEntity, JsonNode.class);
-
-		// Assert
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("List error: %s", response.getStatusCode()));
-
-		PageResultDto<BrandDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<BrandDto>>() {}, objectMapper);
-
+		PageResultDto<BrandDto> page = 
+				this.restClient.get()
+					.uri(HttpUtils.createURL(URI.create(listURI), port, params))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(new ParameterizedTypeReference<PageResultDto<BrandDto>>() {}) 
+					.returnResult()
+				    .getResponseBody();  
+	
 		// Assert
 		Assertions.assertEquals(0, page.getPageNumber(),
 				String.format("Brand list first page number invalid: %d", page.getPageNumber()));
@@ -244,22 +240,22 @@ class BrandControllerTests {
 	@Test
 	void testListSecondPageSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		HttpEntity<String> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, "");
-
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
 		params.add(pageNumber, "1");
 		params.add(pageSize, "4");
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(listURI), port, params),
-				HttpMethod.GET, httpEntity, JsonNode.class);
-
-
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("List error: %s", response.getStatusCode()));
+		PageResultDto<BrandDto> page = 
+				this.restClient.get()
+					.uri(HttpUtils.createURL(URI.create(listURI), port, params))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(new ParameterizedTypeReference<PageResultDto<BrandDto>>() {}) 
+					.returnResult()
+				    .getResponseBody();  
 		
-		PageResultDto<BrandDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<BrandDto>>() {}, objectMapper);
-
 		// Assert
 		Assertions.assertEquals(1, page.getPageNumber(),
 				String.format("Brand list second page number invalid: %d", page.getPageNumber()));
@@ -271,17 +267,22 @@ class BrandControllerTests {
 	void testPostSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PostBrandDto postDto = modelMapper.map(BrandBuilder.build(faker.code().isbn10(),faker.company().name()), PostBrandDto.class);
-		HttpEntity<PostBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postURI), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
+		BrandDto createdDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(postURI), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(BrandDto.class) 
+					.returnResult()
+				    .getResponseBody();  
 
-		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
-
-		BrandDto createdDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
-
+		// Assert
 		assertBrand(modelMapper.map(postDto, BrandDto.class), createdDto);
 	}
 	
@@ -289,23 +290,35 @@ class BrandControllerTests {
 	void testPostDuplicateFailure() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PostBrandDto postDto = modelMapper.map(BrandBuilder.build(faker.code().isbn10(),faker.company().name()), PostBrandDto.class);
-		HttpEntity<PostBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
-
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postURI), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
-
+		
+		BrandDto _ = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(postURI), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(BrandDto.class) 
+					.returnResult()
+				    .getResponseBody();
+		
 		// Act
-		response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postURI), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
+		BrandDto dupDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(postURI), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(BrandDto.class) 
+					.returnResult()
+				    .getResponseBody();
 		
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
-		
-		BrandDto dupDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
-
+		// Assert
 		Assertions.assertEquals(1, dupDto.getMessages().size(),
 				String.format("Duplicate error ,missing message: %s", dupDto.getMessages().size()));
 		
@@ -318,45 +331,50 @@ class BrandControllerTests {
 	void testGetSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PostBrandDto postDto = modelMapper.map(BrandBuilder.build(faker.code().isbn10(),faker.company().name()), PostBrandDto.class);
-		HttpEntity<PostBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
-
-		ResponseEntity<JsonNode> responsePost = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(postURI), port, null), HttpMethod.POST, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.CREATED, responsePost.getStatusCode(),
-				String.format("Post error: %s", responsePost.getStatusCode()));
 		
-		BrandDto createdDto = TestResponseUtils.toDto(responsePost, BrandDto.class, objectMapper);
+		BrandDto createdDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(postURI), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(BrandDto.class) 
+					.returnResult()
+				    .getResponseBody();  
 
 		// Act
-		httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(getURI, createdDto.getUuid())), port, null),
-				HttpMethod.GET, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Get error: %s", response.getStatusCode()));
+		BrandDto fetchedDto = 
+				this.restClient.get()
+					.uri(HttpUtils.createURL(URI.create(String.format(getURI, createdDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(BrandDto.class) 
+					.returnResult()
+				    .getResponseBody();
 		
-		BrandDto fetchedDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
-
+		// Assert
 		assertBrand(modelMapper.map(postDto, BrandDto.class), fetchedDto);
 	}
 	
 	@Test
 	void testGetFailureNotFound() throws MalformedURLException, JsonProcessingException, Exception {
-		// Arrange
-		HttpEntity<Object> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
- 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(getURI, faker.code().isbn10())), port, null),
-				HttpMethod.GET, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
-				String.format("Get error: %s", response.getStatusCode()));
 		
-		if (response.getBody() != null && !response.getBody().isEmpty()) {
-			ErrorDto err = TestResponseUtils.toError(response, objectMapper);
-			Assertions.assertEquals(BrandException.BRAND_NOT_FOUND, err.getCode());
-		}
+		// Act
+		BrandDto _ = 
+				this.restClient.get()
+					.uri(HttpUtils.createURL(URI.create(String.format(getURI, faker.code().isbn10())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isNotFound() 
+					.expectBody(BrandDto.class) 
+					.returnResult()
+				    .getResponseBody();  
 	}
 
 	@ParameterizedTest
@@ -391,16 +409,20 @@ class BrandControllerTests {
 		}
 
 		// Act
-		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, updatedBrand.getUuid())), port, null),
-				HttpMethod.PUT, httpEntity, JsonNode.class);
+		BrandDto updatedDto = 
+				this.restClient.put()
+					.uri(HttpUtils.createURL(URI.create(String.format(putURI, updatedBrand.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(putDto)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(BrandDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Put error: %s", response.getStatusCode()));
-		
-		BrandDto updatedDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
-
+		// Assert
 		assertBrand(modelMapper.map(putDto, BrandDto.class), updatedDto);
 	}
 	
@@ -419,16 +441,20 @@ class BrandControllerTests {
 		putDto.setContacts(null);
 		
 		// Act
-		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putDto);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, updatedBrand.getUuid())), port, null),
-				HttpMethod.PUT, httpEntity, JsonNode.class);
+		BrandDto updatedDto = 
+				this.restClient.put()
+					.uri(HttpUtils.createURL(URI.create(String.format(putURI, updatedBrand.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(putDto)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(BrandDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Put null error: %s", response.getStatusCode()));
-		
-		BrandDto updatedDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
-
+		// Assert
 	 	assertBrand(modelMapper.map(putDto, BrandDto.class), updatedDto);
 	}
 	
@@ -438,18 +464,19 @@ class BrandControllerTests {
 		Brand updatedBrand = BrandBuilder.build(faker.code().isbn10(),faker.company().name());
 		PutBrandDto putDto = modelMapper.map(updatedBrand, PutBrandDto.class);
 		
-		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putDto);
- 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, updatedBrand.getUuid())), port, null),
-				HttpMethod.PUT, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
-				String.format("Get error: %s", response.getStatusCode()));
-		
-		if (response.getBody() != null && !response.getBody().isEmpty()) {
-			ErrorDto err = TestResponseUtils.toError(response, objectMapper);
-			Assertions.assertEquals(BrandException.BRAND_NOT_FOUND, err.getCode());
-		}
+		// Act
+		BrandDto _ = 
+				this.restClient.put()
+					.uri(HttpUtils.createURL(URI.create(String.format(putURI, updatedBrand.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(putDto)
+					.exchange() 
+				    .expectStatus().isNotFound() 
+					.expectBody(BrandDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 	}
 
 	@ParameterizedTest
@@ -465,18 +492,23 @@ class BrandControllerTests {
 		patchDto.setEmail(null);
 		
 		// Act
-		HttpEntity<PatchBrandDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchDto);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(patchURI, brandToPatch.getUuid())), port, null),
-				HttpMethod.PATCH, httpEntity, JsonNode.class);
+		BrandDto patchedDto = 
+				this.restClient.patch()
+					.uri(HttpUtils.createURL(URI.create(String.format(patchURI, brandToPatch.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(patchDto)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(BrandDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Get error: %s", response.getStatusCode()));
-		
 		patchDto.setEmail(brandToPatch.getEmail());
 		patchDto.getAddress().setStreetName(brandToPatch.getAddress().getStreetName());
 		
-	 	BrandDto patchedDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
+		// Assert
 	 	assertBrand(modelMapper.map(patchDto, BrandDto.class), patchedDto);
 	}
 	
@@ -486,20 +518,19 @@ class BrandControllerTests {
 		Brand patchTarget = BrandBuilder.build(faker.code().isbn10(),faker.company().name());
 		PatchBrandDto patchDto = modelMapper.map(patchTarget, PatchBrandDto.class);
 		
-		HttpEntity<PatchBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, patchDto);
-		
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(patchURI, patchTarget.getUuid())), port, null),
-				HttpMethod.PATCH, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
-				String.format("Patch error: %s", response.getStatusCode()));
-		
-		if (response.getBody() != null && !response.getBody().isEmpty()) {
-			ErrorDto err = TestResponseUtils.toError(response, objectMapper);
-			Assertions.assertEquals(BrandException.BRAND_NOT_FOUND, err.getCode());
-		}
+		BrandDto _ = 
+				this.restClient.patch()
+					.uri(HttpUtils.createURL(URI.create(String.format(patchURI, patchTarget.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(patchDto)
+					.exchange() 
+				    .expectStatus().isNotFound() 
+					.expectBody(BrandDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 	}
 
 	@Test
@@ -516,37 +547,36 @@ class BrandControllerTests {
 		brandToActivate.setDeactivatedOn(null);
 
 		// Act
-		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postActivateURI, brandToActivate.getUuid())),
-						port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
+		BrandDto activatedDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postActivateURI, brandToActivate.getUuid())),	port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(BrandDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Brand activation error: %s", response.getStatusCode()));
-		
-		BrandDto activatedDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
-
+		// Assert
 		assertBrand(modelMapper.map(brandToActivate, BrandDto.class), activatedDto);
 	}
 
 	@Test
 	void testActivateFailureNotFound() throws JsonProcessingException, MalformedURLException, Exception {
-		// Arrange
-		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-		
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils
-				.createURL(URI.create(String.format(postActivateURI, faker.code().isbn10())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
-							
-		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
-				String.format("Brand activation error: %s", response.getStatusCode()));
-		
-		if (response.getBody() != null && response.getBody().size() > 0) {
-			ErrorDto err = TestResponseUtils.toError(response, objectMapper);
-			Assertions.assertEquals(BrandException.BRAND_NOT_FOUND, err.getCode());
-		}
+		BrandDto _ = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postActivateURI, faker.code().isbn10())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isNotFound() 
+					.expectBody(BrandDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 	}
 
 	@Test
@@ -561,73 +591,82 @@ class BrandControllerTests {
 		brandToDeactivate.setDeactivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
 
 		// Act
-		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(
-				URI.create(String.format(postDeactivateURI, brandToDeactivate.getUuid())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
+		BrandDto deactivatedDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postDeactivateURI, brandToDeactivate.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(BrandDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Brand deactivation error: %s", response.getStatusCode()));
-		
-		BrandDto deactivatedDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
-
+		// Assert
 		assertBrand(modelMapper.map(brandToDeactivate, BrandDto.class), deactivatedDto);
 	}
 
 	@Test
 	void testDeactivateFailureNotFound() throws JsonProcessingException, MalformedURLException, Exception {
-		// Arrange
-		HttpEntity<PutBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-		
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils
-				.createURL(URI.create(String.format(postDeactivateURI, faker.code().ean13())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
-		
-		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
-				String.format("Brand activation error: %s", response.getStatusCode()));
-		
-		if (response.getBody() != null && response.getBody().size() > 0) {
-			ErrorDto err = TestResponseUtils.toError(response, objectMapper);
-			Assertions.assertEquals(BrandException.BRAND_NOT_FOUND, err.getCode());
-		}
+		BrandDto _ = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postDeactivateURI, faker.code().isbn10())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isNotFound() 
+					.expectBody(BrandDto.class) 
+					.returnResult()
+				    .getResponseBody();
 	}
 
 	@Test
 	void testDeleteSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		PostBrandDto postDto = modelMapper.map(BrandBuilder.build(faker.code().isbn10(),faker.company().name()), PostBrandDto.class);
-		HttpEntity<PostBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
+		
+		BrandDto createdDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(postURI), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(BrandDto.class) 
+					.returnResult()
+				    .getResponseBody();  
 
-		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postURI), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
-
-		BrandDto createdDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
-
-		Populator populator = new Populator(gymRepository, coachRepository, courseRepository, membershipPlanRepository, memberRepository, modelMapper, testRestTemplate, port);
+		Populator populator = new Populator(gymRepository, coachRepository, courseRepository, membershipPlanRepository, memberRepository, modelMapper, restClient, port);
 		BrandDto brandToDelete = populator.populateFullBrand(createdDto, null);
 
 		// Act
-		httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-		response = testRestTemplate.exchange(HttpUtils.createURL(
-				URI.create(String.format(deleteURI, brandToDelete.getUuid())), port, null),
-				HttpMethod.DELETE, httpEntity, JsonNode.class);
+		BrandDto _ = 
+				this.restClient.delete()
+					.uri(HttpUtils.createURL(URI.create(String.format(deleteURI, brandToDelete.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isAccepted() 
+					.expectBody(BrandDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 
-		Assertions.assertEquals(HttpStatus.ACCEPTED, response.getStatusCode(),
-				String.format("Brand delete error: %s", response.getStatusCode()));
-		
-		httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-		response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(getURI, brandToDelete.getUuid())), port, null),
-				HttpMethod.GET, httpEntity, JsonNode.class);
+		BrandDto _ = 
+				this.restClient.get()
+					.uri(HttpUtils.createURL(URI.create(String.format(getURI, brandToDelete.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isNotFound() 
+					.expectBody(BrandDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 
-		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
-				String.format("Get error: %s", response.getStatusCode()));
-		
 		PageResult<Gym> pageGym = gymRepository.findAllByBrandUuidAndDeletedIsFalse(brandToDelete.getUuid(),  PageRequest.of(0, 1000));
 		Assertions.assertEquals(0, pageGym.getTotalElements(),
 				String.format("Deleted brand gyms not deleted: %d", pageGym.getTotalElements()));
@@ -649,8 +688,6 @@ class BrandControllerTests {
 				throws MalformedURLException, JsonProcessingException, Exception
 			{
 			// Arrange
-			HttpEntity<String> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, "");
-
 			MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
 			params.add(searchCriteria, criteria);
 			params.add(pageNumber, "0");
@@ -661,15 +698,18 @@ class BrandControllerTests {
 	        .atMost(20, TimeUnit.SECONDS)
 	        .pollInterval(200, TimeUnit.MILLISECONDS)
 	        .untilAsserted(() -> {
-				ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-						HttpUtils.createURL(URI.create(searchURI), port, params), HttpMethod.GET, httpEntity,
-						JsonNode.class);
-
-				Assertions.assertEquals(response.getStatusCode(), HttpStatus.OK,
-						String.format("Search error: %s", response.getStatusCode()));
-				
-				PageResultDto<BrandSearchDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<BrandSearchDto>>() {}, objectMapper);
-				
+	        	// Act
+	    		PageResultDto<BrandSearchDto> page = 
+	    				this.restClient.get()
+	    					.uri(HttpUtils.createURL(URI.create(searchURI), port, params))
+	    					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+	    					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+	    					.exchange() 
+	    				    .expectStatus().isOk() 
+	    					.expectBody(new ParameterizedTypeReference<PageResultDto<BrandSearchDto>>() {}) 
+	    					.returnResult()
+	    				    .getResponseBody(); 
+	    		// Assert
 				Assertions.assertTrue(page.getContent().size() >= minimumNumberOfElements && 
 									  page.getContent().size() <= maximumNumberOfElements,
 					String.format("Brand search return invalid number of results [%s]: %d", 

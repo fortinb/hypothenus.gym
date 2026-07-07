@@ -1,148 +1,127 @@
 package com.iso.hypo.finance.infrastructure.port.adapter;
 
-import java.io.IOException;
-import java.time.format.DateTimeFormatter;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iso.hypo.common.application.context.RequestContext;
 import com.iso.hypo.common.application.port.PaymentProviderConfigurationEntry;
 import com.iso.hypo.finance.application.port.PaymentProviderPort;
 import com.iso.hypo.finance.application.port.dto.paymentprovider.CreditCardRef;
 import com.iso.hypo.finance.application.port.dto.paymentprovider.ReceiptRef;
-import com.iso.hypo.finance.infrastructure.moneris.api.ValidationsApi;
-import com.iso.hypo.finance.infrastructure.moneris.invoker.ApiClient;
-import com.iso.hypo.finance.infrastructure.moneris.model.AddressVerificationServiceResultCode;
-import com.iso.hypo.finance.infrastructure.moneris.model.Card;
-import com.iso.hypo.finance.infrastructure.moneris.model.CardSecurityCodeResult;
-import com.iso.hypo.finance.infrastructure.moneris.model.CardholderInformation;
-import com.iso.hypo.finance.infrastructure.moneris.model.CreateValidationRequest;
-import com.iso.hypo.finance.infrastructure.moneris.model.CreateValidationRequest.EcommerceIndicatorEnum;
-import com.iso.hypo.finance.infrastructure.moneris.model.PaymentMethodBillingAddress;
-import com.iso.hypo.finance.infrastructure.moneris.model.PaymentMethodRequestSource;
-import com.iso.hypo.finance.infrastructure.moneris.model.StorePaymentMethod;
-import com.iso.hypo.finance.infrastructure.moneris.model.StorePaymentMethodRequest;
-import com.iso.hypo.finance.infrastructure.moneris.model.Validation;
-import com.iso.hypo.finance.infrastructure.moneris.model.ValidationStatus;
 
-import okhttp3.FormBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import JavaAPI.AvsInfo;
+import JavaAPI.CardVerification;
+import JavaAPI.CofInfo;
+import JavaAPI.CvdInfo;
+import JavaAPI.HttpsPostRequest;
+import JavaAPI.Receipt;
+import JavaAPI.Refund;
+import JavaAPI.ResAddCC;
+import JavaAPI.ResDelete;
+import JavaAPI.ResPurchaseCC;
 
 @Component
-@Primary
-public class FinanceMonerisPortAdapter implements PaymentProviderPort {
+public class FinanceMonerisOldPortAdapter implements PaymentProviderPort {
 
-	private static final Logger logger = LoggerFactory.getLogger(FinanceMonerisPortAdapter.class);
+	private static final Logger logger = LoggerFactory.getLogger(FinanceMonerisOldPortAdapter.class);
 
-	@Value("${moneris.url}")
-	private String monerisUrl;
-	
-	@Value("${moneris.api.version}")
-	private String monerisApiVersion;
-	
-	public FinanceMonerisPortAdapter() {
+	public FinanceMonerisOldPortAdapter() {
 	}
 
 	@Override
-	public ReceiptRef verify(PaymentProviderConfigurationEntry config, RequestContext requestContext, CreditCardRef creditCard) {
+	public ReceiptRef verify(PaymentProviderConfigurationEntry config,  RequestContext requestContext, CreditCardRef creditCard) {
 		java.util.Date createDate = new java.util.Date();
 
-		String xCorrelationId = requestContext.getTrackingNumber();
 		String order_id = config.getBrandCode() + "_verify_" + createDate.getTime();
-		String access_token = getOAuthToken(config);
-		
+		String crypt = "7";
+
 		ReceiptRef receiptRef = new ReceiptRef();
 		
-		ApiClient apiClient = new ApiClient();
-		apiClient.setBasePath(monerisUrl);
-		apiClient.setAccessToken(access_token);
-		apiClient.addDefaultHeader("accept", "application/json");
-		apiClient.addDefaultHeader("content-type", "application/json");
-		
-		CreateValidationRequest validationRequest = new CreateValidationRequest();
-		
-		validationRequest.setOrderId(order_id);
-		validationRequest.setCustomerReference(creditCard.getCustomerId());
-		validationRequest.setEcommerceIndicator(EcommerceIndicatorEnum.SSL_MERCHANT);
-		
-		StorePaymentMethodRequest storePaymentMethodRequest = new StorePaymentMethodRequest();
-		
-		Card card = new Card();
-		card.setCardNumber(creditCard.getCardNumber());
-		card.setCardSecurityCode(creditCard.getCvd());
-		card.setExpiryMonth(Integer.valueOf(creditCard.getExpirationDate().substring(0, 2)));
-		card.setExpiryYear(Integer.valueOf("20" + creditCard.getExpirationDate().substring(2, 4)));
-		storePaymentMethodRequest.setCard(card);
-		
-		CardholderInformation cardHolderInfo = new CardholderInformation();
-		cardHolderInfo.setCardholderName(creditCard.getCardHolderName());
-		storePaymentMethodRequest.setCardholderInformation(cardHolderInfo);
-		
-		if (creditCard.getZipCode() != null) {
-			PaymentMethodBillingAddress billingAddress = new PaymentMethodBillingAddress();
-			billingAddress.setPostalCode(creditCard.getZipCode());
-		}
-		
-		storePaymentMethodRequest.setPaymentMethodSource(PaymentMethodRequestSource.CARD);
-		storePaymentMethodRequest.setStorePaymentMethod(StorePaymentMethod.CARDHOLDER_INITIATED);
-		
-		validationRequest.setPaymentMethod(storePaymentMethodRequest);
-		
-		ValidationsApi validationsApi = new ValidationsApi(apiClient);
-		//validationsApi.
-		Validation validation = validationsApi.createValidation(monerisApiVersion, config.getMerchandId(), validationRequest, xCorrelationId);
+		try {
+			boolean status_check = false;
 
-		ValidationStatus validationStatus = validation.getValidationStatus();
-		
-		// Save response as log.
-		receiptRef.setProviderRawResponse(validation);
-		
-		if (validationStatus == ValidationStatus.SUCCEEDED) {
-			receiptRef.setApproved(true);
-			receiptRef.setError(false);
-			
-			receiptRef.setTxnNumber(validation.getTransactionDetails().getTransactionUniqueId());
-			receiptRef.setProviderResponseCode(validation.getTransactionDetails().getResponseCode());
-			receiptRef.setISO(validation.getTransactionDetails().getIsoResponseCode());
-			receiptRef.setAuthCode(validation.getTransactionDetails().getAuthorizationCode());
-			receiptRef.setMessage(validation.getTransactionDetails().getMessage());
-			receiptRef.setCardType(validation.getPaymentMethod().getPaymentMethodInformation().getCardInformation().getCardBrand().getValue());
-			receiptRef.setIssuerId(validation.getPaymentMethod().getPaymentMethodInformation().getCardInformation().getIssuer());
-			receiptRef.setCardNumberMasked(validation.getPaymentMethod().getPaymentMethodInformation().getCardInformation().getLastFour());
-			receiptRef.setReferenceNum(validation.getPaymentMethod().getPaymentMethodInformation().getPaymentAccountReference());
-			receiptRef.setTransDate(validation.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-			receiptRef.setTransTime(validation.getCreatedAt().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
-			
-			receiptRef.setCvdResultCode(CardSecurityCodeResult.MATCH.equals(validation.getVerificationDetails().getCardSecurityCodeResultCode()));
-			receiptRef.setAvsResultCode(AddressVerificationServiceResultCode.PARTIAL_MATCH.equals(validation.getVerificationDetails().getAddressVerificationServiceResultCode()));
-		} else {
+			AvsInfo avsCheck = new AvsInfo();
+			if (creditCard.getZipCode() != null) {
+				avsCheck.setAvsZipCode(creditCard.getZipCode());
+			}
+
+			CvdInfo cvdCheck = new CvdInfo();
+			cvdCheck.setCvdIndicator("1"); // 1: CVD value is present.
+			cvdCheck.setCvdValue(creditCard.getCvd());
+
+			CardVerification cardVerification = new CardVerification();
+			cardVerification.setOrderId(order_id);
+			cardVerification.setPan(creditCard.getCardNumber());
+			cardVerification.setExpdate(creditCard.getExpirationDate());
+			cardVerification.setCryptType(crypt);
+			cardVerification.setAvsInfo(avsCheck);
+			cardVerification.setCvdInfo(cvdCheck);
+
+			// optional - Credential on File details
+			CofInfo cof = new CofInfo();
+			cof.setPaymentIndicator("C"); // C - unscheduled Credential on File (first transactions only)
+			cof.setPaymentInformation("0"); // 0 - first transaction in a series (storing payment details provided by the cardholder)
+
+			cardVerification.setCofInfo(cof);
+
+			HttpsPostRequest mpgReq = new HttpsPostRequest();
+			mpgReq.setProcCountryCode(creditCard.getCountryCode());
+			mpgReq.setTestMode(true); // false or comment out this line for production transactions
+			mpgReq.setStoreId(config.getStoreId());
+			mpgReq.setApiToken(config.getApiKey());
+			mpgReq.setTransaction(cardVerification);
+			mpgReq.setStatusCheck(status_check);
+			mpgReq.send();
+
+			Receipt receipt = mpgReq.getReceipt();
+
+			debugReceipt(receipt);
+
+			boolean approved = "027".equals(receipt.getResponseCode());
+			boolean completed = "true".equals(receipt.getComplete());
+			boolean timeout = "true".equals(receipt.getTimedOut());
+
+			if (!completed || timeout) {
+				receiptRef.setError(true);
+				receiptRef.setMessage(receipt.getMessage());
+			} else {
+				receiptRef.setApproved(approved);
+				receiptRef.setError(false);
+				receiptRef.setCardType(receipt.getCardType());
+				receiptRef.setTxnNumber(receipt.getTxnNumber());
+				receiptRef.setReceiptId(receipt.getReceiptId());
+				receiptRef.setTransType(receipt.getTransType());
+				receiptRef.setReferenceNum(receipt.getReferenceNum());
+				receiptRef.setProviderResponseCode(receipt.getResponseCode());
+				receiptRef.setISO(receipt.getISO());
+				receiptRef.setMessage(receipt.getMessage());
+				receiptRef.setAuthCode(receipt.getAuthCode());
+				receiptRef.setTransDate(receipt.getTransDate());
+				receiptRef.setTransTime(receipt.getTransTime());
+				receiptRef.setIssuerId(receipt.getIssuerId());
+				receiptRef.setCvdResultCode("1M".equals(receipt.getCvdResultCode()));
+				receiptRef.setAvsResultCode("Z".equals(receipt.getAvsResultCode()));
+			}
+		} catch (Exception e) {
 			receiptRef.setApproved(false);
 			receiptRef.setError(true);
-			receiptRef.setTxnNumber(validation.getTransactionDetails().getTransactionUniqueId());
-			receiptRef.setProviderResponseCode(validation.getTransactionDetails().getResponseCode());
-			receiptRef.setISO(validation.getTransactionDetails().getIsoResponseCode());
-			receiptRef.setMessage(validation.getTransactionDetails().getMessage());
+			receiptRef.setMessage(e.getMessage());
+
+			logger.error("Moneris card verification failed for orderId: {}, error: {}", order_id, e.getMessage());
 		}
 
 		return receiptRef;
 	}
 
 	@Override
-	public ReceiptRef register(PaymentProviderConfigurationEntry config, RequestContext requestContext, CreditCardRef creditCard) {
+	public ReceiptRef register(PaymentProviderConfigurationEntry config,  RequestContext requestContext, CreditCardRef creditCard) {
 		String crypt = "7";
 		boolean status_check = false;
 
 		ReceiptRef receiptRef = new ReceiptRef();
 
-		/*try {
+		try {
 
 			ResAddCC resaddcc = new ResAddCC();
 			resaddcc.setPan(creditCard.getCardNumber());
@@ -202,13 +181,14 @@ public class FinanceMonerisPortAdapter implements PaymentProviderPort {
 
 			logger.error("Moneris card registration failed, error: {}", e.getMessage());
 		}
-*/
+
 		return receiptRef;
 	}
 
 	@Override
 	public ReceiptRef purchase(
-			PaymentProviderConfigurationEntry config, RequestContext requestContext, 
+			PaymentProviderConfigurationEntry config, 
+			 RequestContext requestContext,
 			CreditCardRef creditCard, 
 			String orderId,
 			String customerId, 
@@ -218,7 +198,7 @@ public class FinanceMonerisPortAdapter implements PaymentProviderPort {
 
 		ReceiptRef receiptRef = new ReceiptRef();
 
-	/*	try {
+		try {
 
 			ResPurchaseCC resPurchaseCC = new ResPurchaseCC();
 			resPurchaseCC.setDataKey(creditCard.getPermanentToken());
@@ -277,13 +257,14 @@ public class FinanceMonerisPortAdapter implements PaymentProviderPort {
 
 			logger.error("Moneris payment failed, error: {}", e.getMessage());
 		}
-*/
+
 		return receiptRef;
 	}
 
 	@Override
 	public ReceiptRef refund(
-			PaymentProviderConfigurationEntry config, RequestContext requestContext, 
+			PaymentProviderConfigurationEntry config, 
+			 RequestContext requestContext,
 			CreditCardRef creditCard, 
 			String orderId,
 			String customerId, 
@@ -294,7 +275,7 @@ public class FinanceMonerisPortAdapter implements PaymentProviderPort {
 		String dynamic_descriptor = orderId; // Dynamic descriptor can be up to 25 characters, and will appear on the customer's card statement. Using orderId for simplicity, but it can be customized as needed.
 		ReceiptRef receiptRef = new ReceiptRef();
 
-	/*	try {
+		try {
 
 			Refund refund = new Refund();
 			refund.setTxnNumber(txnNumber);
@@ -346,7 +327,7 @@ public class FinanceMonerisPortAdapter implements PaymentProviderPort {
 
 			logger.error("Moneris payment failed, error: {}", e.getMessage());
 		}
-*/
+
 		return receiptRef;
 	}
 
@@ -356,7 +337,7 @@ public class FinanceMonerisPortAdapter implements PaymentProviderPort {
 		
 		ReceiptRef receiptRef = new ReceiptRef();
 		
-	/*	try {
+		try {
 
 			ResDelete resDelete = new ResDelete(creditCard.getPermanentToken());
 
@@ -393,11 +374,11 @@ public class FinanceMonerisPortAdapter implements PaymentProviderPort {
 
 			logger.error("Moneris payment failed, error: {}", e.getMessage());
 		}
-*/
+
 		return receiptRef;
 	}
 	
-/*	private void debugReceipt(Receipt receipt) {
+	private void debugReceipt(Receipt receipt) {
 		if (!logger.isDebugEnabled()) {
 			return;
 		}
@@ -437,63 +418,6 @@ public class FinanceMonerisPortAdapter implements PaymentProviderPort {
 		logger.debug("CvvResponseCode = {}", receipt.getCvvResponseCode());
 		logger.debug("CvdResultCode = {}", receipt.getCvdResultCode());
 	}
-*/
 
-	/**
-	 * Requests a Bearer token from the Moneris OAuth2 endpoint using the
-	 * client_credentials grant.  Sandbox vs production URL is driven by
-	 * {@code config.isTestMode()}.
-	 *
-	 * @param config payment-provider configuration holding clientId / clientSecret
-	 * @return the raw access_token string to be passed as {@code Authorization: Bearer <token>}
-	 * @throws RuntimeException if the token endpoint returns a non-2xx status or the
-	 *                          response cannot be parsed
-	 */
-	private String getOAuthToken(PaymentProviderConfigurationEntry config) {
-
-		String tokenUrl = monerisUrl + "/oauth2/token";
-
-		FormBody formBody = new FormBody.Builder()
-				.add("grant_type", "client_credentials")
-				.add("client_id",     config.getClientId())
-				.add("client_secret", config.getClientSecret())
-				.add("scope", "payment.write")
-				.build();
-
-		Request request = new Request.Builder()
-				.url(tokenUrl)
-				.post(formBody)
-				.addHeader("Accept", "application/json")
-				.build();
-
-		OkHttpClient client = new OkHttpClient();
-
-		try (Response response = client.newCall(request).execute()) {
-
-			if (!response.isSuccessful()) {
-				String errorBody = response.body() != null ? response.body().string() : "(empty)";
-				logger.error("Moneris OAuth token request failed — HTTP {}: {}", response.code(), errorBody);
-				throw new RuntimeException(
-						"Moneris OAuth token request failed with HTTP " + response.code());
-			}
-
-			String responseBody = response.body().string();
-			ObjectMapper mapper = new ObjectMapper();
-			JsonNode json = mapper.readTree(responseBody);
-
-			JsonNode tokenNode = json.get("access_token");
-			if (tokenNode == null || tokenNode.isNull()) {
-				logger.error("Moneris OAuth response did not contain an access_token: {}", responseBody);
-				throw new RuntimeException("Moneris OAuth response missing access_token");
-			}
-
-			logger.debug("Moneris OAuth token obtained successfully");
-			return tokenNode.asText();
-
-		} catch (IOException e) {
-			logger.error("IOException while requesting Moneris OAuth token: {}", e.getMessage());
-			throw new RuntimeException("Failed to obtain Moneris OAuth token", e);
-		}
-	}
 
 }

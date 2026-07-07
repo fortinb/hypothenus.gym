@@ -1,5 +1,7 @@
 package com.iso.hypo.finance.infrastructure.persistence.entity;
 
+import java.util.List;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -34,6 +36,8 @@ public class FinancialInstrumentDocument extends BaseDocument {
 	private CreditCard creditCard;
 	
 	private BankAccount bankAccount;
+	
+	private List<Object> paymentServiceProviderRawResponse;
 	
 	public FinancialInstrumentDocument() {
 	}

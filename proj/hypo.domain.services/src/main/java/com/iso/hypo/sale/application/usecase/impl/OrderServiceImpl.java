@@ -117,6 +117,12 @@ public class OrderServiceImpl implements OrderService {
 			BrandRef brand = resolveBrand(orderDto.getBrandUuid());
 			MemberRef member = resolveMember(brand.getUuid(), orderDto.getMemberUuid());
 
+			// Validate that the order is not already created.
+			if (order.getStatus() != OrderStatusEnum.idle || order.getOrderNumber() != null || order.getUuid() != null) {
+				throw new OrderException(requestContext.getTrackingNumber(), OrderException.ORDER_ALREADY_EXISTS,
+						"Order already exists - status=" + order.getStatus());
+			}
+			
 			// Initialize order
 			initializeOrder(order, brand, member);
 
@@ -157,6 +163,12 @@ public class OrderServiceImpl implements OrderService {
 			Order order = orderMapper.toEntity(orderDto);
 			Order oldOrder = this.readByOrderUuid(brand.getUuid(), member.getUuid(), orderDto.getUuid());
 
+			// Validate that the order is not already created.
+			if (oldOrder.getStatus() != OrderStatusEnum.created) {
+				throw new OrderException(requestContext.getTrackingNumber(), OrderException.ORDER_ALREADY_PROCESSED,
+						"Order already processed - status=" + order.getStatus());
+			}
+			
 			// Map Order Request to existing order. Only non-null fields in the request will
 			// be mapped to existing order
 			ModelMapper mapper = new ModelMapper();
@@ -265,6 +277,7 @@ public class OrderServiceImpl implements OrderService {
 				
 				if (paymentResult.getPaymentStatus() == PaymentStatusEnumDto.completed) {
 					// Payment successful
+					order.setStatus(OrderStatusEnum.paymentSucceded);
 					order.setProcessingState(OrderProcessingStateEnum.createMembership);
 				} else {
 					// Payment failed, update order status to failed.
@@ -276,7 +289,9 @@ public class OrderServiceImpl implements OrderService {
 			}
 
 			// If payment is successful create membership
-			if (order.getProcessingState() == OrderProcessingStateEnum.createMembership) {	
+			if (order.getStatus() == OrderStatusEnum.paymentSucceded && 
+				order.getProcessingState() == OrderProcessingStateEnum.createMembership) {
+				
 				order = createMembership(brand, member, order);
 				
 				// Order is paid and membership are created successfully.

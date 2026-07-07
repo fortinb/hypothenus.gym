@@ -1,8 +1,10 @@
 plugins {
     id 'java-library'
+	id 'org.springframework.boot' version '4.1.0'
 	id 'io.spring.dependency-management' version '1.1.7'
 	id 'java-test-fixtures'
-    id 'org.openapi.generator' version '7.6.0'
+    id 'org.openapi.generator' version '7.23.0'
+    id 'eclipse'
 }
 
 group = "com.hypo"
@@ -24,12 +26,6 @@ tasks.withType(org.gradle.api.tasks.compile.JavaCompile).configureEach {
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
-}
-
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.boot:spring-boot-dependencies:3.5.9"
-    }
 }
 
  //  implementation 'org.mongodb:mongodb-driver-sync:5.1.0'
@@ -60,7 +56,7 @@ dependencies {
 }
 
 // ─── Moneris REST API client generation ──────────────────────────────────────
-def monerisSpec = "$rootDir/src/main/openapi/moneris-openapi.yaml"
+def monerisSpec = "$rootDir/src/main/openapi/moneris-api-2025-08-14.yaml"
 
 openApiGenerate {
     generatorName = "java"
@@ -76,21 +72,63 @@ openApiGenerate {
         dateLibrary      : "java8",
         serializationLibrary: "jackson"
     ]
-    // Skip generation when the spec file does not exist yet
+}
+
+// Skip generation when the spec file does not exist yet
+// onlyIf is a task method — it must be set on the task, not inside the extension block
+tasks.named('openApiGenerate') {
     onlyIf { file(monerisSpec).exists() }
 }
 
-// Include generated sources in the main source set
+// ── Compile generated code in its own source set so -nowarn applies only
+//    to generated files, leaving hand-written code warnings intact ──────────
 sourceSets {
-    main {
+    // Dedicated source set for the OpenAPI-generated client
+    monerisClient {
         java {
             srcDir layout.buildDirectory.dir("generated/moneris-client/src/main/java")
         }
+        // Reuse every jar already resolved for the main source set
+        compileClasspath += sourceSets.main.compileClasspath
     }
 }
 
-// Generate before compiling
-compileJava.dependsOn tasks.openApiGenerate
+// Make compiled generated classes visible when compiling and running main code
+sourceSets.main {
+    compileClasspath += sourceSets.monerisClient.output
+    runtimeClasspath += sourceSets.monerisClient.output
+}
+
+// Include generated classes in the published jar
+jar {
+    from sourceSets.monerisClient.output
+}
+
+// Compile the generated client suppressing all warnings (-nowarn)
+tasks.named('compileMonerisClientJava') {
+    options.compilerArgs = ['-parameters', '-nowarn']
+}
+
+// Hand-written code must wait for the generated code to be compiled first
+compileJava.dependsOn 'compileMonerisClientJava'
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Eclipse: suppress all warnings for the OpenAPI-generated source folder ───
+// Eclipse (ECJ) ignores javac's -nowarn flag.  The classpath attribute
+// "ignore_optional_problems=true" is the standard Eclipse mechanism to tell
+// the IDE to skip all optional diagnostics (unused imports, raw types, etc.)
+// for a specific source folder, while leaving warnings intact everywhere else.
+// After any build.gradle change run: Gradle > Refresh Gradle Project in Eclipse.
+eclipse {
+    classpath {
+        file.whenMerged { cp ->
+            cp.entries
+                .findAll { it instanceof org.gradle.plugins.ide.eclipse.model.SourceFolder &&
+                           it.path.contains('moneris-client') }
+                .each    { it.entryAttributes['ignore_optional_problems'] = 'true' }
+        }
+    }
+}
 // ─────────────────────────────────────────────────────────────────────────────
 
 test {

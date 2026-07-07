@@ -31,10 +31,8 @@ public class ReceiptRef {
 	
 	private boolean error;
 	
-	// M = Match, N = No Match, P = Not processed, S = Should have been present, U = Issuer unable to process request
 	private boolean cvdResultCode;
 	
-	// Z = ZipCode Match, Y = full match (street and zipcode)
 	private boolean avsResultCode;
 	
 	private String ISO;
@@ -50,5 +48,25 @@ public class ReceiptRef {
 	private String ticket;
 	
 	private String issuerId;
+
+	/**
+	 * Full, unmodified response object returned by the payment provider.
+	 * This field is intentionally typed as {@link Object} so that no
+	 * provider-specific class (e.g. Moneris) leaks into this DTO.
+	 *
+	 * <p>The adapter is responsible for setting any Jackson-serializable value
+	 * here (a generated model POJO, a {@code Map<String,Object>}, etc.).
+	 * Spring Data MongoDB will persist it as a BSON sub-document, which is
+	 * readable as plain JSON in the database.
+	 *
+	 * <p>Example (in the Moneris adapter):
+	 * <pre>{@code
+	 * receipt.setProviderRawResponse(monerисPaymentObject);   // generated POJO
+	 * // — or — convert to Map to avoid any serialisation surprises:
+	 * receipt.setProviderRawResponse(
+	 *     new ObjectMapper().convertValue(monerisPayment, Map.class));
+	 * }</pre>
+	 */
+	private Object providerRawResponse;
 }
 

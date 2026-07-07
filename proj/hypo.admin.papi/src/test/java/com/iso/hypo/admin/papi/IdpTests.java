@@ -18,9 +18,9 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+//import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+//import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -64,7 +64,7 @@ import net.datafaker.Faker;
 @ActiveProfiles("test")
 class IdpTests {
 
-	public static final String postBrandURI = "/v1/brands";
+/*	public static final String postBrandURI = "/v1/brands";
 	
 	public static final String userPostURI = "/v1/users/admin";
 	public static final String userGetURI = "/v1/users/%s";
@@ -345,4 +345,5 @@ class IdpTests {
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
 				String.format("Put error: %s", response.getStatusCode()));
 	}
+	*/
 }

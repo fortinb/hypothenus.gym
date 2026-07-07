@@ -42,6 +42,8 @@ public final class Payment extends BaseEntity  {
 	private String refundTransactionId;
 	private String refundReason;
 	private Instant refundedOn;
+	
+	private Object paymentServiceProviderRawResponse;
 
 	public Payment() {
 	}

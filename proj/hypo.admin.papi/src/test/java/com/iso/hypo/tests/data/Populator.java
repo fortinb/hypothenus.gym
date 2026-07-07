@@ -11,15 +11,16 @@ import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.web.servlet.client.RestTestClient;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.iso.hypo.admin.papi.dto.model.BrandDto;
+import com.iso.hypo.admin.papi.dto.model.MemberDto;
 import com.iso.hypo.admin.papi.dto.model.UserDto;
 import com.iso.hypo.admin.papi.dto.post.PostMemberDto;
 import com.iso.hypo.brand.domain.model.Coach;
@@ -58,7 +59,7 @@ public class Populator {
 	private final MemberRepository memberRepository;
 	private final CourseRepository courseRepository;
 	private final MembershipPlanRepository membershipPlanRepository;
-	private final TestRestTemplate testRestTemplate;
+	private final RestTestClient testRestTemplate;
 	private final ModelMapper modelMapper;
 	private final int port;
 	
@@ -69,7 +70,7 @@ public class Populator {
 					 MembershipPlanRepository membershipPlanRepository, 
 					 MemberRepository memberRepository,
 					 ModelMapper modelMapper,
-					 TestRestTemplate testRestTemplate,
+					 RestTestClient testRestTemplate,
 					 int port) {
 		this.gymRepository = gymRepository;
 		this.coachRepository = coachRepository;
@@ -453,7 +454,19 @@ public class Populator {
 		postDto.getPerson().setLastname(user.getLastname());
 		postDto.setPreferredGymUuid(preferredGymUuid);
 		
-		HttpEntity<PostMemberDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
+		MemberDto _ = 
+				this.testRestTemplate.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(memberPostURI, brand.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(MemberDto.class) 
+					.returnResult()
+				    .getResponseBody();
+		
+	/*	HttpEntity<PostMemberDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
 
 		// Act
 		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(memberPostURI, brand.getUuid())), port, null),
@@ -461,5 +474,7 @@ public class Populator {
 
 		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
 				String.format("Post error: %s", response.getStatusCode()));
+				
+				*/
 	}
 }

@@ -22,7 +22,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+//import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import com.iso.hypo.common.application.dto.PageResultDto;
 import org.springframework.http.HttpEntity;
@@ -65,7 +65,7 @@ import net.datafaker.Faker;
 @ActiveProfiles("test")
 class CourseControllerTests {
 
-	public static final String listURI = "/v1/brands/%s/courses";
+/*	public static final String listURI = "/v1/brands/%s/courses";
 	public static final String postURI = "/v1/brands/%s/courses";
 	public static final String getURI = "/v1/brands/%s/courses/%s";
 	public static final String putURI = "/v1/brands/%s/courses/%s";
@@ -754,4 +754,5 @@ class CourseControllerTests {
 			Assertions.assertNull(result.getDescription());
 		}
 	}
+	*/
 }

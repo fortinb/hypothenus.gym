@@ -261,7 +261,7 @@ public class FinancialInstrumentServiceImpl implements FinancialInstrumentServic
 		try {	
 			
 			// Verify card with file credentials
-			ReceiptRef receipt = paymentProviderPort.verify(paymentProviderConfig, creditCard);
+			ReceiptRef receipt = paymentProviderPort.verify(paymentProviderConfig, requestContext, creditCard);
 			
 			if (!receipt.isApproved()) {
 				throw new FinancialInstrumentException(requestContext.getTrackingNumber(), FinancialInstrumentException.CARD_VERIFICATION_FAILED,
@@ -280,7 +280,12 @@ public class FinancialInstrumentServiceImpl implements FinancialInstrumentServic
 
 			// Set financial instrument credit card information based on verification result
 			financialInstrument.getCreditCard().setIssuerId(receipt.getIssuerId());
-			financialInstrument.getCreditCard().setCardType(receipt.getCardType());		
+			financialInstrument.getCreditCard().setCardType(receipt.getCardType());	
+			
+			if (financialInstrument.getPaymentServiceProviderRawResponse() == null) {
+				financialInstrument.setPaymentServiceProviderRawResponse(new java.util.ArrayList<>());
+			}
+			financialInstrument.getPaymentServiceProviderRawResponse().add(receipt.getProviderRawResponse());
 			
 			return financialInstrument;
 		} catch (Exception e) {
@@ -300,11 +305,16 @@ public class FinancialInstrumentServiceImpl implements FinancialInstrumentServic
 						CreditCardRef creditCardRef) throws FinancialInstrumentException {
 		try {
 
-			ReceiptRef receipt = paymentProviderPort.register(paymentProviderConfig, creditCardRef);
+			ReceiptRef receipt = paymentProviderPort.register(paymentProviderConfig, requestContext, creditCardRef);
 			
-			financialInstrument.getCreditCard().setCardNumber(financialInstrument.getCreditCard().getCardNumber().replaceAll("\\w(?=\\w{4})", "*"));
+			financialInstrument.getCreditCard().setCardNumber(receipt.getCardNumberMasked());
 			financialInstrument.getCreditCard().setPermanentToken(receipt.getPermanentToken());
 
+			if (financialInstrument.getPaymentServiceProviderRawResponse() == null) {
+				financialInstrument.setPaymentServiceProviderRawResponse(new java.util.ArrayList<>());
+			}
+			financialInstrument.getPaymentServiceProviderRawResponse().add(receipt.getProviderRawResponse());
+			
 			return financialInstrument;
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}", financialInstrument != null ? financialInstrument.getBrandUuid() : null, e);

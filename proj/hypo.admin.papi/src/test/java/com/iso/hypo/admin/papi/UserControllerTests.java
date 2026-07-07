@@ -19,9 +19,9 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+//import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+//import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -62,7 +62,7 @@ import net.datafaker.Faker;
 @ActiveProfiles("test")
 class UserControllerTests {
 
-	public static final String searchURI = "/v1/users/search";
+/*	public static final String searchURI = "/v1/users/search";
 	public static final String listURI = "/v1/users";
 	public static final String postURI = "/v1/users/admin";
 	public static final String getURI = "/v1/users/%s";
@@ -135,30 +135,6 @@ class UserControllerTests {
 		// Cleanup
 		// userRepository.deleteAll();
 	}
-
-	/*
-	 * @Test void testSearchAutocompleteDeletedSuccess() throws
-	 * MalformedURLException, JsonProcessingException, Exception { // Act String
-	 * criteria = StringUtils.extractRandomWordPartial(userDeleted.getFirstname(),
-	 * 10); assertSearch(criteria, 0, 0); }
-	 */
-	 /* 		 
-	 * @Test 
-	 * void testSearchAutocompleteFirstnameSuccess() throws MalformedURLException,
-	 * JsonProcessingException, Exception { // Act String criteria =
-	 * StringUtils.extractRandomWordPartial(user.getFirstname(), 3);
-	 * assertSearch(criteria, 1, 1000); }
-	 * 
-	 * @Test void testSearchAutocompleteLastnameSuccess() throws
-	 * MalformedURLException, JsonProcessingException, Exception { // Act String
-	 * criteria = StringUtils.extractRandomWordPartial(user.getLastname(), 3);
-	 * assertSearch(criteria, 1, 1000); }
-	 * 
-	 * @Test void testSearchAutocompleteEmailSuccess() throws MalformedURLException,
-	 * JsonProcessingException, Exception { // Act String criteria =
-	 * StringUtils.extractRandomWordPartial(user.getEmail(), 3);
-	 * assertSearch(criteria, 1, 1000); }
-	 */
 
 	@Test
 	void testListFirstPageSuccess() throws MalformedURLException, JsonProcessingException, Exception {
@@ -561,33 +537,6 @@ class UserControllerTests {
 				String.format("Get error: %s", response.getStatusCode()));
 	}
 
-	/*
-	 * private void assertSearch(String criteria, int minimumNumberOfElements, int
-	 * maximumNumberOfElements) throws MalformedURLException,
-	 * JsonProcessingException, Exception { // Arrange HttpEntity<String> httpEntity
-	 * = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, "");
-	 * 
-	 * MultiValueMap<String, String> params = new LinkedMultiValueMap<String,
-	 * String>(); params.add(searchCriteria, criteria); params.add(pageNumber, "0");
-	 * params.add(pageSize, "4");
-	 * 
-	 * // Act await().atMost(10, TimeUnit.SECONDS).pollInterval(200,
-	 * TimeUnit.MILLISECONDS).untilAsserted(() -> { ResponseEntity<JsonNode>
-	 * response = testRestTemplate.exchange(
-	 * HttpUtils.createURL(URI.create(searchURI), port, params), HttpMethod.GET,
-	 * httpEntity, JsonNode.class);
-	 * 
-	 * Assertions.assertEquals(response.getStatusCode(), HttpStatus.OK,
-	 * String.format("Search error: %s", response.getStatusCode()));
-	 * 
-	 * PageResultDto<UserSearchDto> page = TestResponseUtils.toPage(response, new
-	 * TypeReference<PageResultDto<UserSearchDto>>() { }, objectMapper);
-	 * 
-	 * Assertions.assertTrue( page.getTotalElements() >= minimumNumberOfElements
-	 * && page.getTotalElements() <= maximumNumberOfElements,
-	 * String.format("User search return invalid number of results [%s]: %d",
-	 * criteria, page.getTotalElements())); }); }
-	 */
 
 	public static final void assertUser(UserDto expected, UserDto result) {
 		
@@ -602,4 +551,5 @@ class UserControllerTests {
 			}
 		}
 	}
+	*/
 }

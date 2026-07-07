@@ -23,11 +23,13 @@ public class OrderException extends DomainException {
 	public static final String ORDER_SUBMIT_FAILED = "1007";	
 	public static final String ORDER_PAYMENT_FAILED = "1008";
 	public static final String MEMBERSHIP_CREATION_FAILED  = "1009";
+	public static final String ORDER_ALREADY_EXISTS =  "1010";
 
 
 	private OrderDto orderDto;
 
 	private static final long serialVersionUID = 1L;
+
 
 	public OrderException(String trackingNumber, String code, String message, OrderDto orderDto) {
 		super(trackingNumber, code, message);

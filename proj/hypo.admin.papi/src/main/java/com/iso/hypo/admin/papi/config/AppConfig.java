@@ -7,8 +7,6 @@ import java.util.regex.Pattern;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
-import org.springframework.cloud.openfeign.support.PageJacksonModule;
-import org.springframework.cloud.openfeign.support.SortJacksonModule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -45,10 +43,13 @@ public class AppConfig {
 
 	@Bean
 	@Primary
-	ObjectMapper instanciateObjectMapper() {
+	JsonMapper instanciateObjectMapper() {
 
-		ObjectMapper mapper = JsonMapper.builder().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-				.addModule(new PageJacksonModule()).addModule(new SortJacksonModule()).addModule(new JavaTimeModule())
+		JsonMapper mapper = JsonMapper.builder()
+					.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+					.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false)
+				//.addModule(new PageJacksonModule()).addModule(new SortJacksonModule()).addModule(new JavaTimeModule())
+				.addModule(new JavaTimeModule())
 				.build();
 
 		return mapper;
