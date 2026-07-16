@@ -80,6 +80,7 @@ public class Order extends BaseEntity  {
 		this.memberUuid = memberUuid;
 		this.billingDetail = billingDetail;
 		this.orderNumber = orderNumber;
+		this.status = status;
 		this.processingState = processingState;
 		this.status = status;
 		this.items = items;

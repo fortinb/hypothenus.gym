@@ -118,9 +118,9 @@ public class OrderServiceImpl implements OrderService {
 			MemberRef member = resolveMember(brand.getUuid(), orderDto.getMemberUuid());
 
 			// Validate that the order is not already created.
-			if (order.getStatus() != OrderStatusEnum.idle || order.getOrderNumber() != null || order.getUuid() != null) {
+			if (order.getOrderNumber() != null || order.getUuid() != null) {
 				throw new OrderException(requestContext.getTrackingNumber(), OrderException.ORDER_ALREADY_EXISTS,
-						"Order already exists - status=" + order.getStatus());
+						"Order already exists - OrderNumber=" + order.getOrderNumber());
 			}
 			
 			// Initialize order

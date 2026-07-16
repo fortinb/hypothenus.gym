@@ -13,7 +13,7 @@ public class TestHeaderPreAuthenticationFilter extends RequestHeaderAuthenticati
 
 	public TestHeaderPreAuthenticationFilter() {
 		super();
-
+		this.setCheckForPrincipalChanges(true);
 	}
 
 	@Override

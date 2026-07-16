@@ -18,21 +18,15 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-//import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-//import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.client.RestTestClient;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iso.hypo.admin.papi.dto.model.BrandDto;
+import com.iso.hypo.admin.papi.dto.model.MemberDto;
 import com.iso.hypo.admin.papi.dto.model.UserDto;
 import com.iso.hypo.admin.papi.dto.post.PostBrandDto;
 import com.iso.hypo.admin.papi.dto.post.PostMemberDto;
@@ -54,9 +48,10 @@ import com.iso.hypo.membership.domain.model.enumeration.MemberTypeEnum;
 import com.iso.hypo.membership.domain.repository.MemberRepository;
 import com.iso.hypo.tests.http.HttpUtils;
 import com.iso.hypo.tests.security.Users;
-import com.iso.hypo.tests.utils.TestResponseUtils;
 
 import net.datafaker.Faker;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.json.JsonMapper.Builder;
 
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = "app.test.run=false")
@@ -64,7 +59,7 @@ import net.datafaker.Faker;
 @ActiveProfiles("test")
 class IdpTests {
 
-/*	public static final String postBrandURI = "/v1/brands";
+	public static final String postBrandURI = "/v1/brands";
 	
 	public static final String userPostURI = "/v1/users/admin";
 	public static final String userGetURI = "/v1/users/%s";
@@ -92,37 +87,50 @@ class IdpTests {
 	@Autowired
 	UserDtoMapper userMapper;
 	@Autowired
-	ObjectMapper objectMapper;
+	Builder objectMapper;
 	@Autowired
 	ModelMapper modelMapper;
 
 	private Faker faker = new Faker();
 
-	private RestTemplateBuilder restTemplateBuilder;
-	private TestRestTemplate testRestTemplate;
+	private RestTestClient restClient;
+	
 	private Brand brand;
 
 	public static final String codeBrand_1 = "Brand1";
 	
 	@BeforeAll
 	void arrange() {
-		restTemplateBuilder = new RestTemplateBuilder()
-				.additionalMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper));
-
-		testRestTemplate = new TestRestTemplate(restTemplateBuilder);
+		restClient = RestTestClient.bindToServer()
+		        .baseUrl("http://localhost:" + port)
+		        .configureMessageConverters(converters -> 
+		        	converters.addCustomConverter(
+		        			new JacksonJsonHttpMessageConverter(
+		        			objectMapper
+		        			.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+		        			.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false))))
+		        .build();
 
 		userRepository.deleteAll();
 
 		try {
-			PostBrandDto postBrandDto = modelMapper.map(BrandBuilder.build(faker.code().isbn10(),faker.company().name()), PostBrandDto.class);
-			HttpEntity<PostBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postBrandDto);
-
-			// Act
-			ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postBrandURI), port, null),
-					HttpMethod.POST, httpEntity, JsonNode.class);
+			PostBrandDto postDto = modelMapper.map(BrandBuilder.build(faker.code().isbn10(),faker.company().name()), PostBrandDto.class);
 			
-			BrandDto createdDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
-			brand = objectMapper.convertValue(createdDto, Brand.class);
+			// Act
+			BrandDto createdDto = 
+					this.restClient.post()
+						.uri(HttpUtils.createURL(URI.create(postBrandURI), port, null))				
+						.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+						.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+						.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+						.body(postDto)
+						.exchange() 
+					    .expectStatus().isCreated() 
+						.expectBody(BrandDto.class) 
+						.returnResult()
+					    .getResponseBody();
+			
+			brand = modelMapper.map(createdDto, Brand.class);
 		} catch (Exception e) {
 			 Assertions.fail(String.format("Error during creation of brand: %s", e.getMessage()));
 			 return;
@@ -140,131 +148,168 @@ class IdpTests {
 	void testPostBrandSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PostBrandDto postDto = modelMapper.map(BrandBuilder.build(faker.code().isbn10(),faker.company().name()), PostBrandDto.class);
-		HttpEntity<PostBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
-
+		
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postBrandURI), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
+		BrandDto _ = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(postBrandURI), port, null))				
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(BrandDto.class) 
+					.returnResult()
+				    .getResponseBody();
 	}
 	
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin" })
-	void testPostUserSuccess(String role, String userName) throws MalformedURLException, JsonProcessingException, Exception {
+	void testPostUserSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PostUserDto postDto = modelMapper.map(UserBuilder.build(), PostUserDto.class);
 		postDto.setRoles(new ArrayList<RoleEnum>());
 		postDto.getRoles().add(role.equals("admin") ? RoleEnum.admin : RoleEnum.manager);
-		HttpEntity<PostUserDto> httpEntity = HttpUtils.createHttpEntity(role, userName, postDto);
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(userPostURI), port, null), HttpMethod.POST, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
+		UserDto _ = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(userPostURI), port, null))			
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(UserDto.class) 
+					.returnResult()
+				    .getResponseBody();
 	}
 	
 	@Test
-	void testPutUserNotAllowed() throws MalformedURLException, JsonProcessingException, Exception {
+	void testPutUserRoleAssignmenNotAllowed() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PostUserDto postDto = modelMapper.map(UserBuilder.build(), PostUserDto.class);
 		postDto.setRoles(new ArrayList<RoleEnum>());
 		postDto.getRoles().add(RoleEnum.manager);
 		postDto.getRoles().add(RoleEnum.member);
-		HttpEntity<PostUserDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
 
-		// Act
-		ResponseEntity<JsonNode> responsePost = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(userPostURI), port, null), HttpMethod.POST, httpEntity, JsonNode.class);
-		Assertions.assertEquals(HttpStatus.CREATED, responsePost.getStatusCode(),
-				String.format("Post error: %s", responsePost.getStatusCode()));
-		
-		UserDto createdDto = TestResponseUtils.toDto(responsePost, UserDto.class, objectMapper);
-		
+		UserDto createdDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(userPostURI), port, null))			
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(UserDto.class) 
+					.returnResult()
+				    .getResponseBody();
+
 		PutUserDto putDto = modelMapper.map(createdDto, PutUserDto.class);
 		putDto.getRoles().add(RoleEnum.admin);
 
 		// Act
-		HttpEntity<PutUserDto> putHttpEntity = HttpUtils.createHttpEntity(Roles.Manager, Users.Manager, putDto);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(userPutURI, createdDto.getUuid())), port, null),
-				HttpMethod.PUT, putHttpEntity, JsonNode.class);
+		UserDto updatedDto = 
+				this.restClient.put()
+					.uri(HttpUtils.createURL(URI.create(String.format(userPutURI, createdDto.getUuid())), port, null))		
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Manager, Users.Manager)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(putDto)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(UserDto.class) 
+					.returnResult()
+				    .getResponseBody();
 		
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
-		
-		UserDto updatedDto = TestResponseUtils.toDto(response, UserDto.class, objectMapper);
+		// Assert
 		Assertions.assertTrue(updatedDto.getMessages().getFirst().getCode().equals(UserException.ROLE_ASSIGNMENT_NOT_ALLOWED));
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testGetUserSuccess(String role, String userName) throws MalformedURLException, JsonProcessingException, Exception {
+	void testGetUserSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PostUserDto postDto = modelMapper.map(UserBuilder.build(), PostUserDto.class);
 		postDto.setRoles(new ArrayList<RoleEnum>());
 		postDto.getRoles().add(role.equals("admin") ? RoleEnum.admin : RoleEnum.manager);
-		HttpEntity<PostUserDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
-
-		ResponseEntity<JsonNode> responsePost = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(userPostURI), port, null), HttpMethod.POST, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.CREATED, responsePost.getStatusCode(),
-				String.format("Post error: %s", responsePost.getStatusCode()));
-
-		UserDto createdDto = TestResponseUtils.toDto(responsePost, UserDto.class, objectMapper);
+		
+		UserDto createdDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(userPostURI), port, null))			
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(UserDto.class) 
+					.returnResult()
+				    .getResponseBody();
 
 		// Act
-		httpEntity = HttpUtils.createHttpEntity(role, userName, null);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(userGetURI, createdDto.getUuid())), port, null),
-				HttpMethod.GET, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Get error: %s", response.getStatusCode()));
+		UserDto fetchedDto = 
+				this.restClient.get()
+					.uri(HttpUtils.createURL(URI.create(String.format(userGetURI, createdDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(UserDto.class) 
+					.returnResult()
+				    .getResponseBody();
 		
-		UserDto userDto = TestResponseUtils.toDto(response, UserDto.class, objectMapper);
-		Assertions.assertTrue(userDto.getFirstname().equals(createdDto.getFirstname()));
-		Assertions.assertTrue(userDto.getLastname().equals(createdDto.getLastname()));
-		Assertions.assertTrue(userDto.getEmail().equals(createdDto.getEmail()));
-		Assertions.assertTrue(userDto.getRoles().contains(RoleEnum.valueOf(role)));
+		// Assert
+		Assertions.assertTrue(fetchedDto.getFirstname().equals(createdDto.getFirstname()));
+		Assertions.assertTrue(fetchedDto.getLastname().equals(createdDto.getLastname()));
+		Assertions.assertTrue(fetchedDto.getEmail().equals(createdDto.getEmail()));
+		Assertions.assertTrue(fetchedDto.getRoles().contains(RoleEnum.valueOf(role)));
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin" })
-	void testPutUserSuccess(String role, String userName) throws JsonProcessingException, MalformedURLException {
+	void testPutUserSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		PostUserDto postDto = modelMapper.map(UserBuilder.build(), PostUserDto.class);
 		postDto.setRoles(new ArrayList<RoleEnum>());
 		postDto.getRoles().add(RoleEnum.admin);
 		postDto.getRoles().add(RoleEnum.manager);
-		HttpEntity<PostUserDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
-
-		ResponseEntity<JsonNode> responsePost = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(userPostURI), port, null), HttpMethod.POST, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.CREATED, responsePost.getStatusCode(),
-				String.format("Post error: %s", responsePost.getStatusCode()));
 		
-		UserDto createdDto = TestResponseUtils.toDto(responsePost, UserDto.class, objectMapper);
-		
+		UserDto createdDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(userPostURI), port, null))			
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(UserDto.class) 
+					.returnResult()
+				    .getResponseBody();
+
 		PutUserDto putDto = modelMapper.map(createdDto, PutUserDto.class);
 		putDto.getRoles().add(RoleEnum.member);
 		putDto.getRoles().remove(RoleEnum.manager);
 
 		// Act
-		HttpEntity<PutUserDto> putHttpEntity = HttpUtils.createHttpEntity(role, userName, putDto);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(userPutURI, createdDto.getUuid())), port, null),
-				HttpMethod.PUT, putHttpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Put error: %s", response.getStatusCode()));
+		UserDto updatedDto = 
+				this.restClient.put()
+					.uri(HttpUtils.createURL(URI.create(String.format(userPutURI, createdDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(putDto)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(UserDto.class) 
+					.returnResult()
+				    .getResponseBody();
 		
-		UserDto updatedDto = TestResponseUtils.toDto(response, UserDto.class, objectMapper);
+		// Assert
 		Assertions.assertTrue(updatedDto.getRoles().contains(RoleEnum.admin));
 		Assertions.assertTrue(updatedDto.getRoles().contains(RoleEnum.member));
 		Assertions.assertFalse(updatedDto.getRoles().contains(RoleEnum.manager));
@@ -275,29 +320,37 @@ class IdpTests {
 	void testDeleteUserSuccess() throws JsonProcessingException, MalformedURLException {
 		// Arrange
 		PostUserDto postDto = modelMapper.map(UserBuilder.build(), PostUserDto.class);
-		HttpEntity<PostUserDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
-
-		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(userPostURI), port, null), HttpMethod.POST, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
-
-		UserDto userToDeleteDto = TestResponseUtils.toDto(response, UserDto.class, objectMapper);
+		
+		UserDto createdDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(userPostURI), port, null))			
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(UserDto.class) 
+					.returnResult()
+				    .getResponseBody();
 
 		// Act
 		await()
         .atMost(20, TimeUnit.SECONDS)
         .pollInterval(500, TimeUnit.MILLISECONDS)
         .untilAsserted(() -> {
-        	HttpEntity<PostUserDto> httpEntityDelete = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-        	ResponseEntity<JsonNode> responseDelete = testRestTemplate.exchange(
-    				HttpUtils.createURL(URI.create(String.format(userDeleteURI, userToDeleteDto.getUuid())), port, null),
-    				HttpMethod.DELETE, httpEntityDelete, JsonNode.class);
-
-    		Assertions.assertEquals(HttpStatus.ACCEPTED, responseDelete.getStatusCode(),
-    				String.format("User delete error: %s", responseDelete.getStatusCode()));
+        	
+    		// Act
+    		UserDto _ = 
+    				this.restClient.delete()
+    					.uri(HttpUtils.createURL(URI.create(String.format(userDeleteURI, createdDto.getUuid())), port, null))
+    					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+    					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+    					.exchange() 
+    				    .expectStatus().isAccepted() 
+    					.expectBody(UserDto.class) 
+    					.returnResult()
+    				    .getResponseBody(); 
 			});
 	}
 
@@ -306,14 +359,20 @@ class IdpTests {
 		// Arrange
 		PostMemberDto postDto = modelMapper.map(MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular), PostMemberDto.class);
 		postDto.setPassword("admin.test.1");
-		HttpEntity<PostMemberDto> httpEntityMember = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
-
+		
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(memberPostURI, brand.getUuid())), port, null),
-				HttpMethod.POST, httpEntityMember, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
+		MemberDto _ = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(memberPostURI, brand.getUuid())), port, null))	
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(MemberDto.class) 
+					.returnResult()
+				    .getResponseBody();
 	}
 	
 	@ParameterizedTest
@@ -322,28 +381,37 @@ class IdpTests {
 
 		PostMemberDto postDto = modelMapper.map(MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular), PostMemberDto.class);
 		postDto.setPassword("admin.test.1");
-		HttpEntity<PostMemberDto> httpEntityMember = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
-
-		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(memberPostURI, brand.getUuid())), port, null),
-				HttpMethod.POST, httpEntityMember, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
 		
-		PutMemberDto putDto = TestResponseUtils.toDto(response, PutMemberDto.class, objectMapper);
+		MemberDto createdDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(memberPostURI, brand.getUuid())), port, null))		
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(MemberDto.class) 
+					.returnResult()
+				    .getResponseBody();
+		
+		PutMemberDto putDto = modelMapper.map(createdDto, PutMemberDto.class);
 		putDto.getPerson().setEmail(faker.internet().emailAddress());
 		putDto.getPerson().setFirstname(putDto.getPerson().getFirstname() + " - updated");
 		putDto.getPerson().setLastname(putDto.getPerson().getLastname() + " - updated");
 		
 		// Act
-		HttpEntity<PutMemberDto> httpPutEntity = HttpUtils.createHttpEntity(role, user, putDto);
-		response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(memberPutURI, putDto.getBrandUuid(), putDto.getUuid())), port, null),
-				HttpMethod.PUT, httpPutEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Put error: %s", response.getStatusCode()));
+		MemberDto _ = 
+				this.restClient.put()
+					.uri(HttpUtils.createURL(URI.create(String.format(memberPutURI, putDto.getBrandUuid(), putDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(putDto)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(MemberDto.class) 
+					.returnResult()
+				    .getResponseBody();
 	}
-	*/
 }

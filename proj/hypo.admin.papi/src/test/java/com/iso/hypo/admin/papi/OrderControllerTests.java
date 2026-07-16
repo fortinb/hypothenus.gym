@@ -17,28 +17,24 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-//import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.client.RestTestClient;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.iso.hypo.admin.papi.dto.ErrorDto;
 import com.iso.hypo.admin.papi.dto.model.OrderDto;
 import com.iso.hypo.admin.papi.dto.order.BillingDetailDto;
 import com.iso.hypo.admin.papi.dto.order.DiscountDetailDto;
 import com.iso.hypo.admin.papi.dto.order.OrderItemDto;
 import com.iso.hypo.admin.papi.dto.order.PaymentDetailDto;
 import com.iso.hypo.admin.papi.dto.order.ShippingDetailDto;
+import com.iso.hypo.admin.papi.dto.patch.PatchOrderDto;
 import com.iso.hypo.admin.papi.dto.post.PostFinancialInstrumentDto;
 import com.iso.hypo.admin.papi.dto.post.PostOrderDto;
 import com.iso.hypo.admin.papi.dto.put.PutOrderDto;
@@ -69,9 +65,10 @@ import com.iso.hypo.sale.domain.model.enumeration.OrderStatusEnum;
 import com.iso.hypo.sale.domain.repository.OrderRepository;
 import com.iso.hypo.tests.http.HttpUtils;
 import com.iso.hypo.tests.security.Users;
-import com.iso.hypo.tests.utils.TestResponseUtils;
 
 import net.datafaker.Faker;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.json.JsonMapper.Builder;
 
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = "app.test.run=true")
@@ -79,7 +76,7 @@ import net.datafaker.Faker;
 @ActiveProfiles("test")
 class OrderControllerTests {
 
-/*	public static final String listURI    = "/v1/brands/%s/members/%s/orders";
+	public static final String listURI    = "/v1/brands/%s/members/%s/orders";
 	public static final String getURI     = "/v1/brands/%s/members/%s/orders/%s";
 	public static final String postURI    = "/v1/brands/%s/members/%s/orders";
 	public static final String putURI     = "/v1/brands/%s/members/%s/orders/%s";
@@ -111,14 +108,15 @@ class OrderControllerTests {
 	@Autowired
 	OrderRepository orderRepository;
 	@Autowired
-	ObjectMapper objectMapper;
+	Builder objectMapper;
 	@Autowired
 	ModelMapper modelMapper;
 
 
 	private Faker faker = new Faker();
 
-	private TestRestTemplate testRestTemplate = new TestRestTemplate();
+	private RestTestClient restClient;
+	
 	private Member member;
 	private Brand brand;
 	private MembershipPlan membershipPlan1;
@@ -128,7 +126,16 @@ class OrderControllerTests {
 
 	@BeforeAll
 	void arrange() {
-		testRestTemplate.getRestTemplate().setRequestFactory(new HttpComponentsClientHttpRequestFactory());
+    	restClient = RestTestClient.bindToServer()
+		        .baseUrl("http://localhost:" + port)
+		        .configureMessageConverters(converters -> 
+		        	converters.addCustomConverter(
+		        			new JacksonJsonHttpMessageConverter(
+		        			objectMapper
+		        			.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+		        			.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false))))
+		        .build();
+    	
 		orderRepository.deleteAll();
 		memberRepository.deleteAll();
 		membershipPlanRepository.deleteAll();
@@ -163,66 +170,27 @@ class OrderControllerTests {
 	@Test
 	void testListFirstPageSuccess() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		HttpEntity<String> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 		params.add(pageNumber, "0");
 		params.add(pageSize, "2");
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(listURI, brand.getUuid(), member.getUuid())), port, params),
-				HttpMethod.GET, httpEntity, JsonNode.class);
-
+		PageResultDto<OrderDto> page = 
+				this.restClient.get()
+					.uri(HttpUtils.createURL(URI.create(String.format(listURI, brand.getUuid(), member.getUuid())), port, params))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(new ParameterizedTypeReference<PageResultDto<OrderDto>>() {}) 
+					.returnResult()
+				    .getResponseBody(); 
+		
 		// Assert
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("List error: %s", response.getStatusCode()));
-
-		PageResultDto<OrderDto> page = TestResponseUtils.toPage(response,
-				new TypeReference<PageResultDto<OrderDto>>() {}, objectMapper);
 		Assertions.assertEquals(0, page.getPageNumber(),
 				String.format("Order list first page number invalid: %d", page.getPageNumber()));
 		Assertions.assertEquals(2, page.getContent().size(),
 				String.format("Order list first page number of elements invalid: %d", page.getTotalElements()));
-	}
-
-	@Test
-	void testGetSuccess() throws MalformedURLException, JsonProcessingException, Exception {
-		// Arrange
-		Order order = OrderBuilder.build(brand.getUuid(), member.getUuid(), membershipPlans);
-		order.setActive(true);
-		orderRepository.save(order);
-
-		HttpEntity<String> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-
-		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(getURI, brand.getUuid(), member.getUuid(), order.getUuid())), port, null),
-				HttpMethod.GET, httpEntity, JsonNode.class);
-
-		// Assert
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Get error: %s", response.getStatusCode()));
-
-		OrderDto result =
-				TestResponseUtils.toDto(response, OrderDto.class, objectMapper);
-		
-		assertOrder(modelMapper.map(order, OrderDto.class), result);
-	}
-
-	@Test
-	void testGetFailureNotFound() throws MalformedURLException, JsonProcessingException, Exception {
-		// Arrange
-		HttpEntity<String> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-
-		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(getURI, brand.getUuid(), member.getUuid(), faker.code().isbn10())), port, null),
-				HttpMethod.GET, httpEntity, JsonNode.class);
-
-		// Assert
-		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
-				String.format("Get error: %s", response.getStatusCode()));
 	}
 
 	@ParameterizedTest
@@ -232,74 +200,109 @@ class OrderControllerTests {
 		Member postMember = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
 		memberRepository.save(postMember);
 
-		Order postOrder = OrderBuilder.build(brand.getUuid(), postMember.getUuid(), membershipPlans);
-		PostOrderDto postOrderDto = modelMapper.map(postOrder, PostOrderDto.class);
-		HttpEntity<PostOrderDto> httpEntity = HttpUtils.createHttpEntity(role, user, postOrderDto);
-
-		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postURI, brand.getUuid(), postMember.getUuid())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
-
-		// Assert
-		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
-
-		OrderDto createdDto =
-				TestResponseUtils.toDto(response, OrderDto.class, objectMapper);
+		PostOrderDto postDto = modelMapper.map(OrderBuilder.build(brand.getUuid(), postMember.getUuid(), membershipPlans), PostOrderDto.class);
 		
-		assertOrder(modelMapper.map(postOrderDto, OrderDto.class), createdDto);
+		// Act
+		OrderDto createdDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postURI, brand.getUuid(), postMember.getUuid())), port, null))		
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(OrderDto.class) 
+					.returnResult()
+				    .getResponseBody();
+		
+		// Assert
+		assertOrder(modelMapper.map(postDto, OrderDto.class), createdDto);
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis", "member, Guillaume Fortin" })
-	void testPostFailureForbiddenBrandMismatch(String role, String user)
-			throws MalformedURLException, JsonProcessingException, Exception {
+	void testPostFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		Member postMember = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
-		memberRepository.save(postMember);
-
-		PostOrderDto postDto = modelMapper.map(
-				OrderBuilder.build(brand.getUuid(), postMember.getUuid(), membershipPlans),
-				PostOrderDto.class);
-		HttpEntity<PostOrderDto> httpEntity = HttpUtils.createHttpEntity(role, user, postDto);
+		PostOrderDto postDto = modelMapper.map(OrderBuilder.build(brand.getUuid(), faker.code().isbn10(), membershipPlans), PostOrderDto.class);
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postURI, faker.code().isbn10(), postMember.getUuid())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
-
-		// Assert
-		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
+		ErrorDto _ = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postURI, faker.code().isbn10(), postDto.getMemberUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isForbidden() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis", "member, Guillaume Fortin" })
-	void testPostFailureForbiddenMemberMismatch(String role, String user)
-			throws MalformedURLException, JsonProcessingException, Exception {
+	void testPostFailureForbiddenMemberMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		Member postMember = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
-		memberRepository.save(postMember);
-
-		PostOrderDto postDto = modelMapper.map(
-				OrderBuilder.build(brand.getUuid(), postMember.getUuid(), membershipPlans),
-				PostOrderDto.class);
-		HttpEntity<PostOrderDto> httpEntity = HttpUtils.createHttpEntity(role, user, postDto);
+		PostOrderDto postDto = modelMapper.map(OrderBuilder.build(brand.getUuid(), faker.code().isbn10(), membershipPlans), PostOrderDto.class);
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postURI, brand.getUuid(), faker.code().isbn10())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
+		ErrorDto _ = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postURI, brand.getUuid(), faker.code().isbn10())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isForbidden() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
+	}
+	
+	@Test
+	void testGetSuccess() throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		Order order = OrderBuilder.build(brand.getUuid(), member.getUuid(), membershipPlans);
+		order.setActive(true);
+		orderRepository.save(order);
 
+		// Act
+		OrderDto fetchedDto = 
+				this.restClient.get()
+					.uri(HttpUtils.createURL(URI.create(String.format(getURI, brand.getUuid(), member.getUuid(), order.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(OrderDto.class) 
+					.returnResult()
+				    .getResponseBody();
+		
 		// Assert
-		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
+		assertOrder(modelMapper.map(order, OrderDto.class), fetchedDto);
+	}
+
+	@Test
+	void testGetFailureNotFound() throws MalformedURLException, JsonProcessingException, Exception {
+		// Act
+    	ErrorDto _ = 
+				this.restClient.get()
+					.uri(HttpUtils.createURL(URI.create(String.format(getURI, brand.getUuid(), member.getUuid(), faker.code().isbn10())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isNotFound() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 	}
 	
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis", "member, Guillaume Fortin" })
-	void testUpdateSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
+	void testPutSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		Member postMember = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
 		memberRepository.save(postMember);
@@ -318,32 +321,53 @@ class OrderControllerTests {
 		orderToUpdate.setDiscountDetail(OrderBuilder.buildDiscountDetail());
 		orderToUpdate.setPaymentDetail(OrderBuilder.buildPaymentDetail());
 		orderToUpdate.setItems(OrderBuilder.buildItems(List.of(modelMapper.map(membershipPlan, com.iso.hypo.sale.domain.model.MembershipPlan.class))));
-		PutOrderDto putOrderDto = modelMapper.map(orderToUpdate, PutOrderDto.class);
+		PutOrderDto putDto = modelMapper.map(orderToUpdate, PutOrderDto.class);
 		
-		List<OrderItemDto> items = orderToUpdate.getItems().stream()
-				.map(item -> modelMapper.map(item, OrderItemDto.class))
-				.toList();
+		List<OrderItemDto> items = orderToUpdate.getItems().stream().map(item -> modelMapper.map(item, OrderItemDto.class)).toList();
 		orderToUpdateDto.setItems(items);
 		orderToUpdateDto.setBillingDetail(modelMapper.map(orderToUpdate.getBillingDetail(), BillingDetailDto.class));
 		orderToUpdateDto.setShippingDetail(modelMapper.map(orderToUpdate.getShippingDetail(), ShippingDetailDto.class));
 		orderToUpdateDto.setDiscountDetail(modelMapper.map(orderToUpdate.getDiscountDetail(), DiscountDetailDto.class));
 		orderToUpdateDto.setPaymentDetail(modelMapper.map(orderToUpdate.getPaymentDetail(), PaymentDetailDto.class));
 		
-		HttpEntity<PutOrderDto> httpEntity = HttpUtils.createHttpEntity(role, user, putOrderDto);
+	//	HttpEntity<PutOrderDto> httpEntity = HttpUtils.createHttpEntity(role, user, putOrderDto);
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, brand.getUuid(), postMember.getUuid(), orderToUpdate.getUuid())), port, null),
-				HttpMethod.PUT, httpEntity, JsonNode.class);
-
+		OrderDto updatedDto = 
+				this.restClient.put()
+					.uri(HttpUtils.createURL(URI.create(String.format(putURI, brand.getUuid(), postMember.getUuid(), orderToUpdate.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(putDto)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(OrderDto.class) 
+					.returnResult()
+				    .getResponseBody();
+		
 		// Assert
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Order submit error: %s", response.getStatusCode()));
-		
-		OrderDto updatedDto =
-				TestResponseUtils.toDto(response, OrderDto.class, objectMapper);
-		
 		assertOrder(modelMapper.map(orderToUpdateDto, OrderDto.class), updatedDto);
+	}
+	
+	@Test
+	void testPutFailureNotFound() throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		PutOrderDto putDto = modelMapper.map(OrderBuilder.build(brand.getUuid(), member.getUuid(), membershipPlans), PutOrderDto.class);
+
+		// Act
+		ErrorDto _ = 
+				this.restClient.put()
+					.uri(HttpUtils.createURL(URI.create(String.format(putURI, brand.getUuid(), putDto.getMemberUuid(), putDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(putDto)
+					.exchange() 
+				    .expectStatus().isNotFound() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 	}
 	
 	@ParameterizedTest
@@ -380,24 +404,46 @@ class OrderControllerTests {
 				.toList();
 		orderToUpdateDto.setItems(items);
 		
-		PutOrderDto putOrderDto = modelMapper.map(orderToUpdate, PutOrderDto.class);
-		
-		HttpEntity<PutOrderDto> httpEntity = HttpUtils.createHttpEntity(role, user, putOrderDto);
+		PatchOrderDto patchDto = modelMapper.map(orderToUpdate, PatchOrderDto.class);
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(patchURI, brand.getUuid(), postMember.getUuid(), orderToUpdate.getUuid())), port, null),
-				HttpMethod.PATCH, httpEntity, JsonNode.class);
-
-		// Assert
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Order submit error: %s", response.getStatusCode()));
-		
-		OrderDto updatedDto =
-				TestResponseUtils.toDto(response, OrderDto.class, objectMapper);
-		
-		assertOrder(modelMapper.map(orderToUpdateDto, OrderDto.class), updatedDto);
+		OrderDto patchedDto = 
+				this.restClient.patch()
+					.uri(HttpUtils.createURL(URI.create(String.format(patchURI, brand.getUuid(), postMember.getUuid(), orderToUpdate.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(patchDto)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(OrderDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
+       
+        // Assert
+		assertOrder(modelMapper.map(orderToUpdateDto, OrderDto.class), patchedDto);
 	}
+	
+	@Test
+	void testPatchFailureNotFound() throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		PatchOrderDto putDto = modelMapper.map(OrderBuilder.build(brand.getUuid(), member.getUuid(), membershipPlans), PatchOrderDto.class);
+				
+		// Act
+		ErrorDto _ = 
+				this.restClient.put()
+					.uri(HttpUtils.createURL(URI.create(String.format(patchURI, brand.getUuid(), putDto.getMemberUuid(), putDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(putDto)
+					.exchange() 
+				    .expectStatus().isNotFound() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
+	}
+	
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis", "member, Guillaume Fortin" })
 	void testSubmitSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
@@ -405,57 +451,60 @@ class OrderControllerTests {
 		Member member = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
 		memberRepository.save(member);
 		
-		PostFinancialInstrumentDto postFinancialInstrumentDto = modelMapper
-				.map(FinancialInstrumentBuilder.build(brand.getUuid(), member), PostFinancialInstrumentDto.class);
-		HttpEntity<PostFinancialInstrumentDto> httpEntity = HttpUtils.createHttpEntity(role, user, postFinancialInstrumentDto);
+		PostFinancialInstrumentDto postFinancialInstrumentDto = modelMapper.map(FinancialInstrumentBuilder.build(brand.getUuid(), member), PostFinancialInstrumentDto.class);		
 		postFinancialInstrumentDto.getCreditCard().setCvd("123");
 		postFinancialInstrumentDto.getCreditCard().setZipCode("H3Z2Y7");
 		postFinancialInstrumentDto.getCreditCard().setCardHolderName("John Doe");
 
-		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils
-				.createURL(URI.create(String.format(financialInstrumentPostURI, brand.getUuid(), member.getUuid())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
+		FinancialInstrumentDto createdFinancialInstrumentDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(financialInstrumentPostURI, brand.getUuid(), member.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postFinancialInstrumentDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(FinancialInstrumentDto.class) 
+					.returnResult()
+				    .getResponseBody();
 
-		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
-
-		FinancialInstrumentDto createdFinancialInstrumentDto = TestResponseUtils.toDto(response, FinancialInstrumentDto.class,	objectMapper);
-		
 		Order postOrder = OrderBuilder.build(brand.getUuid(), member.getUuid(), membershipPlans);
 		postOrder.getPaymentDetail().setFinancialInstrumentUuid(createdFinancialInstrumentDto.getUuid());
 		
-		PostOrderDto postOrderDto = modelMapper.map(postOrder, PostOrderDto.class);
-		HttpEntity<PostOrderDto> httpEntityOrder = HttpUtils.createHttpEntity(role, user, postOrderDto);
+		PostOrderDto postDto = modelMapper.map(postOrder, PostOrderDto.class);
 
-		// Act
-		response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postURI, brand.getUuid(), member.getUuid())), port, null),
-				HttpMethod.POST, httpEntityOrder, JsonNode.class);
-
-		// Assert
-		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
-
-		OrderDto createdOrderDto =
-				TestResponseUtils.toDto(response, OrderDto.class, objectMapper);
+		OrderDto createdDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postURI, brand.getUuid(), member.getUuid())), port, null))		
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(OrderDto.class) 
+					.returnResult()
+				    .getResponseBody();
 		
-		PutOrderDto putOrderDto = modelMapper.map(createdOrderDto, PutOrderDto.class);
-		HttpEntity<PutOrderDto> httpEntitySubmit = HttpUtils.createHttpEntity(role, user, putOrderDto);
+		PutOrderDto putOrderDto = modelMapper.map(createdDto, PutOrderDto.class);
 
 		// Act
-		response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(submitURI, brand.getUuid(), member.getUuid(), putOrderDto.getUuid())), port, null),
-				HttpMethod.POST, httpEntitySubmit, JsonNode.class);
-
+		OrderDto submittedDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(submitURI, brand.getUuid(), member.getUuid(), putOrderDto.getUuid())), port, null))	
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(putOrderDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(OrderDto.class) 
+					.returnResult()
+				    .getResponseBody();
+		
 		// Assert
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Order submit error: %s", response.getStatusCode()));
-
-		OrderDto submittedDto =
-				TestResponseUtils.toDto(response,OrderDto.class, objectMapper);
-		Assertions.assertEquals(OrderStatusEnumDto.completed, submittedDto.getStatus(),
-				"Order status should be completed");
+		Assertions.assertEquals(OrderStatusEnumDto.completed, submittedDto.getStatus(),	"Order status should be completed");
 		Assertions.assertNotNull(submittedDto.getSubmittedOn(), "SubmittedOn should not be null");
 	}
 
@@ -463,95 +512,84 @@ class OrderControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis", "member, Guillaume Fortin" })
 	void testSubmitFailureNotFound(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		Order orderToSubmit = OrderBuilder.build(brand.getUuid(), member.getUuid(), membershipPlans);
-		orderToSubmit.setActive(true);
-		
-		PutOrderDto putOrderDto = modelMapper.map(orderToSubmit, PutOrderDto.class);
-		HttpEntity<PutOrderDto> httpEntity = HttpUtils.createHttpEntity(role, user, putOrderDto);
+		PutOrderDto putDto = modelMapper.map(OrderBuilder.build(brand.getUuid(), member.getUuid(), membershipPlans), PutOrderDto.class);
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(submitURI, brand.getUuid(), member.getUuid(), orderToSubmit.getUuid())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
-
-		// Assert
-		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
-				String.format("Order submit error: %s", response.getStatusCode()));
+		ErrorDto _ = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(submitURI, brand.getUuid(), member.getUuid(), putDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(putDto)
+					.exchange() 
+				    .expectStatus().isNotFound() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis", "member, Guillaume Fortin" })
-	void testSubmitFailureForbiddenBrandMismatch(String role, String user)
-			throws MalformedURLException, JsonProcessingException, Exception {
+	void testSubmitFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		Member postMember = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
-		memberRepository.save(postMember);
-		
-		Order orderToSubmit = OrderBuilder.build(brand.getUuid(), postMember.getUuid(), membershipPlans);
-		orderToSubmit.setActive(true);
-		orderRepository.save(orderToSubmit);
-		
-		PutOrderDto putOrderDto = modelMapper.map(orderToSubmit, PutOrderDto.class);
-		HttpEntity<PutOrderDto> httpEntity = HttpUtils.createHttpEntity(role, user, putOrderDto);
+		PutOrderDto putDto = modelMapper.map(OrderBuilder.build(brand.getUuid(), member.getUuid(), membershipPlans), PutOrderDto.class);
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(submitURI,  faker.code().isbn10(), postMember.getUuid(), orderToSubmit.getUuid())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
-
-		// Assert
-		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
+		ErrorDto _ = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(submitURI,  faker.code().isbn10(), putDto.getMemberUuid(), putDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(putDto)
+					.exchange() 
+				    .expectStatus().isForbidden() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis", "member, Guillaume Fortin" })
-	void testSubmitFailureForbiddenMemberMismatch(String role, String user)
-			throws MalformedURLException, JsonProcessingException, Exception {
+	void testSubmitFailureForbiddenMemberMismatch(String role, String user)	throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		Member postMember = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
-		memberRepository.save(postMember);
-		
-		Order orderToSubmit = OrderBuilder.build(brand.getUuid(), postMember.getUuid(), membershipPlans);
-		orderToSubmit.setActive(true);
-		orderRepository.save(orderToSubmit);
-		
-		PutOrderDto putOrderDto = modelMapper.map(orderToSubmit, PutOrderDto.class);
-		HttpEntity<PutOrderDto> httpEntity = HttpUtils.createHttpEntity(role, user, putOrderDto);
+		PutOrderDto putDto = modelMapper.map(OrderBuilder.build(brand.getUuid(), member.getUuid(), membershipPlans), PutOrderDto.class);
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(submitURI, brand.getUuid(), faker.code().isbn10(), orderToSubmit.getUuid())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
-
-		// Assert
-		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
+		ErrorDto _ = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(submitURI, brand.getUuid(), faker.code().isbn10(), putDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(putDto)
+					.exchange() 
+				    .expectStatus().isForbidden() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody();
 	}
 	
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis", "member, Guillaume Fortin" })
-	void testSubmitFailureForbiddenOrderMismatch(String role, String user)
-			throws MalformedURLException, JsonProcessingException, Exception {
+	void testSubmitFailureForbiddenOrderMismatch(String role, String user)	throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		Member postMember = MemberBuilder.build(brand.getUuid(), MemberTypeEnum.regular);
-		memberRepository.save(postMember);
-		
-		Order orderToSubmit = OrderBuilder.build(brand.getUuid(), postMember.getUuid(), membershipPlans);
-		orderToSubmit.setActive(true);
-		orderRepository.save(orderToSubmit);
-		
-		PutOrderDto putOrderDto = modelMapper.map(orderToSubmit, PutOrderDto.class);
-		HttpEntity<PutOrderDto> httpEntity = HttpUtils.createHttpEntity(role, user, putOrderDto);
+		PutOrderDto putDto = modelMapper.map(OrderBuilder.build(brand.getUuid(), member.getUuid(), membershipPlans), PutOrderDto.class);
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(submitURI, brand.getUuid(), member.getUuid(), faker.code().isbn10())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
-
-		// Assert
-		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
+		ErrorDto _ = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(submitURI, brand.getUuid(), member.getUuid(), faker.code().isbn10())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(putDto)
+					.exchange() 
+				    .expectStatus().isForbidden() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody();
 	}
 	
 	@ParameterizedTest
@@ -567,35 +605,37 @@ class OrderControllerTests {
 		orderRepository.save(orderToCancel);
 
 		// Act
-		HttpEntity<Void> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(cancelURI, brand.getUuid(), postMember.getUuid(), orderToCancel.getUuid())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
-
+		OrderDto cancelledDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(cancelURI, brand.getUuid(), postMember.getUuid(), orderToCancel.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(OrderDto.class) 
+					.returnResult()
+				    .getResponseBody();
+		
 		// Assert
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Order cancel error: %s", response.getStatusCode()));
-
-		OrderDto cancelledDto =
-				TestResponseUtils.toDto(response, OrderDto.class, objectMapper);
-		Assertions.assertEquals(OrderStatusEnumDto.cancelled, cancelledDto.getStatus(),
-				"Order status should be cancelled");
+		Assertions.assertEquals(OrderStatusEnumDto.cancelled, cancelledDto.getStatus(),	"Order status should be cancelled");
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis", "member, Guillaume Fortin" })
 	void testCancelFailureNotFound(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		HttpEntity<Void> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-
-		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(cancelURI, brand.getUuid(), member.getUuid(), faker.code().isbn10())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
-
-		// Assert
-		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
-				String.format("Order cancel error: %s", response.getStatusCode()));
+		ErrorDto _ = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(cancelURI, brand.getUuid(), member.getUuid(), faker.code().isbn10())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isNotFound() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 	}
 
 	@Test
@@ -611,28 +651,28 @@ class OrderControllerTests {
 		Membership membership = MembershipBuilder.build(brand.getUuid(), postMember.getUuid(), membershipPlan);
 		membership = membershipRepository.save(membership);
 		
-		//membershipRepository
-		Order postOrder = OrderBuilder.build(brand.getUuid(), postMember.getUuid(), List.of(modelMapper.map(membershipPlan, com.iso.hypo.sale.domain.model.MembershipPlan.class)));
-		PostOrderDto postOrderDto = modelMapper.map(postOrder, PostOrderDto.class);
-		HttpEntity<PostOrderDto> httpEntity = HttpUtils.createHttpEntity(Roles.Member, Users.Member, postOrderDto);
+		PostOrderDto postDto = modelMapper.map(OrderBuilder.build(brand.getUuid(), postMember.getUuid(), List.of(modelMapper.map(membershipPlan, com.iso.hypo.sale.domain.model.MembershipPlan.class))), PostOrderDto.class);
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postURI, brand.getUuid(), postMember.getUuid())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
+		OrderDto createdDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postURI, brand.getUuid(), postMember.getUuid())), port, null))		
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Member, Users.Member)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(OrderDto.class) 
+					.returnResult()
+				    .getResponseBody();
 
 		// Assert
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
-
-		OrderDto orderDto =
-				TestResponseUtils.toDto(response, OrderDto.class, objectMapper);
+		Assertions.assertEquals(1, createdDto.getMessages().size(),
+				String.format("Trial error , missing message: %s", createdDto.getMessages().size()));
 		
-		Assertions.assertEquals(1, orderDto.getMessages().size(),
-				String.format("Trial error , missing message: %s", orderDto.getMessages().size()));
-		
-		Assertions.assertEquals(OrderException.TRIAL_MEMBERSHIP_PLAN_ONLY_FOR_NEW_MEMBER, orderDto.getMessages().getFirst().getCode(),
-				String.format("Trial error, missing message: %s", orderDto.getMessages().getFirst().getCode()));
+		Assertions.assertEquals(OrderException.TRIAL_MEMBERSHIP_PLAN_ONLY_FOR_NEW_MEMBER, createdDto.getMessages().getFirst().getCode(),
+				String.format("Trial error, missing message: %s", createdDto.getMessages().getFirst().getCode()));
 	}
 	
 	@Test
@@ -652,28 +692,28 @@ class OrderControllerTests {
 		trialMembershipPlan.setPeriod(MembershipPlanPeriodEnum.trial);
 		trialMembershipPlan = membershipPlanRepository.save(trialMembershipPlan);
 		
-		//membershipRepository
-		Order postOrder = OrderBuilder.build(brand.getUuid(), postMember.getUuid(), List.of(modelMapper.map(trialMembershipPlan, com.iso.hypo.sale.domain.model.MembershipPlan.class)));
-		PostOrderDto postOrderDto = modelMapper.map(postOrder, PostOrderDto.class);
-		HttpEntity<PostOrderDto> httpEntity = HttpUtils.createHttpEntity(Roles.Member, Users.Member, postOrderDto);
+		PostOrderDto postDto = modelMapper.map(OrderBuilder.build(brand.getUuid(), postMember.getUuid(), List.of(modelMapper.map(trialMembershipPlan, com.iso.hypo.sale.domain.model.MembershipPlan.class))), PostOrderDto.class);
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postURI, brand.getUuid(), postMember.getUuid())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
-
+		OrderDto createdDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postURI, brand.getUuid(), postMember.getUuid())), port, null))		
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Member, Users.Member)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(OrderDto.class) 
+					.returnResult()
+				    .getResponseBody();
+		
 		// Assert
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
-
-		OrderDto orderDto =
-				TestResponseUtils.toDto(response, OrderDto.class, objectMapper);
+		Assertions.assertEquals(1, createdDto.getMessages().size(),
+				String.format("Trial error , missing message: %s", createdDto.getMessages().size()));
 		
-		Assertions.assertEquals(1, orderDto.getMessages().size(),
-				String.format("Trial error , missing message: %s", orderDto.getMessages().size()));
-		
-		Assertions.assertEquals(OrderException.TRIAL_MEMBERSHIP_PLAN_ONLY_FOR_NEW_MEMBER, orderDto.getMessages().getFirst().getCode(),
-				String.format("Trial error, missing message: %s", orderDto.getMessages().getFirst().getCode()));
+		Assertions.assertEquals(OrderException.TRIAL_MEMBERSHIP_PLAN_ONLY_FOR_NEW_MEMBER, createdDto.getMessages().getFirst().getCode(),
+				String.format("Trial error, missing message: %s", createdDto.getMessages().getFirst().getCode()));
 	}
 
 	@Test
@@ -686,25 +726,26 @@ class OrderControllerTests {
 		membershipPlan.setPeriod(MembershipPlanPeriodEnum.trial);
 		membershipPlan = membershipPlanRepository.save(membershipPlan);
 		
-		// membershipRepository
 		Order postOrder = OrderBuilder.build(brand.getUuid(), postMember.getUuid(), List.of(modelMapper.map(membershipPlan, com.iso.hypo.sale.domain.model.MembershipPlan.class)));
 		postOrder.getItems().stream().findFirst().get().setQuantity(2);
 		
-		PostOrderDto postOrderDto = modelMapper.map(postOrder, PostOrderDto.class);
-		HttpEntity<PostOrderDto> httpEntity = HttpUtils.createHttpEntity(Roles.Member, Users.Member, postOrderDto);
+		PostOrderDto postDto = modelMapper.map(postOrder, PostOrderDto.class);
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postURI, brand.getUuid(), postMember.getUuid())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
-
-		// Assert
-		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
-
-		OrderDto createdDto =
-				TestResponseUtils.toDto(response, OrderDto.class, objectMapper);
+		OrderDto createdDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postURI, brand.getUuid(), postMember.getUuid())), port, null))	
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Member, Users.Member)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(OrderDto.class) 
+					.returnResult()
+				    .getResponseBody();
 		
+		// Assert
 		Assertions.assertEquals(1, createdDto.getItems().stream().findFirst().get().getQuantity(),
 				String.format("Only one trial error , invalid quantity : %s", createdDto.getItems().stream().findFirst().get().getQuantity()));
 	}
@@ -857,5 +898,5 @@ class OrderControllerTests {
 			Assertions.assertNull(result.getPaymentDetail());
 		}
 	}
-	*/
+	
 }

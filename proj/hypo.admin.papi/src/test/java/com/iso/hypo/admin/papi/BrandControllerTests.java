@@ -32,6 +32,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.iso.hypo.admin.papi.dto.ErrorDto;
 import com.iso.hypo.admin.papi.dto.contact.ContactDto;
 import com.iso.hypo.admin.papi.dto.contact.PhoneNumberDto;
 import com.iso.hypo.admin.papi.dto.model.BrandDto;
@@ -365,14 +366,14 @@ class BrandControllerTests {
 	void testGetFailureNotFound() throws MalformedURLException, JsonProcessingException, Exception {
 		
 		// Act
-		BrandDto _ = 
+		ErrorDto _ = 
 				this.restClient.get()
 					.uri(HttpUtils.createURL(URI.create(String.format(getURI, faker.code().isbn10())), port, null))
 					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
 					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
 					.exchange() 
 				    .expectStatus().isNotFound() 
-					.expectBody(BrandDto.class) 
+					.expectBody(ErrorDto.class) 
 					.returnResult()
 				    .getResponseBody();  
 	}
@@ -465,7 +466,7 @@ class BrandControllerTests {
 		PutBrandDto putDto = modelMapper.map(updatedBrand, PutBrandDto.class);
 		
 		// Act
-		BrandDto _ = 
+		ErrorDto _ = 
 				this.restClient.put()
 					.uri(HttpUtils.createURL(URI.create(String.format(putURI, updatedBrand.getUuid())), port, null))
 					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
@@ -474,7 +475,7 @@ class BrandControllerTests {
 					.body(putDto)
 					.exchange() 
 				    .expectStatus().isNotFound() 
-					.expectBody(BrandDto.class) 
+					.expectBody(ErrorDto.class) 
 					.returnResult()
 				    .getResponseBody(); 
 	}
@@ -519,7 +520,7 @@ class BrandControllerTests {
 		PatchBrandDto patchDto = modelMapper.map(patchTarget, PatchBrandDto.class);
 		
 		// Act
-		BrandDto _ = 
+		ErrorDto _ = 
 				this.restClient.patch()
 					.uri(HttpUtils.createURL(URI.create(String.format(patchURI, patchTarget.getUuid())), port, null))
 					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
@@ -528,7 +529,7 @@ class BrandControllerTests {
 					.body(patchDto)
 					.exchange() 
 				    .expectStatus().isNotFound() 
-					.expectBody(BrandDto.class) 
+					.expectBody(ErrorDto.class) 
 					.returnResult()
 				    .getResponseBody(); 
 	}
@@ -566,7 +567,7 @@ class BrandControllerTests {
 	@Test
 	void testActivateFailureNotFound() throws JsonProcessingException, MalformedURLException, Exception {
 		// Act
-		BrandDto _ = 
+		ErrorDto _ = 
 				this.restClient.post()
 					.uri(HttpUtils.createURL(URI.create(String.format(postActivateURI, faker.code().isbn10())), port, null))
 					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
@@ -574,7 +575,7 @@ class BrandControllerTests {
 					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
 					.exchange() 
 				    .expectStatus().isNotFound() 
-					.expectBody(BrandDto.class) 
+					.expectBody(ErrorDto.class) 
 					.returnResult()
 				    .getResponseBody(); 
 	}
@@ -610,7 +611,7 @@ class BrandControllerTests {
 	@Test
 	void testDeactivateFailureNotFound() throws JsonProcessingException, MalformedURLException, Exception {
 		// Act
-		BrandDto _ = 
+		ErrorDto _ = 
 				this.restClient.post()
 					.uri(HttpUtils.createURL(URI.create(String.format(postDeactivateURI, faker.code().isbn10())), port, null))
 					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
@@ -618,7 +619,7 @@ class BrandControllerTests {
 					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
 					.exchange() 
 				    .expectStatus().isNotFound() 
-					.expectBody(BrandDto.class) 
+					.expectBody(ErrorDto.class) 
 					.returnResult()
 				    .getResponseBody();
 	}
@@ -656,14 +657,15 @@ class BrandControllerTests {
 					.returnResult()
 				    .getResponseBody(); 
 
-		BrandDto _ = 
+		// Assert
+		ErrorDto _ = 
 				this.restClient.get()
 					.uri(HttpUtils.createURL(URI.create(String.format(getURI, brandToDelete.getUuid())), port, null))
 					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
 					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
 					.exchange() 
 				    .expectStatus().isNotFound() 
-					.expectBody(BrandDto.class) 
+					.expectBody(ErrorDto.class) 
 					.returnResult()
 				    .getResponseBody(); 
 

@@ -476,12 +476,12 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 	 */
 	private void awaitUserDeleted(String userId) {
 		final int maxAttempts = 20;
-		final int delaySeconds = 1;
+		final int delaySeconds = 2;
 
 		for (int attempt = 1; attempt <= maxAttempts; attempt++) {
 			try {
 				if (findUser(userId).isEmpty()) {
-						return; // User no longer found, deletion is complete
+					return; // User no longer found, deletion is complete
 				}	// User still exists — wait and retry
 				TimeUnit.SECONDS.sleep(delaySeconds);
 			} catch (Exception ie) {
@@ -494,7 +494,7 @@ public class AzureGraphClientServiceImpl implements AzureGraphClientService {
 
 	private void awaitUserExist(String userId) {
 		final int maxAttempts = 20;
-		final int delaySeconds = 1;
+		final int delaySeconds = 2;
 
 		for (int attempt = 1; attempt <= maxAttempts; attempt++) {
 			try {

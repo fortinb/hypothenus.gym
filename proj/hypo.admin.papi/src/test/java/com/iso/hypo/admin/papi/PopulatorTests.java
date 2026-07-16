@@ -5,7 +5,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Optional;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -13,20 +12,13 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-//import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-//import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.client.RestTestClient;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iso.hypo.admin.papi.dto.model.BrandDto;
 import com.iso.hypo.admin.papi.dto.model.UserDto;
 import com.iso.hypo.admin.papi.dto.post.PostBrandDto;
@@ -52,10 +44,11 @@ import com.iso.hypo.tests.data.Populator;
 import com.iso.hypo.tests.http.HttpUtils;
 import com.iso.hypo.tests.security.Users;
 import com.iso.hypo.tests.utils.RetryUtils;
-import com.iso.hypo.tests.utils.TestResponseUtils;
 import com.microsoft.graph.models.User;
 
 import net.datafaker.Faker;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.json.JsonMapper.Builder;
 
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = "app.test.run=false")
@@ -63,7 +56,7 @@ import net.datafaker.Faker;
 @ActiveProfiles("test")
 @Tag("populator")
 class PopulatorTests {
-/*	public static final String postBrandURI = "/v1/brands";
+	public static final String postBrandURI = "/v1/brands";
 	@LocalServerPort
 	private int port;
 
@@ -86,7 +79,7 @@ class PopulatorTests {
 	@Autowired
 	UserRepository userRepository;
 	@Autowired
-	ObjectMapper objectMapper;
+	Builder objectMapper;
 	@Autowired
 	BrandService brandService;
 	@Autowired
@@ -96,15 +89,21 @@ class PopulatorTests {
 	@Autowired
 	ModelMapper modelMapper;
 	
-	private RestTemplateBuilder restTemplateBuilder;
-	private TestRestTemplate testRestTemplate;
+	private RestTestClient restClient;
+	
 	private Faker faker = new Faker();
 
 	@Test
 	void populator() throws MalformedURLException, JsonProcessingException, Exception {
-		restTemplateBuilder = new RestTemplateBuilder()
-				.additionalMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper));
-		testRestTemplate = new TestRestTemplate(restTemplateBuilder);
+    	restClient = RestTestClient.bindToServer()
+		        .baseUrl("http://localhost:" + port)
+		        .configureMessageConverters(converters -> 
+		        	converters.addCustomConverter(
+		        			new JacksonJsonHttpMessageConverter(
+		        			objectMapper
+		        			.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+		        			.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false))))
+		        .build();
 	
 		try {
 			azureGraphClientService.deleteAllUser();
@@ -139,33 +138,43 @@ class PopulatorTests {
 		}
 		
 		// Full Brands with all related entities is required for testing
-		Populator populator = new Populator( gymRepository, coachRepository, courseRepository,	membershipPlanRepository, memberRepository, modelMapper, testRestTemplate, port);
+		Populator populator = new Populator( gymRepository, coachRepository, courseRepository,	membershipPlanRepository, memberRepository, modelMapper, restClient, port);
 		
-		// Arrange
+		// Create Brand #1
 		PostBrandDto postBrandDto = modelMapper.map(BrandBuilder.build("crossfitextreme", "Crossfit Extreme"), PostBrandDto.class);
-		HttpEntity<PostBrandDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postBrandDto);
-
+		
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postBrandURI), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
+		BrandDto createdBrandDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(postBrandURI), port, null))			
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postBrandDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(BrandDto.class) 
+					.returnResult()
+				    .getResponseBody();
 
-		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
-
-		BrandDto createdBrandDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
 		populator.populateFullBrand(createdBrandDto, adminUserDto);
 		
+		// Create Brand #2
 		postBrandDto = modelMapper.map(BrandBuilder.build("fitnessboxing", "Fitness Boxing"), PostBrandDto.class);
-		httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postBrandDto);
-
-		// Act
-		response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(postBrandURI), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
-
-		createdBrandDto = TestResponseUtils.toDto(response, BrandDto.class, objectMapper);
+		
+		createdBrandDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(postBrandURI), port, null))			
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postBrandDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(BrandDto.class) 
+					.returnResult()
+				    .getResponseBody();
+		
 		populator.populateFullBrand(createdBrandDto, adminUserDto);
 	}
 
@@ -185,7 +194,6 @@ class PopulatorTests {
 					},
 					null);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -199,18 +207,22 @@ class PopulatorTests {
 		postDto.setRoles(new ArrayList<RoleEnum>());
 		postDto.getRoles().add(RoleEnum.admin);
 		postDto.getRoles().add(RoleEnum.manager);
-		HttpEntity<PostUserDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(userPostURI), port, null), HttpMethod.POST, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
-		
-		UserDto createdUserDto = TestResponseUtils.toDto(response, UserDto.class, objectMapper);
+		UserDto createdUserDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(userPostURI), port, null))			
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(UserDto.class) 
+					.returnResult()
+				    .getResponseBody();
 		
 		return createdUserDto;
 	}
-	*/
+	
 }

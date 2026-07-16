@@ -22,30 +22,24 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-//import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.client.RestTestClient;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iso.hypo.admin.papi.dto.ErrorDto;
 import com.iso.hypo.admin.papi.dto.LocalizedStringDto;
+import com.iso.hypo.admin.papi.dto.model.CourseDto;
+import com.iso.hypo.admin.papi.dto.model.GymDto;
+import com.iso.hypo.admin.papi.dto.model.MemberDto;
 import com.iso.hypo.admin.papi.dto.model.MembershipPlanDto;
 import com.iso.hypo.admin.papi.dto.patch.PatchMembershipPlanDto;
 import com.iso.hypo.admin.papi.dto.post.PostMembershipPlanDto;
-import com.iso.hypo.admin.papi.dto.put.PutCoachDto;
-import com.iso.hypo.admin.papi.dto.put.PutCourseDto;
-import com.iso.hypo.admin.papi.dto.put.PutGymDto;
 import com.iso.hypo.admin.papi.dto.put.PutMembershipPlanDto;
 import com.iso.hypo.brand.domain.model.Brand;
 import com.iso.hypo.brand.domain.model.Course;
@@ -61,14 +55,14 @@ import com.iso.hypo.domain.BrandBuilder;
 import com.iso.hypo.domain.CourseBuilder;
 import com.iso.hypo.domain.GymBuilder;
 import com.iso.hypo.domain.MembershipPlanBuilder;
-import com.iso.hypo.membership.application.exception.MembershipPlanException;
 import com.iso.hypo.membership.domain.model.MembershipPlan;
 import com.iso.hypo.membership.domain.repository.MembershipPlanRepository;
 import com.iso.hypo.tests.http.HttpUtils;
 import com.iso.hypo.tests.security.Users;
-import com.iso.hypo.tests.utils.TestResponseUtils;
 
 import net.datafaker.Faker;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.json.JsonMapper.Builder;
 
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = "app.test.run=true")
@@ -76,7 +70,7 @@ import net.datafaker.Faker;
 @ActiveProfiles("test")
 class MembershipPlanControllerTests {
 
-/*	public static final String listURI = "/v1/brands/%s/membership/plans";
+	public static final String listURI = "/v1/brands/%s/membership/plans";
 	public static final String listActiveURI = "/v1/brands/%s/membership/plans/active";
 	public static final String postURI = "/v1/brands/%s/membership/plans";
 	public static final String getURI = "/v1/brands/%s/membership/plans/%s";
@@ -103,25 +97,20 @@ class MembershipPlanControllerTests {
 
 	@Autowired
 	BrandRepository brandRepository;
-
 	@Autowired
 	MembershipPlanRepository membershipPlanRepository;
-
 	@Autowired
 	CourseRepository courseRepository;
-
 	@Autowired
 	GymRepository gymRepository;
-
 	@Autowired
-	ObjectMapper objectMapper;
-
+	Builder objectMapper;
 	@Autowired
 	ModelMapper modelMapper;
 
 	private Faker faker = new Faker();
 
-	private TestRestTemplate testRestTemplate = new TestRestTemplate();
+	private RestTestClient restClient;
 
 	private MembershipPlan membershipPlan;
 	private MembershipPlan membershipPlanDeleted;
@@ -134,7 +123,16 @@ class MembershipPlanControllerTests {
 
 	@BeforeAll
 	void arrange() {
-		testRestTemplate.getRestTemplate().setRequestFactory(new HttpComponentsClientHttpRequestFactory());
+		restClient = RestTestClient.bindToServer()
+		        .baseUrl("http://localhost:" + port)
+		        .configureMessageConverters(converters -> 
+		        	converters.addCustomConverter(
+		        			new JacksonJsonHttpMessageConverter(
+		        			objectMapper
+		        			.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+		        			.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false))))
+		        .build();
+		
 		membershipPlanRepository.deleteAll();
 
 		brand_FitnessBoxing = BrandBuilder.build(brandCode_FitnessBoxing, "Fitness Boxing");
@@ -189,29 +187,25 @@ class MembershipPlanControllerTests {
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testListActiveSuccess(String role, String user)
-			throws MalformedURLException, JsonProcessingException, Exception {
+	void testListActiveSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		HttpEntity<String> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
 		params.add(pageNumber, "0");
 		params.add(pageSize, "5");
 		params.add(includeInactive, "false");
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(listURI, brand_CrossfitExtreme.getUuid())), port, params),
-				HttpMethod.GET, httpEntity, JsonNode.class);
-
-		// Assert
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("List error: %s", response.getStatusCode()));
-
-		PageResultDto<MembershipPlanDto> page = TestResponseUtils.toPage(response,
-				new TypeReference<PageResultDto<MembershipPlanDto>>() {
-				}, objectMapper);
-
+		PageResultDto<MembershipPlanDto> page = 
+				this.restClient.get()
+					.uri(HttpUtils.createURL(URI.create(String.format(listURI, brand_CrossfitExtreme.getUuid())), port, params))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(new ParameterizedTypeReference<PageResultDto<MembershipPlanDto>>() {}) 
+					.returnResult()
+				    .getResponseBody(); 
+		
 		// Assert
 		Assertions.assertEquals(0, page.getPageNumber(),
 				String.format("Membership Plan list first page number invalid: %d", page.getPageNumber()));
@@ -224,28 +218,24 @@ class MembershipPlanControllerTests {
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testListFirstPageSuccess(String role, String user)
-			throws MalformedURLException, JsonProcessingException, Exception {
+	void testListFirstPageSuccess(String role, String user)	throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		HttpEntity<String> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
 		params.add(pageNumber, "0");
 		params.add(pageSize, "5");
 		params.add(includeInactive, "true");
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(listURI, brand_CrossfitExtreme.getUuid())), port, params),
-				HttpMethod.GET, httpEntity, JsonNode.class);
-
-		// Assert
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("List error: %s", response.getStatusCode()));
-
-		PageResultDto<MembershipPlanDto> page = TestResponseUtils.toPage(response,
-				new TypeReference<PageResultDto<MembershipPlanDto>>() {
-				}, objectMapper);
+		PageResultDto<MembershipPlanDto> page = 
+				this.restClient.get()
+					.uri(HttpUtils.createURL(URI.create(String.format(listURI, brand_CrossfitExtreme.getUuid())), port, params))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(new ParameterizedTypeReference<PageResultDto<MembershipPlanDto>>() {}) 
+					.returnResult()
+				    .getResponseBody(); 
 
 		// Assert
 		Assertions.assertEquals(0, page.getPageNumber(),
@@ -260,26 +250,23 @@ class MembershipPlanControllerTests {
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testListSecondPageSuccess(String role, String user)
-			throws MalformedURLException, JsonProcessingException, Exception {
+	void testListSecondPageSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		HttpEntity<String> httpEntity = HttpUtils.createHttpEntity(role, user, "");
-
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
 		params.add(pageNumber, "1");
 		params.add(pageSize, "2");
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(listURI, brand_CrossfitExtreme.getUuid())), port, params),
-				HttpMethod.GET, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("List error: %s", response.getStatusCode()));
-
-		PageResultDto<MembershipPlanDto> page = TestResponseUtils.toPage(response,
-				new TypeReference<PageResultDto<MembershipPlanDto>>() {
-				}, objectMapper);
+		PageResultDto<MembershipPlanDto> page = 
+				this.restClient.get()
+					.uri(HttpUtils.createURL(URI.create(String.format(listURI, brand_CrossfitExtreme.getUuid())), port, params))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(new ParameterizedTypeReference<PageResultDto<MembershipPlanDto>>() {}) 
+					.returnResult()
+				    .getResponseBody(); 
 
 		// Assert
 		Assertions.assertEquals(1, page.getPageNumber(),
@@ -295,92 +282,102 @@ class MembershipPlanControllerTests {
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPostSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostMembershipPlanDto postDto = modelMapper.map(
-				MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), gymUuids, courseUuids),
-				PostMembershipPlanDto.class);
-
-		HttpEntity<PostMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, postDto);
+		PostMembershipPlanDto postDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), gymUuids, courseUuids), PostMembershipPlanDto.class);
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postURI, brand_FitnessBoxing.getUuid())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
+		MembershipPlanDto createdDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postURI, brand_FitnessBoxing.getUuid())), port, null))	
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(MembershipPlanDto.class) 
+					.returnResult()
+				    .getResponseBody();
 
-		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
-				String.format("Create error: %s", response.getStatusCode()));
-
-		MembershipPlanDto createdDto = TestResponseUtils.toDto(response, MembershipPlanDto.class, objectMapper);
+		// Assert
 		assertMembershipPlan(modelMapper.map(postDto, MembershipPlanDto.class), createdDto);
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testPostFailureForbiddenBrandMismatch(String role, String user)
-			throws MalformedURLException, JsonProcessingException, Exception {
+	void testPostFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostMembershipPlanDto postDto = modelMapper.map(
-				MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null), PostMembershipPlanDto.class);
-		HttpEntity<PostMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, postDto);
-
+		PostMembershipPlanDto postDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null), PostMembershipPlanDto.class);
+		
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postURI, faker.code().isbn10())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
+		ErrorDto _ = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postURI, faker.code().isbn10())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isForbidden() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testGetSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PostMembershipPlanDto postDto = modelMapper.map(
-				MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), gymUuids, courseUuids),
-				PostMembershipPlanDto.class);
+		PostMembershipPlanDto postDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), gymUuids, courseUuids), PostMembershipPlanDto.class);
 
-		HttpEntity<PostMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, postDto);
-
-		ResponseEntity<JsonNode> responsePost = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postURI, brand_FitnessBoxing.getUuid())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.CREATED, responsePost.getStatusCode(),
-				String.format("Post error: %s", responsePost.getStatusCode()));
+		MembershipPlanDto createdDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postURI, brand_FitnessBoxing.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(MembershipPlanDto.class) 
+					.returnResult()
+				    .getResponseBody();
 
 		// Act
-		httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		MembershipPlanDto createdDto = TestResponseUtils.toDto(responsePost, MembershipPlanDto.class, objectMapper);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(
-				URI.create(String.format(getURI, brand_FitnessBoxing.getUuid(), createdDto.getUuid())), port, null),
-				HttpMethod.GET, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Get error: %s", response.getStatusCode()));
-
-		MembershipPlanDto fetchedDto = TestResponseUtils.toDto(response, MembershipPlanDto.class, objectMapper);
-
+		MembershipPlanDto fetchedDto = 
+				this.restClient.get()
+					.uri(HttpUtils.createURL(URI.create(String.format(getURI, brand_FitnessBoxing.getUuid(), createdDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(MembershipPlanDto.class) 
+					.returnResult()
+				    .getResponseBody();
+		
+		// Assert
 		assertMembershipPlan(modelMapper.map(postDto, MembershipPlanDto.class), fetchedDto);
 	}
 
 	@Test
 	void testGetFailureNotFound() throws MalformedURLException, JsonProcessingException, Exception {
-		// Arrange
-		HttpEntity<Object> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(
-				URI.create(String.format(getURI, brand_FitnessBoxing.getUuid(), faker.code().isbn10())), port, null),
-				HttpMethod.GET, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
-				String.format("Get error: %s", response.getStatusCode()));
+		// Act
+    	ErrorDto _ = 
+				this.restClient.get()
+					.uri(HttpUtils.createURL(URI.create(String.format(getURI, brand_FitnessBoxing.getUuid(), faker.code().isbn10())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isNotFound() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testPutSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
 		// Arrange
-		MembershipPlan membershipPlanToUpdate = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(),
-				gymUuids.subList(0, 2), courseUuids.subList(0, 2));
+		MembershipPlan membershipPlanToUpdate = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), gymUuids.subList(0, 2), courseUuids.subList(0, 2));
 		membershipPlanToUpdate = membershipPlanRepository.save(membershipPlanToUpdate);
 
 		PutMembershipPlanDto putDto = modelMapper.map(membershipPlanToUpdate, PutMembershipPlanDto.class);
@@ -401,16 +398,20 @@ class MembershipPlanControllerTests {
 		}
 
 		// Act
-		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, brand_FitnessBoxing.getUuid(), putDto.getUuid())),
-						port, null),
-				HttpMethod.PUT, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Put error: %s", response.getStatusCode()));
-
-		MembershipPlanDto updatedDto = TestResponseUtils.toDto(response, MembershipPlanDto.class, objectMapper);
+		MembershipPlanDto updatedDto = 
+				this.restClient.put()
+					.uri(HttpUtils.createURL(URI.create(String.format(putURI, brand_FitnessBoxing.getUuid(), putDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(putDto)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(MembershipPlanDto.class) 
+					.returnResult()
+				    .getResponseBody();
+		
+		// Assert
 		assertMembershipPlan(modelMapper.map(putDto, MembershipPlanDto.class), updatedDto);
 	}
 
@@ -434,164 +435,83 @@ class MembershipPlanControllerTests {
 		membershipPlanToUpdate.setTitle(null);
 
 		// Act
-		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, brand_FitnessBoxing.getUuid(), putDto.getUuid())),
-						port, null),
-				HttpMethod.PUT, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Put null error: %s", response.getStatusCode()));
-
-		MembershipPlanDto updatedDto = TestResponseUtils.toDto(response, MembershipPlanDto.class, objectMapper);
+		MembershipPlanDto updatedDto = 
+				this.restClient.put()
+					.uri(HttpUtils.createURL(URI.create(String.format(putURI, brand_FitnessBoxing.getUuid(), putDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(putDto)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(MembershipPlanDto.class) 
+					.returnResult()
+				    .getResponseBody();
+		
+		// Assert
 		assertMembershipPlan(modelMapper.map(membershipPlanToUpdate, MembershipPlanDto.class), updatedDto);
 	}
 
 	@Test
 	void testPutFailureNotFound() throws MalformedURLException, JsonProcessingException, Exception {
-		PutMembershipPlanDto putDto = modelMapper.map(
-				MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null), PutMembershipPlanDto.class);
-		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, putDto);
+		// Arrange
+		PutMembershipPlanDto putDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null), PutMembershipPlanDto.class);
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, brand_FitnessBoxing.getUuid(), putDto.getUuid())),
-						port, null),
-				HttpMethod.PUT, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
-				String.format("Get error: %s", response.getStatusCode()));
+		ErrorDto _ = 
+				this.restClient.put()
+					.uri(HttpUtils.createURL(URI.create(String.format(putURI, brand_FitnessBoxing.getUuid(), putDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(putDto)
+					.exchange() 
+				    .expectStatus().isNotFound() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testPutFailureForbiddenBrandMismatch(String role, String user)
-			throws MalformedURLException, JsonProcessingException, Exception {
+	void testPutFailureForbiddenBrandMismatch(String role, String user)	throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PutMembershipPlanDto putDto = modelMapper.map(
-				MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null), PutMembershipPlanDto.class);
-		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
-
+		PutMembershipPlanDto putDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null), PutMembershipPlanDto.class);
+		
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils
-				.createURL(URI.create(String.format(putURI, faker.code().isbn10(), putDto.getUuid())), port, null),
-				HttpMethod.PUT, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
+		ErrorDto _ = 
+				this.restClient.put()
+					.uri(HttpUtils.createURL(URI.create(String.format(putURI, faker.code().isbn10(), putDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(putDto)
+					.exchange() 
+				    .expectStatus().isForbidden() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody();
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testPutFailureForbiddenMembershipPlanMismatch(String role, String user)
-			throws MalformedURLException, JsonProcessingException, Exception {
+	void testPutFailureForbiddenMembershipPlanMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PutMembershipPlanDto putDto = modelMapper.map(
-				MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null), PutMembershipPlanDto.class);
-		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
-		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(
-				URI.create(String.format(putURI, brand_FitnessBoxing.getUuid(), faker.code().isbn10())), port, null),
-				HttpMethod.PUT, httpEntity, JsonNode.class);
-		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
-	}
-
-	@ParameterizedTest
-	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testActivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
-		// Arrange
-		MembershipPlan membershipPlanToActivate = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null,
-				null);
-		membershipPlanToActivate.setActive(false);
-		membershipPlanToActivate.setActivatedOn(null);
-		membershipPlanToActivate.setDeactivatedOn(null);
-		membershipPlanToActivate = membershipPlanRepository.save(membershipPlanToActivate);
-
-		membershipPlanToActivate.setActive(true);
-		membershipPlanToActivate.setActivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
-		membershipPlanToActivate.setDeactivatedOn(null);
+		PutMembershipPlanDto putDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null), PutMembershipPlanDto.class);
 
 		// Act
-		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<JsonNode> response = testRestTemplate
-				.exchange(
-						HttpUtils.createURL(URI.create(String.format(postActivateURI, brand_FitnessBoxing.getUuid(),
-								membershipPlanToActivate.getUuid())), port, null),
-						HttpMethod.POST, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Membership Plan activation error: %s", response.getStatusCode()));
-
-		MembershipPlanDto activatedDto = TestResponseUtils.toDto(response, MembershipPlanDto.class, objectMapper);
-		assertMembershipPlan(modelMapper.map(membershipPlanToActivate, MembershipPlanDto.class), activatedDto);
-	}
-
-	@ParameterizedTest
-	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testActivateFailureNotFound(String role, String user) throws JsonProcessingException, MalformedURLException {
-		// Arrange
-
-		// Act
-		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(
-				URI.create(String.format(postActivateURI, brand_FitnessBoxing.getUuid(), faker.code().isbn10())), port,
-				null), HttpMethod.POST, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
-				String.format("Membership Plan activation error: %s", response.getStatusCode()));
-
-		if (response.getBody() != null && response.getBody().size() > 0) {
-			ErrorDto err = TestResponseUtils.toError(response, objectMapper);
-			Assertions.assertEquals(MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND, err.getCode());
-		}
-	}
-
-	@ParameterizedTest
-	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testDeactivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
-		// Arrange
-		MembershipPlan membershipPlanToDeactivate = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null,
-				null);
-		membershipPlanToDeactivate.setActive(true);
-		membershipPlanToDeactivate.setActivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
-		membershipPlanToDeactivate = membershipPlanRepository.save(membershipPlanToDeactivate);
-
-		membershipPlanToDeactivate.setActive(false);
-		membershipPlanToDeactivate.setDeactivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
-
-		// Act
-		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postDeactivateURI, brand_FitnessBoxing.getUuid(),
-						membershipPlanToDeactivate.getUuid())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Membership Plan deactivation error: %s", response.getStatusCode()));
-
-		MembershipPlanDto deactivatedDto = TestResponseUtils.toDto(response, MembershipPlanDto.class, objectMapper);
-		assertMembershipPlan(modelMapper.map(membershipPlanToDeactivate, MembershipPlanDto.class), deactivatedDto);
-	}
-
-	@ParameterizedTest
-	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testDeactivateFailureNotFound(String role, String user) throws JsonProcessingException, MalformedURLException {
-		// Arrange
-
-		// Act
-		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(
-				URI.create(String.format(postDeactivateURI, brand_FitnessBoxing.getUuid(), faker.code().ean13())), port,
-				null), HttpMethod.POST, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
-				String.format("Membership Plan activation error: %s", response.getStatusCode()));
-
-		if (response.getBody() != null && response.getBody().size() > 0) {
-			ErrorDto err = TestResponseUtils.toError(response, objectMapper);
-			Assertions.assertEquals(MembershipPlanException.MEMBERSHIPPLAN_NOT_FOUND, err.getCode());
-		}
+		ErrorDto _ = 
+				this.restClient.put()
+					.uri(HttpUtils.createURL(URI.create(String.format(putURI, brand_FitnessBoxing.getUuid(), faker.code().isbn10())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(putDto)
+					.exchange() 
+				    .expectStatus().isForbidden() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody();
 	}
 
 	@ParameterizedTest
@@ -610,70 +530,179 @@ class MembershipPlanControllerTests {
 		membershipPlanToPatch.setStartDate(patchDto.getStartDate());
 
 		// Act
-		HttpEntity<PatchMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchDto);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(
-				URI.create(String.format(patchURI, brand_FitnessBoxing.getUuid(), patchDto.getUuid())), port, null),
-				HttpMethod.PATCH, httpEntity, JsonNode.class);
+		MembershipPlanDto patchedDto = 
+				this.restClient.patch()
+					.uri(HttpUtils.createURL(URI.create(String.format(patchURI, brand_FitnessBoxing.getUuid(), patchDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(patchDto)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(MembershipPlanDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Get error: %s", response.getStatusCode()));
-
-		MembershipPlanDto patchedDto = TestResponseUtils.toDto(response, MembershipPlanDto.class, objectMapper);
+		// Assert
 		assertMembershipPlan(modelMapper.map(membershipPlanToPatch, MembershipPlanDto.class), patchedDto);
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testPatchFailureNotFound(String role, String user)
-			throws MalformedURLException, JsonProcessingException, Exception {
+	void testPatchFailureNotFound(String role, String user)	throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		MembershipPlan patchTarget = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null);
-		PatchMembershipPlanDto patchDto = modelMapper.map(patchTarget, PatchMembershipPlanDto.class);
-
-		HttpEntity<PatchMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchDto);
+		PatchMembershipPlanDto patchDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null), PatchMembershipPlanDto.class);
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(
-				URI.create(String.format(patchURI, brand_FitnessBoxing.getUuid(), patchDto.getUuid())), port, null),
-				HttpMethod.PATCH, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
-				String.format("Patch error: %s", response.getStatusCode()));
+		ErrorDto _ = 
+				this.restClient.patch()
+					.uri(HttpUtils.createURL(URI.create(String.format(patchURI, brand_FitnessBoxing.getUuid(), patchDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(patchDto)
+					.exchange() 
+				    .expectStatus().isNotFound() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+					.getResponseBody(); 
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testPatchFailureForbiddenBrandMismatch(String role, String user)
-			throws MalformedURLException, JsonProcessingException, Exception {
+	void testPatchFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PutMembershipPlanDto putDto = modelMapper.map(
-				MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null), PutMembershipPlanDto.class);
-		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
+		PatchMembershipPlanDto patchDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null), PatchMembershipPlanDto.class);
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils
-				.createURL(URI.create(String.format(putURI, faker.code().isbn10(), putDto.getUuid())), port, null),
-				HttpMethod.PATCH, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
+		ErrorDto _ = 
+				this.restClient.patch()
+					.uri(HttpUtils.createURL(URI.create(String.format(patchURI, faker.code().isbn10(), patchDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(patchDto)
+					.exchange() 
+				    .expectStatus().isForbidden() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testPatchFailureForbiddenMembershipPlanMismatch(String role, String user)
-			throws MalformedURLException, JsonProcessingException, Exception {
+	void testPatchFailureForbiddenMembershipPlanMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		PutMembershipPlanDto putDto = modelMapper.map(
-				MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null), PutMembershipPlanDto.class);
-		HttpEntity<PutMembershipPlanDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
-		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(
-				URI.create(String.format(putURI, brand_FitnessBoxing.getUuid(), faker.code().isbn10())), port, null),
-				HttpMethod.PATCH, httpEntity, JsonNode.class);
+		PatchMembershipPlanDto patchDto = modelMapper.map(MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null, null), PatchMembershipPlanDto.class);
 
-		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
+		// Act
+		ErrorDto _ = 
+				this.restClient.patch()
+					.uri(HttpUtils.createURL(URI.create(String.format(patchURI, brand_FitnessBoxing.getUuid(), faker.code().isbn10())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(patchDto)
+					.exchange() 
+				    .expectStatus().isForbidden() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
+	}
+	
+	@ParameterizedTest
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
+	void testActivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
+		// Arrange
+		MembershipPlan membershipPlanToActivate = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null,	null);
+		membershipPlanToActivate.setActive(false);
+		membershipPlanToActivate.setActivatedOn(null);
+		membershipPlanToActivate.setDeactivatedOn(null);
+		membershipPlanToActivate = membershipPlanRepository.save(membershipPlanToActivate);
+
+		membershipPlanToActivate.setActive(true);
+		membershipPlanToActivate.setActivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
+		membershipPlanToActivate.setDeactivatedOn(null);
+
+		// Act
+		MembershipPlanDto activatedDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postActivateURI, brand_FitnessBoxing.getUuid(), membershipPlanToActivate.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(MembershipPlanDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
+
+		// Assert
+		assertMembershipPlan(modelMapper.map(membershipPlanToActivate, MembershipPlanDto.class), activatedDto);
+	}
+
+	@ParameterizedTest
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
+	void testActivateFailureNotFound(String role, String user) throws JsonProcessingException, MalformedURLException {
+		// Act
+		ErrorDto _ = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postActivateURI, brand_FitnessBoxing.getUuid(), faker.code().isbn10())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isNotFound() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
+	}
+
+	@ParameterizedTest
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
+	void testDeactivateSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
+		// Arrange
+		MembershipPlan membershipPlanToDeactivate = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), null,
+				null);
+		membershipPlanToDeactivate.setActive(true);
+		membershipPlanToDeactivate.setActivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
+		membershipPlanToDeactivate = membershipPlanRepository.save(membershipPlanToDeactivate);
+
+		membershipPlanToDeactivate.setActive(false);
+		membershipPlanToDeactivate.setDeactivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
+
+		// Act
+		MembershipPlanDto deactivatedDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postDeactivateURI, brand_FitnessBoxing.getUuid(),	membershipPlanToDeactivate.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(MembershipPlanDto.class) 
+					.returnResult()
+				    .getResponseBody();
+
+		// Assert
+		assertMembershipPlan(modelMapper.map(membershipPlanToDeactivate, MembershipPlanDto.class), deactivatedDto);
+	}
+
+	@ParameterizedTest
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
+	void testDeactivateFailureNotFound(String role, String user) throws JsonProcessingException, MalformedURLException {
+		// Act
+		ErrorDto _ = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postDeactivateURI, brand_FitnessBoxing.getUuid(), faker.code().ean13())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isNotFound() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody();
 	}
 
 	@Test
@@ -683,22 +712,29 @@ class MembershipPlanControllerTests {
 				courseUuids);
 		membershipPlanToDelete = membershipPlanRepository.save(membershipPlanToDelete);
 
-		// Act
-		HttpEntity<PutCoachDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(
-				URI.create(String.format(deleteURI, brand_FitnessBoxing.getUuid(), membershipPlanToDelete.getUuid())),
-				port, null), HttpMethod.DELETE, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.ACCEPTED, response.getStatusCode(),
-				String.format("Coach activation error: %s", response.getStatusCode()));
-
-		httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-		response = testRestTemplate.exchange(HttpUtils.createURL(
-				URI.create(String.format(getURI, brand_FitnessBoxing.getUuid(), membershipPlanToDelete.getUuid())),
-				port, null), HttpMethod.GET, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
-				String.format("Get error: %s", response.getStatusCode()));
+        // Act
+		MemberDto _ = 
+				this.restClient.delete()
+					.uri(HttpUtils.createURL(URI.create(String.format(deleteURI, brand_FitnessBoxing.getUuid(), membershipPlanToDelete.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isAccepted() 
+					.expectBody(MemberDto.class) 
+					.returnResult()
+				    .getResponseBody();
+		
+		// Assert
+		ErrorDto _ = 
+				this.restClient.get()
+					.uri(HttpUtils.createURL(URI.create(String.format(getURI, brand_FitnessBoxing.getUuid(), membershipPlanToDelete.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isNotFound() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 	}
 
 	@Test
@@ -722,30 +758,37 @@ class MembershipPlanControllerTests {
 			gymUuids.add(item.getUuid());
 		}
 
-		MembershipPlan membershipPlanReferences1 = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), gymUuids,
-				courseUuids);
+		MembershipPlan membershipPlanReferences1 = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), gymUuids,	courseUuids);
 		membershipPlanRepository.save(membershipPlanReferences1);
 
-		MembershipPlan membershipPlanReferences2 = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), gymUuids,
-				courseUuids);
+		MembershipPlan membershipPlanReferences2 = MembershipPlanBuilder.build(brand_FitnessBoxing.getUuid(), gymUuids,	courseUuids);
 		membershipPlanRepository.save(membershipPlanReferences2);
 
-		HttpEntity<PutGymDto> httpGymEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(
-				URI.create(String.format(deleteGymURI, brand_FitnessBoxing.getUuid(), gymUuids.getFirst())), port,
-				null), HttpMethod.DELETE, httpGymEntity, JsonNode.class);
+		// Act
+		GymDto _ = 
+				this.restClient.delete()
+					.uri(HttpUtils.createURL(URI.create(String.format(deleteGymURI, brand_FitnessBoxing.getUuid(), gymUuids.getFirst())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isAccepted() 
+					.expectBody(GymDto.class) 
+					.returnResult()
+				    .getResponseBody();
+		
+		CourseDto _ = 
+				this.restClient.delete()
+					.uri(HttpUtils.createURL(URI.create(String.format(deleteCourseURI, brand_FitnessBoxing.getUuid(), courseUuids.getFirst())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isAccepted() 
+					.expectBody(CourseDto.class) 
+					.returnResult()
+				    .getResponseBody();
+		
 
-		Assertions.assertEquals(HttpStatus.ACCEPTED, response.getStatusCode(),
-				String.format("Gym delete error: %s", response.getStatusCode()));
-
-		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-		response = testRestTemplate.exchange(HttpUtils.createURL(
-				URI.create(String.format(deleteCourseURI, brand_FitnessBoxing.getUuid(), courseUuids.getFirst())), port,
-				null), HttpMethod.DELETE, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.ACCEPTED, response.getStatusCode(),
-				String.format("Course delete error: %s", response.getStatusCode()));
-
+		// Assert
 		PageResult<MembershipPlan> pageMembershipPlan = membershipPlanRepository
 				.findAllByBrandUuidAndDeletedIsFalse(brand_FitnessBoxing.getUuid(), PageRequest.of(0, 1000));
 
@@ -858,28 +901,25 @@ class MembershipPlanControllerTests {
 		java.util.Date currentDate = Date.from(Instant.now().truncatedTo(ChronoUnit.DAYS));
 		String currentDateStr = currentDate.toInstant().toString();
 
-		HttpEntity<String> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-
+		// Act
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 		params.add(pageNumber, "0");
 		params.add(pageSize, "100");
 		params.add(currentDateParam, currentDateStr);
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils
-				.createURL(URI.create(String.format(listActiveURI, brand_ActiveDateBrand.getUuid())), port, params),
-				HttpMethod.GET, httpEntity, JsonNode.class);
+		PageResultDto<MembershipPlanDto> page = 
+				this.restClient.get()
+					.uri(HttpUtils.createURL(URI.create(String.format(listActiveURI, brand_ActiveDateBrand.getUuid())), port, params))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(new ParameterizedTypeReference<PageResultDto<MembershipPlanDto>>() {}) 
+					.returnResult()
+				    .getResponseBody(); 
 
-		// Assert — HTTP status
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("List active error: %s", response.getStatusCode()));
-
-		PageResultDto<MembershipPlanDto> page = TestResponseUtils.toPage(response,
-				new TypeReference<PageResultDto<MembershipPlanDto>>() {
-				}, objectMapper);
-
-		// Assert — only the 2 active plans are returned (activePlanNoEndDate +
-		// activePlanWithEndDate)
+		// Assert — only the 2 active plans are returned (activePlanNoEndDate + activePlanWithEndDate)
 		Assertions.assertEquals(2, page.getTotalElements(),
 				String.format("Expected 2 active membership plans but got: %d", page.getTotalElements()));
 		Assertions.assertEquals(2, page.getContent().size(),
@@ -1069,5 +1109,5 @@ class MembershipPlanControllerTests {
 			}
 		}
 	}
-	*/
+	
 }

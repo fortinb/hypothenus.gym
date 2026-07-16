@@ -22,23 +22,16 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-//import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import com.iso.hypo.common.application.dto.PageResultDto;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.client.RestTestClient;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iso.hypo.admin.papi.dto.ErrorDto;
 import com.iso.hypo.admin.papi.dto.LocalizedStringDto;
 import com.iso.hypo.admin.papi.dto.model.CourseDto;
@@ -50,14 +43,16 @@ import com.iso.hypo.brand.domain.model.Brand;
 import com.iso.hypo.brand.domain.model.Course;
 import com.iso.hypo.brand.domain.repository.BrandRepository;
 import com.iso.hypo.brand.domain.repository.CourseRepository;
+import com.iso.hypo.common.application.dto.PageResultDto;
 import com.iso.hypo.common.application.security.Roles;
 import com.iso.hypo.domain.BrandBuilder;
 import com.iso.hypo.domain.CourseBuilder;
 import com.iso.hypo.tests.http.HttpUtils;
 import com.iso.hypo.tests.security.Users;
-import com.iso.hypo.tests.utils.TestResponseUtils;
 
 import net.datafaker.Faker;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.json.JsonMapper.Builder;
 
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = "app.test.run=true")
@@ -65,7 +60,7 @@ import net.datafaker.Faker;
 @ActiveProfiles("test")
 class CourseControllerTests {
 
-/*	public static final String listURI = "/v1/brands/%s/courses";
+	public static final String listURI = "/v1/brands/%s/courses";
 	public static final String postURI = "/v1/brands/%s/courses";
 	public static final String getURI = "/v1/brands/%s/courses/%s";
 	public static final String putURI = "/v1/brands/%s/courses/%s";
@@ -85,19 +80,16 @@ class CourseControllerTests {
 
 	@Autowired
 	BrandRepository brandRepository;
-	
 	@Autowired
 	CourseRepository courseRepository;
-
 	@Autowired
-	ObjectMapper objectMapper;
-
+	Builder objectMapper;
 	@Autowired
 	ModelMapper modelMapper;
 
 	private Faker faker = new Faker();
 
-	private TestRestTemplate testRestTemplate = new TestRestTemplate();
+	private RestTestClient restClient;
 
 	private Course course;
 	private Course courseDeleted;
@@ -107,7 +99,15 @@ class CourseControllerTests {
 
 	@BeforeAll
 	void arrange() {
-		testRestTemplate.getRestTemplate().setRequestFactory(new HttpComponentsClientHttpRequestFactory());
+		restClient = RestTestClient.bindToServer()
+		        .baseUrl("http://localhost:" + port)
+		        .configureMessageConverters(converters -> 
+		        	converters.addCustomConverter(
+		        			new JacksonJsonHttpMessageConverter(
+		        			objectMapper
+		        			.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+		        			.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false))))
+		        .build();
 
 		courseRepository.deleteAll();
 
@@ -149,27 +149,25 @@ class CourseControllerTests {
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testListActiveSuccess(String role, String user)
-			throws MalformedURLException, JsonProcessingException, Exception {
+	void testListActiveSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		HttpEntity<String> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
 		params.add(pageNumber, "0");
 		params.add(pageSize, "5");
 		params.add(includeInactive, "false");
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(listURI, brand_2.getUuid())), port, params), HttpMethod.GET,
-				httpEntity, JsonNode.class);
-
-		// Assert
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("List error: %s", response.getStatusCode()));
-
-		PageResultDto<CourseDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<CourseDto>>() {}, objectMapper);
-
+		PageResultDto<CourseDto> page = 
+				this.restClient.get()
+					.uri(HttpUtils.createURL(URI.create(String.format(listURI, brand_2.getUuid())), port, params))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(new ParameterizedTypeReference<PageResultDto<CourseDto>>() {}) 
+					.returnResult()
+				    .getResponseBody(); 
+		
 		// Assert
 		Assertions.assertEquals(0, page.getPageNumber(),
 				String.format("Course list first page number invalid: %d", page.getPageNumber()));
@@ -184,27 +182,25 @@ class CourseControllerTests {
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testListFirstPageSuccess(String role, String user)
-			throws MalformedURLException, JsonProcessingException, Exception {
+	void testListFirstPageSuccess(String role, String user)	throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		HttpEntity<String> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
 		params.add(pageNumber, "0");
 		params.add(pageSize, "5");
 		params.add(includeInactive, "true");
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(listURI, brand_2.getUuid())), port, params), HttpMethod.GET,
-				httpEntity, JsonNode.class);
-
-		// Assert
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("List error: %s", response.getStatusCode()));
-
-		PageResultDto<CourseDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<CourseDto>>() {}, objectMapper);
-
+		PageResultDto<CourseDto> page = 
+				this.restClient.get()
+					.uri(HttpUtils.createURL(URI.create(String.format(listURI, brand_2.getUuid())), port, params))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(new ParameterizedTypeReference<PageResultDto<CourseDto>>() {}) 
+					.returnResult()
+				    .getResponseBody(); 
+		
 		// Assert
 		Assertions.assertEquals(0, page.getPageNumber(),
 				String.format("Course list first page number invalid: %d", page.getPageNumber()));
@@ -218,24 +214,23 @@ class CourseControllerTests {
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testListSecondPageSuccess(String role, String user)
-			throws MalformedURLException, JsonProcessingException, Exception {
+	void testListSecondPageSuccess(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		HttpEntity<String> httpEntity = HttpUtils.createHttpEntity(role, user, "");
-
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
 		params.add(pageNumber, "1");
 		params.add(pageSize, "2");
 
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(listURI, brand_2.getUuid())), port, params), HttpMethod.GET,
-				httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("List error: %s", response.getStatusCode()));
-
-		PageResultDto<CourseDto> page = TestResponseUtils.toPage(response, new TypeReference<PageResultDto<CourseDto>>() {}, objectMapper);
+		PageResultDto<CourseDto> page = 
+				this.restClient.get()
+					.uri(HttpUtils.createURL(URI.create(String.format(listURI, brand_2.getUuid())), port, params))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(new ParameterizedTypeReference<PageResultDto<CourseDto>>() {}) 
+					.returnResult()
+				    .getResponseBody(); 
 
 		// Assert
 		Assertions.assertEquals(1, page.getPageNumber(),
@@ -253,17 +248,20 @@ class CourseControllerTests {
 		// Arrange
 		PostCourseDto postDto = modelMapper.map(CourseBuilder.build(brand_1.getUuid()), PostCourseDto.class);
 
-		HttpEntity<PostCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, postDto);
-
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postURI, brand_1.getUuid())), port, null), HttpMethod.POST,
-				httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
-
-		CourseDto createdDto = TestResponseUtils.toDto(response, CourseDto.class, objectMapper);
+		CourseDto createdDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postURI, brand_1.getUuid())), port, null))					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(CourseDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
+		
+		// Assert
 		assertCourse(modelMapper.map(postDto, CourseDto.class), createdDto);
 	}
 
@@ -271,24 +269,34 @@ class CourseControllerTests {
 	void testPostDuplicateFailure() throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
 		PostCourseDto postDto = modelMapper.map(CourseBuilder.build(brand_1.getUuid()), PostCourseDto.class);
-		HttpEntity<PostCourseDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, postDto);
-
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postURI, brand_1.getUuid())), port, null), HttpMethod.POST,
-				httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
+		
+		CourseDto _ = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postURI, brand_1.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(CourseDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 
 		// Act
-		response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postURI, brand_1.getUuid())), port, null), HttpMethod.POST,
-				httpEntity, JsonNode.class);
-		
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
-		
-		CourseDto dupDto = TestResponseUtils.toDto(response, CourseDto.class, objectMapper);
+		CourseDto dupDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postURI, brand_1.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(CourseDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
+
 		Assertions.assertEquals(1, dupDto.getMessages().size(),
 				String.format("Duplicate error ,missing message: %s", dupDto.getMessages().size()));
 		
@@ -302,14 +310,19 @@ class CourseControllerTests {
 		// Arrange
 		PostCourseDto postDto = modelMapper.map(CourseBuilder.build(brand_1.getUuid()), PostCourseDto.class);
 		
-		HttpEntity<PostCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, postDto);
-
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(URI.create(String.format(postURI, faker.code().isbn10())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
+		ErrorDto _ = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postURI, faker.code().isbn10())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isForbidden() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 	}
 
 	
@@ -319,39 +332,47 @@ class CourseControllerTests {
 		// Arrange
 		PostCourseDto postDto = modelMapper.map(CourseBuilder.build(brand_1.getUuid()), PostCourseDto.class);
 
-		HttpEntity<PostCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, postDto);
-
-		ResponseEntity<JsonNode> responsePost = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postURI, brand_1.getUuid())), port, null), HttpMethod.POST,
-				httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.CREATED, responsePost.getStatusCode(),
-				String.format("Post error: %s", responsePost.getStatusCode()));
+		CourseDto createdDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postURI, brand_1.getUuid())), port, null))					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(postDto)
+					.exchange() 
+				    .expectStatus().isCreated() 
+					.expectBody(CourseDto.class) 
+					.returnResult()
+				    .getResponseBody();
 
 		// Act
-		httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		CourseDto createdDto = TestResponseUtils.toDto(responsePost, CourseDto.class, objectMapper);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils
-				.createURL(URI.create(String.format(getURI, brand_1.getUuid(), createdDto.getUuid())), port, null),
-				HttpMethod.GET, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Get error: %s", response.getStatusCode()));
-
-		CourseDto fetchedDto = TestResponseUtils.toDto(response, CourseDto.class, objectMapper);
+		CourseDto fetchedDto = 
+				this.restClient.get()
+					.uri(HttpUtils.createURL(URI.create(String.format(getURI, brand_1.getUuid(), createdDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(CourseDto.class) 
+					.returnResult()
+				    .getResponseBody();
+		
+		// Assert
 		assertCourse(modelMapper.map(postDto, CourseDto.class), fetchedDto);
 	}
 	
 	@Test
 	void testGetFailureNotFound() throws MalformedURLException, JsonProcessingException, Exception {
-		// Arrange
-		HttpEntity<Object> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(getURI, brand_1.getUuid(), faker.code().isbn10())), port, null),
-				HttpMethod.GET, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
-				String.format("Get error: %s", response.getStatusCode()));
+		// Act
+		ErrorDto _ = 
+				this.restClient.get()
+					.uri(HttpUtils.createURL(URI.create(String.format(getURI, brand_1.getUuid(), faker.code().isbn10())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isNotFound() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody();  
 	}
 
 	@ParameterizedTest
@@ -373,15 +394,20 @@ class CourseControllerTests {
 		}
 
 		// Act
-		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, brand_1.getUuid(), putDto.getUuid())), port, null),
-				HttpMethod.PUT, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Put error: %s", response.getStatusCode()));
-
-		CourseDto updatedDto = TestResponseUtils.toDto(response, CourseDto.class, objectMapper);
+		CourseDto updatedDto = 
+				this.restClient.put()
+					.uri(HttpUtils.createURL(URI.create(String.format(putURI, brand_1.getUuid(), putDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(putDto)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(CourseDto.class) 
+					.returnResult()
+				    .getResponseBody();
+		
+		// Assert
 		assertCourse(modelMapper.map(putDto, CourseDto.class), updatedDto);
 	}
 
@@ -406,41 +432,45 @@ class CourseControllerTests {
 		putDto.setDescription(null);
 
 		// Act
-		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, brand_1.getUuid(), putDto.getUuid())), port, null),
-				HttpMethod.PUT, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Put null error: %s", response.getStatusCode()));
-
+		CourseDto updatedDto = 
+				this.restClient.put()
+					.uri(HttpUtils.createURL(URI.create(String.format(putURI, brand_1.getUuid(), putDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(putDto)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(CourseDto.class) 
+					.returnResult()
+				    .getResponseBody();
+		
+		// Assert
 		courseToUpdate.setDescription(null);
 
-		CourseDto updatedDto = TestResponseUtils.toDto(response, CourseDto.class, objectMapper);
 		assertCourse(modelMapper.map(courseToUpdate, CourseDto.class), updatedDto);
 	}
 	
-	@Test
-	void testPutFailureNotFound() throws MalformedURLException, JsonProcessingException, Exception {
+	@ParameterizedTest
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
+	void testPutFailureNotFound(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
 		// Arrange
-		Course courseToUpdate = CourseBuilder.build(brand_1.getUuid());
-		PutCourseDto courseToUpdateDto = modelMapper.map(courseToUpdate, PutCourseDto.class);
+		Course putDto = CourseBuilder.build(brand_1.getUuid());
+		PutCourseDto patchDto = modelMapper.map(putDto, PutCourseDto.class);
 		
-		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, courseToUpdateDto);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, brand_1.getUuid(), courseToUpdate.getUuid())), port, null),
-				HttpMethod.PUT, httpEntity, JsonNode.class);
-
-		// Assert status first
-		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
-				String.format("Get error: %s", response.getStatusCode()));
-
-		// If there's a body, try to map to ErrorDto and validate the error code
-		if (response.getBody() != null && response.getBody().size() > 0) {
-			ErrorDto error = TestResponseUtils.toError(response, objectMapper);
-			Assertions.assertEquals(CourseException.COURSE_NOT_FOUND, error.getCode(),
-					String.format("Unexpected error code: %s", error.getCode()));
-		}
+		// Act
+		ErrorDto _ = 
+				this.restClient.put()
+					.uri(HttpUtils.createURL(URI.create(String.format(putURI, brand_1.getUuid(), patchDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(putDto)
+					.exchange() 
+				    .expectStatus().isNotFound() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 	}
 	
 	@ParameterizedTest
@@ -449,15 +479,19 @@ class CourseControllerTests {
 		// Arrange
 		PutCourseDto putDto = modelMapper.map(CourseBuilder.build(brand_1.getUuid()), PutCourseDto.class);
 		
-		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
-
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, faker.code().isbn10(), putDto.getUuid())), port, null),
-				HttpMethod.PUT, httpEntity, JsonNode.class);
-		
-		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
+		ErrorDto _ = 
+				this.restClient.put()
+					.uri(HttpUtils.createURL(URI.create(String.format(putURI, faker.code().isbn10(), putDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(putDto)
+					.exchange() 
+				    .expectStatus().isForbidden() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 	}
 	
 	@ParameterizedTest
@@ -466,17 +500,119 @@ class CourseControllerTests {
 		// Arrange
 		PutCourseDto putDto = modelMapper.map(CourseBuilder.build(brand_1.getUuid()), PutCourseDto.class);
 		
-		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
-
 		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(putURI, brand_1.getUuid(), faker.code().isbn10())), port, null),
-				HttpMethod.PUT, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
+		ErrorDto _ = 
+				this.restClient.put()
+					.uri(HttpUtils.createURL(URI.create(String.format(putURI, brand_1.getUuid(), faker.code().isbn10())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(putDto)
+					.exchange() 
+				    .expectStatus().isForbidden() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 	}
 
+	@ParameterizedTest
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
+	void testPatchSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
+		// Arrange
+		Course courseToPatch = CourseBuilder.build(brand_1.getUuid());
+		courseToPatch = courseRepository.save(courseToPatch);
+
+		PatchCourseDto patchDto = modelMapper.map(courseToPatch, PatchCourseDto.class);
+		patchDto.setUuid(courseToPatch.getUuid());
+		patchDto.setStartDate(Date.from(Instant.now().plus(5, ChronoUnit.DAYS)));
+		patchDto.setName(null);
+		patchDto.setDescription(null);
+		
+		courseToPatch.setStartDate(patchDto.getStartDate());
+		
+		// Act
+		CourseDto patchedDto = 
+				this.restClient.patch()
+					.uri(HttpUtils.createURL(URI.create(String.format(patchURI, brand_1.getUuid(), patchDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(patchDto)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(CourseDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
+		
+		// Assert
+		assertCourse(modelMapper.map(courseToPatch, CourseDto.class), patchedDto);
+	}
+
+	
+	@ParameterizedTest
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
+	void testPatchFailureNotFound(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		Course patchTarget = CourseBuilder.build(brand_1.getUuid());
+		PatchCourseDto patchDto = modelMapper.map(patchTarget, PatchCourseDto.class);
+		
+		// Act
+		ErrorDto _ = 
+				this.restClient.patch()
+					.uri(HttpUtils.createURL(URI.create(String.format(patchURI, brand_1.getUuid(), patchDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(patchDto)
+					.exchange() 
+				    .expectStatus().isNotFound() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
+	}
+
+	@ParameterizedTest
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
+	void testPatchFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		PatchCourseDto patchDto = modelMapper.map(CourseBuilder.build(brand_1.getUuid()), PatchCourseDto.class);
+		
+		// Act
+		ErrorDto _ = 
+				this.restClient.patch()
+					.uri(HttpUtils.createURL(URI.create(String.format(patchURI, faker.code().isbn10(), patchDto.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(patchDto)
+					.exchange() 
+				    .expectStatus().isForbidden() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
+	}
+	
+	@ParameterizedTest
+	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
+	void testPatchFailureForbiddenUuidMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
+		// Arrange
+		PatchCourseDto patchDto = modelMapper.map(CourseBuilder.build(brand_1.getUuid()), PatchCourseDto.class);
+
+		// Act
+		ErrorDto _ = 
+				this.restClient.patch()
+					.uri(HttpUtils.createURL(URI.create(String.format(patchURI, brand_1.getUuid(), faker.code().isbn10())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.body(patchDto)
+					.exchange() 
+				    .expectStatus().isForbidden() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
+	}
+	
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
@@ -493,37 +629,37 @@ class CourseControllerTests {
 		courseToActivate.setDeactivatedOn(null);
 
 		// Act
-		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(postActivateURI, brand_1.getUuid(), courseToActivate.getUuid())),
-						port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Course activation error: %s", response.getStatusCode()));
-
-		CourseDto activated = TestResponseUtils.toDto(response, CourseDto.class, objectMapper);
-		assertCourse(modelMapper.map(courseToActivate, CourseDto.class), activated);
+		CourseDto activatedDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postActivateURI, brand_1.getUuid(), courseToActivate.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(CourseDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
+		
+		// Assert
+		assertCourse(modelMapper.map(courseToActivate, CourseDto.class), activatedDto);
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testActivateFailureNotFound(String role, String user) throws JsonProcessingException, MalformedURLException {
-		// Arrange
-
+	void testActivateFailureNotFound(String role, String user) throws JsonProcessingException, MalformedURLException {		
 		// Act
-		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils
-				.createURL(URI.create(String.format(postActivateURI, brand_1.getUuid(), faker.code().isbn10())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
-																		
-		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
-				String.format("Course activation error: %s", response.getStatusCode()));
-
-		if (response.getBody() != null && response.getBody().size() > 0) {
-			ErrorDto err = TestResponseUtils.toError(response, objectMapper);
-			Assertions.assertEquals(CourseException.COURSE_NOT_FOUND, err.getCode());
-		}
+		ErrorDto _ = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postActivateURI, brand_1.getUuid(), faker.code().isbn10())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isNotFound() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 	}
 
 	@ParameterizedTest
@@ -539,123 +675,36 @@ class CourseControllerTests {
 		courseToDeactivate.setDeactivatedOn(Instant.now().truncatedTo(ChronoUnit.DAYS));
 
 		// Act
-		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils.createURL(
-				URI.create(String.format(postDeactivateURI, brand_1.getUuid(), courseToDeactivate.getUuid())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
+		CourseDto deactivatedDto = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postDeactivateURI, brand_1.getUuid(), courseToDeactivate.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isOk() 
+					.expectBody(CourseDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Course deactivation error: %s", response.getStatusCode()));
-
-		CourseDto deactivated = TestResponseUtils.toDto(response, CourseDto.class, objectMapper);
-		assertCourse(modelMapper.map(courseToDeactivate, CourseDto.class), deactivated);
+		assertCourse(modelMapper.map(courseToDeactivate, CourseDto.class), deactivatedDto);
 	}
 
 	@ParameterizedTest
 	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
 	void testDeactivateFailureNotFound(String role, String user) throws JsonProcessingException, MalformedURLException {
-		// Arrange
-
 		// Act
-		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, null);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(HttpUtils
-				.createURL(URI.create(String.format(postDeactivateURI, brand_1.getUuid(), faker.code().ean13())), port, null),
-				HttpMethod.POST, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
-				String.format("Course activation error: %s", response.getStatusCode()));
-
-		if (response.getBody() != null && response.getBody().size() > 0) {
-			ErrorDto err = TestResponseUtils.toError(response, objectMapper);
-			Assertions.assertEquals(CourseException.COURSE_NOT_FOUND, err.getCode());
-		}
-	}
-
-	@ParameterizedTest
-	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testPatchSuccess(String role, String user) throws JsonProcessingException, MalformedURLException {
-		// Arrange
-		Course courseToPatch = CourseBuilder.build(brand_1.getUuid());
-		courseToPatch = courseRepository.save(courseToPatch);
-
-		PatchCourseDto patchCourseDto = modelMapper.map(courseToPatch, PatchCourseDto.class);
-		patchCourseDto.setUuid(courseToPatch.getUuid());
-		patchCourseDto.setStartDate(Date.from(Instant.now().plus(5, ChronoUnit.DAYS)));
-		patchCourseDto.setName(null);
-		patchCourseDto.setDescription(null);
-		
-		courseToPatch.setStartDate(patchCourseDto.getStartDate());
-		
-		// Act
-		HttpEntity<PatchCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchCourseDto);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(patchURI, brand_1.getUuid(), patchCourseDto.getUuid())), port, null),
-				HttpMethod.PATCH, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
-				String.format("Get error: %s", response.getStatusCode()));
-
-
-		CourseDto patchedDto = TestResponseUtils.toDto(response, CourseDto.class, objectMapper);
-		assertCourse(modelMapper.map(courseToPatch, CourseDto.class), patchedDto);
-	}
-
-	
-	@ParameterizedTest
-	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testPatchFailureNotFound(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
-		// Arrange
-		Course patchTarget = CourseBuilder.build(brand_1.getUuid());
-		PatchCourseDto patchDto = modelMapper.map(patchTarget, PatchCourseDto.class);
-		
-		HttpEntity<PatchCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, patchDto);
-		
-		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(patchURI, brand_1.getUuid(), patchDto.getUuid())), port, null),
-				HttpMethod.PATCH, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
-				String.format("Patch error: %s", response.getStatusCode()));
-
-		if (response.getBody() != null && response.getBody().size() > 0) {
-			ErrorDto error = TestResponseUtils.toError(response, objectMapper);
-			Assertions.assertEquals(CourseException.COURSE_NOT_FOUND, error.getCode());
-		}
-	}
-
-	@ParameterizedTest
-	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testPatchFailureForbiddenBrandMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
-		// Arrange
-		PutCourseDto putDto = modelMapper.map(CourseBuilder.build(brand_1.getUuid()), PutCourseDto.class);
-		
-		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
-
-		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(patchURI, faker.code().isbn10(), putDto.getUuid())), port, null),
-				HttpMethod.PATCH, httpEntity, JsonNode.class);
-		
-		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
-	}
-	
-	@ParameterizedTest
-	@CsvSource({ "admin, Bruno Fortin", "manager, Liliane Denis" })
-	void testPatchFailureForbiddenUuidMismatch(String role, String user) throws MalformedURLException, JsonProcessingException, Exception {
-		// Arrange
-		PutCourseDto putDto = modelMapper.map(CourseBuilder.build(brand_1.getUuid()), PutCourseDto.class);
-		
-		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(role, user, putDto);
-
-		// Act
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(patchURI, brand_1.getUuid(), faker.code().isbn10())), port, null),
-				HttpMethod.PATCH, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(),
-				String.format("Post error: %s", response.getStatusCode()));
+		ErrorDto _ = 
+				this.restClient.post()
+					.uri(HttpUtils.createURL(URI.create(String.format(postDeactivateURI, brand_1.getUuid(), faker.code().isbn10())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(role, user)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isNotFound() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 	}
 
 	@Test
@@ -665,22 +714,28 @@ class CourseControllerTests {
 		courseToDelete = courseRepository.save(courseToDelete);
 
 		// Act
-		HttpEntity<PutCourseDto> httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-		ResponseEntity<JsonNode> response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(deleteURI, brand_1.getUuid(), courseToDelete.getUuid())), port, null),
-				HttpMethod.DELETE, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.ACCEPTED, response.getStatusCode(),
-				String.format("Course delete error: %s", response.getStatusCode()));
-
+		CourseDto _ = 
+				this.restClient.delete()
+					.uri(HttpUtils.createURL(URI.create(String.format(deleteURI, brand_1.getUuid(), courseToDelete.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isAccepted() 
+					.expectBody(CourseDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 		
-		httpEntity = HttpUtils.createHttpEntity(Roles.Admin, Users.Admin, null);
-		response = testRestTemplate.exchange(
-				HttpUtils.createURL(URI.create(String.format(getURI, brand_1.getUuid(), courseToDelete.getUuid())), port, null),
-				HttpMethod.GET, httpEntity, JsonNode.class);
-
-		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(),
-				String.format("Get error: %s", response.getStatusCode()));
+		// Assert
+		ErrorDto _ = 
+				this.restClient.get()
+					.uri(HttpUtils.createURL(URI.create(String.format(getURI, brand_1.getUuid(), courseToDelete.getUuid())), port, null))
+					.headers(h -> h.addAll(HttpUtils.createHttpHeaders(Roles.Admin, Users.Admin)))
+					.accept(org.springframework.http.MediaType.APPLICATION_JSON)
+					.exchange() 
+				    .expectStatus().isNotFound() 
+					.expectBody(ErrorDto.class) 
+					.returnResult()
+				    .getResponseBody(); 
 	}
 	
 	public static final void assertCourse(CourseDto expected, CourseDto result) {
@@ -754,5 +809,4 @@ class CourseControllerTests {
 			Assertions.assertNull(result.getDescription());
 		}
 	}
-	*/
 }
