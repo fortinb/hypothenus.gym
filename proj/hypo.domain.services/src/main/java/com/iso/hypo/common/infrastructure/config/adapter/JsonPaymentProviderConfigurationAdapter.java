@@ -19,10 +19,14 @@ import jakarta.annotation.PostConstruct;
 @Component
 public class JsonPaymentProviderConfigurationAdapter implements PaymentProviderConfigurationPort {
 
-    private static final String PAYMENT_PROVIDER_CONFIG_FILE = "payment-provider-config.json";
-
+   // private static final String PAYMENT_PROVIDER_CONFIG_FILE = "payment-provider-config.json";
+	private static final String PAYMENT_PROVIDER_CONFIG_FILE = "payment-provider-config_openapi.json";
+	
     private List<PaymentProviderConfigurationEntry> allEntries = Collections.emptyList();
 
+    public JsonPaymentProviderConfigurationAdapter() {
+    }
+    
     @PostConstruct
     public void init() {
         try {

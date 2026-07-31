@@ -23,10 +23,12 @@ public class FinancialInstrumentException extends DomainException {
 	public static final String CARD_EXPIRY_DATE_REQUIRED = "1008";
 	public static final String CARD_CVD_REQUIRED = "1009";
 	public static final String CARD_REGISTRATION_FAILED  = "1010";
+	public static final String CARD_DELETION_FAILED = "1011";
 	
 	private FinancialInstrumentDto financialInstrumentDto;
 	
 	private static final long serialVersionUID = 1L;
+
 	
 	public FinancialInstrumentException(String trackingNumber, String code, String message, FinancialInstrumentDto financialInstrumentDto) {
 		super(trackingNumber, code, message);

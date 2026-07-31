@@ -31,6 +31,7 @@ public final class Payment extends BaseEntity  {
 
 	// Transaction detail fields
 	private String transactionId;
+	private String paymentId;
 	private String transactionReference;
 	private String gatewayProvider;
 	private String gatewayResponse;

@@ -1,5 +1,7 @@
 package com.iso.hypo.finance.application.port.dto.paymentprovider;
 
+import java.time.OffsetDateTime;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,14 +14,16 @@ public class ReceiptRef {
 	private String cardNumberMasked;
 	
 	private String cardHolderName;
-
-	private String permanentToken;
 	
-	private String transAmount;
+	private String paymentMethodId;
+
+	//private String permanentToken;
+	
+	private int transAmount;
 
 	private String txnNumber;
 	
-	private String receiptId;
+	private String paymentId;
 	
 	private String transType;
 	
@@ -41,9 +45,7 @@ public class ReceiptRef {
 	
 	private String authCode;
 	
-	private String transDate;
-	
-	private String transTime;
+	private OffsetDateTime transDate;
 	
 	private String ticket;
 	

@@ -31,6 +31,10 @@ public class CreditCardRef {
 	
 	private String issuerId;
 	
+	// After verification
+	private String temporaryToken;
+	
+	// After registration
 	private String permanentToken;
 	
 }

@@ -9,15 +9,10 @@ public interface PaymentProviderPort {
 
 	// Verifies the credit card information without performing a transaction. This can be used to check if the card is valid.
     ReceiptRef verify(PaymentProviderConfigurationEntry config, RequestContext requestContext, CreditCardRef creditCard);
-    
-    // Registers the credit card information for future transactions.
-    ReceiptRef register(PaymentProviderConfigurationEntry config, RequestContext requestContext, CreditCardRef creditCard);
-    
+      
     // Performs a purchase transaction using the provided credit card information and order details. This will charge the card for the specified amount.
-    ReceiptRef purchase(PaymentProviderConfigurationEntry config, RequestContext requestContext, CreditCardRef creditCard, String orderId, String customerId, String amount);
+    ReceiptRef purchase(PaymentProviderConfigurationEntry config, RequestContext requestContext, CreditCardRef creditCard, String orderId, String customerId, int amount, String currency);
     
-    // Issues a refund for a previous transaction. This will credit the specified amount back to the card used in the original purchase.
-    ReceiptRef refund(PaymentProviderConfigurationEntry config, RequestContext requestContext, CreditCardRef creditCard, String orderId, String customerId, String txnNumber, String amount);
-    
-    ReceiptRef delete(PaymentProviderConfigurationEntry config, RequestContext requestContext, CreditCardRef creditCard);
+    // Delete a payment method (credit card) from the payment provider's system. This is typically used to remove a stored credit card from the user's account.
+    ReceiptRef delete(PaymentProviderConfigurationEntry config, RequestContext requestContext, String paymentMethodId);
 }

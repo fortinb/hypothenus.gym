@@ -112,13 +112,18 @@ public class PaymentServiceImpl implements PaymentService {
 			PaymentProviderConfigurationEntry paymentProviderConfig = paymentProviderConfigurationPort.getPaymentProviderConfiguration(brand.getCode());
 			
 			CreditCardRef creditCardRef = creditCardRefMapper.toRef(financialInstrument.getCreditCard());
-			ReceiptRef receipt =  paymentProviderPort.purchase(paymentProviderConfig, requestContext, creditCardRef, payment.getOrderNumber(), payment.getMemberUuid(), payment.formatProvidePaymentAmount());
+			
+			ReceiptRef receipt =  paymentProviderPort.purchase(paymentProviderConfig, requestContext, creditCardRef, payment.getOrderNumber(), 
+											payment.getMemberUuid(), 
+											payment.getPurchaseAmount().getAmount(),
+											payment.getPurchaseAmount().getCurrency().getCode());
 
 			payment.setPaymentServiceProviderRawResponse(receipt.getProviderRawResponse());
 			
 			if (receipt.isApproved()) {
 				payment.setTransactionId(receipt.getTxnNumber());
 				payment.setTransactionReference(receipt.getReferenceNum());
+				payment.setPaymentId(receipt.getPaymentId());
 				payment.setGatewayResponse(receipt.getMessage());
 				payment.setGatewayResponseCode(receipt.getProviderResponseCode());
 				payment.setGatewayISOResponseCode(receipt.getISO());

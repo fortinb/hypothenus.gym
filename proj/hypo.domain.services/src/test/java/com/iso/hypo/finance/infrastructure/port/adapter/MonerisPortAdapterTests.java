@@ -10,19 +10,19 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import com.iso.hypo.common.application.context.RequestContext;
 import com.iso.hypo.common.application.port.PaymentProviderConfigurationEntry;
+import com.iso.hypo.common.application.port.PaymentProviderConfigurationPort;
 import com.iso.hypo.finance.application.port.dto.paymentprovider.CreditCardRef;
 import com.iso.hypo.finance.application.port.dto.paymentprovider.ReceiptRef;
 
+@SpringJUnitConfig(MonerisTestConfig.class)
+@TestPropertySource(locations = "classpath:application.properties")
 class MonerisPortAdapterTests {
-
-    // Moneris test environment credentials (from payment-provider-config.json)
-    private static final String TEST_STORE_ID = "store5";
-    private static final String TEST_API_KEY  = "yesguy";
-    private static final String TEST_PROVIDER  = "moneris";
-    private static final String TEST_BRAND    = "default";
 
     // Moneris sandbox test card (Visa – approved in test mode)
     private static final String VISA_APPROVED_PAN    = "4242424242424242";
@@ -37,18 +37,19 @@ class MonerisPortAdapterTests {
     private static final String COUNTRY_CODE         = "CA";
     private static final String CARD_HOLDER_NAME     = "John Doe";
 
-    private FinanceMonerisOldPortAdapter adapter;
+    @Autowired
+    private FinanceMonerisPortAdapter adapter;
+    
+    @Autowired
+	private PaymentProviderConfigurationPort paymentProviderConfigurationPort;
+	
     private PaymentProviderConfigurationEntry config;
     private CreditCardRef approvedCard;
     private RequestContext requestContext;
 
     @BeforeEach
     void setUp() {
-        adapter = new FinanceMonerisOldPortAdapter();
-   
-        config = new PaymentProviderConfigurationEntry(
-        		TEST_BRAND, TEST_PROVIDER, TEST_STORE_ID, "MerchandId", "SubscriptionId",
-        		TEST_API_KEY, "ClientId", "ClientSecret", true);
+        config = paymentProviderConfigurationPort.getPaymentProviderConfiguration("default");
 
         approvedCard = new CreditCardRef();
         approvedCard.setCardNumber(VISA_APPROVED_PAN);
@@ -76,6 +77,7 @@ class MonerisPortAdapterTests {
             	ReceiptRef receipt =  adapter.verify(config, requestContext, creditCard);
             	assertNotNull(receipt);	
 				assertTrue(receipt.isApproved());
+				assertNotNull(receipt.getPaymentMethodId());
             });
         }
         
@@ -88,6 +90,8 @@ class MonerisPortAdapterTests {
 				assertTrue(receipt.isApproved());
 				assertTrue(receipt.isAvsResultCode()); // M = Match (AVS)
 				assertTrue(receipt.isCvdResultCode()); // M = Match (CVD)
+				assertTrue(receipt.isApproved());
+				assertNotNull(receipt.getPaymentMethodId());
             });
         	
             assertDoesNotThrow(() -> adapter.verify(config, requestContext, buildCard(VISA_CVD_AVS_APPROVED_PAN)));
@@ -100,6 +104,7 @@ class MonerisPortAdapterTests {
             	ReceiptRef receipt =  adapter.verify(config, requestContext, creditCard);
             	assertNotNull(receipt);	
 				assertTrue(receipt.isApproved());
+				assertNotNull(receipt.getPaymentMethodId());
             });
         }
 
@@ -110,29 +115,7 @@ class MonerisPortAdapterTests {
             	ReceiptRef receipt =  adapter.verify(config, requestContext, creditCard);
             	assertNotNull(receipt);	
 				assertFalse(receipt.isApproved());
-            });
-        }
-    }
-
-    // =========================================================================
-    // register() –
-    // =========================================================================
-
-    @Nested
-    class RegisterTests {
-
-        @Test
-        void register_success() {
-        	assertDoesNotThrow(() -> { 
-            	CreditCardRef creditCard = buildCard(VISA_CVD_AVS_APPROVED_PAN);
-            	ReceiptRef receipt =  adapter.verify(config, requestContext, creditCard);
-            	
-            	creditCard.setCardType(receipt.getCardType());
-            	creditCard.setIssuerId(receipt.getIssuerId());
-            	receipt =  adapter.register(config, requestContext, creditCard);
-				assertNotNull(receipt);	
-				assertTrue(receipt.isApproved());
-				assertNotNull(receipt.getPermanentToken());
+				assertNotNull(receipt.getPaymentMethodId());
             });
         }
     }
@@ -152,51 +135,23 @@ class MonerisPortAdapterTests {
              	ReceiptRef receipt =  adapter.verify(config, requestContext, creditCard);
              	creditCard.setCardType(receipt.getCardType());
              	creditCard.setIssuerId(receipt.getIssuerId());
-             	receipt =  adapter.register(config, requestContext, creditCard);
              	
  				assertNotNull(receipt);	
  				assertTrue(receipt.isApproved());
- 				assertNotNull(receipt.getPermanentToken());
+ 				assertNotNull(receipt.getPaymentMethodId());
  				
- 				creditCard.setPermanentToken(receipt.getPermanentToken());
+ 				creditCard.setPermanentToken(receipt.getPaymentMethodId());
  				
-             	receipt =  adapter.purchase(config, requestContext, creditCard, "ORDER-001", "CUSTOMER-001", "10.01");
+             	receipt =  adapter.purchase(config, requestContext, creditCard, "ORDER-001", "CUSTOMER-001", 1001, "CAD");
             	
              });
          }
-    	 
     }
 
     // =========================================================================
     // refund() – stub, not yet implemented
     // =========================================================================
 
-    @Nested
-    class RefundTests {
-
-    	@Test
-    	void refund_success() {
-          	assertDoesNotThrow(() -> { 
-              	CreditCardRef creditCard = buildCard(VISA_CVD_AVS_APPROVED_PAN);
-              	
-              	ReceiptRef receipt =  adapter.verify(config, requestContext, creditCard);
-              	creditCard.setCardType(receipt.getCardType());
-              	creditCard.setIssuerId(receipt.getIssuerId());
-              	receipt =  adapter.register(config, requestContext, creditCard);
-              	
-  				assertNotNull(receipt);	
-  				assertNotNull(receipt.getPermanentToken());
-  				
-  				creditCard.setPermanentToken(receipt.getPermanentToken());
-  				
-              	receipt =  adapter.purchase(config, requestContext, creditCard, "ORDER-002", "CUSTOMER-002", "10.01");
-              	assertNotNull(receipt);
-              	
-              	receipt =  adapter.refund(config, requestContext, creditCard, "ORDER-002", "CUSTOMER-002", receipt.getTxnNumber(), receipt.getTransAmount());
-             	
-              });
-          }
-    }
     
     @Nested
     class DeleteTests {
@@ -209,12 +164,11 @@ class MonerisPortAdapterTests {
               	ReceiptRef receipt =  adapter.verify(config, requestContext, creditCard);
               	creditCard.setCardType(receipt.getCardType());
               	creditCard.setIssuerId(receipt.getIssuerId());
-              	receipt =  adapter.register(config, requestContext, creditCard);
               	
   				assertNotNull(receipt);	
-  				assertNotNull(receipt.getPermanentToken());
+  				assertNotNull(receipt.getPaymentMethodId());
   				
-  				creditCard.setPermanentToken(receipt.getPermanentToken());
+  				creditCard.setPermanentToken(receipt.getPaymentMethodId());
   				
               	receipt =  adapter.delete(config, requestContext, creditCard);
               	assertNotNull(receipt);             	

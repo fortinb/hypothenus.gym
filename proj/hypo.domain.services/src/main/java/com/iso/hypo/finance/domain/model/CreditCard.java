@@ -15,6 +15,10 @@ public class CreditCard {
 	
 	private String expirationDate;
 	
+	// After verification
+	private String temporaryToken;
+	
+	// After registration
 	private String permanentToken;
 	
 	// Issuer ID - Bank Identification Number

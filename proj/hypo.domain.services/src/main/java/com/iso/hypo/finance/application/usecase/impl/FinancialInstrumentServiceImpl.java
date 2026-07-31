@@ -107,13 +107,11 @@ public class FinancialInstrumentServiceImpl implements FinancialInstrumentServic
 			PaymentProviderConfigurationEntry paymentProviderConfig = paymentProviderConfigurationPort.getPaymentProviderConfiguration(brand.getCode());
 
 			// Verify credit card information with provider and get card type and issuer id
+			// Vault credit card
 			financialInstrument = verifyCreditCard(paymentProviderConfig, financialInstrument, brand, creditCardRef);
 			
 			// Prepare credit card reference for vault add credit card
 			creditCardRef.setIssuerId(financialInstrument.getCreditCard().getIssuerId());
-
-			// Vault add credit card
-			financialInstrument = registerCreditCard(paymentProviderConfig, financialInstrument, brand, creditCardRef);
 
 			financialInstrument.setCreatedOn(Instant.now());
 			financialInstrument.setCreatedBy(requestContext.getUsername());
@@ -182,13 +180,22 @@ public class FinancialInstrumentServiceImpl implements FinancialInstrumentServic
 			BrandRef brand = resolveBrand(brandUuid);
 			MemberRef member = resolveMember(brand.getUuid(), memberUuid);
 
-			FinancialInstrument entity = this.readByFinancialInstrumentUuid(brand.getUuid(), member.getUuid(), financialInstrumentUuid);
+			FinancialInstrument financialInstrument = this.readByFinancialInstrumentUuid(brand.getUuid(), member.getUuid(), financialInstrumentUuid);
 			
-			entity.delete(requestContext.getUsername());
-			
-			// TODO: Call CreditCard provider service to delete permanent token
+	
+			// Get CreditCard provider configuration
+			PaymentProviderConfigurationEntry paymentProviderConfig = paymentProviderConfigurationPort.getPaymentProviderConfiguration(brand.getCode());
 
-			financialInstrumentRepository.save(entity);
+			// Verify card with file credentials
+			ReceiptRef receipt = paymentProviderPort.delete(paymentProviderConfig, requestContext, financialInstrument.getCreditCard().getPermanentToken());
+		
+			if (receipt.isApproved()) {
+				throw new FinancialInstrumentException(requestContext.getTrackingNumber(), FinancialInstrumentException.CARD_DELETION_FAILED,
+						"Card deletion failed - providerResponseCode=" + receipt.getProviderResponseCode() + " message=" + receipt.getMessage());
+			}
+			
+			financialInstrument.delete(requestContext.getUsername());
+			financialInstrumentRepository.save(financialInstrument);
 		} catch (Exception e) {
 			logger.error("Error - brandUuid={}, financialInstrumentUuid={}, uuid={}", brandUuid, financialInstrumentUuid, financialInstrumentUuid, e);
 
@@ -279,12 +286,15 @@ public class FinancialInstrumentServiceImpl implements FinancialInstrumentServic
 			}
 
 			// Set financial instrument credit card information based on verification result
-			financialInstrument.getCreditCard().setIssuerId(receipt.getIssuerId());
 			financialInstrument.getCreditCard().setCardType(receipt.getCardType());	
+			financialInstrument.getCreditCard().setIssuerId(receipt.getIssuerId());
+			financialInstrument.getCreditCard().setCardNumber(receipt.getCardNumberMasked());
+			financialInstrument.getCreditCard().setPermanentToken(receipt.getPaymentMethodId());
 			
 			if (financialInstrument.getPaymentServiceProviderRawResponse() == null) {
 				financialInstrument.setPaymentServiceProviderRawResponse(new java.util.ArrayList<>());
 			}
+			
 			financialInstrument.getPaymentServiceProviderRawResponse().add(receipt.getProviderRawResponse());
 			
 			return financialInstrument;
@@ -295,34 +305,6 @@ public class FinancialInstrumentServiceImpl implements FinancialInstrumentServic
 				throw (FinancialInstrumentException) e;
 			}
 			throw new FinancialInstrumentException(requestContext.getTrackingNumber(), FinancialInstrumentException.CARD_VERIFICATION_FAILED, e);
-		}
-	}
-	
-	private FinancialInstrument registerCreditCard(
-						PaymentProviderConfigurationEntry paymentProviderConfig,
-						FinancialInstrument financialInstrument, 
-						BrandRef brandRef, 
-						CreditCardRef creditCardRef) throws FinancialInstrumentException {
-		try {
-
-			ReceiptRef receipt = paymentProviderPort.register(paymentProviderConfig, requestContext, creditCardRef);
-			
-			financialInstrument.getCreditCard().setCardNumber(receipt.getCardNumberMasked());
-			financialInstrument.getCreditCard().setPermanentToken(receipt.getPermanentToken());
-
-			if (financialInstrument.getPaymentServiceProviderRawResponse() == null) {
-				financialInstrument.setPaymentServiceProviderRawResponse(new java.util.ArrayList<>());
-			}
-			financialInstrument.getPaymentServiceProviderRawResponse().add(receipt.getProviderRawResponse());
-			
-			return financialInstrument;
-		} catch (Exception e) {
-			logger.error("Error - brandUuid={}", financialInstrument != null ? financialInstrument.getBrandUuid() : null, e);
-
-			if (e instanceof FinancialInstrumentException) {
-				throw (FinancialInstrumentException) e;
-			}
-			throw new FinancialInstrumentException(requestContext.getTrackingNumber(), FinancialInstrumentException.CARD_REGISTRATION_FAILED, e);
 		}
 	}
 	
