@@ -170,7 +170,7 @@ class MonerisPortAdapterTests {
   				
   				creditCard.setPermanentToken(receipt.getPaymentMethodId());
   				
-              	receipt =  adapter.delete(config, requestContext, creditCard);
+              	receipt =  adapter.delete(config, requestContext, creditCard.getPermanentToken());
               	assertNotNull(receipt);             	
               });
           }

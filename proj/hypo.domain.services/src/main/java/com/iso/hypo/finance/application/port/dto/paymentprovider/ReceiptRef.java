@@ -69,6 +69,6 @@ public class ReceiptRef {
 	 *     new ObjectMapper().convertValue(monerisPayment, Map.class));
 	 * }</pre>
 	 */
-	private Object providerRawResponse;
+	private String providerRawResponse;
 }
 

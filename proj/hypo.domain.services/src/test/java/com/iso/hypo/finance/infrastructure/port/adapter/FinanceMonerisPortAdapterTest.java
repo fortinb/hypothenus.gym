@@ -15,7 +15,8 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 @TestPropertySource(locations = "classpath:application.properties")
 class FinanceMonerisPortAdapterTest {
 
-    @Autowired
+    @SuppressWarnings("unused")
+	@Autowired
     private FinanceMonerisPortAdapter adapter;
 }
 

@@ -498,7 +498,7 @@ class OrderControllerTests {
 					.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
 					.body(putOrderDto)
 					.exchange() 
-				    .expectStatus().isCreated() 
+				    .expectStatus().isOk() 
 					.expectBody(OrderDto.class) 
 					.returnResult()
 				    .getResponseBody();

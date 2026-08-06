@@ -26,7 +26,7 @@ public class FinancialInstrument extends BaseEntity  {
 	
 	private BankAccount bankAccount;
 	
-	private List<Object> paymentServiceProviderRawResponse;
+	private List<String> paymentServiceProviderRawResponse;
 	
 	public FinancialInstrument() {
 	}

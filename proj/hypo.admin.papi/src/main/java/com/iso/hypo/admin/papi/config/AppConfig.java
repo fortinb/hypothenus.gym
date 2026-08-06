@@ -48,9 +48,9 @@ public class AppConfig {
 		JsonMapper mapper = JsonMapper.builder()
 					.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 					.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false)
-				//.addModule(new PageJacksonModule()).addModule(new SortJacksonModule()).addModule(new JavaTimeModule())
-				.addModule(new JavaTimeModule())
-				.build();
+				//.addModule(new PageJacksonModule()).addModule(new SortJacksonModule())
+					.addModule(new JavaTimeModule())
+					.build();
 
 		return mapper;
 	}

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.iso.hypo.common.application.context.RequestContext;
 import com.iso.hypo.common.application.port.PaymentProviderConfigurationEntry;
 import com.iso.hypo.finance.application.port.PaymentProviderPort;
@@ -60,7 +61,10 @@ public class FinanceMonerisPortAdapter implements PaymentProviderPort {
 	@Value("${app.payment.provider.test:true}")
 	private boolean paymentProviderTest;
 	
-	public FinanceMonerisPortAdapter() {
+	JsonMapper mapper;
+	
+	public FinanceMonerisPortAdapter(JsonMapper mapper) {
+		this.mapper = mapper;
 	}
 
 	@Override
@@ -135,7 +139,7 @@ public class FinanceMonerisPortAdapter implements PaymentProviderPort {
 			ValidationStatus validationStatus = validation.getValidationStatus();
 			
 			// Save response as log.
-			receiptRef.setProviderRawResponse(validation);
+			receiptRef.setProviderRawResponse(mapper.writeValueAsString(validation));
 			
 			if (validationStatus == ValidationStatus.SUCCEEDED) {
 				receiptRef.setApproved(true);
@@ -242,7 +246,7 @@ public class FinanceMonerisPortAdapter implements PaymentProviderPort {
 			PaymentStatus paymentStatus = payment.getPaymentStatus();
 	
 			// Save response as log.
-			receiptRef.setProviderRawResponse(payment);
+			receiptRef.setProviderRawResponse(mapper.writeValueAsString(payment));
 			
 			if (paymentStatus == PaymentStatus.SUCCEEDED) {
 				receiptRef.setApproved(true);

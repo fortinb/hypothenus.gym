@@ -37,6 +37,7 @@ import com.iso.hypo.common.application.usecase.AzureGraphClientService;
 import com.iso.hypo.domain.BrandBuilder;
 import com.iso.hypo.domain.UserBuilder;
 import com.iso.hypo.finance.domain.repository.FinancialInstrumentRepository;
+import com.iso.hypo.finance.domain.repository.PaymentRepository;
 import com.iso.hypo.membership.domain.repository.MemberRepository;
 import com.iso.hypo.membership.domain.repository.MembershipPlanRepository;
 import com.iso.hypo.sale.domain.repository.OrderRepository;
@@ -76,6 +77,8 @@ class PopulatorTests {
 	FinancialInstrumentRepository financialInstrumentRepository;
 	@Autowired
 	OrderRepository orderRepository;
+	@Autowired
+	PaymentRepository paymentRepository;
 	@Autowired
 	UserRepository userRepository;
 	@Autowired
@@ -121,6 +124,7 @@ class PopulatorTests {
 		membershipPlanRepository.deleteAll();
 		financialInstrumentRepository.deleteAll();
 		orderRepository.deleteAll();
+		paymentRepository.deleteAll();
 		
 		// Admin user is required
 		UserDto adminUserDto = createAdminUser();

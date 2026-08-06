@@ -441,7 +441,7 @@ public class OrderServiceImpl implements OrderService {
 			// Initialize shipping detail to default value - empty
 			if (order.getShippingDetail() == null) {
 				ShippingDetail shippingDetail = new ShippingDetail();
-				shippingDetail.setAddress(null);
+				shippingDetail.setAddress(addressMapper.toEntity(member.getPerson().getAddress()));
 				shippingDetail.setShippingMethod(ShippingMethodEnum.email);
 
 				order.setShippingDetail(shippingDetail);

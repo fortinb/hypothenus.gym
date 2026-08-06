@@ -6,6 +6,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.iso.hypo.common.infrastructure.persistence.entity.BaseDocument;
 import com.iso.hypo.finance.domain.model.BankAccount;
 import com.iso.hypo.finance.domain.model.CreditCard;
@@ -37,7 +38,8 @@ public class FinancialInstrumentDocument extends BaseDocument {
 	
 	private BankAccount bankAccount;
 	
-	private List<Object> paymentServiceProviderRawResponse;
+	@JsonIgnore
+    private List<String> paymentServiceProviderRawResponse;
 	
 	public FinancialInstrumentDocument() {
 	}
